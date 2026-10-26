@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Integration tests: package files (Hexium rules), version consistency, settings layout of the built DLL. No game running. -->
+  <PropertyGroup>
+    <AssemblyName>SteveTheTroll.IntegrationTests</AssemblyName>
+    <RootNamespace>SteveTheTroll.Tests.Integration</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="UnityEngine.CoreModule"><HintPath>$(ValheimRefs)\UnityEngine.CoreModule.dll</HintPath><Private>true</Private></Reference>
+  </ItemGroup>
+</Project>
