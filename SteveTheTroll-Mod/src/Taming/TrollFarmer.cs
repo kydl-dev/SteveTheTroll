@@ -27,6 +27,7 @@ namespace SteveTheTroll.Taming
         int _attacks, _swingsThisTry, _try = 1, _dry;
         uint _lastRevision;
         bool _home, _announce;
+        ItemDrop.ItemData _lastWeapon;
 
         internal string CurrentItem { get; private set; } = "";
 
@@ -46,7 +47,7 @@ namespace SteveTheTroll.Taming
             if (ai.GetFollowTarget() != null) { ModLog.Info("TrollFarmer: " + name + " got a follow order - stops farming"); Destroy(this); return ai.GetFollowTarget() == null; }
             if (ai.GetTargetCreature() != null) return ai.GetTargetCreature() == null;      // fighting (D-042 defend): the game's AI drives
             if (_home) return GoHome(ai, dt, moveTo);
-            var weapon = Weapon(me);
+            var weapon = Weapon(me, _target != null && _target.GetComponent<TreeBase>() == null);
             if (weapon == null) { if (Time.time >= _nextLog) { _nextLog = Time.time + LogSeconds; ModLog.Warn("TrollFarmer: " + name + " has no melee item with chop / pickaxe damage"); } return weapon != null; }
             if ((_target == null || _hit == null) && Time.time >= _nextSearch) Search(weapon);
             if (_home) return true;
@@ -221,17 +222,25 @@ namespace SteveTheTroll.Taming
             return string.IsNullOrEmpty(n) ? name : n;
         }
 
-        // A melee troll attack with chop or pickaxe damage (punch / log swing), not the throw.
-        static ItemDrop.ItemData Weapon(Humanoid me)
+        // A melee troll attack with chop or pickaxe damage (punch / log swing), not the throw. D-061 (user: Steve's log "went through" logs
+        // without hitting): the game's melee hit check of a HORIZONTAL swing runs at the attack height (chest), so it passes over a log lying
+        // on the ground; low targets (everything but a standing tree) get the VERTICAL swing, standing trees the horizontal one.
+        ItemDrop.ItemData Weapon(Humanoid me, bool low)
         {
             ItemDrop.ItemData best = null;
+            var want = low ? Attack.AttackType.Vertical : Attack.AttackType.Horizontal;
             foreach (var it in me.GetInventory().GetAllItems())
             {
                 var s = it.m_shared;
                 if (s.m_damages.m_chop + s.m_damages.m_pickaxe <= 0f || s.m_attack == null) continue;
                 var type = s.m_attack.m_attackType;
                 if (type == Attack.AttackType.Projectile || type == Attack.AttackType.TriggerProjectile) continue;
-                if (best == null || type == Attack.AttackType.Horizontal || type == Attack.AttackType.Vertical) best = it;
+                if (best == null || type == want || (best.m_shared.m_attack.m_attackType != want && (type == Attack.AttackType.Horizontal || type == Attack.AttackType.Vertical))) best = it;
+            }
+            if (best != null && best != _lastWeapon)
+            {
+                _lastWeapon = best;
+                ModLog.Verbose("TrollFarmer: " + name + " swings " + best.m_shared.m_name + " (" + best.m_shared.m_attack.m_attackType + ", wanted " + want + " for a " + (low ? "low target" : "standing tree") + ")");
             }
             return best;
         }
