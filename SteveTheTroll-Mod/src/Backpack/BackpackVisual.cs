@@ -18,7 +18,7 @@ namespace SteveTheTroll.Backpack
         static readonly List<Character> Trolls = new List<Character>();
 
         Transform _root, _spine;
-        int _pieces;
+        int _pieces, _chests;
         float _nextLog;
 
         /// Plugin.Update: adds the backpack to tamed trolls that have none and removes it from trolls that are no longer tamed.
@@ -47,8 +47,9 @@ namespace SteveTheTroll.Backpack
             _root = root.transform;
             _root.SetParent(transform, false);
             int missing = 0, renderers = 0, empty = 0;
-            foreach (var p in BackpackData.Pieces)
+            for (int idx = 0; idx < BackpackData.Pieces.Length; idx++)
             {
+                var p = BackpackData.Pieces[idx];
                 var prefab = ZNetScene.instance != null ? ZNetScene.instance.GetPrefab(p.Prefab) : null;
                 if (prefab == null) { missing++; ModLog.Warn("BackpackVisual: piece prefab '" + p.Prefab + "' not found"); continue; }
                 var copy = VisualCopy(prefab, out int r);
@@ -57,9 +58,13 @@ namespace SteveTheTroll.Backpack
                 copy.transform.SetParent(_root, false);
                 copy.transform.localPosition = new Vector3(p.X, p.Y, p.Z);
                 copy.transform.localRotation = Quaternion.Euler(0f, p.Yaw, 0f);
+                int chest = System.Array.IndexOf(BackpackData.Chests, idx);
+                if (chest >= 0) { BackpackChest.Make(copy, GetComponent<Character>(), chest); _chests++; }
                 _pieces++;
             }
+            BackpackStore.Store(GetComponent<Character>());      // T-008c: the chests' storage (once per troll, every client)
             Place();
+            ModLog.Check("BackpackVisual: " + name + " openable chests", _chests, BackpackData.Chests.Length, 0, "");
             ModLog.Info("BackpackVisual: " + name + " backpack built: " + _pieces + " piece(s), " + renderers + " renderer(s), " + missing + " missing, bone " + (_spine != null ? Bone : "NOT FOUND (troll root used)"));
             ModLog.Check("BackpackVisual: " + name + " backpack pieces", _pieces, BackpackData.Pieces.Length, 0, "");
             ModLog.Check("BackpackVisual: " + name + " pieces without a mesh", empty, 0, 0, "");

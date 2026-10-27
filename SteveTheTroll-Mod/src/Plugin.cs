@@ -90,7 +90,9 @@ namespace SteveTheTroll
             if (!ModSettings.On) return;
             MainMenu.Tick();
             Taming.TrollRegistry.Tick();
-            Backpack.BackpackVisual.Tick();         // T-008b: backpack on every tamed troll       // D-043: live values of the player's tamed trolls for the F6 lists
+            Backpack.BackpackVisual.Tick();
+            Backpack.BackpackPickup.Tick();         // T-008c: wood / ores / scrap within 50 m into the backpack
+            Taming.TrollIdle.Tick();                // D-062: no job for 2 min -> farms on its own         // T-008b: backpack on every tamed troll       // D-043: live values of the player's tamed trolls for the F6 lists
         }
 
         void OnDestroy()

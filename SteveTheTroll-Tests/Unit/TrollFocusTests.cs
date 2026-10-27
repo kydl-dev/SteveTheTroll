@@ -65,6 +65,15 @@ namespace SteveTheTroll.Tests.Unit
         }
 
         [Test]
+        public void EveryFarmedItem_IsPickedUp()
+        {
+            var pick = new List<string>(TrollFocus.PickupItems);
+            foreach (var g in TrollFocus.DefaultOrder) Assert.That(pick, Does.Contain(g.Item));
+            Assert.That(pick, Does.Contain("BlackMetalScrap"));
+            Assert.That(pick, Does.Not.Contain("Stone"), "only wood, ores and scrap");
+        }
+
+        [Test]
         public void SearchOrder_FocusFirstThenDefault()
         {
             var order = TrollFocus.SearchOrder("TinOre");

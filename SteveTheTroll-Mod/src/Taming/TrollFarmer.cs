@@ -15,7 +15,7 @@ namespace SteveTheTroll.Taming
     internal sealed class TrollFarmer : MonoBehaviour
     {
         const float SearchSeconds = 3f, LogSeconds = 5f, LookAngle = 25f, MinAttackGap = 0.3f, StuckSeconds = 8f, BadSeconds = 120f;
-        const float StepMetres = 2f, StepSeconds = 2.5f, CloseSlack = 3f, HomeMetres = 4f;
+        const float StepMetres = 2f, StepSeconds = 2.5f, CloseSlack = 3f, HomeMetres = 4f, CloseWaitSeconds = 0.5f, FullCheckSeconds = 2f;
         const int SwingsPerTry = 2, Tries = 4;
         readonly Dictionary<GameObject, float> _bad = new Dictionary<GameObject, float>();
         string _focus = "";
@@ -26,7 +26,8 @@ namespace SteveTheTroll.Taming
         Vector3 _stepTo;
         int _attacks, _swingsThisTry, _try = 1, _dry;
         uint _lastRevision;
-        bool _home, _announce;
+        bool _home, _announce, _auto;
+        float _nextFullCheck;
         ItemDrop.ItemData _lastWeapon;
 
         internal string CurrentItem { get; private set; } = "";
@@ -34,7 +35,7 @@ namespace SteveTheTroll.Taming
         /// `announce` (D-058): the troll starts on its own after waiting without orders - its owner gets a message with the item it found.
         internal void Setup(string focus, Vector3 centre, bool announce = false)
         {
-            _focus = focus ?? ""; _centre = centre; _target = null; _hit = null; _nextSearch = 0f; CurrentItem = ""; _home = false; _announce = announce;
+            _focus = focus ?? ""; _centre = centre; _target = null; _hit = null; _nextSearch = 0f; CurrentItem = ""; _home = false; _announce = announce; _auto = announce;
             ResetTries();
         }
 
@@ -47,7 +48,8 @@ namespace SteveTheTroll.Taming
             if (ai.GetFollowTarget() != null) { ModLog.Info("TrollFarmer: " + name + " got a follow order - stops farming"); Destroy(this); return ai.GetFollowTarget() == null; }
             if (ai.GetTargetCreature() != null) return ai.GetTargetCreature() == null;      // fighting (D-042 defend): the game's AI drives
             if (_home) return GoHome(ai, dt, moveTo);
-            var weapon = Weapon(me, _target != null && _target.GetComponent<TreeBase>() == null);
+            if (Time.time >= _nextFullCheck && Full()) return true;
+            var weapon = _target != null ? Weapon(me, _target.GetComponent<TreeBase>() == null) : (_lastWeapon ?? Weapon(me, false));
             if (weapon == null) { if (Time.time >= _nextLog) { _nextLog = Time.time + LogSeconds; ModLog.Warn("TrollFarmer: " + name + " has no melee item with chop / pickaxe damage"); } return weapon != null; }
             if ((_target == null || _hit == null) && Time.time >= _nextSearch) Search(weapon);
             if (_home) return true;
@@ -70,9 +72,12 @@ namespace SteveTheTroll.Taming
             {
                 if (d < _lastDist - 0.2f) { _lastDist = d; _stuckSeconds = 0f; } else _stuckSeconds += dt;
                 bool close = d <= reach + CloseSlack;
-                if (_stuckSeconds <= StuckSeconds) { moveTo(ai, dt, point, reach * 0.7f, false); return true; }
-                if (!close) { GiveUp("cannot reach it (" + d.ToString("F1") + " m)"); return true; }
-                // TEST-022: "cannot reach it (2.7 m)" - blocked by the log / trunk itself while already close: swing from here
+                // D-062 (TEST-026: waited ~8 s at 2.3 m in front of a trunk): close and not getting closer for 0.5 s -> swing from here
+                if (!close || _stuckSeconds <= CloseWaitSeconds)
+                {
+                    if (_stuckSeconds <= StuckSeconds) { moveTo(ai, dt, point, reach * 0.7f, false); return true; }
+                    if (!close) { GiveUp("cannot reach it (" + d.ToString("F1") + " m)"); return true; }
+                }
             }
             _stuckSeconds = 0f; _lastDist = float.MaxValue;
             ai.StopMoving();
@@ -188,7 +193,7 @@ namespace SteveTheTroll.Taming
             _announce = false;
             string shown = Shown();
             ModLog.Info("TrollFarmer: " + name + " finds nothing to farm within " + ModSettings.FarmMaxRange.Value + " m - goes to the owner's bed");
-            if (IsMine())
+            if (IsMine() && !_auto)      // D-062: a troll that went farming on its own does not report "nothing found" every 2 minutes
                 Ui.Notify.Show(Loc.T("stevethetroll_farm_nothing", shown, ModSettings.FarmMaxRange.Value.ToString("0")), Ui.Notify.Kind.Farm);
         }
 
@@ -208,8 +213,20 @@ namespace SteveTheTroll.Taming
             ai.StopMoving();
             ai.SetPatrolPoint();
             ModLog.Info("TrollFarmer: " + name + " is at the owner's bed (" + d.ToString("F1") + " m) - waits");
-            Ui.Notify.Show(Loc.T("stevethetroll_farm_home", Shown()), Ui.Notify.Kind.Farm);
+            if (!_auto) Ui.Notify.Show(Loc.T("stevethetroll_farm_home", Shown()), Ui.Notify.Kind.Farm);
             Destroy(this);
+            return true;
+        }
+
+        // D-062: a full backpack ends farming - the troll walks to the owner's bed (T-008e). Expected outcome: true = it is full.
+        bool Full()
+        {
+            _nextFullCheck = Time.time + FullCheckSeconds;
+            var view = GetComponent<ZNetView>();
+            if (view == null || !view.IsValid() || !Backpack.BackpackStore.IsFull(view.GetZDO())) return false;
+            ModLog.Info("TrollFarmer: " + name + " backpack is full - goes to the owner's bed");
+            _home = true; _auto = true; _target = null; _hit = null; CurrentItem = "";
+            if (IsMine()) Ui.Notify.Show(Loc.T("stevethetroll_backpack_full", Shown()), Ui.Notify.Kind.Farm);
             return true;
         }
 

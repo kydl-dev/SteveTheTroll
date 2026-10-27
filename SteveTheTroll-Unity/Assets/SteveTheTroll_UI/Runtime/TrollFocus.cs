@@ -51,6 +51,13 @@ namespace SteveTheTroll.Ui
             new Goal("Wood"),                               // wood from any source
         };
 
+        /// D-062 (user spec): what a tamed troll's backpack picks up within 50 m - wood, ores, scrap iron, black metal scrap (every farmed item).
+        internal static readonly string[] PickupItems =
+        {
+            "Wood", "FineWood", "RoundLog", "ElderBark", "YggdrasilWood", "Blackwood",
+            "CopperOre", "TinOre", "IronOre", "SilverOre", "CopperScrap", "IronScrap", "BlackMetalScrap", "FlametalOre", "FlametalOreNew",
+        };
+
         /// The source prefab (name without "(Clone)") counts for the goal. Expected outcome: true when the goal has no source list or the
         /// name starts with one of its sources (any case).
         internal static bool SourceMatches(Goal goal, string prefabName)

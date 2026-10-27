@@ -70,9 +70,9 @@ namespace SteveTheTroll.Testing
             try
             {
                 string r = Taming.TrollTamingPatch.SelfCheck();
-                bool stats = Taming.TamedTrollStats.SelfCheck(), defend = Taming.TrollDefend.SelfCheck(), farm = Taming.TrollFarming.SelfCheck();
-                string more = ", TamedTrollStats " + stats + ", TrollDefend " + defend + ", TrollFarming " + farm;
-                return r.StartsWith("PASS") && stats && defend && farm ? r + more : "FAIL: " + r + more;
+                bool stats = Taming.TamedTrollStats.SelfCheck(), defend = Taming.TrollDefend.SelfCheck(), farm = Taming.TrollFarming.SelfCheck(), store = Backpack.BackpackStore.SelfCheck();
+                string more = ", TamedTrollStats " + stats + ", TrollDefend " + defend + ", TrollFarming " + farm + ", BackpackStore " + store;
+                return r.StartsWith("PASS") && stats && defend && farm && store ? r + more : "FAIL: " + r + more;
             }
             catch (System.TypeInitializationException e) { return "FAIL: " + (e.InnerException != null ? e.InnerException.Message : e.Message); }
         }
