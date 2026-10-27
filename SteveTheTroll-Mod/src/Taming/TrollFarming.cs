@@ -10,7 +10,7 @@ namespace SteveTheTroll.Taming
     /// where it was sent (then of the owner's bed): standing trees / logs (TreeBase -> m_logPrefab -> TreeLog -> m_subLogPrefab ... drops),
     /// rocks (MineRock5 / MineRock) and other destructibles (DropOnDestroyed) whose drop tables contain the item. No focus = the D-038
     /// priority (copper, core wood / pine, fine wood / birch, tin, wood). Steering: postfix on MonsterAI.UpdateAI (the last MoveTo of the frame
-    /// wins); a fight (target creature) or a follow order ends / pauses farming. Drops stay on the ground until the backpack (T-008c) exists.
+    /// wins -> since D-048 a prefix that replaces the AI step while farming); a fight (target creature) or a follow order ends / pauses farming. Drops stay on the ground until the backpack (T-008c) exists.
     /// </summary>
     internal static class TrollFarming
     {
@@ -133,11 +133,17 @@ namespace SteveTheTroll.Taming
         [HarmonyPatch(typeof(MonsterAI), nameof(MonsterAI.UpdateAI))]
         static class Steer
         {
-            static void Postfix(MonsterAI __instance, float dt, bool __result)
+            // D-048: a PREFIX now - while the troll farms, the game's AI step (idle wandering, the feeding animation, its own attack timer) is
+            // skipped completely; it runs again when farming hands back (fight, follow order, nothing to farm).
+            static bool Prefix(MonsterAI __instance, float dt, ref bool __result)
             {
-                if (!__result || __instance == null) return;
-                var f = __instance.GetComponent<TrollFarmer>();
-                if (f != null) f.Step(__instance, dt, MoveTo, LookAt);
+                var f = __instance != null ? __instance.GetComponent<TrollFarmer>() : null;
+                if (f == null) return true;
+                var view = __instance.GetComponent<ZNetView>();
+                if (view == null || !view.IsValid() || !view.IsOwner()) return true;
+                bool drove = f.Step(__instance, dt, MoveTo, LookAt);
+                if (drove) __result = true;
+                return !drove;
             }
         }
     }

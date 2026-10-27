@@ -44,7 +44,7 @@ namespace SteveTheTroll.Taming
             _ai.SetFollowTarget(null);
             _ai.SetPatrolPoint();
             ModLog.Info("TrollArrival: " + name + (late ? " gave up walking after " + GiveUpSeconds + " s" : " arrived (" + d.ToString("F1") + " m)") + " - stays and waits for orders");
-            if (!late && _player == Player.m_localPlayer) Ui.Notify.Show(Loc.T("stevethetroll_troll_waits", Shown()), Ui.Notify.Kind.Info);
+            if (!late && _player == Player.m_localPlayer) Ui.Notify.Show(Loc.T("stevethetroll_troll_waits", Shown()), Ui.Notify.Kind.Good);
             Destroy(this);
         }
     }

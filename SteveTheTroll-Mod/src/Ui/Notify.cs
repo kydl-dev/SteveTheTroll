@@ -4,10 +4,11 @@ namespace SteveTheTroll.Ui
 {
     /// <summary>
     /// D-047: every message of the mod goes to the LEFT side of the screen (MessageHud TopLeft, normal text), coloured by kind.
+    /// D-048 (user colours): Farm dark yellow, Attack red, Good green (coming, follow / stay), Death blue; Info white, Warn orange.
     /// </summary>
     internal static class Notify
     {
-        internal enum Kind { Info, Good, Warn, Bad }
+        internal enum Kind { Info, Good, Warn, Bad, Farm, Attack, Death }
 
         static string Colour(Kind k)
         {
@@ -16,6 +17,9 @@ namespace SteveTheTroll.Ui
                 case Kind.Good: return "#9BE07A";
                 case Kind.Warn: return "#FFB347";
                 case Kind.Bad: return "#FF6B6B";
+                case Kind.Farm: return "#C9A227";
+                case Kind.Attack: return "#FF4040";
+                case Kind.Death: return "#5AA9FF";
                 default: return "#E8E0D0";
             }
         }

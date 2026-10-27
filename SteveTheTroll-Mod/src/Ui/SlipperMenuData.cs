@@ -70,7 +70,8 @@ namespace SteveTheTroll.Ui
             if (troll == null) { Tell(Loc.T("stevethetroll_gofarm_far", shown), Notify.Kind.Warn); ModLog.Info("SlipperMenuData: Go farm for " + shown + " - not loaded"); return false; }
             string focus = info != null ? TrollFocus.Normalize(info.Focus) : "";
             bool ok = Taming.TrollFarming.Begin(troll, focus);
-            Tell(ok ? Loc.T("stevethetroll_gofarm_started", shown, Loc.T(TrollFocus.KeyOf(focus))) : Loc.T("stevethetroll_gofarm_far", shown), ok ? Notify.Kind.Good : Notify.Kind.Warn);
+            Tell(ok ? Loc.T("stevethetroll_gofarm_started", shown, Loc.T(TrollFocus.KeyOf(focus))) : Loc.T("stevethetroll_gofarm_far", shown), ok ? Notify.Kind.Farm : Notify.Kind.Warn);
+            Taming.TrollRegistry.Trolls();           // refresh now: the open menu shows "Farming" within a second (TEST-019)
             ModLog.Info("SlipperMenuData: Go farm for " + shown + " focus '" + focus + "' -> " + ok);
             return ok;
         }

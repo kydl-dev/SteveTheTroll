@@ -68,6 +68,12 @@ namespace SteveTheTroll.Taming
                     + ", health now " + __instance.GetHealth().ToString("F0") + " / " + __instance.GetMaxHealth().ToString("F0") + " at " + __instance.transform.position.ToString("F1");
                 if (__instance.GetHealth() <= 0f || total >= __instance.GetMaxHealth() * 0.25f) ModLog.Warn(line + " (big hit / death)");
                 else ModLog.Verbose(line);
+                // D-048: the owner is told when an enemy hits its troll (the troll fights back on its own)
+                if (a != null && !a.IsPlayer() && !a.IsTamed() && !__instance.IsDead() && Player.m_localPlayer != null && TrollTaming.Owner(__instance) == Player.m_localPlayer.GetPlayerID())
+                {
+                    var tame = __instance.GetComponent<Tameable>();
+                    TrollDefend.UnderAttack(tame != null && !string.IsNullOrEmpty(tame.GetText()) ? tame.GetText() : __instance.name);
+                }
             }
         }
 

@@ -81,7 +81,17 @@ namespace SteveTheTroll.Ui
                     if (goFarm != null) goFarm(troll.Id);
                 });
                 go.style.width = GoWidth; go.style.flexShrink = 0;
-                tab.Add(Row(Cell(t.Shown(text), NameWidth, false), Cell(doing, StatusWidth, false), drop, go, Cell(t.Farming.Length > 0 ? t.Farming : "-", -1f, false)));
+                var doingCell = Cell(doing, StatusWidth, false);
+                var farmCell = Cell(t.Farming.Length > 0 ? t.Farming : "-", -1f, false);
+                tab.Add(Row(Cell(t.Shown(text), NameWidth, false), doingCell, drop, go, farmCell));
+                // TEST-019: "Go farm" looked like it only worked after closing the menu - the row now follows the live values every second
+                doingCell.schedule.Execute(() =>
+                {
+                    string now = text(troll.Status) + (troll.Loaded ? "" : " *");
+                    string farm = troll.Farming.Length > 0 ? troll.Farming : "-";
+                    if (doingCell.text != now) { UiLog.Verbose("MainMenuView: " + troll.Shown(null) + " now '" + now + "'"); doingCell.text = now; }
+                    if (farmCell.text != farm) farmCell.text = farm;
+                }).Every(1000);
             }
             tab.Add(UiControls.Note(text("stevethetroll_troll_lastseen_note")));
             return tab;

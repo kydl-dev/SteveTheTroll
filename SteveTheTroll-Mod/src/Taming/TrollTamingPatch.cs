@@ -113,8 +113,10 @@ namespace SteveTheTroll.Taming
             string name = TrollRegistry.NameFor(troll);
             t.SetText(name);                          // D-044: Steve N (club) / Spencer N - before Tame, so every message uses it
             string baseName = name.Contains(" ") ? name.Substring(0, name.LastIndexOf(' ')) : name;
-            Ui.TrollMessages.ComingText(Loc.T("stevethetroll_troll_coming", baseName));   // D-047: "Steve is coming!" instead of the game's text
             DoTame(t);
+            // D-047 / D-048: "Steve is coming!" (green, left) for the tamer when this is the tamer's client
+            if (wearer == Player.m_localPlayer) Ui.Notify.Show(Loc.T("stevethetroll_troll_coming", baseName), Ui.Notify.Kind.Good);
+            else ModLog.Verbose("TrollTamingPatch: tamer " + wearer.GetPlayerName() + " is on another client - no 'is coming' message here");
             ModLog.Info("TrollTamingPatch: " + troll.name + " tamed by " + wearer.GetPlayerName() + " as '" + name + "' (owner set " + owned + ", tamed " + troll.IsTamed() + ")");
             ModLog.Check("TrollTamingPatch: " + troll.name + " tamed after the countdown", troll.IsTamed() ? 1 : 0, 1, 0, "");
             TamedTrollStats.Refresh(troll);           // D-042: x3 health from now on

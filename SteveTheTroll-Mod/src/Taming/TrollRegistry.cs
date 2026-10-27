@@ -175,7 +175,7 @@ namespace SteveTheTroll.Taming
             t.Status = "stevethetroll_status_dead"; t.Health = 0f; t.Loaded = false; t.LastSeenTicks = DateTime.UtcNow.Ticks; t.DiedTicks = t.LastSeenTicks;
             Save();
             string shown = t.Shown(k => Loc.T(k));
-            Ui.Notify.Show(Loc.T("stevethetroll_troll_died", shown), Ui.Notify.Kind.Bad);
+            Ui.Notify.Show(Loc.T("stevethetroll_troll_died", shown), Ui.Notify.Kind.Death);
             ModLog.Info("TrollRegistry: " + shown + " [" + id + "] died - removed in " + ModSettings.DeadKeepSeconds.Value + " s");
         }
 

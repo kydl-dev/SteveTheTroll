@@ -31,6 +31,18 @@ namespace SteveTheTroll.Taming
             }
         }
 
+        static readonly System.Collections.Generic.Dictionary<string, float> LastWarn = new System.Collections.Generic.Dictionary<string, float>();
+        const float WarnEverySeconds = 10f;
+
+        /// D-048: "X is under attack. Attacking back." (red, left), at most every WarnEverySeconds per name. Expected outcome: whether shown.
+        internal static bool UnderAttack(string who)
+        {
+            float last;
+            if (LastWarn.TryGetValue(who, out last) && Time.time - last < WarnEverySeconds) return false;
+            LastWarn[who] = Time.time;
+            return Ui.Notify.Show(Loc.T("stevethetroll_under_attack", who), Ui.Notify.Kind.Attack);
+        }
+
         /// Expected outcome: returns how many trolls now target the attacker.
         internal static int Defend(Player owner, Character attacker)
         {
@@ -52,6 +64,7 @@ namespace SteveTheTroll.Taming
                 ModLog.Info("TrollDefend: " + owner.GetPlayerName() + " hit by " + attacker.name + " - " + troll.name + " (" + d.ToString("F1") + " m) attacks it");
             }
             ModLog.Verbose("TrollDefend: " + Near.Count + " own tamed troll(s) loaded, " + set + " defending");
+            if (set > 0 && owner == Player.m_localPlayer) UnderAttack(owner.GetPlayerName());
             return set;
         }
     }

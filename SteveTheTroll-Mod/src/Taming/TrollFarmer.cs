@@ -10,7 +10,10 @@ namespace SteveTheTroll.Taming
     /// </summary>
     internal sealed class TrollFarmer : MonoBehaviour
     {
-        const float SearchSeconds = 3f, LogSeconds = 5f, LookAngle = 25f, MinAttackGap = 1f, StuckSeconds = 8f;
+        const float SearchSeconds = 3f, LogSeconds = 5f, LookAngle = 25f, MinAttackGap = 0.3f, StuckSeconds = 8f;
+        const int MaxMisses = 4;
+        int _missed;
+        uint _lastRevision;
         float _stuckSeconds, _lastDist = float.MaxValue;
         GameObject _bad;
         string _focus = "";
@@ -27,16 +30,18 @@ namespace SteveTheTroll.Taming
             _focus = focus ?? ""; _centre = centre; _target = null; _hit = null; _nextSearch = 0f; CurrentItem = "";
         }
 
-        internal void Step(MonsterAI ai, float dt, System.Func<BaseAI, float, Vector3, float, bool, bool> moveTo, System.Action<BaseAI, Vector3> lookAt)
+        /// One AI step. Expected outcome: returns whether farming drove the troll this frame (true = the game's AI is skipped: no idling,
+        /// no feeding animation, D-048); false = fighting / nothing to farm / done -> the game's AI runs.
+        internal bool Step(MonsterAI ai, float dt, System.Func<BaseAI, float, Vector3, float, bool, bool> moveTo, System.Action<BaseAI, Vector3> lookAt)
         {
             var me = GetComponent<Humanoid>();
-            if (me == null || me.IsDead()) { Destroy(this); return; }
-            if (ai.GetFollowTarget() != null) { ModLog.Info("TrollFarmer: " + name + " got a follow order - stops farming"); Destroy(this); return; }
-            if (ai.GetTargetCreature() != null) return;                       // fighting (D-042 defend): vanilla AI drives this frame
+            if (me == null || me.IsDead()) { Destroy(this); return me != null && !me.IsDead(); }
+            if (ai.GetFollowTarget() != null) { ModLog.Info("TrollFarmer: " + name + " got a follow order - stops farming"); Destroy(this); return ai.GetFollowTarget() == null; }
+            if (ai.GetTargetCreature() != null) return ai.GetTargetCreature() == null;      // fighting (D-042 defend): the game's AI drives
             var weapon = Weapon(me);
-            if (weapon == null) { if (Time.time >= _nextLog) { _nextLog = Time.time + LogSeconds; ModLog.Warn("TrollFarmer: " + name + " has no melee item with chop / pickaxe damage"); } return; }
+            if (weapon == null) { if (Time.time >= _nextLog) { _nextLog = Time.time + LogSeconds; ModLog.Warn("TrollFarmer: " + name + " has no melee item with chop / pickaxe damage"); } return weapon != null; }
             if ((_target == null || _hit == null) && Time.time >= _nextSearch) Search(me, weapon);
-            if (_target == null || _hit == null) return;
+            if (_target == null || _hit == null) return _target != null;
 
             var point = _hit.bounds.ClosestPoint(transform.position);      // bounds: Collider.ClosestPoint is wrong on non-convex meshes (TEST-018)
             point.y = Mathf.Clamp(transform.position.y + 1.5f, _hit.bounds.min.y, _hit.bounds.max.y);   // hit the trunk / rock at chest height, not the ground
@@ -45,26 +50,46 @@ namespace SteveTheTroll.Taming
             if (Time.time >= _nextLog)
             {
                 _nextLog = Time.time + LogSeconds;
-                ModLog.Verbose("TrollFarmer: " + name + " -> " + _target.name + " (" + TrollFarming.KindOf(_target) + ", " + CurrentItem + ") " + d.ToString("F1") + " m, reach " + reach.ToString("F1") + " m, weapon " + weapon.m_shared.m_name + ", attacks " + _attacks + ", stuck " + _stuckSeconds.ToString("F0") + " s");
+                ModLog.Verbose("TrollFarmer: " + name + " -> " + _target.name + " (" + TrollFarming.KindOf(_target) + ", " + CurrentItem + ") " + d.ToString("F1") + " m, reach " + reach.ToString("F1")
+                    + " m, height diff " + (point.y - transform.position.y).ToString("F1") + " m, weapon " + weapon.m_shared.m_name + ", attacks " + _attacks + " (" + _missed + " without damage), stuck " + _stuckSeconds.ToString("F0") + " s");
             }
             if (d > reach)
             {
                 // no progress for StuckSeconds -> give this source up and look for another one
                 if (d < _lastDist - 0.2f) { _lastDist = d; _stuckSeconds = 0f; } else _stuckSeconds += dt;
-                if (_stuckSeconds > StuckSeconds) { ModLog.Info("TrollFarmer: " + name + " cannot reach " + _target.name + " (" + d.ToString("F1") + " m) - tries another source"); _bad = _target; _target = null; _hit = null; _stuckSeconds = 0f; _lastDist = float.MaxValue; return; }
+                if (_stuckSeconds > StuckSeconds) { GiveUp("cannot reach it (" + d.ToString("F1") + " m)"); return _target != null; }
                 moveTo(ai, dt, point, reach * 0.8f, false);
-                return;
+                return true;
             }
             _stuckSeconds = 0f; _lastDist = float.MaxValue;
             ai.StopMoving();
             lookAt(ai, point);
-            if (me.InAttack() || Time.time < _nextAttack || !ai.IsLookingAt(point, LookAngle, false)) return;
+            if (me.InAttack() || Time.time < _nextAttack || !ai.IsLookingAt(point, LookAngle, false)) return true;
+            // TEST-019: a birch in a valley was swung at but never hit -> the source's ZDO must change after a few swings, else give up
+            uint rev = Revision();
+            if (_attacks > 0 && rev == _lastRevision) _missed++; else _missed = 0;
+            _lastRevision = rev;
+            if (_missed >= MaxMisses) { GiveUp(_missed + " swings without damage (height diff " + (point.y - transform.position.y).ToString("F1") + " m)"); return _target != null; }
             if (!me.IsItemEquiped(weapon)) me.EquipItem(weapon, false);
             if (me.StartAttack(null, false))
             {
                 _attacks++;
-                _nextAttack = Time.time + Mathf.Max(MinAttackGap, weapon.m_shared.m_aiAttackInterval);
+                _nextAttack = Time.time + MinAttackGap;       // D-048: keep swinging (the game's AI interval of 4-6 s is not used while farming)
             }
+            return true;
+        }
+
+        uint Revision()
+        {
+            var v = _target != null ? _target.GetComponent<ZNetView>() : null;
+            var z = v != null && v.IsValid() ? v.GetZDO() : null;
+            return z != null ? z.DataRevision : 0u;
+        }
+
+        void GiveUp(string why)
+        {
+            ModLog.Info("TrollFarmer: " + name + " gives up " + (_target != null ? _target.name : "?") + ": " + why + " - tries another source");
+            _bad = _target; _target = null; _hit = null; _stuckSeconds = 0f; _lastDist = float.MaxValue; _missed = 0; _lastRevision = 0u;
         }
 
         void Search(Humanoid me, ItemDrop.ItemData weapon)
