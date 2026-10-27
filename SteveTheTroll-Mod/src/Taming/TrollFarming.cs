@@ -9,12 +9,11 @@ namespace SteveTheTroll.Taming
     /// T-008d step 1 (D-038 / D-044, "Go farm"): a tamed troll gathers its focus item. It looks for the nearest source within FarmRange of
     /// where it was sent (then of the owner's bed): standing trees / logs (TreeBase -> m_logPrefab -> TreeLog -> m_subLogPrefab ... drops),
     /// rocks (MineRock5 / MineRock) and other destructibles (DropOnDestroyed) whose drop tables contain the item. No focus = the D-038
-    /// priority (copper, core wood / pine, fine wood / birch, tin, wood). Steering: postfix on MonsterAI.UpdateAI (the last MoveTo of the frame
+    /// priority (D-058: TrollFocus.DefaultOrder - Yggdrasil wood, ancient bark, iron scrap, birch, silver, copper, pine, oak, tin, wood). Steering: postfix on MonsterAI.UpdateAI (the last MoveTo of the frame
     /// wins -> since D-048 a prefix that replaces the AI step while farming); a fight (target creature) or a follow order ends / pauses farming. Drops stay on the ground until the backpack (T-008c) exists.
     /// </summary>
     internal static class TrollFarming
     {
-        internal static readonly string[] Priority = { "CopperOre", "RoundLog", "FineWood", "TinOre", "Wood" };
         static readonly System.Func<BaseAI, float, Vector3, float, bool, bool> MoveTo =
             AccessTools.MethodDelegate<System.Func<BaseAI, float, Vector3, float, bool, bool>>(AccessTools.Method(typeof(BaseAI), "MoveTo"));
         static readonly System.Action<BaseAI, Vector3> LookAt = AccessTools.MethodDelegate<System.Action<BaseAI, Vector3>>(AccessTools.Method(typeof(BaseAI), "LookAt"));
@@ -28,7 +27,7 @@ namespace SteveTheTroll.Taming
         internal static bool SelfCheck() { return MoveTo != null && LookAt != null; }
 
         /// "Go farm" (owner of the troll's ZDO only). Expected outcome: returns whether the troll now farms.
-        internal static bool Begin(Character troll, string focus)
+        internal static bool Begin(Character troll, string focus, bool announce = false)
         {
             var view = troll != null ? troll.GetComponent<ZNetView>() : null;
             var ai = troll != null ? troll.GetComponent<MonsterAI>() : null;
@@ -39,8 +38,8 @@ namespace SteveTheTroll.Taming
             if (arrival != null) Object.Destroy(arrival);
             var f = troll.GetComponent<TrollFarmer>();
             if (f == null) f = troll.gameObject.AddComponent<TrollFarmer>();
-            f.Setup(focus, troll.transform.position);
-            ModLog.Info("TrollFarming: " + troll.name + " farms '" + (focus.Length > 0 ? focus : "priority " + string.Join(" > ", Priority)) + "' around " + troll.transform.position.ToString("F0"));
+            f.Setup(focus, troll.transform.position, announce);
+            ModLog.Info("TrollFarming: " + troll.name + " farms '" + (focus.Length > 0 ? focus : "default priority") + (announce ? " (no orders for a while)" : "") + "' around " + troll.transform.position.ToString("F0"));
             return troll.GetComponent<TrollFarmer>() != null;
         }
 
@@ -100,8 +99,9 @@ namespace SteveTheTroll.Taming
         internal static string LastScan = "";
         internal static bool LastScanFull;
 
-        internal static GameObject Find(Vector3 center, Vector3 from, string item, int tier, float range, out Collider hit, System.Func<GameObject, bool> skip = null)
+        internal static GameObject Find(Vector3 center, Vector3 from, Ui.TrollFocus.Goal goal, int tier, float range, out Collider hit, System.Func<GameObject, bool> skip = null)
         {
+            string item = goal.Item;
             hit = null;
             GameObject best = null;
             float bestD = float.MaxValue, r2 = range * range;
@@ -119,7 +119,7 @@ namespace SteveTheTroll.Taming
                 var src = Source(v);
                 if (src == null || src.Collider == null) continue;
                 var g = v.gameObject;
-                if ((skip != null && skip(g)) || src.MinTier > tier || !src.Yields(item)) continue;
+                if ((skip != null && skip(g)) || src.MinTier > tier || !src.Yields(item) || !Ui.TrollFocus.SourceMatches(goal, src.PrefabName)) continue;
                 if (src.Tier == TamingRules.TierNone) { skipped++; continue; }
                 counts[src.Tier]++;
                 var at = src.IsTree ? pos : src.Collider.bounds.ClosestPoint(from);     // trees: the trunk (TEST-020)
@@ -129,7 +129,7 @@ namespace SteveTheTroll.Taming
             LastScan = "objects " + seen + ", logs/rocks " + counts[0] + ", trees " + counts[1] + ", other " + counts[2] + ", too small " + skipped
                 + ", best " + (best != null ? best.name + " (" + KindOf(best) + ")" : "none");
             LastScanFull = false;
-            ModLog.Verbose("TrollFarming: search '" + item + "' within " + range + " m of " + center.ToString("F0") + ": " + LastScan + (best != null ? " score " + bestD.ToString("F1") : ""));
+            ModLog.Verbose("TrollFarming: search '" + item + "'" + (goal.Sources.Length > 0 ? " from " + string.Join(" / ", goal.Sources) : "") + " within " + range + " m of " + center.ToString("F0") + ": " + LastScan + (best != null ? " score " + bestD.ToString("F1") : ""));
             return best;
         }
 
@@ -149,6 +149,7 @@ namespace SteveTheTroll.Taming
             if (c == null) c = g.AddComponent<FarmSourceCache>();
             c.Collider = Biggest(g);
             c.IsTree = tree;
+            c.PrefabName = Utils.GetPrefabName(g);
             c.MinTier = MinTier(g);
             c.Tier = TamingRules.Tier(log, rock, tree, c.Collider != null ? c.Collider.bounds.size.y : 0f, MinOtherHeight);
             Known[id] = c;
@@ -191,6 +192,7 @@ namespace SteveTheTroll.Taming
     {
         internal Collider Collider;
         internal bool IsTree;
+        internal string PrefabName = "";
         internal int MinTier, Tier = TamingRules.TierNone;
         readonly Dictionary<string, bool> _yields = new Dictionary<string, bool>();
 

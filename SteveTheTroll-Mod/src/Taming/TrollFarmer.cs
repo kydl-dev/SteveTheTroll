@@ -26,13 +26,14 @@ namespace SteveTheTroll.Taming
         Vector3 _stepTo;
         int _attacks, _swingsThisTry, _try = 1, _dry;
         uint _lastRevision;
-        bool _home;
+        bool _home, _announce;
 
         internal string CurrentItem { get; private set; } = "";
 
-        internal void Setup(string focus, Vector3 centre)
+        /// `announce` (D-058): the troll starts on its own after waiting without orders - its owner gets a message with the item it found.
+        internal void Setup(string focus, Vector3 centre, bool announce = false)
         {
-            _focus = focus ?? ""; _centre = centre; _target = null; _hit = null; _nextSearch = 0f; CurrentItem = ""; _home = false;
+            _focus = focus ?? ""; _centre = centre; _target = null; _hit = null; _nextSearch = 0f; CurrentItem = ""; _home = false; _announce = announce;
             ResetTries();
         }
 
@@ -136,27 +137,29 @@ namespace SteveTheTroll.Taming
             _nextSearch = Time.time + SearchSeconds;
             ResetTries();
             int tier = weapon.m_shared.m_toolTier;
-            var items = new List<string>();
-            if (_focus.Length > 0) items.Add(_focus);
-            foreach (var it in TrollFarming.Priority) if (it != _focus) items.Add(it);
+            var goals = Ui.TrollFocus.SearchOrder(_focus);         // D-058: focus item first, then the default priority
             foreach (var range in new[] { ModSettings.FarmQuickRange.Value, ModSettings.FarmRange.Value, ModSettings.FarmMaxRange.Value })
             {
-                foreach (var item in items)
+                foreach (var goal in goals)
                 {
-                    _target = TrollFarming.Find(transform.position, transform.position, item, tier, range, out _hit, IsBad);
+                    string item = goal.Item;
+                    _target = TrollFarming.Find(transform.position, transform.position, goal, tier, range, out _hit, IsBad);
                     if (_target == null) continue;
                     string was = CurrentItem;
                     CurrentItem = item;
                     ModLog.Info("TrollFarmer: " + name + " farms " + item + (_focus.Length > 0 && item != _focus ? " (no " + _focus + " found, farming something else)" : "") + " from "
                         + _target.name + " (" + TrollFarming.KindOf(_target) + ") within " + range + " m" + (was != item && was.Length > 0 ? ", was " + was : ""));
+                    if (_announce && IsMine()) Ui.Notify.Show(Loc.T("stevethetroll_farm_auto", Shown(), Loc.T(Ui.TrollFocus.KeyOf(item))), Ui.Notify.Kind.Farm);
+                    _announce = false;
                     return;
                 }
             }
             CurrentItem = "";
             _home = true;
+            _announce = false;
             string shown = Shown();
             ModLog.Info("TrollFarmer: " + name + " finds nothing to farm within " + ModSettings.FarmMaxRange.Value + " m - goes to the owner's bed");
-            if (TrollTaming.Owner(GetComponent<Character>()) == (Player.m_localPlayer != null ? Player.m_localPlayer.GetPlayerID() : -1L))
+            if (IsMine())
                 Ui.Notify.Show(Loc.T("stevethetroll_farm_nothing", shown, ModSettings.FarmMaxRange.Value.ToString("0")), Ui.Notify.Kind.Farm);
         }
 
@@ -180,6 +183,8 @@ namespace SteveTheTroll.Taming
             Destroy(this);
             return true;
         }
+
+        bool IsMine() { return TrollTaming.Owner(GetComponent<Character>()) == (Player.m_localPlayer != null ? Player.m_localPlayer.GetPlayerID() : -1L); }
 
         string Shown()
         {

@@ -21,7 +21,7 @@ namespace SteveTheTroll.Ui
             g.Add(text("stevethetroll_troll_health"), t.Health.ToString("0", c) + " / " + t.MaxHealth.ToString("0", c));
             g.Add(text("stevethetroll_troll_damage"), "x" + t.DamageFactor.ToString("0.##", c));
             g.Add(text("stevethetroll_focus_label"), text(TrollFocus.KeyOf(t.Focus)));
-            g.Add(text("stevethetroll_troll_farming"), t.Farming.Length > 0 ? t.Farming : "-");
+            g.Add(text("stevethetroll_troll_farming"), TrollFocus.Shown(t.Farming, text));
             groups.Add(g);
             var dmg = new DetailGroup(text("stevethetroll_troll_attacks"));
             foreach (var row in Attacks(t.Attacks, text)) dmg.Add(row.Key, row.Value);

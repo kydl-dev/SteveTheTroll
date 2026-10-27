@@ -83,7 +83,7 @@ namespace SteveTheTroll.Testing
             var p = Player.m_localPlayer;
             if (p == null) return "SKIP: no local player";
             Collider hit;
-            var best = Taming.TrollFarming.Find(p.transform.position, p.transform.position, "Wood", 10, ModSettings.FarmRange.Value, out hit);
+            var best = Taming.TrollFarming.Find(p.transform.position, p.transform.position, new Ui.TrollFocus.Goal("Wood"), 10, ModSettings.FarmRange.Value, out hit);
             string detail = "Wood within " + ModSettings.FarmRange.Value + " m: " + Taming.TrollFarming.LastScan;
             ModLog.Verbose("InGameTests: World_FarmScan " + detail);
             if (Taming.TrollFarming.LastScanFull) return "FAIL: " + detail;

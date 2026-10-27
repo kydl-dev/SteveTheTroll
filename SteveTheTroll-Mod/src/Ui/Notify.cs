@@ -38,5 +38,18 @@ namespace SteveTheTroll.Ui
             finally { TrollMessages.Passing = false; }
             return p != null;
         }
+
+        /// D-058: the big message in the middle of the screen (MessageHud Center, 150 % size, on top of the game view), for the first troll
+        /// a player ever tames. Expected outcome: returns whether a local player got it.
+        internal static bool Big(string text, Kind kind)
+        {
+            var p = Player.m_localPlayer;
+            ModLog.Verbose("Notify: BIG [" + kind + "] " + text + (p == null ? " (no local player - not shown)" : ""));
+            if (p == null) return p != null;
+            TrollMessages.Passing = true;
+            try { p.Message(MessageHud.MessageType.Center, "<size=150%>" + Paint(text, kind) + "</size>"); }
+            finally { TrollMessages.Passing = false; }
+            return p != null;
+        }
     }
 }

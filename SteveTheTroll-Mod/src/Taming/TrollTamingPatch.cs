@@ -18,6 +18,8 @@ namespace SteveTheTroll.Taming
         // m_tameDeltaTime is a CONST (3 s in 1.0.20, Cecil: literal) - no field ref possible (TEST-012 / TEST-014 crashed on FieldRefAccess and
         // StaticFieldRefAccess). Read its constant value once; 3 s if the game ever changes it to something unreadable.
         const float FallbackTick = 3f;
+        /// D-058: set in the player's custom data after the first troll this character tamed (big "is coming!" only once).
+        internal const string FirstTameKey = "stevethetroll_first_tame";
         static readonly float TickSeconds = ReadTick();
 
         static float ReadTick()
@@ -115,7 +117,13 @@ namespace SteveTheTroll.Taming
             string baseName = name.Contains(" ") ? name.Substring(0, name.LastIndexOf(' ')) : name;
             DoTame(t);
             // D-047 / D-048: "Steve is coming!" (green, left) for the tamer when this is the tamer's client
-            if (wearer == Player.m_localPlayer) Ui.Notify.Show(Loc.T("stevethetroll_troll_coming", baseName), Ui.Notify.Kind.Good);
+            // D-058: the very first troll a player tames: the message big in the middle of the screen (once per character)
+            if (wearer == Player.m_localPlayer)
+            {
+                bool first = !wearer.m_customData.ContainsKey(FirstTameKey);
+                if (first) { wearer.m_customData[FirstTameKey] = "1"; Ui.Notify.Big(Loc.T("stevethetroll_troll_coming", baseName), Ui.Notify.Kind.Good); }
+                else Ui.Notify.Show(Loc.T("stevethetroll_troll_coming", baseName), Ui.Notify.Kind.Good);
+            }
             else ModLog.Verbose("TrollTamingPatch: tamer " + wearer.GetPlayerName() + " is on another client - no 'is coming' message here");
             ModLog.Info("TrollTamingPatch: " + troll.name + " tamed by " + wearer.GetPlayerName() + " as '" + name + "' (owner set " + owned + ", tamed " + troll.IsTamed() + ")");
             ModLog.Check("TrollTamingPatch: " + troll.name + " tamed after the countdown", troll.IsTamed() ? 1 : 0, 1, 0, "");
