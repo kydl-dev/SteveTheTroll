@@ -29,7 +29,7 @@ namespace SteveTheTroll.Ui
                     LastSeenTicks = System.DateTime.UtcNow.Ticks - System.TimeSpan.TicksPerMinute * 12 },
             };
             root.Add(MainMenuView.Build(UiText.English, () => Debug.Log("[MenuPreview] close pressed"), SlipperData.Sample(), null, null, trolls,
-                (id, v) => Debug.Log("[MenuPreview] troll " + id + " focus '" + v + "'"), startTab, System.DateTime.UtcNow.Ticks));
+                (id, v) => Debug.Log("[MenuPreview] troll " + id + " focus '" + v + "'"), id => Debug.Log("[MenuPreview] go farm " + id), startTab, System.DateTime.UtcNow.Ticks));
             Debug.Log("[MenuPreview] SteveTheTroll menu shown");
         }
 

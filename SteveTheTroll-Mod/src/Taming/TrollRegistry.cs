@@ -99,6 +99,8 @@ namespace SteveTheTroll.Taming
                 Read(c, t);
                 live++;
             }
+            int gone = RemoveDead();
+            if (gone > 0) changed = true;
             for (int i = 0; i < Known.Count; i++) Known[i].Number = i + 1;
             if (live != _lastLiveCount || force || changed)
             {
@@ -125,7 +127,9 @@ namespace SteveTheTroll.Taming
             t.Name = tame != null ? tame.GetText() ?? "" : "";
             t.Status = StatusOf(c);
             t.Focus = zdo != null ? zdo.GetString(FocusKey, t.Focus) : t.Focus;
-            t.Farming = "";                                  // T-008d (gathering) not built yet
+            t.Farming = TrollFarming.Farming(c);
+            t.Attacks = AttacksOf(c);
+            t.Resists = ResistsOf(c);
             t.Health = c.GetHealth();
             t.MaxHealth = c.GetMaxHealth();
             t.Stars = Math.Max(0, c.GetLevel() - 1);
@@ -143,6 +147,7 @@ namespace SteveTheTroll.Taming
             if (ai == null) return "stevethetroll_status_unknown";
             if (ai.GetTargetCreature() != null) return "stevethetroll_status_fighting";
             if (c.GetComponent<TrollArrival>() != null) return "stevethetroll_status_coming";
+            if (c.GetComponent<TrollFarmer>() != null) return "stevethetroll_status_farming";
             return ai.GetFollowTarget() != null ? "stevethetroll_status_following" : "stevethetroll_status_staying";
         }
 
@@ -154,14 +159,79 @@ namespace SteveTheTroll.Taming
             return Vector3.Distance(pos, profile.GetCustomSpawnPoint());
         }
 
+        /// D-044: the owner is told, the entry stays DeadKeepSeconds (status Dead), then it is removed everywhere (list, pending focus) and its
+        /// name is free again.
         internal static void MarkDead(string id)
         {
             Load();
             var t = Known.Find(k => k.Id == id);
             if (t == null) return;
-            t.Status = "stevethetroll_status_dead"; t.Health = 0f; t.Loaded = false; t.LastSeenTicks = DateTime.UtcNow.Ticks;
+            t.Status = "stevethetroll_status_dead"; t.Health = 0f; t.Loaded = false; t.LastSeenTicks = DateTime.UtcNow.Ticks; t.DiedTicks = t.LastSeenTicks;
             Save();
-            ModLog.Info("TrollRegistry: " + t.Shown(null) + " [" + id + "] died");
+            string shown = t.Shown(k => Loc.T(k));
+            if (Player.m_localPlayer != null) Player.m_localPlayer.Message(MessageHud.MessageType.Center, Loc.T("stevethetroll_troll_died", shown));
+            ModLog.Info("TrollRegistry: " + shown + " [" + id + "] died - removed in " + ModSettings.DeadKeepSeconds.Value + " s");
+        }
+
+        static int RemoveDead()
+        {
+            long keep = (long)(ModSettings.DeadKeepSeconds.Value * TimeSpan.TicksPerSecond), now = DateTime.UtcNow.Ticks;
+            int removed = 0;
+            for (int i = Known.Count - 1; i >= 0; i--)
+            {
+                var t = Known[i];
+                if (t.DiedTicks <= 0 || now - t.DiedTicks < keep) continue;
+                Known.RemoveAt(i);
+                PendingFocus.Remove(t.Id);
+                removed++;
+                ModLog.Info("TrollRegistry: " + t.Shown(null) + " [" + t.Id + "] removed (dead for " + ModSettings.DeadKeepSeconds.Value + " s), name '" + t.Name + "' is free");
+            }
+            return removed;
+        }
+
+        /// D-044: the name a newly tamed troll gets: "Steve N" with a club (log), "Spencer N" without; N = lowest free among living trolls.
+        internal static string NameFor(Character troll)
+        {
+            Load();
+            var names = new List<string>();
+            foreach (var t in Known) if (t.Name.Length > 0) names.Add(t.Name);     // a dead troll's name is free once its entry is removed
+            var h = troll as Humanoid;
+            bool club = false;
+            if (h != null) foreach (var it in h.GetInventory().GetAllItems()) if (it.m_dropPrefab != null && it.m_dropPrefab.name.StartsWith("troll_log")) club = true;
+            string name = TamingRules.NextName(club ? "Steve" : "Spencer", names);
+            ModLog.Verbose("TrollRegistry: name for " + troll.name + ": club " + club + ", taken [" + string.Join(", ", names.ToArray()) + "] -> " + name);
+            return name;
+        }
+
+        static readonly string[] DamageNames = { "Blunt", "Slash", "Pierce", "Chop", "Pickaxe", "Fire", "Frost", "Lightning", "Poison", "Spirit" };
+
+        // "name~Blunt=180,Chop=300~4;..." for the Trolls tab: each attack item's damage x the level and tamed factors, and its AI interval.
+        static string AttacksOf(Character c)
+        {
+            var h = c as Humanoid;
+            if (h == null) return "";
+            float factor = (1f + Math.Max(0, c.GetLevel() - 1) * 0.5f) * ModSettings.TamedDamageFactor.Value;
+            var parts = new List<string>();
+            foreach (var it in h.GetInventory().GetAllItems())
+            {
+                var d = it.m_shared.m_damages;
+                float[] v = { d.m_blunt, d.m_slash, d.m_pierce, d.m_chop, d.m_pickaxe, d.m_fire, d.m_frost, d.m_lightning, d.m_poison, d.m_spirit };
+                var dmg = new List<string>();
+                for (int i = 0; i < v.Length; i++) if (v[i] > 0f) dmg.Add(DamageNames[i] + "=" + (v[i] * factor).ToString("0", System.Globalization.CultureInfo.InvariantCulture));
+                if (dmg.Count == 0) continue;
+                string name = Localization.instance != null ? Localization.instance.Localize(it.m_shared.m_name) : it.m_shared.m_name;
+                parts.Add(name.Replace("~", "-").Replace(";", ",") + "~" + string.Join(",", dmg.ToArray()) + "~" + it.m_shared.m_aiAttackInterval.ToString("0.#", System.Globalization.CultureInfo.InvariantCulture));
+            }
+            return string.Join(";", parts.ToArray());
+        }
+
+        static string ResistsOf(Character c)
+        {
+            var m = c.GetDamageModifiers();
+            HitData.DamageModifier[] v = { m.m_blunt, m.m_slash, m.m_pierce, m.m_chop, m.m_pickaxe, m.m_fire, m.m_frost, m.m_lightning, m.m_poison, m.m_spirit };
+            var parts = new List<string>();
+            for (int i = 0; i < v.Length; i++) parts.Add(DamageNames[i] + "=" + v[i]);
+            return string.Join(",", parts.ToArray());
         }
 
         // The list belongs to the local player: (re)read it when the player changed (character switch).

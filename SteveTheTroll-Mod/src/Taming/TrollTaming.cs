@@ -44,11 +44,13 @@ namespace SteveTheTroll.Taming
             if (donor != null)
             {
                 // D-043: troll sounds only - the wolf's visual effects stay, its sounds (sfx_*) go, the troll's own idle growl is added
+                // D-044: nothing of the wolf at all (its "fx_" prefabs carried the sounds too): the tamed moment = the troll's idle growl only;
+                // follow / stay / pet / taming progress = no effect, the game's text message is enough (user)
                 var growl = troll.GetComponent<BaseAI>() != null ? troll.GetComponent<BaseAI>().m_idleSound : null;
-                t.m_tamedEffect = TrollSounds(donor.m_tamedEffect, growl, "tamed");
-                t.m_sootheEffect = TrollSounds(donor.m_sootheEffect, growl, "soothe");
-                t.m_petEffect = TrollSounds(donor.m_petEffect, growl, "pet / command");
-                t.m_unSummonEffect = TrollSounds(donor.m_unSummonEffect, null, "unsummon");
+                t.m_tamedEffect = TrollSounds(null, growl, "tamed");
+                t.m_sootheEffect = new EffectList();
+                t.m_petEffect = new EffectList();
+                t.m_unSummonEffect = new EffectList();
             }
             else
             {
@@ -62,7 +64,7 @@ namespace SteveTheTroll.Taming
             t.m_commandable = true;
             t.m_startsTamed = false;
             t.m_fedDuration = 0f;
-            ModLog.Info("TrollTaming: " + TrollPrefab + " tameable (component " + (existed ? "existed" : "added") + ", taming " + t.m_tamingTime + " s, commandable " + t.m_commandable + ", effects from " + (donor != null ? DonorPrefab : "none") + ")");
+            ModLog.Info("TrollTaming: " + TrollPrefab + " tameable (component " + (existed ? "existed" : "added") + ", taming " + t.m_tamingTime + " s, commandable " + t.m_commandable + ", effects: troll growl when tamed, nothing on follow / stay / pet)");
             ModLog.Check("TrollTaming: troll taming time", t.m_tamingTime, ModSettings.TameSeconds.Value, 0.001, "s");
         }
 

@@ -64,6 +64,14 @@ namespace SteveTheTroll.Tests.Unit
         }
 
         [Test]
+        public void NextName_LowestFree()
+        {
+            Assert.That(ModAssembly.Call(T, "NextName", "Steve", new string[0]), Is.EqualTo("Steve 1"));
+            Assert.That(ModAssembly.Call(T, "NextName", "Steve", new[] { "Steve 1", "Steve 3", "Spencer 2" }), Is.EqualTo("Steve 2"));
+            Assert.That(ModAssembly.Call(T, "NextName", "Spencer", new[] { "Steve 1", "Spencer 1" }), Is.EqualTo("Spencer 2"));
+        }
+
+        [Test]
         public void Percent_Clamped()
         {
             Assert.That((int)ModAssembly.Call(T, "Percent", 30f, 60f), Is.EqualTo(50));

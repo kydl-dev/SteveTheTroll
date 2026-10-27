@@ -31,6 +31,31 @@ namespace SteveTheTroll.Tests.Unit
         }
 
         [Test]
+        public void AttacksAndResists_RoundTrip_OldLinesStillRead()
+        {
+            var s = Sample();
+            s.Attacks = "Punch~Blunt=180,Chop=300~4;Log swing~Blunt=210~6";
+            s.Resists = "Blunt=Normal,Pierce=Resistant";
+            var t = TrollInfo.Decode(s.Encode());
+            Assert.That(t.Attacks, Is.EqualTo(s.Attacks));
+            Assert.That(t.Resists, Is.EqualTo(s.Resists));
+            string old = string.Join("|", s.Encode().Split('|'), 0, 14);
+            var o = TrollInfo.Decode(old);
+            Assert.That(o, Is.Not.Null, "14-field lines from before D-044");
+            Assert.That(o.Attacks, Is.EqualTo(""));
+        }
+
+        [Test]
+        public void Details_AttackRows()
+        {
+            var rows = TrollDetailsBuilder.Attacks("Punch~Blunt=180,Chop=300,Pickaxe=120~4;broken;Throw~Blunt=150~0", K);
+            Assert.That(rows.Count, Is.EqualTo(2));
+            Assert.That(rows[0].Key, Is.EqualTo("Punch"));
+            Assert.That(rows[0].Value, Is.EqualTo("180 Blunt, 300 Chop, 120 Pickaxe (stevethetroll_troll_every 4 s)"));
+            Assert.That(rows[1].Value, Is.EqualTo("150 Blunt"));
+        }
+
+        [Test]
         public void NameWithSeparator_StillDecodes()
         {
             var s = Sample();
@@ -62,17 +87,17 @@ namespace SteveTheTroll.Tests.Unit
             var t = Sample();
             long now = t.LastSeenTicks + TimeSpan.TicksPerMinute * 12;
             var g = TrollDetailsBuilder.Build(t, K, now);
-            Assert.That(g.Count, Is.EqualTo(2));
+            Assert.That(g.Count, Is.EqualTo(4), "general, damage, resistances, position");
             Assert.That(g[0].Rows[0].Value, Is.EqualTo("stevethetroll_status_staying (stevethetroll_troll_lastseen 12 min)"));
             Assert.That(g[0].Rows[1].Value, Is.EqualTo("*"));
             Assert.That(g[0].Rows[2].Value, Is.EqualTo("1235 / 1800").Or.EqualTo("1234 / 1800"));
-            Assert.That(g[1].Rows[0].Value, Is.EqualTo("412 / 77 / -268"));
-            Assert.That(g[1].Rows[1].Value, Is.EqualTo("36 m").Or.EqualTo("35 m"));
+            Assert.That(g[3].Rows[0].Value, Is.EqualTo("412 / 77 / -268"));
+            Assert.That(g[3].Rows[1].Value, Is.EqualTo("36 m").Or.EqualTo("35 m"));
             t.Loaded = true; t.BedDistance = -1f; t.Stars = 0;
             g = TrollDetailsBuilder.Build(t, K, now);
             Assert.That(g[0].Rows[0].Value, Is.EqualTo("stevethetroll_status_staying"));
             Assert.That(g[0].Rows[1].Value, Is.EqualTo("-"));
-            Assert.That(g[1].Rows[1].Value, Is.EqualTo("stevethetroll_troll_nobed"));
+            Assert.That(g[3].Rows[1].Value, Is.EqualTo("stevethetroll_troll_nobed"));
         }
 
         [TestCase(30L, "30 s")]

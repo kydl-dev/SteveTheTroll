@@ -68,6 +68,19 @@ namespace SteveTheTroll.Taming
             return v > 100f ? 100f : v;
         }
 
+        /// D-044: "Steve 1", "Spencer 2", ...: the lowest number of `baseName` not used by a living troll's name in `taken`.
+        public static string NextName(string baseName, System.Collections.Generic.IEnumerable<string> taken)
+        {
+            var used = new System.Collections.Generic.HashSet<string>();
+            if (taken != null) foreach (var t in taken) if (t != null) used.Add(t);
+            for (int i = 1; i < 10000; i++)
+            {
+                string n = baseName + " " + i;
+                if (!used.Contains(n)) return n;
+            }
+            return baseName;
+        }
+
         /// Progress 0..100 % for logs (total &lt;= 0 counts as done).
         public static int Percent(float remaining, float total)
         {

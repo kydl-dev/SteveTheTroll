@@ -60,6 +60,23 @@ namespace SteveTheTroll.Ui
             return copy;
         }
 
+        /// D-044 "Go farm": the troll leaves follow / stay and farms its focus (or the D-038 priority). Only a troll that is near and simulated
+        /// here can get the order; otherwise the player is told. Expected outcome: returns whether the troll now farms.
+        internal static bool GoFarm(string id)
+        {
+            var troll = Taming.TrollRegistry.FindLoaded(id);
+            var info = Taming.TrollRegistry.Trolls().Find(t => t.Id == id);
+            string shown = info != null ? info.Shown(k => Loc.T(k)) : id;
+            if (troll == null) { Tell(Loc.T("stevethetroll_gofarm_far", shown)); ModLog.Info("SlipperMenuData: Go farm for " + shown + " - not loaded"); return false; }
+            string focus = info != null ? TrollFocus.Normalize(info.Focus) : "";
+            bool ok = Taming.TrollFarming.Begin(troll, focus);
+            Tell(ok ? Loc.T("stevethetroll_gofarm_started", shown, Loc.T(TrollFocus.KeyOf(focus))) : Loc.T("stevethetroll_gofarm_far", shown));
+            ModLog.Info("SlipperMenuData: Go farm for " + shown + " focus '" + focus + "' -> " + ok);
+            return ok;
+        }
+
+        static void Tell(string msg) { if (MessageHud.instance != null) MessageHud.instance.ShowMessage(MessageHud.MessageType.Center, msg); }
+
         /// D-043: a troll's new focus from the Troll work tab (stored on that troll, pending while it is far). A troll that follows its owner
         /// does not farm: the player gets a message to let it stay (E on the troll). Expected outcome: returns whether the message was shown.
         internal static bool FocusChosen(string id, string value)

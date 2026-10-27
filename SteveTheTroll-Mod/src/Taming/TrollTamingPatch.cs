@@ -114,6 +114,9 @@ namespace SteveTheTroll.Taming
             ModLog.Check("TrollTamingPatch: " + troll.name + " tamed after the countdown", troll.IsTamed() ? 1 : 0, 1, 0, "");
             TamedTrollStats.Refresh(troll);           // D-042: x3 health from now on
             string id = TrollRegistry.IdOf(troll);    // D-043: our id for the F6 lists
+            string name = TrollRegistry.NameFor(troll);
+            t.SetText(name);                          // D-044: Steve N (club) / Spencer N
+            ModLog.Info("TrollTamingPatch: " + troll.name + " named '" + name + "' (shown '" + t.GetText() + "')");
             TrollArrival.Begin(troll, wearer);       // D-043: walk to the tamer, then wait for orders
             ModLog.Verbose("TrollTamingPatch: " + troll.name + " id " + id + ", walking to " + wearer.GetPlayerName());
         }

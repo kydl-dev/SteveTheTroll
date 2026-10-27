@@ -17,10 +17,10 @@ namespace SteveTheTroll.Ui
         /// `slippers` = the item's data, `makeScene` = the 3D scene (null = name only), `trolls` = the player's tamed trolls (D-043, live or last
         /// seen), `focusChosen(id, value)` = a troll's new focus; `startTab` 0 Slippers, 1 Troll work, 2 Trolls (the preview can start on any).
         internal static VisualElement Build(Func<string, string> text, Action onClose, SlipperData slippers, Func<IModelScene> makeScene, ViewerSettings viewer,
-            IList<TrollInfo> trolls, Action<string, string> focusChosen, int startTab = 0, long nowTicks = 0)
+            IList<TrollInfo> trolls, Action<string, string> focusChosen, Action<string> goFarm, int startTab = 0, long nowTicks = 0)
         {
             var w = UiKit.Window(text("stevethetroll_menu_title"), text("stevethetroll_menu_footer"), onClose, out UiScroll body);
-            var tabs = new[] { SlippersTab(text, slippers, makeScene, viewer), WorkTab(text, trolls, focusChosen), TrollsTab(text, trolls, nowTicks) };
+            var tabs = new[] { SlippersTab(text, slippers, makeScene, viewer), WorkTab(text, trolls, focusChosen, goFarm), TrollsTab(text, trolls, nowTicks) };
             foreach (var t in tabs) body.Content.Add(t);
             var bar = new TabBar(new[] { text("stevethetroll_tab_slippers"), text("stevethetroll_tab_troll"), text("stevethetroll_tab_trolls") }, startTab, index => ShowTab(tabs, index));
             ShowTab(tabs, bar.Selected);
@@ -43,10 +43,10 @@ namespace SteveTheTroll.Ui
             return tab;
         }
 
-        const float NameWidth = 150f, StatusWidth = 170f, FocusWidth = 170f;    // px at the 1080p reference
+        const float NameWidth = 140f, StatusWidth = 150f, FocusWidth = 160f, GoWidth = 110f;    // px at the 1080p reference
 
         // Tab 2 (D-043): one row per tamed troll - name | what it does | focus drop-down | what it farms now.
-        static VisualElement WorkTab(Func<string, string> text, IList<TrollInfo> trolls, Action<string, string> chosen)
+        static VisualElement WorkTab(Func<string, string> text, IList<TrollInfo> trolls, Action<string, string> chosen, Action<string> goFarm)
         {
             var tab = new VisualElement { name = "stevethetroll-work-tab" };
             tab.style.flexShrink = 0;
@@ -54,7 +54,7 @@ namespace SteveTheTroll.Ui
             tab.Add(UiControls.Note(text("stevethetroll_focus_note")));
             if (trolls == null || trolls.Count == 0) { tab.Add(UiControls.Note(text("stevethetroll_troll_none"))); return tab; }
             tab.Add(Row(Cell(text("stevethetroll_troll_name"), NameWidth, true), Cell(text("stevethetroll_troll_doing"), StatusWidth, true),
-                Cell(text("stevethetroll_focus_label"), FocusWidth, true), Cell(text("stevethetroll_troll_farming"), -1f, true)));
+                Cell(text("stevethetroll_focus_label"), FocusWidth, true), Cell("", GoWidth, true), Cell(text("stevethetroll_troll_farming"), -1f, true)));
             var values = new List<string>();
             foreach (var c in TrollFocus.Choices) values.Add(c.Key);
             foreach (var t in trolls)
@@ -69,7 +69,13 @@ namespace SteveTheTroll.Ui
                     if (chosen != null) chosen(troll.Id, n);
                 });
                 drop.style.width = FocusWidth; drop.style.flexShrink = 0;
-                tab.Add(Row(Cell(t.Shown(text), NameWidth, false), Cell(doing, StatusWidth, false), drop, Cell(t.Farming.Length > 0 ? t.Farming : "-", -1f, false)));
+                var go = UiControls.Button(text("stevethetroll_gofarm"), () =>
+                {
+                    UiLog.Verbose("MainMenuView: Go farm pressed for " + troll.Shown(null) + " [" + troll.Id + "], focus '" + troll.Focus + "'");
+                    if (goFarm != null) goFarm(troll.Id);
+                });
+                go.style.width = GoWidth; go.style.flexShrink = 0;
+                tab.Add(Row(Cell(t.Shown(text), NameWidth, false), Cell(doing, StatusWidth, false), drop, go, Cell(t.Farming.Length > 0 ? t.Farming : "-", -1f, false)));
             }
             tab.Add(UiControls.Note(text("stevethetroll_troll_lastseen_note")));
             return tab;
