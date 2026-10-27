@@ -47,6 +47,7 @@ namespace SteveTheTroll.Taming
         internal static int Defend(Player owner, Character attacker)
         {
             long id = owner.GetPlayerID();
+            if (!TrollTaming.Wears(owner) && !TrollHome.Raid()) { ModLog.Verbose("TrollDefend: " + owner.GetPlayerName() + " has no slippers on and there is no raid - trolls stay at the bed"); return 0; }
             Near.Clear();
             foreach (var c in Character.GetAllCharacters())
                 if (c != null && !c.IsDead() && TamedTrollStats.IsTamedTroll(c) && TrollTaming.Owner(c) == id) Near.Add(c);

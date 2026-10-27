@@ -44,6 +44,7 @@ namespace SteveTheTroll.Taming
         {
             var ai = c.GetComponent<MonsterAI>();
             if (ai == null || c.GetComponent<TrollFarmer>() != null || c.GetComponent<TrollArrival>() != null) return true;
+            if (!TrollHome.OwnerWears(c)) return true;          // T-008e: slippers off -> waits at the bed
             if (ai.GetFollowTarget() != null || ai.GetTargetCreature() != null) return true;
             return Backpack.BackpackStore.IsFull(zdo);
         }

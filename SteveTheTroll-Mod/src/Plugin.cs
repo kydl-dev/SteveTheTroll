@@ -94,6 +94,9 @@ namespace SteveTheTroll
             Taming.TrollRegistry.Tick();
             Backpack.BackpackVisual.Tick();
             Backpack.BackpackPickup.Tick();         // T-008c: wood / ores / scrap within 50 m into the backpack
+            Taming.TrollOrders.Tick();              // D-065: attack key (Mouse 4)
+            Taming.TrollGuard.Tick();               // D-065: attackers of the player / troll are targeted at once, crowds get ground slams
+            Taming.TrollHome.Tick();                // T-008e: slippers off -> own trolls wait at the bed
             Taming.TrollIdle.Tick();                // D-062: no job for 2 min -> farms on its own         // T-008b: backpack on every tamed troll       // D-043: live values of the player's tamed trolls for the F6 lists
         }
 

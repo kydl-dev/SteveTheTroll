@@ -43,6 +43,29 @@ namespace SteveTheTroll.Taming
             return troll.GetComponent<TrollFarmer>() != null;
         }
 
+        /// T-008d / D-065 attack key on a tree / log / rock: farm THIS source first, then go on with the focus / default priority.
+        /// Expected outcome: whether the troll now farms it.
+        internal static bool BeginOn(Character troll, GameObject source, string focus)
+        {
+            if (!Begin(troll, focus)) return false;
+            var f = troll.GetComponent<TrollFarmer>();
+            return f != null && f.Force(source);
+        }
+
+        /// T-008e: walk to the owner's bed and wait there (silent). Expected outcome: whether the troll now walks home.
+        internal static bool SendHome(Character troll)
+        {
+            var view = troll != null ? troll.GetComponent<ZNetView>() : null;
+            if (view == null || !view.IsValid() || !view.IsOwner()) return false;
+            var arrival = troll.GetComponent<TrollArrival>();
+            if (arrival != null) Object.Destroy(arrival);
+            var f = troll.GetComponent<TrollFarmer>();
+            if (f == null) f = troll.gameObject.AddComponent<TrollFarmer>();
+            f.SetupHome();
+            ModLog.Info("TrollFarming: " + troll.name + " walks to the owner's bed and waits");
+            return true;
+        }
+
         /// The item the troll farms now ("" = not farming).
         internal static string Farming(Character troll)
         {
@@ -156,7 +179,7 @@ namespace SteveTheTroll.Taming
             return c;
         }
 
-        static Collider Biggest(GameObject g)
+        internal static Collider Biggest(GameObject g)
         {
             Collider best = null;
             float size = -1f;
@@ -178,7 +201,10 @@ namespace SteveTheTroll.Taming
             {
                 if (__instance == null) return true;
                 var view0 = __instance.GetComponent<ZNetView>();
-                if (view0 != null && view0.IsValid() && view0.IsOwner() && TrollHold.Holds(__instance)) { __instance.StopMoving(); __result = true; return false; }     // D-063
+                if (view0 == null || !view0.IsValid() || !view0.IsOwner()) return true;
+                var slam = __instance.GetComponent<TrollSlam>();
+                if (slam != null && slam.Step(__instance, LookAt)) { __result = true; return false; }   // D-065: ground slams first
+                if (TrollHold.Holds(__instance)) { __instance.StopMoving(); __result = true; return false; }     // D-063
                 var f = __instance.GetComponent<TrollFarmer>();
                 if (f == null) return true;
                 var view = __instance.GetComponent<ZNetView>();

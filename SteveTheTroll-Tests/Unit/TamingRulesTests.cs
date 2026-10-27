@@ -73,6 +73,23 @@ namespace SteveTheTroll.Tests.Unit
         }
 
         [Test]
+        public void Slam_CrowdOnly_WithCooldown()
+        {
+            Assert.That((bool)ModAssembly.Call(T, "Slam", 3, 3, -1f, 15f), Is.True, "3 attackers, never slammed");
+            Assert.That((bool)ModAssembly.Call(T, "Slam", 2, 3, -1f, 15f), Is.False, "2 is no crowd");
+            Assert.That((bool)ModAssembly.Call(T, "Slam", 5, 3, 10f, 15f), Is.False, "cooldown");
+            Assert.That((bool)ModAssembly.Call(T, "Slam", 5, 3, 16f, 15f), Is.True);
+        }
+
+        [Test]
+        public void DefendsOwner_SlippersOrRaid()
+        {
+            Assert.That((bool)ModAssembly.Call(T, "DefendsOwner", true, false), Is.True);
+            Assert.That((bool)ModAssembly.Call(T, "DefendsOwner", false, true), Is.True, "raid: defends without slippers");
+            Assert.That((bool)ModAssembly.Call(T, "DefendsOwner", false, false), Is.False, "waits at the bed");
+        }
+
+        [Test]
         public void FarmDamage_HigherOfChopAndPickaxe()
         {
             Assert.That((float)ModAssembly.Call(T, "FarmDamage", 120f, 0f), Is.EqualTo(120f));

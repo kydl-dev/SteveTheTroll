@@ -41,6 +41,27 @@ namespace SteveTheTroll.Taming
             ResetTries();
         }
 
+        /// T-008e: no farming, straight to the bed (silent).
+        internal void SetupHome()
+        {
+            Setup("", transform.position, true);
+            _home = true;
+        }
+
+        /// D-065: the attack key named this source. Expected outcome: whether it became the target (it must be breakable for the troll).
+        internal bool Force(GameObject source)
+        {
+            var col = source != null ? TrollFarming.Biggest(source) : null;
+            if (col == null) { ModLog.Warn("TrollFarmer: " + name + " cannot farm " + (source != null ? source.name : "?") + " (no collider)"); return false; }
+            string item = "Wood";
+            foreach (var g in Ui.TrollFocus.DefaultOrder) if (TrollFarming.Yields(source, g.Item)) { item = g.Item; break; }
+            _target = source; _hit = col; CurrentItem = item; _home = false;
+            ResetTries();
+            _nextSearch = Time.time + SearchSeconds;
+            ModLog.Info("TrollFarmer: " + name + " ordered to break " + source.name + " (" + TrollFarming.KindOf(source) + ", " + item + ")");
+            return true;
+        }
+
         /// One AI step. Expected outcome: returns whether farming drove the troll this frame (true = the game's AI is skipped: no idling,
         /// no feeding animation, D-048); false = fighting / done -> the game's AI runs.
         internal bool Step(MonsterAI ai, float dt, System.Func<BaseAI, float, Vector3, float, bool, bool> moveTo, System.Action<BaseAI, Vector3> lookAt)
@@ -273,16 +294,8 @@ namespace SteveTheTroll.Taming
         // on the ground; low targets (everything but a standing tree) get the VERTICAL swing, standing trees the horizontal one.
         ItemDrop.ItemData Weapon(Humanoid me, bool low)
         {
-            ItemDrop.ItemData best = null;
             var want = low ? Attack.AttackType.Vertical : Attack.AttackType.Horizontal;
-            foreach (var it in me.GetInventory().GetAllItems())
-            {
-                var s = it.m_shared;
-                if (s.m_damages.m_chop + s.m_damages.m_pickaxe <= 0f || s.m_attack == null) continue;
-                var type = s.m_attack.m_attackType;
-                if (type == Attack.AttackType.Projectile || type == Attack.AttackType.TriggerProjectile) continue;
-                if (best == null || type == want || (best.m_shared.m_attack.m_attackType != want && (type == Attack.AttackType.Horizontal || type == Attack.AttackType.Vertical))) best = it;
-            }
+            var best = TrollWeapons.Pick(me, want, true);
             if (best != null && best != _lastWeapon)
             {
                 _lastWeapon = best;

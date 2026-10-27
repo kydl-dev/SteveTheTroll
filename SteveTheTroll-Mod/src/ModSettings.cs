@@ -17,6 +17,7 @@ namespace SteveTheTroll
         // [General]
         public static ConfigEntry<bool> EnableAll;
         public static ConfigEntry<KeyCode> MenuKey;
+        public static ConfigEntry<KeyCode> AttackKey;
         // [DebugLog]
         public static ConfigEntry<bool> DebugLog;
 
@@ -39,6 +40,7 @@ namespace SteveTheTroll
         public static readonly Tunable<float> FarmReach = new Tunable<float>("TrollTamed", "FarmReach", 2f, 1f, 6f, "Metres (flat) from a tree trunk / log / rock at which a farming troll stops walking and swings (user: 2 m, TEST-021).");
         public static readonly Tunable<float> AutoFarmSeconds = new Tunable<float>("TrollTamed", "AutoFarmSeconds", 120f, 10f, 600f, "Seconds a newly tamed troll waits at the player for an order; no order -> it farms the default priority on its own (user: 2 minutes).");
         public static readonly Tunable<float> HoldNearPlayerRange = new Tunable<float>("TrollTamed", "HoldNearPlayerRange", 4f, 0f, 15f, "Metres: a tamed troll that is not following stands still while a player is this close (D-063, to open the backpack; 0 = off).");
+        public static readonly Tunable<int> CrowdCount = new Tunable<int>("TrollTamed", "CrowdCount", 3, 2, 10, "This many creatures attacking the player / troll at once -> the troll does 4 ground slams first (D-065).");
         public static readonly Tunable<float> DeadKeepSeconds = new Tunable<float>("TrollTamed", "DeadKeepSeconds", 60f, 5f, 600f, "Seconds a dead troll stays in the F6 lists before it is removed and its name is free again (user: 60 s).");
         public static readonly Tunable<float> SpawnBoostSeconds = new Tunable<float>("TrollTamed", "SpawnBoostSeconds", 120f, 0f, 1800f, "Seconds between troll spawn tries (100 % chance, day and night) near a slipper wearer without a tamed troll; the game's own entry tries every 4000 s with 5 % (D-059; 0 = off).");
         public static readonly Tunable<float> SpawnBoostWearerRange = new Tunable<float>("TrollTamed", "SpawnBoostWearerRange", 150f, 20f, 300f, "Metres from a spawn zone within which a slipper wearer boosts its troll spawns (user: 150 m).");
@@ -135,6 +137,8 @@ namespace SteveTheTroll
                 "Switches the whole mod on / off while playing. Off: no effects and no menus from this mod; things already built stay in the world.");
             MenuKey = c.Bind("General", "MenuKey", KeyCode.F6,
                 "Opens / closes the SteveTheTroll menu. None = no menu.");
+            AttackKey = c.Bind("Controls", "AttackKey", KeyCode.Mouse3,
+                "Look at a creature, tree, log or rock and press this: your nearest tamed troll attacks / breaks it (Mouse3 = the mouse's back button, Mouse 4). Looking at nothing: it goes farming. None = off.");
             DebugLog = c.Bind("DebugLog", "Enable", false,
                 "Writes detailed lines about everything the mod does to the BepInEx log (for bug reports). Leave off while playing normally.");
 

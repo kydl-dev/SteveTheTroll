@@ -69,6 +69,15 @@ namespace SteveTheTroll.Taming
         /// the full damage). Expected outcome: (chop, pickaxe) both = max(chop, pickaxe).
         public static float FarmDamage(float chop, float pickaxe) { return chop > pickaxe ? chop : pickaxe; }
 
+        /// D-065: a crowd (at least `crowd` attackers) gets the ground slams, at most every `cooldown` seconds (`sinceLast` &lt; 0 = never slammed).
+        public static bool Slam(int attackers, int crowd, float sinceLast, float cooldown)
+        {
+            return attackers >= crowd && (sinceLast < 0f || sinceLast > cooldown);
+        }
+
+        /// T-008e: the troll defends its owner when the owner wears the slippers, or during a raid.
+        public static bool DefendsOwner(bool wears, bool raid) { return wears || raid; }
+
         /// D-059: where on the segment a..b (x / z, metres) the point p is nearest, as 0..1 (0 for a zero-length segment).
         public static float SegmentT(float ax, float az, float bx, float bz, float px, float pz)
         {
