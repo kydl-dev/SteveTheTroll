@@ -87,6 +87,7 @@ namespace SteveTheTroll
             if (_cfgWatcher != null) _cfgWatcher.Tick();
             if (!ModSettings.On) return;
             MainMenu.Tick();
+            Taming.TrollRegistry.Tick();       // D-043: live values of the player's tamed trolls for the F6 lists
         }
 
         void OnDestroy()

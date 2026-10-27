@@ -6,27 +6,27 @@ using UnityEngine.UIElements;
 namespace SteveTheTroll.Ui
 {
     /// <summary>
-    /// WHAT the mod's menu shows (UI Toolkit, shared Kydl.Ui look; D-039): tab 1 Slippers = a 3D view of the slippers + their details
-    /// (later the troll costume), tab 2 Troll work = what the tamed troll focus-farms. Compiled into the mod AND shown by the Unity preview
+    /// WHAT the mod's menu shows (UI Toolkit, shared Kydl.Ui look; D-039 / D-043): tab 1 Slippers = a 3D view of the slippers + their details
+    /// (later the troll costume), tab 2 Troll work = every tamed troll, what it does and its focus, tab 3 Trolls = one troll's stats and position. Compiled into the mod AND shown by the Unity preview
     /// (Assets/SteveTheTroll_UI/Preview/MenuPreview.cs). Keep game types OUT of this folder; the game side is src/Ui/MainMenu.cs.
     /// </summary>
     internal static class MainMenuView
     {
         internal const string SlippersModel = "slippers";
 
-        /// `slippers` = the item's data, `makeScene` = the 3D scene (null = name only), `focus` = the stored troll focus, `focusChosen` = called
-        /// with the new value; `startTab` 0 Slippers, 1 Troll work (the preview can start on 1).
+        /// `slippers` = the item's data, `makeScene` = the 3D scene (null = name only), `trolls` = the player's tamed trolls (D-043, live or last
+        /// seen), `focusChosen(id, value)` = a troll's new focus; `startTab` 0 Slippers, 1 Troll work, 2 Trolls (the preview can start on any).
         internal static VisualElement Build(Func<string, string> text, Action onClose, SlipperData slippers, Func<IModelScene> makeScene, ViewerSettings viewer,
-            string focus, Action<string> focusChosen, int startTab = 0)
+            IList<TrollInfo> trolls, Action<string, string> focusChosen, int startTab = 0, long nowTicks = 0)
         {
             var w = UiKit.Window(text("stevethetroll_menu_title"), text("stevethetroll_menu_footer"), onClose, out UiScroll body);
-            var tabs = new[] { SlippersTab(text, slippers, makeScene, viewer), FocusTab(text, focus, focusChosen) };
+            var tabs = new[] { SlippersTab(text, slippers, makeScene, viewer), WorkTab(text, trolls, focusChosen), TrollsTab(text, trolls, nowTicks) };
             foreach (var t in tabs) body.Content.Add(t);
-            var bar = new TabBar(new[] { text("stevethetroll_tab_slippers"), text("stevethetroll_tab_troll") }, startTab, index => ShowTab(tabs, index));
+            var bar = new TabBar(new[] { text("stevethetroll_tab_slippers"), text("stevethetroll_tab_troll"), text("stevethetroll_tab_trolls") }, startTab, index => ShowTab(tabs, index));
             ShowTab(tabs, bar.Selected);
             w.Insert(1, bar.Root);               // between the title bar and the scrolling body: the tabs stay put while the content scrolls
             UiLog.Verbose("MainMenuView: built (" + tabs.Length + " tabs, start tab " + bar.Selected + ", slippers " + (slippers != null ? slippers.ToString() : "none")
-                + ", 3D scene " + (makeScene != null ? "yes" : "no") + ", focus '" + focus + "')");
+                + ", 3D scene " + (makeScene != null ? "yes" : "no") + ", trolls " + (trolls != null ? trolls.Count : 0) + ")");
             return w;
         }
 
@@ -43,22 +43,82 @@ namespace SteveTheTroll.Ui
             return tab;
         }
 
-        static VisualElement FocusTab(Func<string, string> text, string focus, Action<string> chosen)
+        const float NameWidth = 150f, StatusWidth = 170f, FocusWidth = 170f;    // px at the 1080p reference
+
+        // Tab 2 (D-043): one row per tamed troll - name | what it does | focus drop-down | what it farms now.
+        static VisualElement WorkTab(Func<string, string> text, IList<TrollInfo> trolls, Action<string, string> chosen)
         {
-            var tab = new VisualElement { name = "stevethetroll-focus-tab" };
+            var tab = new VisualElement { name = "stevethetroll-work-tab" };
             tab.style.flexShrink = 0;
             tab.Add(UiControls.Heading(text("stevethetroll_focus_heading")));
             tab.Add(UiControls.Note(text("stevethetroll_focus_note")));
+            if (trolls == null || trolls.Count == 0) { tab.Add(UiControls.Note(text("stevethetroll_troll_none"))); return tab; }
+            tab.Add(Row(Cell(text("stevethetroll_troll_name"), NameWidth, true), Cell(text("stevethetroll_troll_doing"), StatusWidth, true),
+                Cell(text("stevethetroll_focus_label"), FocusWidth, true), Cell(text("stevethetroll_troll_farming"), -1f, true)));
             var values = new List<string>();
             foreach (var c in TrollFocus.Choices) values.Add(c.Key);
-            string current = TrollFocus.Normalize(focus);
-            tab.Add(UiControls.Row(text("stevethetroll_focus_label"), UiControls.Dropdown(values, current, v => text(TrollFocus.KeyOf(v)), v =>
+            foreach (var t in trolls)
             {
-                string n = TrollFocus.Normalize(v);
-                UiLog.Verbose("MainMenuView: troll focus chosen '" + n + "' (" + text(TrollFocus.KeyOf(n)) + ")");
-                if (chosen != null) chosen(n);
-            })));
+                var troll = t;
+                string doing = text(t.Status) + (t.Loaded ? "" : " *");
+                var drop = UiControls.Dropdown(values, TrollFocus.Normalize(t.Focus), v => text(TrollFocus.KeyOf(v)), v =>
+                {
+                    string n = TrollFocus.Normalize(v);
+                    UiLog.Verbose("MainMenuView: focus of " + troll.Shown(null) + " [" + troll.Id + "] -> '" + n + "'");
+                    troll.Focus = n;
+                    if (chosen != null) chosen(troll.Id, n);
+                });
+                drop.style.width = FocusWidth; drop.style.flexShrink = 0;
+                tab.Add(Row(Cell(t.Shown(text), NameWidth, false), Cell(doing, StatusWidth, false), drop, Cell(t.Farming.Length > 0 ? t.Farming : "-", -1f, false)));
+            }
+            tab.Add(UiControls.Note(text("stevethetroll_troll_lastseen_note")));
             return tab;
+        }
+
+        // Tab 3 (D-043): pick a troll, see its stats, stars, position and distance from your bed.
+        static VisualElement TrollsTab(Func<string, string> text, IList<TrollInfo> trolls, long nowTicks)
+        {
+            var tab = new VisualElement { name = "stevethetroll-trolls-tab" };
+            tab.style.flexShrink = 0;
+            if (trolls == null || trolls.Count == 0) { tab.Add(UiControls.Note(text("stevethetroll_troll_none"))); return tab; }
+            var ids = new List<string>();
+            foreach (var t in trolls) ids.Add(t.Id);
+            var details = new VisualElement { name = "stevethetroll-troll-details" };
+            details.style.flexShrink = 0;
+            Action<string> show = id =>
+            {
+                details.Clear();
+                TrollInfo pick = null;
+                foreach (var t in trolls) if (t.Id == id) pick = t;
+                details.Add(DetailsView.Build(TrollDetailsBuilder.Build(pick, text, nowTicks), "", ""));
+                UiLog.Verbose("MainMenuView: troll details " + (pick != null ? pick.ToString() : "none for " + id));
+            };
+            tab.Add(UiControls.Row(text("stevethetroll_troll_pick"), UiControls.Dropdown(ids, ids[0], id =>
+            {
+                foreach (var t in trolls) if (t.Id == id) return t.Shown(text);
+                return id;
+            }, show)));
+            tab.Add(details);
+            show(ids[0]);
+            return tab;
+        }
+
+        static VisualElement Row(params VisualElement[] cells)
+        {
+            var r = new VisualElement();
+            r.style.flexDirection = FlexDirection.Row; r.style.alignItems = Align.Center; r.style.flexShrink = 0;
+            r.style.marginTop = 3; r.style.marginBottom = 3;
+            foreach (var c in cells) r.Add(c);
+            return r;
+        }
+
+        static Label Cell(string content, float width, bool header)
+        {
+            var l = UiKit.Label(content, header ? UiKit.SmallSize : UiKit.FontSize, header ? UiKit.TextDim : UiKit.Text);
+            l.style.whiteSpace = WhiteSpace.Normal;
+            if (width >= 0f) { l.style.width = width; l.style.flexShrink = 0; }
+            else { l.style.flexGrow = 1; l.style.flexShrink = 1; }
+            return l;
         }
 
         static void ShowTab(VisualElement[] tabs, int index)

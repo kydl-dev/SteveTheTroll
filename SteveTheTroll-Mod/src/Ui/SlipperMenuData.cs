@@ -4,13 +4,11 @@ using UnityEngine;
 namespace SteveTheTroll.Ui
 {
     /// <summary>
-    /// Game side of the F6 menu tabs (D-039): the slippers' data from the item + recipe in ObjectDB, the 3D model (an inert copy of the item's
-    /// ground model "attach": the slipper pair - no trolls, the surprise stays), and the player's troll focus (saved in the player's profile,
-    /// Player.m_customData; the tamed troll reads it in T-008d).
+    /// Game side of the F6 menu tabs (D-039 / D-043): the slippers' data from the item + recipe in ObjectDB, the 3D model (an inert copy of
+    /// the item's ground model "attach": the slipper pair - no trolls, the surprise stays), and each troll's focus (TrollRegistry).
     /// </summary>
     internal static class SlipperMenuData
     {
-        public const string FocusKey = "stevethetroll_troll_focus";
 
         /// Expected outcome: the data of the real item, or null before a world is loaded (logged).
         internal static SlipperData Read()
@@ -62,40 +60,21 @@ namespace SteveTheTroll.Ui
             return copy;
         }
 
-        /// The stored troll focus of the local player ("" = no focus).
-        internal static string Focus()
+        /// D-043: a troll's new focus from the Troll work tab (stored on that troll, pending while it is far). A troll that follows its owner
+        /// does not farm: the player gets a message to let it stay (E on the troll). Expected outcome: returns whether the message was shown.
+        internal static bool FocusChosen(string id, string value)
         {
-            var p = Player.m_localPlayer;
-            string v;
-            string focus = p != null && p.m_customData.TryGetValue(FocusKey, out v) ? TrollFocus.Normalize(v) : TrollFocus.None;
-            ModLog.Verbose("SlipperMenuData: troll focus read '" + focus + "' (player " + (p != null) + ")");
-            return focus;
-        }
-
-        // D-042: a troll that follows its owner does not farm - tell the player to let it stay (E on the troll).
-        static void WarnIfFollowing(Player p, string focus)
-        {
-            float d;
-            var troll = Taming.TrollTaming.OwnTroll(p, out d);
+            string v = TrollFocus.Normalize(value);
+            Taming.TrollRegistry.SetFocus(id, v);
+            var troll = Taming.TrollRegistry.FindLoaded(id);
             var ai = troll != null ? troll.GetComponent<MonsterAI>() : null;
             bool following = ai != null && ai.GetFollowTarget() != null;
-            ModLog.Verbose("SlipperMenuData: own troll " + (troll != null ? troll.name + " at " + d.ToString("F0") + " m, following " + following : "not loaded") + ", focus '" + focus + "'");
-            if (!following || focus.Length == 0) return;
-            string msg = Loc.T("stevethetroll_focus_following", Loc.T(TrollFocus.KeyOf(focus)));
+            ModLog.Verbose("SlipperMenuData: troll [" + id + "] " + (troll != null ? "loaded, following " + following : "not loaded") + ", focus '" + v + "'");
+            if (!following || v.Length == 0) return false;
+            string msg = Loc.T("stevethetroll_focus_following", Loc.T(TrollFocus.KeyOf(v)));
             if (MessageHud.instance != null) MessageHud.instance.ShowMessage(MessageHud.MessageType.Center, msg);
             ModLog.Info("SlipperMenuData: told the player the troll is following (" + msg + ")");
-        }
-
-        /// Expected outcome: the player's profile holds the focus (returns that check).
-        internal static bool SetFocus(string value)
-        {
-            var p = Player.m_localPlayer;
-            if (p == null) { ModLog.Warn("SlipperMenuData: no local player - troll focus '" + value + "' not saved"); return p != null; }
-            string v = TrollFocus.Normalize(value);
-            p.m_customData[FocusKey] = v;
-            ModLog.Info("SlipperMenuData: troll focus set to '" + (v.Length > 0 ? v : "no focus") + "'");
-            WarnIfFollowing(p, v);
-            return p.m_customData[FocusKey] == v;
+            return MessageHud.instance != null;
         }
     }
 }

@@ -42,11 +42,12 @@ namespace SteveTheTroll.Ui
             if (root == null) { ModLog.Warn("MainMenu: UI Toolkit is not available, the menu cannot open"); return; }
             var viewer = new ViewerSettings();
             var data = SlipperMenuData.Read();
+            var trolls = Taming.TrollRegistry.Trolls();
             _window = MainMenuView.Build(k => Loc.T(k), () => Close("X"), data, data != null ? () => ViewerScene.Make(SlipperMenuData.MakeModel, viewer) : (System.Func<IModelScene>)null,
-                viewer, SlipperMenuData.Focus(), v => SlipperMenuData.SetFocus(v));
+                viewer, trolls, (id, v) => SlipperMenuData.FocusChosen(id, v), 0, System.DateTime.UtcNow.Ticks);
             root.Add(_window);
             UiInputLock.Hold(LockName);
-            ModLog.Verbose("MainMenu: opened (slippers data " + (data != null) + ")");
+            ModLog.Verbose("MainMenu: opened (slippers data " + (data != null) + ", " + trolls.Count + " troll(s))");
         }
 
         static void Close(string why)

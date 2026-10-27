@@ -43,10 +43,12 @@ namespace SteveTheTroll.Taming
             if (t == null) t = troll.AddComponent<Tameable>();
             if (donor != null)
             {
-                t.m_tamedEffect = donor.m_tamedEffect;
-                t.m_sootheEffect = donor.m_sootheEffect;
-                t.m_petEffect = donor.m_petEffect;
-                t.m_unSummonEffect = donor.m_unSummonEffect;
+                // D-043: troll sounds only - the wolf's visual effects stay, its sounds (sfx_*) go, the troll's own idle growl is added
+                var growl = troll.GetComponent<BaseAI>() != null ? troll.GetComponent<BaseAI>().m_idleSound : null;
+                t.m_tamedEffect = TrollSounds(donor.m_tamedEffect, growl, "tamed");
+                t.m_sootheEffect = TrollSounds(donor.m_sootheEffect, growl, "soothe");
+                t.m_petEffect = TrollSounds(donor.m_petEffect, growl, "pet / command");
+                t.m_unSummonEffect = TrollSounds(donor.m_unSummonEffect, null, "unsummon");
             }
             else
             {
@@ -62,6 +64,25 @@ namespace SteveTheTroll.Taming
             t.m_fedDuration = 0f;
             ModLog.Info("TrollTaming: " + TrollPrefab + " tameable (component " + (existed ? "existed" : "added") + ", taming " + t.m_tamingTime + " s, commandable " + t.m_commandable + ", effects from " + (donor != null ? DonorPrefab : "none") + ")");
             ModLog.Check("TrollTaming: troll taming time", t.m_tamingTime, ModSettings.TameSeconds.Value, 0.001, "s");
+        }
+
+        /// The donor's effects without its sounds (prefab names starting with "sfx"), plus the troll's growl. Expected outcome: a new list.
+        static EffectList TrollSounds(EffectList donor, EffectList growl, string what)
+        {
+            var list = new List<EffectList.EffectData>();
+            int dropped = 0, added = 0;
+            if (donor != null && donor.m_effectPrefabs != null)
+                foreach (var e in donor.m_effectPrefabs)
+                {
+                    if (e == null || e.m_prefab == null) continue;
+                    if (e.m_prefab.name.StartsWith("sfx", System.StringComparison.OrdinalIgnoreCase)) { dropped++; continue; }
+                    list.Add(e);
+                }
+            if (growl != null && growl.m_effectPrefabs != null)
+                foreach (var e in growl.m_effectPrefabs) if (e != null && e.m_prefab != null) { list.Add(e); added++; }
+            ModLog.Verbose("TrollTaming: " + what + " effect: " + list.Count + " part(s), wolf sounds removed " + dropped + ", troll growl parts " + added);
+            if (growl != null) ModLog.CheckRange("TrollTaming: troll growl parts in the " + what + " effect", added, 1, 100, "");
+            return new EffectList { m_effectPrefabs = list.ToArray() };
         }
 
         /// The troll's prefab is Troll (not Troll_Summoned or other mods' trolls).

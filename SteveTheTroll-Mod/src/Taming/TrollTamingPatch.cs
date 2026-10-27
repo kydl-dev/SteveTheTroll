@@ -113,6 +113,9 @@ namespace SteveTheTroll.Taming
             ModLog.Info("TrollTamingPatch: " + troll.name + " tamed by " + wearer.GetPlayerName() + " (owner set " + owned + ", tamed " + troll.IsTamed() + ")");
             ModLog.Check("TrollTamingPatch: " + troll.name + " tamed after the countdown", troll.IsTamed() ? 1 : 0, 1, 0, "");
             TamedTrollStats.Refresh(troll);           // D-042: x3 health from now on
+            string id = TrollRegistry.IdOf(troll);    // D-043: our id for the F6 lists
+            TrollArrival.Begin(troll, wearer);       // D-043: walk to the tamer, then wait for orders
+            ModLog.Verbose("TrollTamingPatch: " + troll.name + " id " + id + ", walking to " + wearer.GetPlayerName());
         }
 
         // D-037: the wearer's own tamed troll walks to the wearer (follows) instead of a second taming. Only the troll's ZDO owner may steer it.
