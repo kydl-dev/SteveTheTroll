@@ -47,6 +47,7 @@ namespace SteveTheTroll.Ui
             { "stevethetroll_focus_corewood", "Core wood" },
             { "stevethetroll_focus_copper", "Copper ore" },
             { "stevethetroll_focus_tin", "Tin ore" },
+            { "stevethetroll_focus_following", "Your troll is following you. Press E on it so it stays - then it farms {0}." },
         };
 
 

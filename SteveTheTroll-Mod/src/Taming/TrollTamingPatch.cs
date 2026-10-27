@@ -67,7 +67,8 @@ namespace SteveTheTroll.Taming
         {
             static void Postfix(Tameable __instance, ref string __result)
             {
-                if (__result == "$hud_tamehungry" && TrollTaming.IsTroll(__instance)) __result = "$hud_tameinprogress";
+                // our trolls never eat: no "hungry"; tamed = happy (TEST-015 showed "Tame, Acclimatizing"), wild = taming in progress
+                if (__result == "$hud_tamehungry" && TrollTaming.IsTroll(__instance)) __result = __instance.IsTamed() ? "$hud_tamehappy" : "$hud_tameinprogress";
             }
         }
 
@@ -111,6 +112,7 @@ namespace SteveTheTroll.Taming
             DoTame(t);
             ModLog.Info("TrollTamingPatch: " + troll.name + " tamed by " + wearer.GetPlayerName() + " (owner set " + owned + ", tamed " + troll.IsTamed() + ")");
             ModLog.Check("TrollTamingPatch: " + troll.name + " tamed after the countdown", troll.IsTamed() ? 1 : 0, 1, 0, "");
+            TamedTrollStats.Refresh(troll);           // D-042: x3 health from now on
         }
 
         // D-037: the wearer's own tamed troll walks to the wearer (follows) instead of a second taming. Only the troll's ZDO owner may steer it.

@@ -67,7 +67,13 @@ namespace SteveTheTroll.Testing
         // TEST-012 lesson: the patch class's reflection lookups (static m_tameDeltaTime) must load without an exception.
         static string Startup_TamingReflection()
         {
-            try { return Taming.TrollTamingPatch.SelfCheck(); }
+            try
+            {
+                string r = Taming.TrollTamingPatch.SelfCheck();
+                bool stats = Taming.TamedTrollStats.SelfCheck(), defend = Taming.TrollDefend.SelfCheck();
+                string more = ", TamedTrollStats " + stats + ", TrollDefend " + defend;
+                return r.StartsWith("PASS") && stats && defend ? r + more : "FAIL: " + r + more;
+            }
             catch (System.TypeInitializationException e) { return "FAIL: " + (e.InnerException != null ? e.InnerException.Message : e.Message); }
         }
 

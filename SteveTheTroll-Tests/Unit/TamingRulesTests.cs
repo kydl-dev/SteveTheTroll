@@ -39,6 +39,30 @@ namespace SteveTheTroll.Tests.Unit
             Assert.That(ticks, Is.EqualTo(20), "60 s in 3 s ticks");
         }
 
+        // D-042: tamed trolls are at least Resistant (DamageModifier ints of 1.0.20)
+        [TestCase(0, 1)] [TestCase(2, 1)] [TestCase(6, 1)] [TestCase(7, 1)] [TestCase(8, 1)]
+        [TestCase(1, 1)] [TestCase(3, 3)] [TestCase(4, 4)] [TestCase(5, 5)] [TestCase(42, 42)]
+        public void AtLeastResistant(int before, int after) { Assert.That((int)ModAssembly.Call(T, "AtLeastResistant", before), Is.EqualTo(after)); }
+
+        [Test]
+        public void Defends_Within30Only()
+        {
+            Assert.That((bool)ModAssembly.Call(T, "Defends", 30f, 30f), Is.True);
+            Assert.That((bool)ModAssembly.Call(T, "Defends", 30.1f, 30f), Is.False);
+            Assert.That((bool)ModAssembly.Call(T, "Defends", -1f, 30f), Is.False);
+        }
+
+        [Test]
+        public void SpawnBoost_ThreeTimes_Clamped()
+        {
+            Assert.That((float)ModAssembly.Call(T, "BoostedInterval", 300f, 3f), Is.EqualTo(100f).Within(1e-3));
+            Assert.That((float)ModAssembly.Call(T, "BoostedInterval", 2f, 3f), Is.EqualTo(1f), "never below 1 s");
+            Assert.That((float)ModAssembly.Call(T, "BoostedInterval", 300f, 1f), Is.EqualTo(300f), "factor 1 = off");
+            Assert.That((float)ModAssembly.Call(T, "BoostedChance", 20f, 3f), Is.EqualTo(60f).Within(1e-3));
+            Assert.That((float)ModAssembly.Call(T, "BoostedChance", 50f, 3f), Is.EqualTo(100f), "never above 100 %");
+            Assert.That((float)ModAssembly.Call(T, "BoostedChance", 50f, 0.5f), Is.EqualTo(50f));
+        }
+
         [Test]
         public void Percent_Clamped()
         {

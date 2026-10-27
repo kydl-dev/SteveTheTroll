@@ -72,6 +72,20 @@ namespace SteveTheTroll.Ui
             return focus;
         }
 
+        // D-042: a troll that follows its owner does not farm - tell the player to let it stay (E on the troll).
+        static void WarnIfFollowing(Player p, string focus)
+        {
+            float d;
+            var troll = Taming.TrollTaming.OwnTroll(p, out d);
+            var ai = troll != null ? troll.GetComponent<MonsterAI>() : null;
+            bool following = ai != null && ai.GetFollowTarget() != null;
+            ModLog.Verbose("SlipperMenuData: own troll " + (troll != null ? troll.name + " at " + d.ToString("F0") + " m, following " + following : "not loaded") + ", focus '" + focus + "'");
+            if (!following || focus.Length == 0) return;
+            string msg = Loc.T("stevethetroll_focus_following", Loc.T(TrollFocus.KeyOf(focus)));
+            if (MessageHud.instance != null) MessageHud.instance.ShowMessage(MessageHud.MessageType.Center, msg);
+            ModLog.Info("SlipperMenuData: told the player the troll is following (" + msg + ")");
+        }
+
         /// Expected outcome: the player's profile holds the focus (returns that check).
         internal static bool SetFocus(string value)
         {
@@ -80,6 +94,7 @@ namespace SteveTheTroll.Ui
             string v = TrollFocus.Normalize(value);
             p.m_customData[FocusKey] = v;
             ModLog.Info("SlipperMenuData: troll focus set to '" + (v.Length > 0 ? v : "no focus") + "'");
+            WarnIfFollowing(p, v);
             return p.m_customData[FocusKey] == v;
         }
     }

@@ -32,6 +32,42 @@ namespace SteveTheTroll.Taming
             return remaining <= 0f;
         }
 
+        // HitData.DamageModifier values in 1.0.20 (Cecil): Normal 0, Resistant 1, Weak 2, Immune 3, Ignore 4, VeryResistant 5, VeryWeak 6,
+        // SlightlyResistant 7, SlightlyWeak 8.
+        public const int ModResistant = 1;
+
+        /// D-042: a tamed troll is at least Resistant: Normal / Weak / VeryWeak / SlightlyWeak / SlightlyResistant become Resistant; Resistant,
+        /// VeryResistant, Immune and Ignore stay. Unknown values stay as they are.
+        public static int AtLeastResistant(int modifier)
+        {
+            switch (modifier)
+            {
+                case 0: case 2: case 6: case 7: case 8: return ModResistant;
+                default: return modifier;
+            }
+        }
+
+        /// D-042: the troll defends its owner when the owner is hit within range (metres; a negative distance = unknown = no).
+        public static bool Defends(float trollToOwner, float range)
+        {
+            return trollToOwner >= 0f && trollToOwner <= range;
+        }
+
+        /// D-042 troll spawn boost: interval / factor (never below 1 s), chance x factor (never above 100 %). factor &lt;= 1 changes nothing.
+        public static float BoostedInterval(float interval, float factor)
+        {
+            if (factor <= 1f) return interval;
+            float v = interval / factor;
+            return v < 1f ? 1f : v;
+        }
+
+        public static float BoostedChance(float chancePercent, float factor)
+        {
+            if (factor <= 1f) return chancePercent;
+            float v = chancePercent * factor;
+            return v > 100f ? 100f : v;
+        }
+
         /// Progress 0..100 % for logs (total &lt;= 0 counts as done).
         public static int Percent(float remaining, float total)
         {
