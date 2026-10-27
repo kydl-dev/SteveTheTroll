@@ -40,10 +40,13 @@ namespace SteveTheTroll.Ui
         {
             var root = UiKit.Root;
             if (root == null) { ModLog.Warn("MainMenu: UI Toolkit is not available, the menu cannot open"); return; }
-            _window = MainMenuView.Build(k => Loc.T(k), () => Close("X"));
+            var viewer = new ViewerSettings();
+            var data = SlipperMenuData.Read();
+            _window = MainMenuView.Build(k => Loc.T(k), () => Close("X"), data, data != null ? () => ViewerScene.Make(SlipperMenuData.MakeModel, viewer) : (System.Func<IModelScene>)null,
+                viewer, SlipperMenuData.Focus(), v => SlipperMenuData.SetFocus(v));
             root.Add(_window);
             UiInputLock.Hold(LockName);
-            ModLog.Verbose("MainMenu: opened");
+            ModLog.Verbose("MainMenu: opened (slippers data " + (data != null) + ")");
         }
 
         static void Close(string why)

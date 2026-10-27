@@ -21,6 +21,12 @@ namespace SteveTheTroll.Item
             return IsSlippers(item) ? item : null;
         }
 
+        /// The item's damage modifiers make it frost resistant.
+        internal static bool FrostResistant(ItemDrop.ItemData.SharedData s)
+        {
+            return s != null && s.m_damageModifiers != null && s.m_damageModifiers.Exists(m => m.m_type == HitData.DamageType.Frost && m.m_modifier == HitData.DamageModifier.Resistant);
+        }
+
         internal static bool IsSlippers(ItemDrop.ItemData item)
         {
             return item != null && item.m_shared != null && item.m_shared.m_name == SlipperItem.TokenName;

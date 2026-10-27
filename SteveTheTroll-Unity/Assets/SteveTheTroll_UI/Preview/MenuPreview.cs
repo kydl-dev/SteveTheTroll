@@ -14,6 +14,7 @@ namespace SteveTheTroll.Ui
     public sealed class MenuPreview : MonoBehaviour
     {
         const string FontFolder = "Assets/Kydl.Ui/Preview/GameAssets/";
+        [SerializeField] int startTab;                      // 0 Slippers, 1 Troll work: check a tab without clicking
 
         void OnEnable()
         {
@@ -21,7 +22,8 @@ namespace SteveTheTroll.Ui
             UiKit.Reset();
             var root = UiKit.Root;
             if (root == null) { Debug.LogError("[MenuPreview] UI Toolkit panel could not be made"); return; }
-            root.Add(MainMenuView.Build(UiText.English, () => Debug.Log("[MenuPreview] close pressed")));
+            root.Add(MainMenuView.Build(UiText.English, () => Debug.Log("[MenuPreview] close pressed"), SlipperData.Sample(), null, null, TrollFocus.None,
+                v => Debug.Log("[MenuPreview] troll focus '" + v + "'"), startTab));
             Debug.Log("[MenuPreview] SteveTheTroll menu shown");
         }
 

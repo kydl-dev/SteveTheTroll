@@ -9,6 +9,17 @@
     <RootNamespace>SteveTheTroll.Tests.Unit</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <!-- D-039 menu: pure UI logic from the Unity project (shared viewer from the template + Slippers / Troll work tabs) -->
+    <Compile Include="..\..\SteveTheTroll-Unity\Assets\SteveTheTroll_UI\Runtime\ViewerSettings.cs" Link="Ui\ViewerSettings.cs" />
+    <Compile Include="..\..\SteveTheTroll-Unity\Assets\SteveTheTroll_UI\Runtime\ViewerMath.cs" Link="Ui\ViewerMath.cs" />
+    <Compile Include="..\..\SteveTheTroll-Unity\Assets\SteveTheTroll_UI\Runtime\ViewerOrbit.cs" Link="Ui\ViewerOrbit.cs" />
+    <Compile Include="..\..\SteveTheTroll-Unity\Assets\SteveTheTroll_UI\Runtime\DetailRow.cs" Link="Ui\DetailRow.cs" />
+    <Compile Include="..\..\SteveTheTroll-Unity\Assets\SteveTheTroll_UI\Runtime\DetailGroup.cs" Link="Ui\DetailGroup.cs" />
+    <Compile Include="..\..\SteveTheTroll-Unity\Assets\SteveTheTroll_UI\Runtime\SlipperData.cs" Link="Ui\SlipperData.cs" />
+    <Compile Include="..\..\SteveTheTroll-Unity\Assets\SteveTheTroll_UI\Runtime\SlipperDetailsBuilder.cs" Link="Ui\SlipperDetailsBuilder.cs" />
+    <Compile Include="..\..\SteveTheTroll-Unity\Assets\SteveTheTroll_UI\Runtime\TrollFocus.cs" Link="Ui\TrollFocus.cs" />
+  </ItemGroup>
+  <ItemGroup>
     <Reference Include="UnityEngine.CoreModule"><HintPath>$(ValheimRefs)\UnityEngine.CoreModule.dll</HintPath><Private>true</Private></Reference>
   </ItemGroup>
 </Project>
