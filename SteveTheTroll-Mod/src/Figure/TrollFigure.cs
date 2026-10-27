@@ -28,7 +28,8 @@ namespace SteveTheTroll.Figure
         Mesh _bake;
         Transform _log, _hand;
         MeshFilter _logMesh;
-        Vector3[] _curlAxis;                              // per posed bone: the knuckle line in that bone's own frame (fingers / thumb only)
+        Vector3[] _curlAxis;
+        FigureFur _fur;                              // per posed bone: the knuckle line in that bone's own frame (fingers / thumb only)
 
         /// Expected outcome: foot, player, body renderer and every fitted bone are known (returns that check).
         public bool Init(Transform foot, Transform player, bool left)
@@ -51,6 +52,7 @@ namespace SteveTheTroll.Figure
                 ModLog.Verbose("TrollFigure: bone " + TrollFitMath.PosedBones[i] + " rest " + _bones[i].localEulerAngles.ToString("F1") + ", fit delta " + _delta[i].eulerAngles.ToString("F1"));
             }
             CurlAxes();
+            _fur = new FigureFur(_body, name);
             _log = transform.Find(TrollFigureFactory.LogName);
             _logMesh = _log != null ? _log.GetComponentInChildren<MeshFilter>(true) : null;
             _hand = TrollFitMath.FindDeep(transform, TrollFigureFactory.HandBone);
@@ -92,7 +94,11 @@ namespace SteveTheTroll.Figure
                 ModSettings.LogForward, ModSettings.LogUp, ModSettings.LogSide, ModSettings.LogYaw, ModSettings.LogPitch, ModSettings.LogRoll, ModSettings.LogLengthScale,
                 ModSettings.HandWristX, ModSettings.HandWristY, ModSettings.HandWristZ, ModSettings.HandFingerCurl, ModSettings.HandThumbCurl };
             foreach (var t in all) t.SettingChanged += (s, e) => { _tunableVersion++; ModLog.Verbose("TrollFigure: " + s + " changed -> re-pose / re-measure (version " + _tunableVersion + ")"); };
-            ModLog.Verbose("TrollFigure: listening to " + all.Length + " Tunables");
+            ModSettings.FurEnable.SettingChanged += (s, e) => { _tunableVersion++; ModLog.Verbose("TrollFigure: " + s + " changed -> fur rebuild"); };
+            ModSettings.FurShells.SettingChanged += (s, e) => { _tunableVersion++; ModLog.Verbose("TrollFigure: " + s + " changed -> fur rebuild"); };
+            var fur = new[] { ModSettings.FurLength, ModSettings.FurDensity, ModSettings.FurThickness, ModSettings.FurDroop, ModSettings.FurTintR, ModSettings.FurTintG, ModSettings.FurTintB, ModSettings.FurTipLight };
+            foreach (var t in fur) t.SettingChanged += (s, e) => { _tunableVersion++; ModLog.Verbose("TrollFigure: " + s + " changed -> fur update"); };
+            ModLog.Verbose("TrollFigure: listening to " + (all.Length + fur.Length + 2) + " Tunables");
         }
 
         void LateUpdate()
@@ -104,6 +110,7 @@ namespace SteveTheTroll.Figure
             Place();
             if (dirty) Measure();
             PlaceLog(dirty);
+            if (dirty && _fur != null) _fur.Refresh();
             if (Time.time >= _nextDiag) Diag();
         }
 
@@ -199,6 +206,7 @@ namespace SteveTheTroll.Figure
         void OnDestroy()
         {
             if (_bake != null) Destroy(_bake);
+            if (_fur != null) ModLog.Verbose("TrollFigure: " + name + " fur removed (" + _fur.Dispose() + " shell(s))");
             ModLog.Verbose("TrollFigure: " + name + " destroyed");
         }
     }
