@@ -34,7 +34,7 @@ namespace SteveTheTroll.Item
 
             var mats = new Dictionary<Material, Material>();
             Bounds width = MeshBounds(parts);
-            float dx = width.size.x * 0.5f + PairGap * 0.5f;
+            float dx = Fit.FitGeometry.PairOffset(width.size.x, PairGap);
             var left = AddSlipper(parts, ground, "SlipperDropLeft", new Vector3(-dx, 0f, 0f), PairToeIn, layer, mats);
             var right = AddSlipper(parts, ground, "SlipperDropRight", new Vector3(dx, 0f, 0f), -PairToeIn, layer, mats);
 
@@ -98,8 +98,7 @@ namespace SteveTheTroll.Item
             var mb = mf.sharedMesh.bounds;
             for (int i = 0; i < 8; i++)
             {
-                var corner = mb.center + Vector3.Scale(mb.extents, new Vector3((i & 1) == 0 ? -1 : 1, (i & 2) == 0 ? -1 : 1, (i & 4) == 0 ? -1 : 1));
-                all.Encapsulate(ground.InverseTransformPoint(mf.transform.TransformPoint(corner)));
+                all.Encapsulate(ground.InverseTransformPoint(mf.transform.TransformPoint(Fit.FitGeometry.BoxCorner(mb, i))));
             }
         }
     }

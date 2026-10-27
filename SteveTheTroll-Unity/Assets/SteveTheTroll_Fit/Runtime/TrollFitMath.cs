@@ -33,44 +33,27 @@ namespace SteveTheTroll.Fit
         public static string ToeOf(string footBone) { return footBone.Replace("Foot", "ToeBase"); }
 
         /// A direction flattened to the ground; `fallback` (flattened) when it is (nearly) vertical or zero.
-        public static Vector3 Flat(Vector3 dir, Vector3 fallback)
-        {
-            var f = Vector3.ProjectOnPlane(dir, Vector3.up);
-            if (f.sqrMagnitude >= 0.0001f) return f.normalized;
-            f = Vector3.ProjectOnPlane(fallback, Vector3.up);
-            return f.sqrMagnitude < 0.0001f ? Vector3.forward : f.normalized;
-        }
+        public static Vector3 Flat(Vector3 dir, Vector3 fallback) { return FitGeometry.Flat(dir, fallback); }
 
         /// Feet never turn further than this from the player's forward (D-029 clamp; the idle stance measured 16 / 64 deg).
-        public const float MaxFootTurnDeg = 75f;
+        public const float MaxFootTurnDeg = FitGeometry.MaxFootTurnDeg;
 
         /// D-016 / D-029: the foot's own forward on the ground. Taken from the foot's LATERAL axis (shin x foot->toe), which stays put when the
         /// foot pitches while running - the flattened foot->toe direction flipped 180 deg on every step (TEST-005: "foot turned 178 deg",
         /// trolls looked backwards). Sign: a foot never points backwards (dot with the player's forward > 0); clamped to +-MaxFootTurnDeg.
         public static Vector3 FootForward(Transform foot, Transform toe, Vector3 playerForward)
         {
-            var pf = Flat(playerForward, Vector3.forward);
-            if (foot == null || toe == null) return pf;
-            var toeDir = toe.position - foot.position;
+            if (foot == null || toe == null) return Flat(playerForward, Vector3.forward);
             var shin = foot.parent != null ? foot.position - foot.parent.position : Vector3.down;
-            var side = Vector3.Cross(shin, toeDir);
-            var f = side.sqrMagnitude > 1e-10f ? Flat(Vector3.Cross(side, Vector3.up), pf) : Flat(toeDir, pf);
-            if (Vector3.Dot(f, pf) < 0f) f = -f;
-            float turn = Vector3.SignedAngle(pf, f, Vector3.up);
-            if (Mathf.Abs(turn) > MaxFootTurnDeg) f = Quaternion.AngleAxis(Mathf.Sign(turn) * MaxFootTurnDeg, Vector3.up) * pf;
-            return f;
+            return FitGeometry.FootForward(toe.position - foot.position, shin, playerForward);
         }
 
         /// World pose of the figure root in the FOOT's frame (footForward from FootForward). Expected outcome: rotation is upright.
         public static void Place(Vector3 footPos, Vector3 footForward, bool leftFoot, float forward, float side, float up, float yawDeg,
             float bottomBelowPivot, out Vector3 position, out Quaternion rotation)
         {
-            var fwd = Flat(footForward, Vector3.forward);
-            var right = Vector3.Cross(Vector3.up, fwd);
-            float outward = leftFoot ? -1f : 1f;
-            position = footPos + fwd * forward + right * (outward * side);
-            position.y = footPos.y + up + bottomBelowPivot;
-            rotation = Quaternion.LookRotation(fwd, Vector3.up) * Quaternion.Euler(0f, yawDeg, 0f);
+            position = FitGeometry.FootFramePosition(footPos, footForward, leftFoot, forward, side, up, bottomBelowPivot);
+            rotation = Quaternion.Euler(0f, FitGeometry.FigureYawDeg(footForward, yawDeg), 0f);
         }
 
         /// bone.localRotation = rest * delta * extra (extra = in-game fine tune, identity when none).
@@ -125,12 +108,11 @@ namespace SteveTheTroll.Fit
             float lengthRatio, Vector3 offsetRatio, Vector3 euler, Vector3 extraOffset, Quaternion extraTurn)
         {
             if (logRoot == null || logMesh == null || logMesh.sharedMesh == null || figure == null || hand == null) { Warn("TrollFitMath: PlaceLog missing a part"); return 0f; }
-            offsetRatio += extraOffset / Mathf.Max(0.0001f, height);
+            offsetRatio = FitGeometry.LogOffsetRatio(offsetRatio, extraOffset, height);
             logRoot.rotation = figure.rotation * extraTurn * Quaternion.Euler(euler);
             var size = logMesh.sharedMesh.bounds.size;
             float meshLong = Mathf.Max(size.x, Mathf.Max(size.y, size.z));
-            float worldLong = meshLong * logMesh.transform.lossyScale.x;      // uniform scales only (checked by the caller's log line)
-            if (worldLong > 0.00001f) logRoot.localScale *= lengthRatio * height / worldLong;
+            logRoot.localScale *= FitGeometry.LogScaleFactor(size, logMesh.transform.lossyScale.x, lengthRatio, height);   // uniform scales only
             var centre = logMesh.transform.TransformPoint(logMesh.sharedMesh.bounds.center);
             var want = hand.position + figure.rotation * (offsetRatio * height);
             logRoot.position += want - centre;

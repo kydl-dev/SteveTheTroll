@@ -13,7 +13,7 @@ namespace SteveTheTroll.Fit
     public static class SlipperFit
     {
         public static readonly Quaternion MeshToFoot = Quaternion.Euler(0f, 180f, 0f);     // mesh toe -Z -> foot forward +Z
-        public const float BlendWidth = 0.03f;                                              // m, foot -> toe weight blend around the toe joint
+        public const float BlendWidth = FitGeometry.ToeBlendWidth;                          // m, foot -> toe weight blend around the toe joint
         public const string RootName = "SteveTheTroll_Slipper";
 
         public sealed class Part
@@ -34,11 +34,8 @@ namespace SteveTheTroll.Fit
             root = go.transform;
             root.SetParent(parent, false);
             var fwd = TrollFitMath.FootForward(foot, toe, playerForward);
-            var right = Vector3.Cross(Vector3.up, fwd);
-            float outward = left ? -1f : 1f;
-            var pos = foot.position + fwd * forward + right * (outward * side);
-            pos.y = foot.position.y + up;
-            root.SetPositionAndRotation(pos, Quaternion.LookRotation(fwd, Vector3.up) * Quaternion.Euler(0f, yawDeg, 0f) * MeshToFoot);
+            var pos = FitGeometry.FootFramePosition(foot.position, fwd, left, forward, side, up, 0f);
+            root.SetPositionAndRotation(pos, Quaternion.Euler(0f, FitGeometry.FigureYawDeg(fwd, yawDeg), 0f) * MeshToFoot);
             root.localScale = Vector3.one * scale;                                          // the mesh is left/right symmetric: no mirroring
             foreach (var mf in partsPrefab.GetComponentsInChildren<MeshFilter>(true))
             {
@@ -67,11 +64,7 @@ namespace SteveTheTroll.Fit
             for (int i = 0; i < verts.Length; i++)
             {
                 float w = 0f;
-                if (toe != null)
-                {
-                    float s = Vector3.Dot(toPart.MultiplyPoint3x4(verts[i]) - toe.position, fwd);
-                    w = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(-BlendWidth, BlendWidth, s));
-                }
+                if (toe != null) w = FitGeometry.ToeWeight(FitGeometry.ToeAlong(toPart.MultiplyPoint3x4(verts[i]), toe.position, fwd));
                 if (w > 0.5f) toeVerts++;
                 weights[i] = new BoneWeight { boneIndex0 = 0, weight0 = 1f - w, boneIndex1 = 1, weight1 = w };
             }

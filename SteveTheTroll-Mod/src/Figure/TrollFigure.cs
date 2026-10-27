@@ -157,12 +157,9 @@ namespace SteveTheTroll.Figure
             Vector3 pos; Quaternion rot;
             float side = ModSettings.FigureSide.Value + (_left ? ModSettings.FigureSideLeft.Value : ModSettings.FigureSideRight.Value);
             var fwd = TrollFitMath.FootForward(_foot, _toe, _player.forward);
-            if (_lastFwd != Vector3.zero)
-            {
-                float step = Vector3.Angle(_lastFwd, fwd);
-                if (step > _maxStep) _maxStep = step;
-                if (step > 45f) _jumps++;
-            }
+            float step = Fit.FitGeometry.FlipStep(_lastFwd, fwd);
+            if (step > _maxStep) _maxStep = step;
+            if (Fit.FitGeometry.IsJump(step)) _jumps++;
             _lastFwd = fwd;
             TrollFitMath.Place(_foot.position, fwd, _left, ModSettings.FigureForward.Value, side, ModSettings.FigureUp.Value,
                 ModSettings.FigureYaw.Value, _bottomBelowPivot, out pos, out rot);
