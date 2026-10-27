@@ -15,7 +15,8 @@ namespace SteveTheTroll.Taming
         static readonly AccessTools.FieldRef<Tameable, Character> TCharacter = AccessTools.FieldRefAccess<Tameable, Character>("m_character");
         static readonly AccessTools.FieldRef<Tameable, MonsterAI> TAI = AccessTools.FieldRefAccess<Tameable, MonsterAI>("m_monsterAI");
         static readonly AccessTools.FieldRef<Tameable, ZNetView> TView = AccessTools.FieldRefAccess<Tameable, ZNetView>("m_nview");
-        static readonly AccessTools.FieldRef<Tameable, float> TDelta = AccessTools.FieldRefAccess<Tameable, float>("m_tameDeltaTime");
+        // m_tameDeltaTime is STATIC in 1.0.20 (seconds between TamingUpdate calls): FieldRefAccess<Tameable, float> threw in the type initializer (TEST-012).
+        static readonly AccessTools.FieldRef<float> TDelta = AccessTools.StaticFieldRefAccess<float>(AccessTools.Field(typeof(Tameable), "m_tameDeltaTime"));
         static readonly System.Func<Tameable, float> GetRemaining = AccessTools.MethodDelegate<System.Func<Tameable, float>>(AccessTools.Method(typeof(Tameable), "GetRemainingTime"));
         static readonly System.Action<Tameable> DoTame = AccessTools.MethodDelegate<System.Action<Tameable>>(AccessTools.Method(typeof(Tameable), "Tame"));
         const float DiagEverySeconds = 5f;
@@ -70,7 +71,7 @@ namespace SteveTheTroll.Taming
             if (step == TamingRules.Step.CallOwnTroll) { CallTroll(own, wearer); return; }
             if (step != TamingRules.Step.CountDown) return;
 
-            float left = TamingRules.CountDown(before, TDelta(t));
+            float left = TamingRules.CountDown(before, TDelta());
             nview.GetZDO().Set(ZDOVars.s_tameTimeLeft, left);
             float stored = GetRemaining(t);
             ModLog.Check("TrollTamingPatch: " + troll.name + " stored taming time", stored, left, 0.01, "s");
