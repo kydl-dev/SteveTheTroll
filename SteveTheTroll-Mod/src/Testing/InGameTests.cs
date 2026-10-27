@@ -1,4 +1,5 @@
 using Kydl.Common;
+using UnityEngine;
 
 namespace SteveTheTroll.Testing
 {
@@ -38,6 +39,21 @@ namespace SteveTheTroll.Testing
             string detail = "Troll " + (troll != null) + ", Troll/Visual " + (visual != null) + ", " + Figure.TrollFigureFactory.LogItemPrefab + "/attach " + (logAttach != null) + ", player LeftFoot " + (foot != null);
             ModLog.Verbose("InGameTests: World_TrollFigureSources " + detail);
             return troll != null && visual != null && logAttach != null && foot != null ? "PASS: " + detail : "FAIL: " + detail;
+        }
+
+        /// T-007: the slipper item exists with its stats (armor 5, max quality 4, utility, frost resistant) and has a recipe.
+        static string World_SlipperItem()
+        {
+            var prefab = ObjectDB.instance != null ? ObjectDB.instance.GetItemPrefab(Item.SlipperItem.PrefabName) : null;
+            var drop = prefab != null ? prefab.GetComponent<ItemDrop>() : null;
+            if (drop == null) return "FAIL: " + Item.SlipperItem.PrefabName + " not in ObjectDB";
+            var s = drop.m_itemData.m_shared;
+            bool frost = s.m_damageModifiers != null && s.m_damageModifiers.Exists(m => m.m_type == HitData.DamageType.Frost && m.m_modifier == HitData.DamageModifier.Resistant);
+            var recipe = ObjectDB.instance.GetRecipe(drop.m_itemData);
+            string detail = "type " + s.m_itemType + ", armor " + s.m_armor + " +" + s.m_armorPerLevel + "/q, max quality " + s.m_maxQuality + ", frost resistant " + frost + ", recipe " + (recipe != null) + ", name " + s.m_name;
+            ModLog.Verbose("InGameTests: World_SlipperItem " + detail);
+            bool ok = s.m_itemType == ItemDrop.ItemData.ItemType.Utility && Mathf.Approximately(s.m_armor, Item.SlipperItem.BaseArmor) && s.m_maxQuality == Item.SlipperItem.MaxQuality && frost && recipe != null;
+            return (ok ? "PASS: " : "FAIL: ") + detail;
         }
     }
 }
