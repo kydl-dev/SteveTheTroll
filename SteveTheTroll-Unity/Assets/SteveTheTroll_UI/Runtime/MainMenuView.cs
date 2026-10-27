@@ -20,13 +20,19 @@ namespace SteveTheTroll.Ui
             IList<TrollInfo> trolls, Action<string, string> focusChosen, Action<string> goFarm, int startTab = 0, long nowTicks = 0)
         {
             var w = UiKit.Window(text("stevethetroll_menu_title"), text("stevethetroll_menu_footer"), onClose, out UiScroll body);
-            var tabs = new[] { SlippersTab(text, slippers, makeScene, viewer), WorkTab(text, trolls, focusChosen, goFarm), TrollsTab(text, trolls, nowTicks) };
+            // D-046: the two troll tabs only exist while the player has at least one living tamed troll (near or far)
+            bool anyTroll = false;
+            if (trolls != null) foreach (var t in trolls) if (t.DiedTicks <= 0) anyTroll = true;
+            var tabs = anyTroll
+                ? new[] { SlippersTab(text, slippers, makeScene, viewer), WorkTab(text, trolls, focusChosen, goFarm), TrollsTab(text, trolls, nowTicks) }
+                : new[] { SlippersTab(text, slippers, makeScene, viewer) };
             foreach (var t in tabs) body.Content.Add(t);
-            var bar = new TabBar(new[] { text("stevethetroll_tab_slippers"), text("stevethetroll_tab_troll"), text("stevethetroll_tab_trolls") }, startTab, index => ShowTab(tabs, index));
+            var names = anyTroll ? new[] { text("stevethetroll_tab_slippers"), text("stevethetroll_tab_troll"), text("stevethetroll_tab_trolls") } : new[] { text("stevethetroll_tab_slippers") };
+            var bar = new TabBar(names, startTab, index => ShowTab(tabs, index));
             ShowTab(tabs, bar.Selected);
             w.Insert(1, bar.Root);               // between the title bar and the scrolling body: the tabs stay put while the content scrolls
             UiLog.Verbose("MainMenuView: built (" + tabs.Length + " tabs, start tab " + bar.Selected + ", slippers " + (slippers != null ? slippers.ToString() : "none")
-                + ", 3D scene " + (makeScene != null ? "yes" : "no") + ", trolls " + (trolls != null ? trolls.Count : 0) + ")");
+                + ", 3D scene " + (makeScene != null ? "yes" : "no") + ", trolls " + (trolls != null ? trolls.Count : 0) + ", troll tabs " + (anyTroll ? "shown" : "hidden (no living tamed troll)") + ")");
             return w;
         }
 
