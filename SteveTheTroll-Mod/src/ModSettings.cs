@@ -38,8 +38,8 @@ namespace SteveTheTroll
         public static readonly Tunable<float> FarmMaxRange = new Tunable<float>("TrollTamed", "FarmMaxRange", 150f, 50f, 200f, "Metres: last search around the troll; nothing here -> it walks to the owner's bed (user: 150 m).");
         public static readonly Tunable<float> FarmReach = new Tunable<float>("TrollTamed", "FarmReach", 2f, 1f, 6f, "Metres (flat) from a tree trunk / log / rock at which a farming troll stops walking and swings (user: 2 m, TEST-021).");
         public static readonly Tunable<float> DeadKeepSeconds = new Tunable<float>("TrollTamed", "DeadKeepSeconds", 60f, 5f, 600f, "Seconds a dead troll stays in the F6 lists before it is removed and its name is free again (user: 60 s).");
-        public static readonly Tunable<float> SpawnBoostFactor = new Tunable<float>("TrollTamed", "SpawnBoostFactor", 3f, 1f, 10f, "Troll spawns this many times as often near a slipper wearer without a tamed troll (user: 3; 1 = off).");
-        public static readonly Tunable<float> SpawnBoostWearerRange = new Tunable<float>("TrollTamed", "SpawnBoostWearerRange", 100f, 20f, 300f, "Metres from a spawn zone within which a slipper wearer boosts its troll spawns.");
+        public static readonly Tunable<float> SpawnBoostFactor = new Tunable<float>("TrollTamed", "SpawnBoostFactor", 5f, 1f, 10f, "Troll spawns this many times as often near a slipper wearer without a tamed troll (user: 5; 1 = off).");
+        public static readonly Tunable<float> SpawnBoostWearerRange = new Tunable<float>("TrollTamed", "SpawnBoostWearerRange", 150f, 20f, 300f, "Metres from a spawn zone within which a slipper wearer boosts its troll spawns (user: 150 m).");
 
         public static readonly Tunable<float> ExampleSpeed = new Tunable<float>("Example", "ExampleSpeed", 1f, 0f, 10f,
             "Example dev-only value: replace or remove. Read it with ModSettings.ExampleSpeed.Value.");
