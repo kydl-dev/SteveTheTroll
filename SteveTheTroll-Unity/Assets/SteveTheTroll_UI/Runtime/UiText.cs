@@ -88,6 +88,8 @@ namespace SteveTheTroll.Ui
             { "stevethetroll_status_farming", "Farming" },
             { "stevethetroll_troll_waits", "{0} is here and waits for your orders." },
             { "stevethetroll_troll_coming", "{0} is coming!" },
+            { "stevethetroll_hover_follow", "Follow" },
+            { "stevethetroll_hover_stay", "Stay" },
             { "stevethetroll_farm_auto", "{0} got no orders and goes farming {1}." },
             { "stevethetroll_farm_nothing", "{0} found nothing to farm within {1} m and walks back to your bed." },
             { "stevethetroll_farm_home", "{0} is back at your bed and waits." },
