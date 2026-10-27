@@ -26,6 +26,13 @@ namespace SteveTheTroll.Taming
             return a;
         }
 
+        string Shown()
+        {
+            var t = GetComponent<Tameable>();
+            string n = t != null ? t.GetText() : "";
+            return string.IsNullOrEmpty(n) ? name : n;
+        }
+
         void Update()
         {
             if (Time.time < _next) return;
@@ -37,7 +44,7 @@ namespace SteveTheTroll.Taming
             _ai.SetFollowTarget(null);
             _ai.SetPatrolPoint();
             ModLog.Info("TrollArrival: " + name + (late ? " gave up walking after " + GiveUpSeconds + " s" : " arrived (" + d.ToString("F1") + " m)") + " - stays and waits for orders");
-            if (!late) _player.Message(MessageHud.MessageType.Center, Loc.T("stevethetroll_troll_waits"));
+            if (!late && _player == Player.m_localPlayer) Ui.Notify.Show(Loc.T("stevethetroll_troll_waits", Shown()), Ui.Notify.Kind.Info);
             Destroy(this);
         }
     }

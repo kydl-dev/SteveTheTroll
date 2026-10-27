@@ -96,6 +96,12 @@ namespace SteveTheTroll.Taming
                 if (id.Length == 0) continue;
                 var t = Known.Find(k => k.Id == id);
                 if (t == null) { t = new TrollInfo { Id = id }; Known.Add(t); changed = true; ModLog.Info("TrollRegistry: new troll " + id + " in the list (" + Known.Count + " now)"); }
+                if (t.Name.Length == 0 && c.GetComponent<ZNetView>() != null && c.GetComponent<ZNetView>().IsOwner() && c.GetComponent<Tameable>() != null)
+                {
+                    string n = NameFor(c);
+                    c.GetComponent<Tameable>().SetText(n);
+                    ModLog.Info("TrollRegistry: unnamed tamed troll [" + id + "] named '" + n + "' (D-047: never 'Troll')");
+                }
                 Read(c, t);
                 live++;
             }
@@ -169,7 +175,7 @@ namespace SteveTheTroll.Taming
             t.Status = "stevethetroll_status_dead"; t.Health = 0f; t.Loaded = false; t.LastSeenTicks = DateTime.UtcNow.Ticks; t.DiedTicks = t.LastSeenTicks;
             Save();
             string shown = t.Shown(k => Loc.T(k));
-            if (Player.m_localPlayer != null) Player.m_localPlayer.Message(MessageHud.MessageType.Center, Loc.T("stevethetroll_troll_died", shown));
+            Ui.Notify.Show(Loc.T("stevethetroll_troll_died", shown), Ui.Notify.Kind.Bad);
             ModLog.Info("TrollRegistry: " + shown + " [" + id + "] died - removed in " + ModSettings.DeadKeepSeconds.Value + " s");
         }
 
@@ -249,6 +255,7 @@ namespace SteveTheTroll.Taming
                 {
                     if (line.Length == 0) continue;
                     var t = TrollInfo.Decode(line);
+                    if (t != null && t.Status == "stevethetroll_status_dead" && t.DiedTicks <= 0) { t.DiedTicks = Math.Max(1L, t.LastSeenTicks); ModLog.Info("TrollRegistry: " + t.Shown(null) + " [" + t.Id + "] was dead without a death time (old entry) - removed with the next refresh"); }
                     if (t != null) { t.Loaded = false; Known.Add(t); } else bad++;
                 }
             ModLog.Verbose("TrollRegistry: loaded " + Known.Count + " troll(s) of " + p.GetPlayerName() + " from the profile" + (bad > 0 ? ", " + bad + " bad line(s) dropped" : ""));

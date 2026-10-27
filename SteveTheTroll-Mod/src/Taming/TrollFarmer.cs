@@ -10,7 +10,9 @@ namespace SteveTheTroll.Taming
     /// </summary>
     internal sealed class TrollFarmer : MonoBehaviour
     {
-        const float SearchSeconds = 3f, LogSeconds = 5f, LookAngle = 25f, MinAttackGap = 1f;
+        const float SearchSeconds = 3f, LogSeconds = 5f, LookAngle = 25f, MinAttackGap = 1f, StuckSeconds = 8f;
+        float _stuckSeconds, _lastDist = float.MaxValue;
+        GameObject _bad;
         string _focus = "";
         Vector3 _centre;
         GameObject _target;
@@ -36,15 +38,24 @@ namespace SteveTheTroll.Taming
             if ((_target == null || _hit == null) && Time.time >= _nextSearch) Search(me, weapon);
             if (_target == null || _hit == null) return;
 
-            var point = _hit.ClosestPoint(transform.position);
+            var point = _hit.bounds.ClosestPoint(transform.position);      // bounds: Collider.ClosestPoint is wrong on non-convex meshes (TEST-018)
+            point.y = Mathf.Clamp(transform.position.y + 1.5f, _hit.bounds.min.y, _hit.bounds.max.y);   // hit the trunk / rock at chest height, not the ground
             float d = Vector3.Distance(transform.position, point);
             float reach = Mathf.Max(1.5f, weapon.m_shared.m_aiAttackRange);
             if (Time.time >= _nextLog)
             {
                 _nextLog = Time.time + LogSeconds;
-                ModLog.Verbose("TrollFarmer: " + name + " -> " + _target.name + " (" + CurrentItem + ") " + d.ToString("F1") + " m, reach " + reach.ToString("F1") + " m, weapon " + weapon.m_shared.m_name + ", attacks " + _attacks);
+                ModLog.Verbose("TrollFarmer: " + name + " -> " + _target.name + " (" + TrollFarming.KindOf(_target) + ", " + CurrentItem + ") " + d.ToString("F1") + " m, reach " + reach.ToString("F1") + " m, weapon " + weapon.m_shared.m_name + ", attacks " + _attacks + ", stuck " + _stuckSeconds.ToString("F0") + " s");
             }
-            if (d > reach) { moveTo(ai, dt, point, reach * 0.8f, false); return; }
+            if (d > reach)
+            {
+                // no progress for StuckSeconds -> give this source up and look for another one
+                if (d < _lastDist - 0.2f) { _lastDist = d; _stuckSeconds = 0f; } else _stuckSeconds += dt;
+                if (_stuckSeconds > StuckSeconds) { ModLog.Info("TrollFarmer: " + name + " cannot reach " + _target.name + " (" + d.ToString("F1") + " m) - tries another source"); _bad = _target; _target = null; _hit = null; _stuckSeconds = 0f; _lastDist = float.MaxValue; return; }
+                moveTo(ai, dt, point, reach * 0.8f, false);
+                return;
+            }
+            _stuckSeconds = 0f; _lastDist = float.MaxValue;
             ai.StopMoving();
             lookAt(ai, point);
             if (me.InAttack() || Time.time < _nextAttack || !ai.IsLookingAt(point, LookAngle, false)) return;
@@ -65,9 +76,9 @@ namespace SteveTheTroll.Taming
             float bed = TrollRegistry.BedDistance(transform.position);
             foreach (var item in items)
             {
-                _target = TrollFarming.Find(_centre, transform.position, item, tier, range, out _hit);
-                if (_target == null && bed >= 0f && Game.instance != null) _target = TrollFarming.Find(Game.instance.GetPlayerProfile().GetCustomSpawnPoint(), transform.position, item, tier, range, out _hit);
-                if (_target != null) { CurrentItem = item; ModLog.Info("TrollFarmer: " + name + " farms " + item + " from " + _target.name + " (tier " + tier + ")"); return; }
+                _target = TrollFarming.Find(_centre, transform.position, item, tier, range, out _hit, _bad);
+                if (_target == null && bed >= 0f && Game.instance != null) _target = TrollFarming.Find(Game.instance.GetPlayerProfile().GetCustomSpawnPoint(), transform.position, item, tier, range, out _hit, _bad);
+                if (_target != null) { CurrentItem = item; ModLog.Info("TrollFarmer: " + name + " farms " + item + " from " + _target.name + " (" + TrollFarming.KindOf(_target) + ", tier " + tier + ")"); return; }
             }
             CurrentItem = "";
             ModLog.Verbose("TrollFarmer: " + name + " finds nothing to farm ('" + (_focus.Length > 0 ? _focus : "priority") + "') within " + range + " m - waits");

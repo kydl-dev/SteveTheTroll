@@ -54,6 +54,23 @@ namespace SteveTheTroll.Taming
             }
         }
 
+        // TEST-017 / TEST-018: two tamed trolls died 5-7 s after the world loaded with nothing in the log. Every hit on a tamed troll is logged
+        // (type, damage, attacker, health after) so the next death shows its cause.
+        [HarmonyPatch(typeof(Character), nameof(Character.ApplyDamage))]
+        static class HitLog
+        {
+            static void Postfix(Character __instance, HitData hit)
+            {
+                if (hit == null || !IsTamedTroll(__instance)) return;
+                var a = hit.GetAttacker();
+                float total = hit.GetTotalDamage();
+                string line = "TamedTrollStats: " + __instance.name + " hit (" + hit.m_hitType + ") " + total.ToString("F1") + " damage by " + (a != null ? a.name : "nothing")
+                    + ", health now " + __instance.GetHealth().ToString("F0") + " / " + __instance.GetMaxHealth().ToString("F0") + " at " + __instance.transform.position.ToString("F1");
+                if (__instance.GetHealth() <= 0f || total >= __instance.GetMaxHealth() * 0.25f) ModLog.Warn(line + " (big hit / death)");
+                else ModLog.Verbose(line);
+            }
+        }
+
         [HarmonyPatch(typeof(Attack), "GetLevelDamageFactor")]
         static class DamageFactor
         {

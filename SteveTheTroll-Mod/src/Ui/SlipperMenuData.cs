@@ -67,15 +67,15 @@ namespace SteveTheTroll.Ui
             var troll = Taming.TrollRegistry.FindLoaded(id);
             var info = Taming.TrollRegistry.Trolls().Find(t => t.Id == id);
             string shown = info != null ? info.Shown(k => Loc.T(k)) : id;
-            if (troll == null) { Tell(Loc.T("stevethetroll_gofarm_far", shown)); ModLog.Info("SlipperMenuData: Go farm for " + shown + " - not loaded"); return false; }
+            if (troll == null) { Tell(Loc.T("stevethetroll_gofarm_far", shown), Notify.Kind.Warn); ModLog.Info("SlipperMenuData: Go farm for " + shown + " - not loaded"); return false; }
             string focus = info != null ? TrollFocus.Normalize(info.Focus) : "";
             bool ok = Taming.TrollFarming.Begin(troll, focus);
-            Tell(ok ? Loc.T("stevethetroll_gofarm_started", shown, Loc.T(TrollFocus.KeyOf(focus))) : Loc.T("stevethetroll_gofarm_far", shown));
+            Tell(ok ? Loc.T("stevethetroll_gofarm_started", shown, Loc.T(TrollFocus.KeyOf(focus))) : Loc.T("stevethetroll_gofarm_far", shown), ok ? Notify.Kind.Good : Notify.Kind.Warn);
             ModLog.Info("SlipperMenuData: Go farm for " + shown + " focus '" + focus + "' -> " + ok);
             return ok;
         }
 
-        static void Tell(string msg) { if (MessageHud.instance != null) MessageHud.instance.ShowMessage(MessageHud.MessageType.Center, msg); }
+        static void Tell(string msg, Notify.Kind kind = Notify.Kind.Info) { Notify.Show(msg, kind); }
 
         /// D-043: a troll's new focus from the Troll work tab (stored on that troll, pending while it is far). A troll that follows its owner
         /// does not farm: the player gets a message to let it stay (E on the troll). Expected outcome: returns whether the message was shown.
@@ -89,9 +89,8 @@ namespace SteveTheTroll.Ui
             ModLog.Verbose("SlipperMenuData: troll [" + id + "] " + (troll != null ? "loaded, following " + following : "not loaded") + ", focus '" + v + "'");
             if (!following || v.Length == 0) return false;
             string msg = Loc.T("stevethetroll_focus_following", Loc.T(TrollFocus.KeyOf(v)));
-            if (MessageHud.instance != null) MessageHud.instance.ShowMessage(MessageHud.MessageType.Center, msg);
             ModLog.Info("SlipperMenuData: told the player the troll is following (" + msg + ")");
-            return MessageHud.instance != null;
+            return Notify.Show(msg, Notify.Kind.Warn);
         }
     }
 }

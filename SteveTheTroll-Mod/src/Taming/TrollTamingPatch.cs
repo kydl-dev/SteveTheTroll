@@ -109,14 +109,15 @@ namespace SteveTheTroll.Taming
             if (!TamingRules.Done(left)) return;
 
             bool owned = TrollTaming.SetOwner(troll, wearer);
-            DoTame(t);
-            ModLog.Info("TrollTamingPatch: " + troll.name + " tamed by " + wearer.GetPlayerName() + " (owner set " + owned + ", tamed " + troll.IsTamed() + ")");
-            ModLog.Check("TrollTamingPatch: " + troll.name + " tamed after the countdown", troll.IsTamed() ? 1 : 0, 1, 0, "");
-            TamedTrollStats.Refresh(troll);           // D-042: x3 health from now on
             string id = TrollRegistry.IdOf(troll);    // D-043: our id for the F6 lists
             string name = TrollRegistry.NameFor(troll);
-            t.SetText(name);                          // D-044: Steve N (club) / Spencer N
-            ModLog.Info("TrollTamingPatch: " + troll.name + " named '" + name + "' (shown '" + t.GetText() + "')");
+            t.SetText(name);                          // D-044: Steve N (club) / Spencer N - before Tame, so every message uses it
+            string baseName = name.Contains(" ") ? name.Substring(0, name.LastIndexOf(' ')) : name;
+            Ui.TrollMessages.ComingText(Loc.T("stevethetroll_troll_coming", baseName));   // D-047: "Steve is coming!" instead of the game's text
+            DoTame(t);
+            ModLog.Info("TrollTamingPatch: " + troll.name + " tamed by " + wearer.GetPlayerName() + " as '" + name + "' (owner set " + owned + ", tamed " + troll.IsTamed() + ")");
+            ModLog.Check("TrollTamingPatch: " + troll.name + " tamed after the countdown", troll.IsTamed() ? 1 : 0, 1, 0, "");
+            TamedTrollStats.Refresh(troll);           // D-042: x3 health from now on
             TrollArrival.Begin(troll, wearer);       // D-043: walk to the tamer, then wait for orders
             ModLog.Verbose("TrollTamingPatch: " + troll.name + " id " + id + ", walking to " + wearer.GetPlayerName());
         }

@@ -82,8 +82,9 @@ namespace SteveTheTroll.Ui
             { "stevethetroll_gofarm_far", "{0} is too far away to get orders." },
             { "stevethetroll_gofarm_started", "{0} goes to farm {1}." },
             { "stevethetroll_status_farming", "Farming" },
-            { "stevethetroll_troll_waits", "Your troll is here and waits for your orders." },
-            { "stevethetroll_focus_following", "Your troll is following you. Press E on it so it stays - then it farms {0}." },
+            { "stevethetroll_troll_waits", "{0} is here and waits for your orders." },
+            { "stevethetroll_troll_coming", "{0} is coming!" },
+            { "stevethetroll_focus_following", "Your troll is following you. Press E on it so it stays, or press Go farm - then it farms {0}." },
         };
 
 
