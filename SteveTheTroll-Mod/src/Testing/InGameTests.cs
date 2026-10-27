@@ -64,6 +64,13 @@ namespace SteveTheTroll.Testing
 
         const string ExpectedName = "Fluffy Slippers";
 
+        // TEST-012 lesson: the patch class's reflection lookups (static m_tameDeltaTime) must load without an exception.
+        static string Startup_TamingReflection()
+        {
+            try { return Taming.TrollTamingPatch.SelfCheck(); }
+            catch (System.TypeInitializationException e) { return "FAIL: " + (e.InnerException != null ? e.InnerException.Message : e.Message); }
+        }
+
         // T-008a: the game's Troll prefab carries a Tameable with the taming time and E commands (follow / stay).
         static string World_TrollTameable()
         {

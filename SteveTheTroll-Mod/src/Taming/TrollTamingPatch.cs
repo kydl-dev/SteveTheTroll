@@ -22,6 +22,16 @@ namespace SteveTheTroll.Taming
         const float DiagEverySeconds = 5f;
         static float _nextDiag;
 
+        /// For the in-game test Startup_TamingReflection: touching this runs the type initializer (all reflection lookups).
+        /// Expected outcome: "tick N s" with the game's tick interval (> 0).
+        internal static string SelfCheck()
+        {
+            float dt = TDelta();
+            bool ok = dt > 0f && GetRemaining != null && DoTame != null;
+            ModLog.Verbose("TrollTamingPatch: self check tick " + dt + " s, delegates " + (GetRemaining != null) + "/" + (DoTame != null));
+            return (ok ? "PASS: " : "FAIL: ") + "tick " + dt + " s, GetRemainingTime " + (GetRemaining != null) + ", Tame " + (DoTame != null);
+        }
+
         [HarmonyPatch(typeof(Tameable), "TamingUpdate")]
         static class TamingUpdate
         {
