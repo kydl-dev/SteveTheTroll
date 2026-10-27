@@ -1,6 +1,6 @@
 # SteveTheTroll
 
-TBD - ask the user and update this line.
+Steve the Troll plush slippers: fluffy troll slippers worn in the utility slot (frost resistance, troll taming). A fluffy troll costume follows later.
 
 ## Features
 - (fill in)
