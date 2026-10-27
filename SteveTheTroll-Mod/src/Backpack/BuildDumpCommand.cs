@@ -12,7 +12,7 @@ namespace SteveTheTroll.Backpack
     /// <summary>
     /// T-008b step 1 (D-037: the troll backpack looks like the user's in-game construction): console command stt_dumpbuild [radius m, default 4].
     /// Writes every building piece within the radius of the player - prefab name, position and rotation relative to the construction's base
-    /// (centre of all pieces, lowest point) - to BepInEx/config/SteveTheTroll_build_dump.txt in the test profile. The agent turns the lines into
+    /// (centre of all pieces, lowest point) - to BepInEx/cache/SteveTheTroll/build_dump.txt in the test profile (ModCache, PROJECT_RULES 18). The agent turns the lines into
     /// BackpackData and the backpack is then built from the game's own piece meshes on the troll's back (nothing of the game is shipped).
     /// </summary>
     internal sealed class BuildDumpCommand : ConsoleCommand
@@ -56,7 +56,7 @@ namespace SteveTheTroll.Backpack
                 sb.AppendLine(Utils.GetPrefabName(piece.gameObject) + " | " + lp.x.ToString("0.###", c) + " " + lp.y.ToString("0.###", c) + " " + lp.z.ToString("0.###", c)
                     + " | " + e.x.ToString("0.#", c) + " " + e.y.ToString("0.#", c) + " " + e.z.ToString("0.#", c) + " | " + s.x.ToString("0.###", c) + " " + s.y.ToString("0.###", c) + " " + s.z.ToString("0.###", c));
             }
-            string path = Path.Combine(Paths.ConfigPath, "SteveTheTroll_build_dump.txt");
+            string path = ModCache.File(Plugin.ModName, "build_dump.txt");
             File.WriteAllText(path, sb.ToString());
             ModLog.Info("BuildDump: " + pieces.Count + " piece(s) within " + radius + " m written to " + path);
             return pieces.Count + " piece(s) -> " + path;

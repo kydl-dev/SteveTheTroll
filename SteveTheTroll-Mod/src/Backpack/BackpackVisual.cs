@@ -5,7 +5,7 @@ using UnityEngine;
 namespace SteveTheTroll.Backpack
 {
     /// <summary>
-    /// T-008b (D-053): the backpack on every tamed Troll, on every client (visual only): the user's construction (BackpackData) rebuilt from the
+    /// T-008b (D-053, D-054): the backpack on every tamed Troll, on every client (visual only): the user's construction (BackpackData) rebuilt from the
     /// game's own piece prefabs - only their mesh renderers (the "new" look of WearNTear pieces, LOD 0), no colliders, no networking.
     /// Placed each LateUpdate behind the troll's Spine2 in the troll's own frame (TrollBackpack Tunables: scale, back / up / side offset in
     /// metres, pitch / yaw / roll), so it moves with the body but does not twist with the spine. Storage comes in T-008c.
