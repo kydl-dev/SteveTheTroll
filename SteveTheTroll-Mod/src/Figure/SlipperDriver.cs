@@ -7,7 +7,8 @@ namespace SteveTheTroll.Figure
 {
     /// <summary>
     /// D-025: one plush slipper on one foot. Builds it through the shared SlipperFit (same code as the Unity fit scene) from the bundle
-    /// prefab "SlipperParts", skinned to the player's own foot + toe bones. Placement Tunables rebuild it (bindposes are taken at build),
+    /// prefab "SlipperParts", skinned with the player's OWN foot / toe / shin weights (SkinTransfer, TEST-007; foot + toe weights when the body
+    /// mesh is not found). Placement Tunables rebuild it (bindposes are taken at build); the troll on it binds through PointAt,
     /// brightness Tunables only re-colour its own material copies. Logs the size / place every few seconds.
     /// </summary>
     internal sealed class SlipperDriver : MonoBehaviour
@@ -20,6 +21,8 @@ namespace SteveTheTroll.Figure
         static bool _subscribed;
 
         Transform _foot, _toe, _player, _root;
+        SkinTransfer _skin;
+        int _buildVersion;
         bool _left;
         int _builtPlace, _builtColour;
         readonly List<Material> _own = new List<Material>();
@@ -42,6 +45,10 @@ namespace SteveTheTroll.Figure
         {
             _foot = foot; _player = player; _left = left;
             _toe = foot != null ? foot.Find(TrollFitMath.ToeOf(foot.name)) : null;
+            var vis = player != null ? player.GetComponent<VisEquipment>() : null;
+            var body = vis != null ? vis.m_bodyModel : null;
+            if (foot != null && body != null) _skin = new SkinTransfer(body, new[] { foot, _toe, foot.parent });
+            ModLog.Verbose("SlipperDriver: skin source " + (_skin != null ? body.name + " (" + body.sharedMesh.vertexCount + " verts), bones " + foot.name + " / " + (_toe != null ? _toe.name : "-") + " / " + (foot.parent != null ? foot.parent.name : "-") : "NOT FOUND (foot + toe weights)"));
             Subscribe();
             ModLog.Verbose("SlipperDriver: Init " + (left ? "left" : "right") + " foot " + (foot != null ? foot.name : "null") + ", toe " + (_toe != null ? _toe.name : "MISSING (no toe bend)"));
             Build();
@@ -52,7 +59,7 @@ namespace SteveTheTroll.Figure
         {
             if (_subscribed) return;
             _subscribed = true;
-            foreach (var t in new[] { ModSettings.SlipperForward, ModSettings.SlipperUp, ModSettings.SlipperSide, ModSettings.SlipperYaw, ModSettings.SlipperScale })
+            foreach (var t in new[] { ModSettings.SlipperForward, ModSettings.SlipperUp, ModSettings.SlipperSide, ModSettings.SlipperYaw, ModSettings.SlipperScale, ModSettings.SlipperWidth })
                 t.SettingChanged += (s, e) => { _placeVersion++; ModLog.Verbose("SlipperDriver: " + s + " changed -> rebuild"); };
             foreach (var t in new[] { ModSettings.SlipperBrightness, ModSettings.SlipperRimBrightness })
                 t.SettingChanged += (s, e) => { _colourVersion++; ModLog.Verbose("SlipperDriver: " + s + " changed -> re-colour"); };
@@ -64,8 +71,11 @@ namespace SteveTheTroll.Figure
             if (_root != null) Destroy(_root.gameObject);
             foreach (var m in _own) if (m != null) Destroy(m);
             _own.Clear(); _base.Clear(); _partOf.Clear();
+            int sources = _skin != null ? _skin.Refresh() : 0;
+            if (_skin != null) ModLog.CheckRange("SlipperDriver: " + name + " skin source vertices (foot / toe / shin)", sources, 50, 20000, "verts");
             var parts = SlipperFit.Build(Prefab(), transform, _foot, _toe, _player.forward, _left, ModSettings.SlipperForward.Value, ModSettings.SlipperSide.Value,
-                ModSettings.SlipperUp.Value, ModSettings.SlipperYaw.Value, ModSettings.SlipperScale.Value, out _root);
+                ModSettings.SlipperUp.Value, ModSettings.SlipperYaw.Value, ModSettings.SlipperScale.Value, ModSettings.SlipperWidth.Value, _skin, out _root);
+            _buildVersion++;
             foreach (var p in parts)
             {
                 var mats = p.Renderer.sharedMaterials;
@@ -84,6 +94,7 @@ namespace SteveTheTroll.Figure
             ModLog.Verbose("SlipperDriver: " + name + " built " + parts.Count + " part(s), " + _own.Count + " material copy(ies), forward " + ModSettings.SlipperForward.Value.ToString("F3")
                 + " m, up " + ModSettings.SlipperUp.Value.ToString("F3") + " m, side " + ModSettings.SlipperSide.Value.ToString("F3") + " m, yaw " + ModSettings.SlipperYaw.Value.ToString("F0") + ", scale " + ModSettings.SlipperScale.Value.ToString("F2"));
             ModLog.Check("SlipperDriver: " + name + " parts", parts.Count, 3, 0, "");
+            foreach (var p in parts) ModLog.Verbose("SlipperDriver: " + name + " " + p.Name + " skinned to " + p.Renderer.bones.Length + " bone(s): " + string.Join(", ", System.Array.ConvertAll(p.Renderer.bones, b => b != null ? b.name : "null")));
             Colour();
         }
 
@@ -117,8 +128,26 @@ namespace SteveTheTroll.Figure
             }
         }
 
+        /// Changes every time the slipper is rebuilt (the troll on it re-binds then).
+        public int BuildVersion { get { return _buildVersion; } }
+
+        /// A point that follows the slipper / foot skin like a slipper vertex at `world` would, bound in the CURRENT pose (the troll's anchor).
+        /// Null when the foot is gone.
+        public SkinPoint PointAt(Vector3 world)
+        {
+            if (_foot == null) return null;
+            if (_skin != null && _skin.Refresh() > 0)
+            {
+                var sp = _skin.PointAt(world);
+                if (sp != null) return sp;
+            }
+            float w = _toe != null ? FitGeometry.ToeWeight(FitGeometry.ToeAlong(world, _toe.position, TrollFitMath.FootForward(_foot, _toe, _player.forward))) : 0f;
+            return new SkinPoint(world, new[] { _foot, _toe }, new[] { 1f - w, w }, _toe != null ? 2 : 1);
+        }
+
         void OnDestroy()
         {
+            if (_skin != null) _skin.Dispose();
             foreach (var m in _own) if (m != null) Destroy(m);
             ModLog.Verbose("SlipperDriver: " + name + " destroyed");
         }

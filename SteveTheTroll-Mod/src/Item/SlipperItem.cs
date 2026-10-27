@@ -17,6 +17,7 @@ namespace SteveTheTroll.Item
     internal static class SlipperItem
     {
         public const string PrefabName = "STT_TrollSlippers";
+        public const string TokenName = "$stevethetroll_slippers";
         const string BasePrefab = "BeltStrength";
         const string IconName = "SlipperIcon";
         public const float BaseArmor = 5f, ArmorPerLevel = 1f;
@@ -39,7 +40,7 @@ namespace SteveTheTroll.Item
             PrefabManager.OnVanillaPrefabsAvailable -= Add;
             var cfg = new ItemConfig
             {
-                Name = "$stevethetroll_slippers",
+                Name = TokenName,
                 Description = "$stevethetroll_slippers_desc",
                 CraftingStation = CraftingStations.Workbench,
                 MinStationLevel = 1,

@@ -24,8 +24,8 @@ namespace SteveTheTroll.Figure
             ModLog.Verbose("SlipperSet: spawn on " + owner + ", feet " + (leftFoot != null) + " / " + (rightFoot != null));
             set._slipLeft = SpawnSlipper(character, leftFoot, true, owner);
             set._slipRight = SpawnSlipper(character, rightFoot, false, owner);
-            set._trollLeft = SpawnTroll(character, leftFoot, true, owner);
-            set._trollRight = SpawnTroll(character, rightFoot, false, owner);
+            set._trollLeft = SpawnTroll(character, leftFoot, true, owner, Driver(set._slipLeft));
+            set._trollRight = SpawnTroll(character, rightFoot, false, owner, Driver(set._slipRight));
             ModLog.Verbose("SlipperSet: " + owner + " slippers " + (set._slipLeft != null) + "/" + (set._slipRight != null) + ", trolls " + (set._trollLeft != null) + "/" + (set._trollRight != null));
             ModLog.Check("SlipperSet: " + owner + " parts built", (set._slipLeft != null ? 1 : 0) + (set._slipRight != null ? 1 : 0) + (set._trollLeft != null ? 1 : 0) + (set._trollRight != null ? 1 : 0), 4, 0, "");
             return set;
@@ -50,13 +50,16 @@ namespace SteveTheTroll.Figure
             return go;
         }
 
-        static GameObject SpawnTroll(Transform character, Transform foot, bool left, string owner)
+        static SlipperDriver Driver(GameObject slipper) { return slipper != null ? slipper.GetComponent<SlipperDriver>() : null; }
+
+        /// The troll is glued to its slipper (TEST-007); without one it stands on the foot.
+        static GameObject SpawnTroll(Transform character, Transform foot, bool left, string owner, SlipperDriver slipper)
         {
             if (foot == null) return null;
             var holder = TrollFigureFactory.Build(left ? "SteveTheTroll_FigureLeft" : "SteveTheTroll_FigureRight");
             if (holder == null) return null;
             holder.transform.SetParent(character, false);
-            bool ready = holder.AddComponent<TrollFigure>().Init(foot, character, left);
+            bool ready = holder.AddComponent<TrollFigure>().Init(foot, character, left, slipper);
             holder.SetActive(true);
             ModLog.Verbose("SlipperSet: " + owner + " " + holder.name + " active, init " + (ready ? "complete" : "INCOMPLETE (see warnings above)"));
             return holder;

@@ -8,15 +8,23 @@ namespace SteveTheTroll.Figure
     /// Drives one mini troll on one foot (D-013 trial). Pose, size and placement come from the Unity fit (TrollFitData, D-014) through the
     /// shared TrollFitMath - the same code the Unity fit scene runs - plus the user's in-game fine tune (TrollFigure / TrollPose Tunables,
     /// read every frame). The size is measured on a baked mesh (never from lossyScale) and re-measured whenever a Tunable changes.
+    /// TEST-007: on a slipper the troll is GLUED to it - placed once with the fit (flat, D-016 / D-029), then bound to three points under it
+    /// that follow the slipper's skin (SlipperDriver.PointAt); every frame it follows their frame (bends / tilts with the slipper and toes).
     /// </summary>
     internal sealed class TrollFigure : MonoBehaviour
     {
         const float DiagEverySeconds = 5f;
         const float SizeTolerance = 0.02f;                 // 2 cm
+        const float AnchorSpan = 0.04f;                    // m between the three glue points under the troll
         static int _tunableVersion = 1;
         static bool _subscribed;
 
         Transform _foot, _toe, _player;
+        SlipperDriver _slipper;
+        SkinPoint _glueA, _glueB, _glueC;
+        Vector3 _gluePos;
+        Quaternion _glueRot = Quaternion.identity;
+        int _boundSlipper = -1;
         bool _left;
         SkinnedMeshRenderer _body;
         Transform[] _bones;
@@ -35,9 +43,9 @@ namespace SteveTheTroll.Figure
         float _maxStep;                              // per posed bone: the knuckle line in that bone's own frame (fingers / thumb only)
 
         /// Expected outcome: foot, player, body renderer and every fitted bone are known (returns that check).
-        public bool Init(Transform foot, Transform player, bool left)
+        public bool Init(Transform foot, Transform player, bool left, SlipperDriver slipper)
         {
-            _foot = foot; _player = player; _left = left;
+            _foot = foot; _player = player; _left = left; _slipper = slipper;
             _toe = foot != null ? foot.Find(TrollFitMath.ToeOf(foot.name)) : null;     // direct child of the player's foot (D-016)
             ModLog.Verbose("TrollFigure: toe '" + (foot != null ? TrollFitMath.ToeOf(foot.name) : "?") + "' " + (_toe != null ? "found, foot->toe " + (_toe.position - foot.position).magnitude.ToString("F3") + " m" : "MISSING (falls back to the player's forward)"));
             _body = TrollFitMath.FindBody(transform);
@@ -112,8 +120,12 @@ namespace SteveTheTroll.Figure
             bool dirty = _measuredVersion != _tunableVersion;
             if (dirty) UpdateExtras();
             TrollFitMath.ApplyPose(_bones, _rest, _delta, _extra);
-            Place();
+            bool rebind = _slipper != null && (dirty || _boundSlipper != _slipper.BuildVersion);
+            if (_slipper == null || rebind || _glueA == null) Place();
             if (dirty) Measure();
+            if (rebind) Bind();
+            else if (_glueA != null) Follow();
+            Watch();
             PlaceLog(dirty);
             if (dirty && _fur != null) _fur.Refresh();
             if (Time.time >= _nextDiag) Diag();
@@ -157,13 +169,53 @@ namespace SteveTheTroll.Figure
             Vector3 pos; Quaternion rot;
             float side = ModSettings.FigureSide.Value + (_left ? ModSettings.FigureSideLeft.Value : ModSettings.FigureSideRight.Value);
             var fwd = TrollFitMath.FootForward(_foot, _toe, _player.forward);
-            float step = Fit.FitGeometry.FlipStep(_lastFwd, fwd);
-            if (step > _maxStep) _maxStep = step;
-            if (Fit.FitGeometry.IsJump(step)) _jumps++;
-            _lastFwd = fwd;
             TrollFitMath.Place(_foot.position, fwd, _left, ModSettings.FigureForward.Value, side, ModSettings.FigureUp.Value,
                 ModSettings.FigureYaw.Value, _bottomBelowPivot, out pos, out rot);
             transform.SetPositionAndRotation(pos, rot);
+        }
+
+        // Glues the troll (placed flat this frame) to three points under it that move with the slipper skin.
+        void Bind()
+        {
+            _boundSlipper = _slipper.BuildVersion;
+            var bottom = transform.position - transform.up * _bottomBelowPivot;
+            _glueA = _slipper.PointAt(bottom);
+            _glueB = _slipper.PointAt(bottom + transform.forward * AnchorSpan);
+            _glueC = _slipper.PointAt(bottom + transform.right * AnchorSpan);
+            Vector3 f, u;
+            if (_glueA == null || _glueB == null || _glueC == null || !FitGeometry.FrameAxes(_glueA.Position, _glueB.Position, _glueC.Position, out f, out u))
+            {
+                ModLog.Warn("TrollFigure: " + name + " could not glue to the slipper (points " + (_glueA != null) + "/" + (_glueB != null) + "/" + (_glueC != null) + ") - stays placed on the foot");
+                _glueA = null;
+                return;
+            }
+            var frame = Quaternion.LookRotation(f, u);
+            var inv = Quaternion.Inverse(frame);
+            _glueRot = inv * transform.rotation;
+            _gluePos = inv * (transform.position - _glueA.Position);
+            ModLog.Verbose("TrollFigure: " + name + " glued to slipper build " + _boundSlipper + " at " + bottom.ToString("F3") + " (" + _glueA.BoneCount + "/" + _glueB.BoneCount + "/" + _glueC.BoneCount
+                + " bones), pivot " + _gluePos.ToString("F3") + " m above the glue point in its frame");
+            ModLog.CheckRange("TrollFigure: " + name + " glue point -> troll bottom", (_glueA.Position - bottom).magnitude, 0f, 0.001f, "m");
+        }
+
+        // Follows the glue points: the troll moves, tilts and bends with the slipper under it.
+        void Follow()
+        {
+            Vector3 f, u;
+            var a = _glueA.Position;
+            if (!FitGeometry.FrameAxes(a, _glueB.Position, _glueC.Position, out f, out u)) { Place(); return; }
+            var frame = Quaternion.LookRotation(f, u);
+            transform.SetPositionAndRotation(a + frame * _gluePos, frame * _glueRot);
+        }
+
+        // D-029 flip detector on the troll's final heading.
+        void Watch()
+        {
+            var fwd = TrollFitMath.Flat(transform.forward, _player.forward);
+            float step = FitGeometry.FlipStep(_lastFwd, fwd);
+            if (step > _maxStep) _maxStep = step;
+            if (FitGeometry.IsJump(step)) _jumps++;
+            _lastFwd = fwd;
         }
 
         // Scales the figure so the posed body is FigureHeight tall in the world, re-measures and checks it.
@@ -211,6 +263,7 @@ namespace SteveTheTroll.Figure
                 + " (" + dist.ToString("F3") + " m from the foot), height " + _measuredHeight.ToString("F3") + " m, scale " + transform.localScale.x.ToString("F4")
                 + ", yaw " + ModSettings.FigureYaw.Value.ToString("F0") + " deg, foot turned " + Vector3.SignedAngle(TrollFitMath.Flat(_player.forward, Vector3.forward), TrollFitMath.FootForward(_foot, _toe, _player.forward), Vector3.up).ToString("F0") + " deg from the player's forward");
             ModLog.CheckRange("TrollFigure: " + name + " distance to the foot", dist, 0f, 0.6f, "m");
+            ModLog.Verbose("TrollFigure: " + name + " " + (_glueA != null ? "glued to the slipper, tilt " + Vector3.Angle(transform.up, Vector3.up).ToString("F0") + " deg" : "placed on the foot (not glued)"));
             ModLog.Check("TrollFigure: " + name + " frame-to-frame turns over 45 deg in the last " + DiagEverySeconds + " s (largest " + _maxStep.ToString("F0") + " deg)", _jumps, 0, 0, "");
             _jumps = 0; _maxStep = 0f;
         }

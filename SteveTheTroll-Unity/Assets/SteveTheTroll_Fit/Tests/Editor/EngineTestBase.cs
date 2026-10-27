@@ -56,6 +56,15 @@ namespace SteveTheTroll.Fit.Tests
             Assert.That((expected - actual).magnitude, Is.LessThan(eps), what + " expected " + expected.ToString("F4") + ", got " + actual.ToString("F4"));
         }
 
+        /// Same Transform objects in the same order (NUnit's EqualTo compares Transforms as collections of their children - too weak).
+        protected static void SameBones(Transform[] expected, Transform[] actual)
+        {
+            Assert.That(actual.Length, Is.EqualTo(expected.Length), "bone count");
+            for (int i = 0; i < expected.Length; i++) Assert.That(ReferenceEquals(expected[i], actual[i]), Is.True, "bone " + i + ": expected " + (expected[i] != null ? expected[i].name : "null") + ", got " + (actual[i] != null ? actual[i].name : "null"));
+        }
+
+        protected static bool Uses(Transform[] bones, Transform bone) { return System.Array.Exists(bones, b => ReferenceEquals(b, bone)); }
+
         protected static void Near(Quaternion expected, Quaternion actual, float epsDeg = 0.01f, string what = "")
         {
             Assert.That(Quaternion.Angle(expected, actual), Is.LessThan(epsDeg), what + " expected " + expected.eulerAngles.ToString("F2") + ", got " + actual.eulerAngles.ToString("F2"));

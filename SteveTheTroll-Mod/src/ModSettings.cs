@@ -95,6 +95,7 @@ namespace SteveTheTroll
         public static readonly Tunable<float> SlipperSide = new Tunable<float>("Slipper", "OffsetSide", Fit.TrollFitData.SlipperSide, -0.1f, 0.1f, "Moves the slippers outward (+) / inward (-), in metres.");
         public static readonly Tunable<float> SlipperYaw = new Tunable<float>("Slipper", "Yaw", Fit.TrollFitData.SlipperYaw, -45f, 45f, "Turns the slippers around the up axis, in degrees.");
         public static readonly Tunable<float> SlipperScale = new Tunable<float>("Slipper", "Scale", Fit.TrollFitData.SlipperScale, 0.6f, 1.6f, "Size of the slippers (1 = as modelled, 0.40 m long).");
+        public static readonly Tunable<float> SlipperWidth = new Tunable<float>("Slipper", "Width", 0.88f, 0.6f, 1.3f, "Width of the slippers across the foot (1 = as modelled, 16 cm at the widest; the foot is 12.3 cm there, so 0.88 leaves ~1 cm of plush each side - measured in the Unity fit scene after TEST-007).");
 
         /// Expected outcome: every player entry is bound (returns that check).
         public static bool Bind(ConfigFile c)

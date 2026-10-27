@@ -126,6 +126,99 @@ namespace SteveTheTroll.Fit
             return width * 0.5f + gap * 0.5f;
         }
 
+        // ---------------- skin transfer (TEST-007: the slipper bends like the player's own foot skin) ----------------
+
+        /// A source vertex counts 1 / (distance + this) when blending weights (m): close vertices dominate, a vertex AT the point cannot divide by 0.
+        public const float SkinBlendEps = 0.002f;
+
+        /// The `k` points of `pts` nearest to p, closest first: their indices in idx and distances (m) in dist (both at least k long).
+        /// Returns how many were found (k, or fewer when pts is shorter). On equal distances the earlier point comes first.
+        public static int NearestK(Vector3 p, Vector3[] pts, int k, int[] idx, float[] dist)
+        {
+            int n = 0;
+            if (pts == null || k <= 0) return 0;
+            for (int i = 0; i < pts.Length; i++)
+            {
+                float d = (pts[i] - p).sqrMagnitude;
+                if (n == k && d >= dist[n - 1]) continue;
+                int j = n < k ? n++ : n - 1;
+                while (j > 0 && dist[j - 1] > d) { dist[j] = dist[j - 1]; idx[j] = idx[j - 1]; j--; }
+                dist[j] = d;
+                idx[j] = i;
+            }
+            for (int i = 0; i < n; i++) dist[i] = Mathf.Sqrt(dist[i]);
+            return n;
+        }
+
+        /// Bone weights for a point from its nearest source vertices (idx / dist from NearestK): each vertex counts 1 / (distance + SkinBlendEps),
+        /// its bone weights are summed per bone, the strongest bones (up to 4 and bones.Length) are kept, strongest first, normalised to 1.
+        /// Returns how many bones were written (0 when no vertex had a weight). On equal weights the bone met first comes first.
+        public static int BlendWeights(BoneWeight[] src, int[] idx, float[] dist, int count, int[] bones, float[] weights)
+        {
+            var ids = new int[count * 4];
+            var sums = new float[count * 4];
+            int m = 0;
+            for (int v = 0; v < count; v++)
+            {
+                var bw = src[idx[v]];
+                float k = 1f / (dist[v] + SkinBlendEps);
+                m = AddWeight(ids, sums, m, bw.boneIndex0, bw.weight0 * k);
+                m = AddWeight(ids, sums, m, bw.boneIndex1, bw.weight1 * k);
+                m = AddWeight(ids, sums, m, bw.boneIndex2, bw.weight2 * k);
+                m = AddWeight(ids, sums, m, bw.boneIndex3, bw.weight3 * k);
+            }
+            int n = 0;
+            float total = 0f;
+            int max = Mathf.Min(4, bones.Length);
+            while (n < max)
+            {
+                int best = -1;
+                for (int i = 0; i < m; i++) if (sums[i] > 0f && (best < 0 || sums[i] > sums[best])) best = i;
+                if (best < 0) break;
+                bones[n] = ids[best];
+                weights[n] = sums[best];
+                total += sums[best];
+                sums[best] = 0f;
+                n++;
+            }
+            for (int i = 0; i < n; i++) weights[i] /= total;
+            return n;
+        }
+
+        static int AddWeight(int[] ids, float[] sums, int m, int bone, float w)
+        {
+            // Stryker disable once Equality : a 0 weight added as a bone keeps sum 0 and is never picked (sums > 0 only)
+            if (w <= 0f) return m;
+            for (int i = 0; i < m; i++) if (ids[i] == bone) { sums[i] += w; return m; }
+            ids[m] = bone;
+            sums[m] = w;
+            return m + 1;
+        }
+
+        /// The bone index with the largest weight (the first one on a tie).
+        public static int StrongestBone(BoneWeight w)
+        {
+            int b = w.boneIndex0;
+            float best = w.weight0;
+            if (w.weight1 > best) { b = w.boneIndex1; best = w.weight1; }
+            if (w.weight2 > best) { b = w.boneIndex2; best = w.weight2; }
+            if (w.weight3 > best) b = w.boneIndex3;
+            return b;
+        }
+
+        /// Forward (a -> b) and up (forward x (a -> c)) of the frame three points span: a = origin, b ahead of it, c to its right.
+        /// False (and +Z / +Y) when the points are (nearly) on one line.
+        public static bool FrameAxes(Vector3 a, Vector3 b, Vector3 c, out Vector3 forward, out Vector3 up)
+        {
+            forward = b - a;
+            up = Vector3.Cross(forward, c - a);
+            // Stryker disable once Equality : < vs <= differ only at exactly 1e-12, which no float input reaches
+            if (forward.sqrMagnitude < 1e-12f || up.sqrMagnitude < 1e-12f) { forward = Vector3.forward; up = Vector3.up; return false; }
+            forward.Normalize();
+            up.Normalize();
+            return true;
+        }
+
         /// Corner i (0..7) of a box: bit 0 = x max, bit 1 = y max, bit 2 = z max.
         public static Vector3 BoxCorner(Bounds b, int i)
         {

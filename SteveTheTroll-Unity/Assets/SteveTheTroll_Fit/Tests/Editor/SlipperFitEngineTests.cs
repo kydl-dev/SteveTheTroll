@@ -93,7 +93,7 @@ namespace SteveTheTroll.Fit.Tests
             var upper = parts.Find(p => p.Name == "SlipperUpper");
             var smr = upper.Renderer;
             Assert.That(smr.sharedMesh, Is.Not.SameAs(_prefab.transform.Find("SlipperUpper").GetComponent<MeshFilter>().sharedMesh), "own copy");
-            Assert.That(smr.bones, Is.EqualTo(new[] { _foot, _toe }));
+            SameBones(new[] { _foot, _toe }, smr.bones);
             Assert.That(smr.rootBone, Is.SameAs(_foot));
             Assert.That(smr.sharedMaterial, Is.SameAs(_plush));
             var verts = smr.sharedMesh.vertices;
@@ -171,7 +171,7 @@ namespace SteveTheTroll.Fit.Tests
             foreach (var p in parts)
             {
                 Assert.That(p.ToeWeighted, Is.EqualTo(0));
-                Assert.That(p.Renderer.bones, Is.EqualTo(new[] { _foot, _foot }));
+                SameBones(new[] { _foot }, p.Renderer.bones);
                 foreach (var w in p.Renderer.sharedMesh.boneWeights) Assert.That(w.weight1, Is.EqualTo(0f));
             }
         }
