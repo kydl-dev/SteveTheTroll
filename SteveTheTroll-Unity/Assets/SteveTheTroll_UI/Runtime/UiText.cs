@@ -84,6 +84,8 @@ namespace SteveTheTroll.Ui
             { "stevethetroll_status_farming", "Farming" },
             { "stevethetroll_troll_waits", "{0} is here and waits for your orders." },
             { "stevethetroll_troll_coming", "{0} is coming!" },
+            { "stevethetroll_farm_nothing", "{0} found nothing to farm within {1} m and walks back to your bed." },
+            { "stevethetroll_farm_home", "{0} is back at your bed and waits." },
             { "stevethetroll_under_attack", "{0} is under attack. Attacking back." },
             { "stevethetroll_focus_following", "Your troll is following you. Press E on it so it stays, or press Go farm - then it farms {0}." },
         };

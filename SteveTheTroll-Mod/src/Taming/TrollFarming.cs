@@ -18,9 +18,10 @@ namespace SteveTheTroll.Taming
         static readonly System.Func<BaseAI, float, Vector3, float, bool, bool> MoveTo =
             AccessTools.MethodDelegate<System.Func<BaseAI, float, Vector3, float, bool, bool>>(AccessTools.Method(typeof(BaseAI), "MoveTo"));
         static readonly System.Action<BaseAI, Vector3> LookAt = AccessTools.MethodDelegate<System.Action<BaseAI, Vector3>>(AccessTools.Method(typeof(BaseAI), "LookAt"));
-        // TEST-021: with FarmRange 50 the 512 buffer filled up (grass, pieces) and fallen logs were never seen -> 4096 + a warning when full
-        const int HitBuffer = 4096;
-        static readonly Collider[] Hits = new Collider[HitBuffer];
+        // D-051: the search walks the game's list of loaded networked objects (ZNetScene) instead of a physics overlap: no buffer to fill up
+        // (TEST-021), any radius up to the loaded area (150 m)
+        static readonly AccessTools.FieldRef<ZNetScene, Dictionary<ZDO, ZNetView>> Instances = AccessTools.FieldRefAccess<ZNetScene, Dictionary<ZDO, ZNetView>>("m_instances");
+        static readonly Dictionary<int, FarmSourceCache> Known = new Dictionary<int, FarmSourceCache>();
         const float MinOtherHeight = 1.2f;
 
         /// In-game test Startup_TamingReflection. Expected outcome: whether both delegates were found.
@@ -90,25 +91,10 @@ namespace SteveTheTroll.Taming
             var d = g.GetComponent<Destructible>(); return d != null ? d.m_minToolTier : 0;
         }
 
-        // The object that owns the source component (trees / rocks have their colliders on children).
-        static GameObject SourceOf(Collider c)
-        {
-            if (c == null) return null;
-            Component s = c.GetComponentInParent<TreeBase>();
-            if (s == null) s = c.GetComponentInParent<TreeLog>();
-            if (s == null) s = c.GetComponentInParent<MineRock5>();
-            if (s == null) s = c.GetComponentInParent<MineRock>();
-            if (s == null) s = c.GetComponentInParent<Destructible>();
-            return s != null ? s.gameObject : null;
-        }
+
 
         /// Nearest source of `item` within range of `center` the troll's weapon tier can damage. Expected outcome: the source or null.
-        /// D-050 tier of a source (TamingRules.Tier): logs / ore rocks first, then standing trees, then tall-enough others.
-        internal static int TierOf(GameObject g, Collider c)
-        {
-            bool rock = g.GetComponent<MineRock5>() != null || g.GetComponent<MineRock>() != null;
-            return TamingRules.Tier(g.GetComponent<TreeLog>() != null, rock, g.GetComponent<TreeBase>() != null, c != null ? c.bounds.size.y : 0f, MinOtherHeight);
-        }
+
 
         /// The last search, for the in-game test World_FarmScan.
         internal static string LastScan = "";
@@ -118,32 +104,67 @@ namespace SteveTheTroll.Taming
         {
             hit = null;
             GameObject best = null;
-            float bestD = float.MaxValue;
-            int n = Physics.OverlapSphereNonAlloc(center, range, Hits, ~0, QueryTriggerInteraction.Ignore);
+            float bestD = float.MaxValue, r2 = range * range;
             var counts = new int[3];
-            int skipped = 0;
-            for (int i = 0; i < n; i++)
+            int seen = 0, skipped = 0;
+            var scene = ZNetScene.instance;
+            var all = scene != null ? Instances(scene) : null;
+            if (all == null) { LastScan = "no ZNetScene"; LastScanFull = false; return null; }
+            foreach (var v in all.Values)
             {
-                var g = SourceOf(Hits[i]);
-                if (g == null || (skip != null && skip(g)) || MinTier(g) > tier) continue;
-                var cache = g.GetComponent<FarmSourceCache>();
-                if (cache == null) cache = g.AddComponent<FarmSourceCache>();
-                if (!cache.Yields(item)) continue;
-                // TEST-018: Collider.ClosestPoint on a non-convex mesh returned the troll's own position (0.0 m to a stump) -> distances from
-                // the collider BOUNDS; and a ranking so trees / logs / ore rocks win over stumps and small debris
-                var at = g.GetComponent<TreeBase>() != null ? g.transform.position : Hits[i].bounds.ClosestPoint(from);     // trees: the trunk (TEST-020)
-                int t = TierOf(g, Hits[i]);
-                if (t == TamingRules.TierNone) { skipped++; continue; }
-                counts[t]++;
-                float d = TamingRules.SourceScore(t, Vector3.Distance(from, at));
-                if (d < bestD) { bestD = d; best = g; hit = Hits[i]; }
+                if (v == null) continue;
+                var pos = v.transform.position;
+                if ((pos - center).sqrMagnitude > r2) continue;
+                seen++;
+                var src = Source(v);
+                if (src == null || src.Collider == null) continue;
+                var g = v.gameObject;
+                if ((skip != null && skip(g)) || src.MinTier > tier || !src.Yields(item)) continue;
+                if (src.Tier == TamingRules.TierNone) { skipped++; continue; }
+                counts[src.Tier]++;
+                var at = src.IsTree ? pos : src.Collider.bounds.ClosestPoint(from);     // trees: the trunk (TEST-020)
+                float d = TamingRules.SourceScore(src.Tier, Vector3.Distance(from, at));
+                if (d < bestD) { bestD = d; best = g; hit = src.Collider; }
             }
-            LastScan = "colliders " + n + (n >= HitBuffer ? " (BUFFER FULL)" : "") + ", logs/rocks " + counts[0] + ", trees " + counts[1] + ", other " + counts[2] + ", too small " + skipped
+            LastScan = "objects " + seen + ", logs/rocks " + counts[0] + ", trees " + counts[1] + ", other " + counts[2] + ", too small " + skipped
                 + ", best " + (best != null ? best.name + " (" + KindOf(best) + ")" : "none");
-            LastScanFull = n >= HitBuffer;
-            if (n >= HitBuffer) ModLog.Warn("TrollFarming: collider buffer full (" + n + ") within " + range + " m - some sources may be missed");
-            ModLog.Verbose("TrollFarming: search '" + item + "' within " + range + " m of " + center.ToString("F0") + ": " + n + " collider(s), sources logs/rocks " + counts[0] + ", trees " + counts[1]
-                + ", other " + counts[2] + " (too small " + skipped + "), best " + (best != null ? best.name + " (" + KindOf(best) + ") score " + bestD.ToString("F1") : "none"));
+            LastScanFull = false;
+            ModLog.Verbose("TrollFarming: search '" + item + "' within " + range + " m of " + center.ToString("F0") + ": " + LastScan + (best != null ? " score " + bestD.ToString("F1") : ""));
+            return best;
+        }
+
+        // The source data of a networked object (null = not a farm source), cached per object.
+        static FarmSourceCache Source(ZNetView v)
+        {
+            int id = v.GetInstanceID();
+            FarmSourceCache c;
+            if (Known.TryGetValue(id, out c)) return c;
+            var g = v.gameObject;
+            bool tree = g.GetComponent<TreeBase>() != null, log = g.GetComponent<TreeLog>() != null;
+            bool rock = g.GetComponent<MineRock5>() != null || g.GetComponent<MineRock>() != null;
+            bool other = !tree && !log && !rock && g.GetComponent<Destructible>() != null;
+            if (Known.Count > 20000) Known.Clear();
+            if (!tree && !log && !rock && !other) { Known[id] = null; return null; }
+            c = g.GetComponent<FarmSourceCache>();
+            if (c == null) c = g.AddComponent<FarmSourceCache>();
+            c.Collider = Biggest(g);
+            c.IsTree = tree;
+            c.MinTier = MinTier(g);
+            c.Tier = TamingRules.Tier(log, rock, tree, c.Collider != null ? c.Collider.bounds.size.y : 0f, MinOtherHeight);
+            Known[id] = c;
+            return c;
+        }
+
+        static Collider Biggest(GameObject g)
+        {
+            Collider best = null;
+            float size = -1f;
+            foreach (var col in g.GetComponentsInChildren<Collider>())
+            {
+                if (col == null || col.isTrigger) continue;
+                float sz = col.bounds.size.sqrMagnitude;
+                if (sz > size) { size = sz; best = col; }
+            }
             return best;
         }
 
@@ -165,9 +186,12 @@ namespace SteveTheTroll.Taming
         }
     }
 
-    /// Remembers per source object which items it yields (drop tables never change at runtime).
+    /// Remembers per source object which items it yields (drop tables never change at runtime), its biggest collider and its tier.
     internal sealed class FarmSourceCache : MonoBehaviour
     {
+        internal Collider Collider;
+        internal bool IsTree;
+        internal int MinTier, Tier = TamingRules.TierNone;
         readonly Dictionary<string, bool> _yields = new Dictionary<string, bool>();
 
         internal bool Yields(string item)
