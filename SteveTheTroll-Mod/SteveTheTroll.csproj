@@ -18,6 +18,8 @@
   <ItemGroup>
     <!-- the mod's menu views live in the Unity project (previewed there) and are compiled into the mod from there -->
     <Compile Include="..\SteveTheTroll-Unity\Assets\SteveTheTroll_UI\Runtime\*.cs" Link="UiViews\%(Filename)%(Extension)" />
+    <!-- D-014: the troll fit math + the fit saved in Unity are compiled into the mod from there (same code in the fit scene and in game) -->
+    <Compile Include="..\SteveTheTroll-Unity\Assets\SteveTheTroll_Fit\Runtime\*.cs" Link="Fit\%(Filename)%(Extension)" />
   </ItemGroup>
 
   <Import Project="..\..\Claude\shared\Kydl.Mod.targets" />

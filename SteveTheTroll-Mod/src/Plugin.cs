@@ -40,6 +40,8 @@ namespace SteveTheTroll
             Kydl.Ui.UiLog.WarnSink = s => ModLog.Warn(s);
             Kydl.Ui.UiLog.ErrorSink = s => ModLog.Error(s);
             Kydl.Ui.UiKit.Owner = ModName;
+            Fit.TrollFitMath.Log = s => ModLog.Verbose(s);     // shared with the Unity fit scene: it logs through the mod's log here
+            Fit.TrollFitMath.Warn = s => ModLog.Warn(s);
 
             ModSettings.Bind(Config);
             _cfgWatcher = new ConfigReloader(Config);

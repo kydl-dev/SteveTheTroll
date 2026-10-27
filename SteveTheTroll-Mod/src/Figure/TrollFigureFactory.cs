@@ -16,7 +16,8 @@ namespace SteveTheTroll.Figure
         public const string LogItemPrefab = "troll_log_swing_v";
         const string VisualChild = "Visual";
         const string LogAttachChild = "attach";
-        const string HandBone = "RightHand";
+        public const string HandBone = "RightHand";
+        public const string LogName = "TrollLog";
 
         /// Expected outcome: an INACTIVE holder with the stripped copy and at least one renderer, or null with the reason logged.
         public static GameObject Build(string name)
@@ -54,7 +55,7 @@ namespace SteveTheTroll.Figure
             return null;
         }
 
-        // The troll's own log, placed like VisEquipment.AttachItem does: the item's "attach" child under the joint at local zero.
+        // The troll's own log (the item a Troll gets from its "Log" weapon set): the item's "attach" child, under the figure root.
         static GameObject AddLog(Transform figure)
         {
             var hand = Utils.FindChild(figure, HandBone);
@@ -62,11 +63,13 @@ namespace SteveTheTroll.Figure
             var attach = item != null ? item.transform.Find(LogAttachChild) : null;
             ModLog.Verbose("TrollFigureFactory: AddLog hand " + (hand != null ? hand.name : "null") + ", item " + (item != null ? item.name : "null") + ", attach " + (attach != null ? "found" : "null"));
             if (hand == null || attach == null) { ModLog.Warn("TrollFigureFactory: no log (hand " + (hand != null) + ", '" + LogItemPrefab + "/" + LogAttachChild + "' " + (attach != null) + ")"); return null; }
-            var log = Object.Instantiate(attach.gameObject, hand, false);
-            log.name = "TrollLog";
+            // under the figure ROOT, not the hand: the troll's bones carry ~x130 scales (Unity fit scene); TrollFitMath.PlaceLog
+            // sizes and places it next to the posed hand every frame
+            var log = Object.Instantiate(attach.gameObject, figure.parent != null ? figure.parent : figure, false);
+            log.name = LogName;
             log.transform.localPosition = Vector3.zero;
             log.transform.localRotation = Quaternion.identity;
-            ModLog.Verbose("TrollFigureFactory: log attached to " + hand.name + ", local scale " + log.transform.localScale.ToString("F3"));
+            ModLog.Verbose("TrollFigureFactory: log added under " + log.transform.parent.name + " (placed next to " + hand.name + " by the fit), local scale " + log.transform.localScale.ToString("F3"));
             return log;
         }
 

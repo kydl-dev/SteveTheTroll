@@ -78,3 +78,9 @@ Desktop.ini
 
 # test-quality output (coverage, Stryker): rebuilt by _agent/tools/test-quality.ps1
 /*-Tests/_quality/
+
+# D-014: reference models copied from the AssetRipper project for the troll fit scene - never commit, never bundle
+SteveTheTroll-Unity/Assets/RipReference/
+SteveTheTroll-Unity/Assets/RipReference.meta
+# files the Claude app saves into the connected folder (chat deliverables, not project files)
+/Claude outputs/

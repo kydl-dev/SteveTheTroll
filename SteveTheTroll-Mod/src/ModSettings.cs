@@ -27,28 +27,28 @@ namespace SteveTheTroll
         public static readonly Tunable<float> ExampleSpeed = new Tunable<float>("Example", "ExampleSpeed", 1f,
             "Example dev-only value: replace or remove. Read it with ModSettings.ExampleSpeed.Value.");
 
-        // --- T-004b runtime troll figure on each slipper (D-013 trial). Sizes in metres, angles in degrees (bone-local Euler).
-        //     Joint signs are NOT verified yet: the user tunes them live in KydlTools; settled values become the new defaults here.
-        public static readonly Tunable<float> FigureHeight = new Tunable<float>("TrollFigure", "Height", 0.28f, 0.05f, 0.8f,
+        // --- runtime troll figure on each slipper (D-013 trial). Defaults = the Unity fit (TrollFitData, D-014/D-015); these Tunables are the
+        //     user's in-game fine tune on top of it (KydlTools). Sizes in metres, angles in degrees. Settled values go back into the fit / here.
+        public static readonly Tunable<float> FigureHeight = new Tunable<float>("TrollFigure", "Height", Fit.TrollFitData.Height, 0.05f, 0.8f,
             "World height of the seated mini troll on each slipper, in metres (picture: about mid-shin).");
-        public static readonly Tunable<float> FigureForward = new Tunable<float>("TrollFigure", "OffsetForward", 0.06f, -0.3f, 0.3f,
+        public static readonly Tunable<float> FigureForward = new Tunable<float>("TrollFigure", "OffsetForward", Fit.TrollFitData.Forward, -0.3f, 0.3f,
             "Moves the troll along the player's facing direction from the foot bone, in metres (+ = toward the toes).");
-        public static readonly Tunable<float> FigureUp = new Tunable<float>("TrollFigure", "OffsetUp", 0.0f, -0.2f, 0.3f,
-            "Moves the troll up from the foot bone, in metres.");
-        public static readonly Tunable<float> FigureSide = new Tunable<float>("TrollFigure", "OffsetSide", 0.0f, -0.2f, 0.2f,
+        public static readonly Tunable<float> FigureUp = new Tunable<float>("TrollFigure", "OffsetUp", Fit.TrollFitData.Up, -0.2f, 0.3f,
+            "Height of the troll's lowest point above the foot bone, in metres.");
+        public static readonly Tunable<float> FigureSide = new Tunable<float>("TrollFigure", "OffsetSide", Fit.TrollFitData.Side, -0.2f, 0.2f,
             "Moves the troll sideways (+ = outward from the body, mirrored per foot), in metres.");
-        public static readonly Tunable<float> FigureYaw = new Tunable<float>("TrollFigure", "Yaw", 0f, -180f, 180f,
+        public static readonly Tunable<float> FigureYaw = new Tunable<float>("TrollFigure", "Yaw", Fit.TrollFitData.Yaw, -180f, 180f,
             "Turns the troll around the up axis, in degrees (0 = looks where the player looks).");
-        public static readonly Tunable<float> PoseSpineX = new Tunable<float>("TrollPose", "SpineX", 10f, -90f, 90f, "Spine0 bend, local X, degrees.");
-        public static readonly Tunable<float> PoseUpLegX = new Tunable<float>("TrollPose", "UpLegX", -80f, -180f, 180f, "Thigh swing (sitting), local X, degrees.");
-        public static readonly Tunable<float> PoseUpLegZ = new Tunable<float>("TrollPose", "UpLegZ", 10f, -90f, 90f, "Thigh spread, local Z, degrees (mirrored on the right leg).");
-        public static readonly Tunable<float> PoseLegX = new Tunable<float>("TrollPose", "LegX", 80f, -180f, 180f, "Knee bend, local X, degrees.");
-        public static readonly Tunable<float> PoseRightArmX = new Tunable<float>("TrollPose", "RightArmX", -50f, -180f, 180f, "Right upper arm (holds the log), local X, degrees.");
-        public static readonly Tunable<float> PoseRightArmZ = new Tunable<float>("TrollPose", "RightArmZ", 0f, -180f, 180f, "Right upper arm, local Z, degrees.");
-        public static readonly Tunable<float> PoseRightForeArmX = new Tunable<float>("TrollPose", "RightForeArmX", -20f, -180f, 180f, "Right forearm, local X, degrees.");
-        public static readonly Tunable<float> PoseLeftArmX = new Tunable<float>("TrollPose", "LeftArmX", -40f, -180f, 180f, "Left upper arm (rests on the slipper), local X, degrees.");
-        public static readonly Tunable<float> PoseLeftArmZ = new Tunable<float>("TrollPose", "LeftArmZ", 0f, -180f, 180f, "Left upper arm, local Z, degrees.");
-        public static readonly Tunable<float> PoseLeftForeArmX = new Tunable<float>("TrollPose", "LeftForeArmX", -20f, -180f, 180f, "Left forearm, local X, degrees.");
+        public static readonly Tunable<float> PoseSpineX = new Tunable<float>("TrollPose", "SpineX", 0f, -90f, 90f, "Extra Spine0 bend on top of the Unity fit, local X, degrees.");
+        public static readonly Tunable<float> PoseUpLegX = new Tunable<float>("TrollPose", "UpLegX", 0f, -90f, 90f, "Extra thigh swing on top of the fit, local X, degrees.");
+        public static readonly Tunable<float> PoseUpLegZ = new Tunable<float>("TrollPose", "UpLegZ", 0f, -90f, 90f, "Extra thigh spread on top of the fit, local Z, degrees (mirrored on the right leg).");
+        public static readonly Tunable<float> PoseLegX = new Tunable<float>("TrollPose", "LegX", 0f, -90f, 90f, "Extra knee bend on top of the fit, local X, degrees.");
+        public static readonly Tunable<float> PoseRightArmX = new Tunable<float>("TrollPose", "RightArmX", 0f, -90f, 90f, "Extra right upper arm (log arm) on top of the fit, local X, degrees.");
+        public static readonly Tunable<float> PoseRightArmZ = new Tunable<float>("TrollPose", "RightArmZ", 0f, -90f, 90f, "Extra right upper arm on top of the fit, local Z, degrees.");
+        public static readonly Tunable<float> PoseRightForeArmX = new Tunable<float>("TrollPose", "RightForeArmX", 0f, -90f, 90f, "Extra right forearm on top of the fit, local X, degrees.");
+        public static readonly Tunable<float> PoseLeftArmX = new Tunable<float>("TrollPose", "LeftArmX", 0f, -90f, 90f, "Extra left upper arm on top of the fit, local X, degrees.");
+        public static readonly Tunable<float> PoseLeftArmZ = new Tunable<float>("TrollPose", "LeftArmZ", 0f, -90f, 90f, "Extra left upper arm on top of the fit, local Z, degrees.");
+        public static readonly Tunable<float> PoseLeftForeArmX = new Tunable<float>("TrollPose", "LeftForeArmX", 0f, -90f, 90f, "Extra left forearm on top of the fit, local X, degrees.");
 
         /// Expected outcome: every player entry is bound (returns that check).
         public static bool Bind(ConfigFile c)
