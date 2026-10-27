@@ -82,14 +82,14 @@ namespace SteveTheTroll
 
         // --- D-027 smooth plush look of the mini trolls (user picked style D): the troll skin re-coloured, no strands
         public static readonly Tunable<bool> PlushEnable = new Tunable<bool>("TrollPlush", "Enable", true, "Smooth plush colour on the mini trolls (off = the game's troll skin).");
-        public static readonly Tunable<float> PlushTintR = new Tunable<float>("TrollPlush", "TintR", 1.1f, 0f, 2f, "Plush colour multiplier on the troll skin, red.");
-        public static readonly Tunable<float> PlushTintG = new Tunable<float>("TrollPlush", "TintG", 1.3f, 0f, 2f, "Plush colour multiplier on the troll skin, green.");
-        public static readonly Tunable<float> PlushTintB = new Tunable<float>("TrollPlush", "TintB", 1.35f, 0f, 2f, "Plush colour multiplier on the troll skin, blue.");
+        public static readonly Tunable<float> PlushTintR = new Tunable<float>("TrollPlush", "TintR", 1.0f, 0f, 2f, "Plush colour multiplier on the troll skin, red.");
+        public static readonly Tunable<float> PlushTintG = new Tunable<float>("TrollPlush", "TintG", 1.2f, 0f, 2f, "Plush colour multiplier on the troll skin, green.");
+        public static readonly Tunable<float> PlushTintB = new Tunable<float>("TrollPlush", "TintB", 1.25f, 0f, 2f, "Plush colour multiplier on the troll skin, blue.");
         public static readonly Tunable<float> PlushSmoothness = new Tunable<float>("TrollPlush", "Smoothness", 0f, 0f, 0.6f, "Shine of the plush (0 = matt fabric).");
 
         // --- D-025 slipper on each foot (bundle prefab "SlipperParts", skinned to the player's foot + toe bones). Placement defaults = Unity fit.
-        public static readonly Tunable<float> SlipperBrightness = new Tunable<float>("Slipper", "Brightness", 1f, 0.3f, 1.7f, "Brightness of the blue plush slipper (1 = as made).");
-        public static readonly Tunable<float> SlipperRimBrightness = new Tunable<float>("Slipper", "RimBrightness", 1f, 0.3f, 1.7f, "Brightness of the fluffy rim around the opening (1 = as made).");
+        public static readonly Tunable<float> SlipperBrightness = new Tunable<float>("Slipper", "Brightness", 0.84f, 0.3f, 1.7f, "Brightness of the blue plush slipper (1 = as modelled; 0.84 = the user's choice, TEST-005).");
+        public static readonly Tunable<float> SlipperRimBrightness = new Tunable<float>("Slipper", "RimBrightness", 0.88f, 0.3f, 1.7f, "Brightness of the fluffy rim around the opening (1 = as modelled; 0.88 = the user's choice, TEST-005).");
         public static readonly Tunable<float> SlipperForward = new Tunable<float>("Slipper", "OffsetForward", Fit.TrollFitData.SlipperForward, -0.15f, 0.25f, "Slipper middle along the foot from the foot bone, in metres.");
         public static readonly Tunable<float> SlipperUp = new Tunable<float>("Slipper", "OffsetUp", Fit.TrollFitData.SlipperUp, -0.25f, 0f, "Slipper ground plane below the foot bone, in metres.");
         public static readonly Tunable<float> SlipperSide = new Tunable<float>("Slipper", "OffsetSide", Fit.TrollFitData.SlipperSide, -0.1f, 0.1f, "Moves the slippers outward (+) / inward (-), in metres.");

@@ -29,7 +29,10 @@ namespace SteveTheTroll.Figure
         Transform _log, _hand;
         MeshFilter _logMesh;
         Vector3[] _curlAxis;
-        FigureFur _fur;                              // per posed bone: the knuckle line in that bone's own frame (fingers / thumb only)
+        FigureFur _fur;
+        Vector3 _lastFwd;                                 // D-029 flip detector: the troll must not swing round within one frame
+        int _jumps;
+        float _maxStep;                              // per posed bone: the knuckle line in that bone's own frame (fingers / thumb only)
 
         /// Expected outcome: foot, player, body renderer and every fitted bone are known (returns that check).
         public bool Init(Transform foot, Transform player, bool left)
@@ -153,7 +156,15 @@ namespace SteveTheTroll.Figure
         {
             Vector3 pos; Quaternion rot;
             float side = ModSettings.FigureSide.Value + (_left ? ModSettings.FigureSideLeft.Value : ModSettings.FigureSideRight.Value);
-            TrollFitMath.Place(_foot.position, TrollFitMath.FootForward(_foot, _toe, _player.forward), _left, ModSettings.FigureForward.Value, side, ModSettings.FigureUp.Value,
+            var fwd = TrollFitMath.FootForward(_foot, _toe, _player.forward);
+            if (_lastFwd != Vector3.zero)
+            {
+                float step = Vector3.Angle(_lastFwd, fwd);
+                if (step > _maxStep) _maxStep = step;
+                if (step > 45f) _jumps++;
+            }
+            _lastFwd = fwd;
+            TrollFitMath.Place(_foot.position, fwd, _left, ModSettings.FigureForward.Value, side, ModSettings.FigureUp.Value,
                 ModSettings.FigureYaw.Value, _bottomBelowPivot, out pos, out rot);
             transform.SetPositionAndRotation(pos, rot);
         }
@@ -203,6 +214,8 @@ namespace SteveTheTroll.Figure
                 + " (" + dist.ToString("F3") + " m from the foot), height " + _measuredHeight.ToString("F3") + " m, scale " + transform.localScale.x.ToString("F4")
                 + ", yaw " + ModSettings.FigureYaw.Value.ToString("F0") + " deg, foot turned " + Vector3.SignedAngle(TrollFitMath.Flat(_player.forward, Vector3.forward), TrollFitMath.FootForward(_foot, _toe, _player.forward), Vector3.up).ToString("F0") + " deg from the player's forward");
             ModLog.CheckRange("TrollFigure: " + name + " distance to the foot", dist, 0f, 0.6f, "m");
+            ModLog.Check("TrollFigure: " + name + " frame-to-frame turns over 45 deg in the last " + DiagEverySeconds + " s (largest " + _maxStep.ToString("F0") + " deg)", _jumps, 0, 0, "");
+            _jumps = 0; _maxStep = 0f;
         }
 
         void OnDestroy()

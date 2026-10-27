@@ -41,10 +41,24 @@ namespace SteveTheTroll.Fit
             return f.sqrMagnitude < 0.0001f ? Vector3.forward : f.normalized;
         }
 
-        /// D-016: the foot's own forward (foot bone -> toe bone, flattened); the player's forward when the toe is missing.
+        /// Feet never turn further than this from the player's forward (D-029 clamp; the idle stance measured 16 / 64 deg).
+        public const float MaxFootTurnDeg = 75f;
+
+        /// D-016 / D-029: the foot's own forward on the ground. Taken from the foot's LATERAL axis (shin x foot->toe), which stays put when the
+        /// foot pitches while running - the flattened foot->toe direction flipped 180 deg on every step (TEST-005: "foot turned 178 deg",
+        /// trolls looked backwards). Sign: a foot never points backwards (dot with the player's forward > 0); clamped to +-MaxFootTurnDeg.
         public static Vector3 FootForward(Transform foot, Transform toe, Vector3 playerForward)
         {
-            return toe != null ? Flat(toe.position - foot.position, playerForward) : Flat(playerForward, Vector3.forward);
+            var pf = Flat(playerForward, Vector3.forward);
+            if (foot == null || toe == null) return pf;
+            var toeDir = toe.position - foot.position;
+            var shin = foot.parent != null ? foot.position - foot.parent.position : Vector3.down;
+            var side = Vector3.Cross(shin, toeDir);
+            var f = side.sqrMagnitude > 1e-10f ? Flat(Vector3.Cross(side, Vector3.up), pf) : Flat(toeDir, pf);
+            if (Vector3.Dot(f, pf) < 0f) f = -f;
+            float turn = Vector3.SignedAngle(pf, f, Vector3.up);
+            if (Mathf.Abs(turn) > MaxFootTurnDeg) f = Quaternion.AngleAxis(Mathf.Sign(turn) * MaxFootTurnDeg, Vector3.up) * pf;
+            return f;
         }
 
         /// World pose of the figure root in the FOOT's frame (footForward from FootForward). Expected outcome: rotation is upright.
