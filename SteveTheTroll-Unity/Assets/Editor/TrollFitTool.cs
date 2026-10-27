@@ -50,6 +50,7 @@ namespace SteveTheTroll.EditorTools
             }
             LoadSavedFit(rig);
             foreach (var r in Object.FindObjectsByType<Renderer>(FindObjectsSortMode.None)) FixMaterials(r);
+            rig.BuildSlippers();
             rig.Apply();
             EditorSceneManager.SaveScene(scene, ScenePath);
             string msg = "TrollFitTool: scene built, feet L " + (leftFoot != null ? leftFoot.position.ToString("F3") : "null") + " R " + (rightFoot != null ? rightFoot.position.ToString("F3") : "null") + ", " + rig.lastReport;
@@ -111,6 +112,8 @@ namespace SteveTheTroll.EditorTools
         {
             rig.height = TrollFitData.Height; rig.forward = TrollFitData.Forward; rig.side = TrollFitData.Side; rig.up = TrollFitData.Up; rig.yaw = TrollFitData.Yaw;
             rig.logLength = TrollFitData.LogLength;
+            rig.slipperForward = TrollFitData.SlipperForward; rig.slipperUp = TrollFitData.SlipperUp; rig.slipperSide = TrollFitData.SlipperSide;
+            rig.slipperYaw = TrollFitData.SlipperYaw; rig.slipperScale = TrollFitData.SlipperScale;
             rig.logOffset = new Vector3(TrollFitData.LogOffset[0], TrollFitData.LogOffset[1], TrollFitData.LogOffset[2]);
             rig.logEuler = new Vector3(TrollFitData.LogEuler[0], TrollFitData.LogEuler[1], TrollFitData.LogEuler[2]);
             int n = TrollFitMath.PosedBones.Length;
@@ -139,6 +142,11 @@ namespace SteveTheTroll.EditorTools
             sb.AppendLine("        public const float Side = " + F(rig.side) + ";               // m outward from the body (mirrored per foot)");
             sb.AppendLine("        public const float Up = " + F(rig.up) + ";                 // m from the foot bone up to the troll's lowest vertex");
             sb.AppendLine("        public const float Yaw = " + F(rig.yaw) + ";                // deg around up, 0 = faces the player's forward");
+            sb.AppendLine("        public const float SlipperForward = " + F(rig.slipperForward) + ";   // m along the foot's forward from the foot bone to the slipper's middle");
+            sb.AppendLine("        public const float SlipperUp = " + F(rig.slipperUp) + ";       // m from the foot bone down to the slipper's ground plane");
+            sb.AppendLine("        public const float SlipperSide = " + F(rig.slipperSide) + ";          // m outward (mirrored per foot)");
+            sb.AppendLine("        public const float SlipperYaw = " + F(rig.slipperYaw) + ";           // deg");
+            sb.AppendLine("        public const float SlipperScale = " + F(rig.slipperScale) + ";         // x the modelled size (0.163 x 0.395 x 0.106 m)");
             sb.AppendLine("        public const float LogLength = " + F(rig.logLength) + ";        // log length / troll height");
             sb.AppendLine("        public static readonly float[] LogOffset = { " + F(rig.logOffset.x) + ", " + F(rig.logOffset.y) + ", " + F(rig.logOffset.z) + " };   // log centre from the right hand, figure frame, / troll height");
             sb.AppendLine("        public static readonly float[] LogEuler = { " + F(rig.logEuler.x) + ", " + F(rig.logEuler.y) + ", " + F(rig.logEuler.z) + " };      // log rotation in the figure frame, degrees");

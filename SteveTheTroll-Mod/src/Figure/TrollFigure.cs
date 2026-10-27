@@ -94,6 +94,8 @@ namespace SteveTheTroll.Figure
                 ModSettings.LogForward, ModSettings.LogUp, ModSettings.LogSide, ModSettings.LogYaw, ModSettings.LogPitch, ModSettings.LogRoll, ModSettings.LogLengthScale,
                 ModSettings.HandWristX, ModSettings.HandWristY, ModSettings.HandWristZ, ModSettings.HandFingerCurl, ModSettings.HandThumbCurl };
             foreach (var t in all) t.SettingChanged += (s, e) => { _tunableVersion++; ModLog.Verbose("TrollFigure: " + s + " changed -> re-pose / re-measure (version " + _tunableVersion + ")"); };
+            ModSettings.PlushEnable.SettingChanged += (s, e) => { _tunableVersion++; ModLog.Verbose("TrollFigure: " + s + " changed -> plush"); };
+            foreach (var p in new[] { ModSettings.PlushTintR, ModSettings.PlushTintG, ModSettings.PlushTintB, ModSettings.PlushSmoothness }) p.SettingChanged += (s, e) => { _tunableVersion++; ModLog.Verbose("TrollFigure: " + s + " changed -> plush colour"); };
             ModSettings.FurEnable.SettingChanged += (s, e) => { _tunableVersion++; ModLog.Verbose("TrollFigure: " + s + " changed -> fur rebuild"); };
             ModSettings.FurShells.SettingChanged += (s, e) => { _tunableVersion++; ModLog.Verbose("TrollFigure: " + s + " changed -> fur rebuild"); };
             var fur = new[] { ModSettings.FurLength, ModSettings.FurDensity, ModSettings.FurThickness, ModSettings.FurDroop, ModSettings.FurTintR, ModSettings.FurTintG, ModSettings.FurTintB, ModSettings.FurTipLight };

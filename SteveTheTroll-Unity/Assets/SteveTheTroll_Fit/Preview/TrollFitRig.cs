@@ -26,6 +26,45 @@ namespace SteveTheTroll.Fit
         public Vector3 logOffset = new Vector3(0f, 0f, 0.1f);
         public Vector3 logEuler;
 
+        [Header("Slipper (D-025): placement in the foot frame, metres / degrees")]
+        public float slipperForward = 0.086f;
+        public float slipperUp = -0.125f;
+        public float slipperSide;
+        public float slipperYaw;
+        public float slipperScale = 1f;
+        public int slipperFurShells = 16;
+        public float slipperFurLength = 0.006f;
+
+        /// (Re)builds both slippers with the shared SlipperFit (as the mod does). Agent: call after changing the slipper fields.
+        public string BuildSlippers()
+        {
+#if UNITY_EDITOR
+            foreach (var old in FindObjectsByType<Transform>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+                if (old != null && old.name.StartsWith(SlipperFit.RootName)) DestroyImmediate(old.gameObject);
+            var prefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>("Assets/SteveTheTroll_Slipper/SlipperParts.prefab");
+            var fur = UnityEditor.AssetDatabase.LoadAssetAtPath<Material>("Assets/SteveTheTroll_Fur/TrollFur.mat");
+            string report = "";
+            foreach (var left in new[] { true, false })
+            {
+                var foot = left ? leftFoot : rightFoot;
+                Transform root;
+                var parts = SlipperFit.Build(prefab, transform, foot, TrollFitMath.FindDeep(player, TrollFitMath.ToeOf(foot.name)), player.forward, left,
+                    slipperForward, slipperSide, slipperUp, slipperYaw, slipperScale, out root);
+                foreach (var p in parts)
+                {
+                    if (p.Name == "SlipperSole" || fur == null) continue;
+                    var col = p.Renderer.sharedMaterials[0].GetColor("_Color");
+                    var shells = TrollFur.AddShells(p.Renderer, fur, slipperFurShells);
+                    TrollFur.Apply(shells, slipperFurLength, 900f, 1.2f, 0.0008f, col, Color.white * 1.15f);
+                }
+                report += (left ? "L " : "R ") + parts.Count + " part(s); ";
+            }
+            return report;
+#else
+            return "editor only";
+#endif
+        }
+
         [Header("Pose: Euler degrees per TrollFitMath.PosedBones, on top of rest")]
         public Vector3[] boneEuler = new Vector3[TrollFitMath.PosedBones.Length];
         [HideInInspector] public Quaternion[] rest = new Quaternion[0];

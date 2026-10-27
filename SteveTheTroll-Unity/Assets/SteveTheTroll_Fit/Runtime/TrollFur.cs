@@ -43,6 +43,30 @@ namespace SteveTheTroll.Fit
             return list;
         }
 
+        /// D-027 smooth plush (user's choice "D"): a ShellFur material at _Shell 0 (no strands, no root darkening) with the body's own
+        /// albedo and a light tint. Expected outcome: a new material (caller assigns it and keeps the original to give back).
+        public static Material MakePlush(SkinnedMeshRenderer body, Material template, Color tint, float smoothness)
+        {
+            if (body == null || template == null) { TrollFitMath.Warn("TrollFur: MakePlush without " + (body == null ? "body" : "material")); return null; }
+            var albedo = body.sharedMaterial != null && body.sharedMaterial.HasProperty("_MainTex") ? body.sharedMaterial.GetTexture("_MainTex") : null;
+            var m = new Material(template) { name = "TrollPlush" };
+            if (albedo != null) m.SetTexture("_MainTex", albedo);
+            m.SetFloat("_Shell", 0f);
+            m.SetFloat("_Occlusion", 0f);
+            SetPlush(m, tint, smoothness);
+            TrollFitMath.Log("TrollFur: plush material for " + body.name + ", albedo " + (albedo != null ? albedo.name : "none"));
+            return m;
+        }
+
+        /// Live plush colour. Expected outcome: returns whether the material took the values.
+        public static bool SetPlush(Material m, Color tint, float smoothness)
+        {
+            if (m == null) return false;
+            m.SetColor("_Color", tint);
+            m.SetFloat("_Glossiness", smoothness);
+            return m.GetColor("_Color") == tint;
+        }
+
         /// Pushes the look into every shell. Expected outcome: returns how many shell materials were updated.
         public static int Apply(List<SkinnedMeshRenderer> shells, float lengthM, float density, float thickness, float gravityM, Color tint, Color tip)
         {

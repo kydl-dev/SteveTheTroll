@@ -20,6 +20,7 @@ namespace SteveTheTroll.Figure
         readonly string _owner;
         List<SkinnedMeshRenderer> _shells = new List<SkinnedMeshRenderer>();
         int _builtCount = -1;
+        Material _original, _plush;                       // D-027: the troll's own body material / our plush copy
 
         public FigureFur(SkinnedMeshRenderer body, string owner) { _body = body; _owner = owner; }
 
@@ -36,6 +37,7 @@ namespace SteveTheTroll.Figure
         /// Called when a Tunable changed (and once at start). Expected outcome: shell count = FurShells when enabled, 0 when not.
         public int Refresh()
         {
+            RefreshPlush();
             int want = ModSettings.FurEnable.Value ? ModSettings.FurShells.Value : 0;
             if (want != _builtCount) Rebuild(want);
             var tint = new Color(ModSettings.FurTintR.Value, ModSettings.FurTintG.Value, ModSettings.FurTintB.Value, 1f);
@@ -43,6 +45,26 @@ namespace SteveTheTroll.Figure
             TrollFur.Apply(_shells, ModSettings.FurLength.Value, ModSettings.FurDensity.Value, ModSettings.FurThickness.Value, ModSettings.FurDroop.Value, tint, new Color(t, t, t, 1f));
             ModLog.Check("FigureFur: " + _owner + " shells", _shells.Count, want, 0, "");
             return _shells.Count;
+        }
+
+        // D-027 smooth plush: swap the body material for our plush copy (and back when switched off), colour live.
+        void RefreshPlush()
+        {
+            if (_body == null) return;
+            if (_original == null) _original = _body.sharedMaterial;
+            var tint = new Color(ModSettings.PlushTintR.Value, ModSettings.PlushTintG.Value, ModSettings.PlushTintB.Value, 1f);
+            if (ModSettings.PlushEnable.Value)
+            {
+                if (_plush == null && Template() != null)
+                {
+                    _body.sharedMaterial = _original;                 // the plush takes the albedo from the troll's own material
+                    _plush = TrollFur.MakePlush(_body, Template(), tint, ModSettings.PlushSmoothness.Value);
+                }
+                if (_plush != null) { _body.sharedMaterial = _plush; TrollFur.SetPlush(_plush, tint, ModSettings.PlushSmoothness.Value); }
+            }
+            else if (_body.sharedMaterial != _original) _body.sharedMaterial = _original;
+            ModLog.Verbose("FigureFur: " + _owner + " plush " + (ModSettings.PlushEnable.Value ? "on, tint " + tint.ToString("F2") + ", smoothness " + ModSettings.PlushSmoothness.Value.ToString("F2") : "off") + ", body material " + (_body.sharedMaterial != null ? _body.sharedMaterial.name : "none"));
+            ModLog.Check("FigureFur: " + _owner + " plush material in use", _body.sharedMaterial == _plush && _plush != null ? 1 : 0, ModSettings.PlushEnable.Value && Template() != null ? 1 : 0, 0, "");
         }
 
         void Rebuild(int count)
@@ -60,6 +82,7 @@ namespace SteveTheTroll.Figure
         {
             int n = _shells.Count;
             Rebuild(0);
+            if (_plush != null) { if (_body != null) _body.sharedMaterial = _original; Object.Destroy(_plush); _plush = null; }
             return n - _shells.Count;
         }
     }

@@ -69,7 +69,7 @@ namespace SteveTheTroll
         public static readonly Tunable<float> HandThumbCurl = new Tunable<float>("TrollHand", "ThumbCurl", 0f, -60f, 60f, "Extra curl of the thumb (each joint, around the knuckle line), degrees.");
 
         // --- D-020 fluffy fur on the mini trolls (shell fur, bundle material "TrollFur"); values of the Unity preview fur_v4 (user: v2 "kind of bad" -> denser, shorter, softer, lighter; D-026)
-        public static readonly Tunable<bool> FurEnable = new Tunable<bool>("TrollFur", "Enable", true, "Fluffy fur on the mini trolls (off = the game's troll skin).");
+        public static readonly Tunable<bool> FurEnable = new Tunable<bool>("TrollFur", "Enable", false, "Fur strands (shells) on the mini trolls. Off by default since D-027 (the user chose the smooth plush look).");
         public static readonly Tunable<int> FurShells = new Tunable<int>("TrollFur", "Shells", 24, 4, 32, "Number of fur layers (more = smoother fur, more cost).");
         public static readonly Tunable<float> FurLength = new Tunable<float>("TrollFur", "Length", 0.007f, 0.001f, 0.04f, "Fur length in metres.");
         public static readonly Tunable<float> FurDensity = new Tunable<float>("TrollFur", "Density", 700f, 50f, 1500f, "Strands per texture unit (higher = finer fur).");
@@ -79,6 +79,13 @@ namespace SteveTheTroll
         public static readonly Tunable<float> FurTintG = new Tunable<float>("TrollFur", "TintG", 1.15f, 0f, 1.5f, "Fur colour multiplier, green.");
         public static readonly Tunable<float> FurTintB = new Tunable<float>("TrollFur", "TintB", 1.2f, 0f, 1.5f, "Fur colour multiplier, blue.");
         public static readonly Tunable<float> FurTipLight = new Tunable<float>("TrollFur", "TipLight", 1.25f, 0.3f, 1.5f, "Brightness of the fur tips (1 = like the roots before darkening).");
+
+        // --- D-027 smooth plush look of the mini trolls (user picked style D): the troll skin re-coloured, no strands
+        public static readonly Tunable<bool> PlushEnable = new Tunable<bool>("TrollPlush", "Enable", true, "Smooth plush colour on the mini trolls (off = the game's troll skin).");
+        public static readonly Tunable<float> PlushTintR = new Tunable<float>("TrollPlush", "TintR", 1.1f, 0f, 2f, "Plush colour multiplier on the troll skin, red.");
+        public static readonly Tunable<float> PlushTintG = new Tunable<float>("TrollPlush", "TintG", 1.3f, 0f, 2f, "Plush colour multiplier on the troll skin, green.");
+        public static readonly Tunable<float> PlushTintB = new Tunable<float>("TrollPlush", "TintB", 1.35f, 0f, 2f, "Plush colour multiplier on the troll skin, blue.");
+        public static readonly Tunable<float> PlushSmoothness = new Tunable<float>("TrollPlush", "Smoothness", 0f, 0f, 0.6f, "Shine of the plush (0 = matt fabric).");
 
         /// Expected outcome: every player entry is bound (returns that check).
         public static bool Bind(ConfigFile c)
