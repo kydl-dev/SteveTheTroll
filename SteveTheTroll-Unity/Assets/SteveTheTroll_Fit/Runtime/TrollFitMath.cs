@@ -24,6 +24,9 @@ namespace SteveTheTroll.Fit
             // D-017: the right hand grips the log
             "RightHandIndex1", "RightHandIndex2", "RightHandIndex3", "RightHandMiddle1", "RightHandMiddle2", "RightHandMiddle3",
             "RightHandRing1", "RightHandRing2", "RightHandRing3", "RightHandThumb1", "RightHandThumb2", "RightHandThumb3",
+            // D-024: the left hand closed (user wants to see a fist)
+            "LeftHandIndex1", "LeftHandIndex2", "LeftHandIndex3", "LeftHandMiddle1", "LeftHandMiddle2", "LeftHandMiddle3",
+            "LeftHandRing1", "LeftHandRing2", "LeftHandRing3", "LeftHandThumb1", "LeftHandThumb2", "LeftHandThumb3",
         };
 
         /// The player's toe bone for a foot bone name (LeftFoot -> LeftToeBase).
