@@ -69,7 +69,7 @@ namespace SteveTheTroll.Item
             shared.m_armor = BaseArmor;
             shared.m_armorPerLevel = ArmorPerLevel;
             shared.m_maxQuality = MaxQuality;
-            shared.m_equipStatusEffect = null;
+            shared.m_equipStatusEffect = FrostEffect(icon);      // D-033: frost resistance shown under Active effects with the slipper icon
             shared.m_setStatusEffect = null;
             shared.m_movementModifier = 0f;
             shared.m_damageModifiers = new List<HitData.DamageModPair>
@@ -81,6 +81,24 @@ namespace SteveTheTroll.Item
             ModLog.Info("SlipperItem: " + PrefabName + " added " + added + " (armor " + shared.m_armor + " +" + shared.m_armorPerLevel + "/quality, max quality " + shared.m_maxQuality + ", worn belt parts removed " + removed + ", ground look slippers " + dropLook + ", hash " + _hash + ")");
             ModLog.Check("SlipperItem: armor at quality 1", shared.m_armor, BaseArmor, 0.001, "");
             ModLog.Check("SlipperItem: max quality", shared.m_maxQuality, MaxQuality, 0, "");
+        }
+
+        public const string FrostEffectName = "SE_STT_SlipperFrost";
+
+        /// D-033 (now, with T-008): a status effect while the slippers are worn: frost Resistant, the slipper icon, shown in Compendium >
+        /// Active effects. Registered with Jotunn. Expected outcome: the effect (null if it could not be made, logged).
+        static StatusEffect FrostEffect(Sprite icon)
+        {
+            var se = ScriptableObject.CreateInstance<SE_Stats>();
+            se.name = FrostEffectName;
+            se.m_name = "$stevethetroll_se_frost";
+            se.m_tooltip = "$stevethetroll_se_frost_tooltip";
+            se.m_icon = icon;
+            se.m_mods = new List<HitData.DamageModPair> { new HitData.DamageModPair { m_type = HitData.DamageType.Frost, m_modifier = HitData.DamageModifier.Resistant } };
+            bool added = ItemManager.Instance.AddStatusEffect(new CustomStatusEffect(se, false));
+            ModLog.Verbose("SlipperItem: status effect " + FrostEffectName + " added " + added + " (icon " + (icon != null) + ", frost Resistant)");
+            ModLog.Check("SlipperItem: frost status effect registered", added ? 1 : 0, 1, 0, "");
+            return se;
         }
 
         /// Removes the belt's worn visual (children named attach_*, e.g. attach_skin); the ground model "attach" stays and gets the

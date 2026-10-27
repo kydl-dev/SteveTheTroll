@@ -14,6 +14,8 @@ namespace SteveTheTroll.Ui
             { "stevethetroll_menu_footer", "Esc to close" },
             { "stevethetroll_slippers", "Fluffy Slippers" },
             { "stevethetroll_slippers_desc", "Soft, fluffy plush slippers with a fur-lined rim. Warm toes, brave heart." },
+            { "stevethetroll_se_frost", "Fluffy feet" },
+            { "stevethetroll_se_frost_tooltip", "Warm, fluffy slippers: resistant to frost." },
             { "stevethetroll_tab_slippers", "Slippers" },
             { "stevethetroll_tab_troll", "Troll work" },
             { "stevethetroll_viewer_hint", "Drag: turn - right-drag: move - wheel: zoom" },
