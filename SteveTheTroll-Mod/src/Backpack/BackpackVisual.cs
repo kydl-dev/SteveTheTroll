@@ -5,8 +5,8 @@ using UnityEngine;
 namespace SteveTheTroll.Backpack
 {
     /// <summary>
-    /// T-008b (D-053, D-054): the backpack on every tamed Troll, on every client (visual only): the user's construction (BackpackData) rebuilt from the
-    /// game's own piece prefabs - only their mesh renderers (the "new" look of WearNTear pieces, LOD 0), no colliders, no networking.
+    /// T-008b (D-053, D-054, D-057): the backpack on every tamed Troll, on every client (visual only): the user's construction (BackpackData) rebuilt from the
+    /// game's own piece prefabs - only their mesh renderers (the "new" look of WearNTear pieces, no lower LODs), no colliders, no networking.
     /// Placed each LateUpdate behind the troll's Spine2 in the troll's own frame (TrollBackpack Tunables: scale, back / up / side offset in
     /// metres, pitch / yaw / roll), so it moves with the body but does not twist with the spine. Storage comes in T-008c.
     /// </summary>
@@ -46,13 +46,14 @@ namespace SteveTheTroll.Backpack
             var root = new GameObject(RootName);
             _root = root.transform;
             _root.SetParent(transform, false);
-            int missing = 0, renderers = 0;
+            int missing = 0, renderers = 0, empty = 0;
             foreach (var p in BackpackData.Pieces)
             {
                 var prefab = ZNetScene.instance != null ? ZNetScene.instance.GetPrefab(p.Prefab) : null;
                 if (prefab == null) { missing++; ModLog.Warn("BackpackVisual: piece prefab '" + p.Prefab + "' not found"); continue; }
                 var copy = VisualCopy(prefab, out int r);
                 renderers += r;
+                if (r == 0) { empty++; ModLog.Warn("BackpackVisual: piece '" + p.Prefab + "' has no mesh to show"); }
                 copy.transform.SetParent(_root, false);
                 copy.transform.localPosition = new Vector3(p.X, p.Y, p.Z);
                 copy.transform.localRotation = Quaternion.Euler(0f, p.Yaw, 0f);
@@ -61,35 +62,52 @@ namespace SteveTheTroll.Backpack
             Place();
             ModLog.Info("BackpackVisual: " + name + " backpack built: " + _pieces + " piece(s), " + renderers + " renderer(s), " + missing + " missing, bone " + (_spine != null ? Bone : "NOT FOUND (troll root used)"));
             ModLog.Check("BackpackVisual: " + name + " backpack pieces", _pieces, BackpackData.Pieces.Length, 0, "");
+            ModLog.Check("BackpackVisual: " + name + " pieces without a mesh", empty, 0, 0, "");
         }
 
-        // A renderer-only copy of a piece: the WearNTear "new" look (or the whole prefab), LOD 0 only. Nothing networked is instantiated.
+        // A renderer-only copy of a piece: the WearNTear "new" look (or the whole prefab), no lower LODs. Nothing networked is instantiated.
+        // D-057 (TEST-024: 50 pieces but only 35 renderers): the old code took the FIRST LODGroup of the prefab (often the worn / broken look)
+        // as "LOD 0" and so dropped every renderer of the new look. Now only renderers listed in LOD 1+ of any LODGroup are skipped, and a piece
+        // that still ends up empty falls back to the whole prefab.
         static GameObject VisualCopy(GameObject prefab, out int renderers)
         {
-            renderers = 0;
-            var go = new GameObject(prefab.name);
             var src = prefab.transform;
             var wnt = prefab.GetComponent<WearNTear>();
-            var from = wnt != null && wnt.m_new != null ? wnt.m_new.transform : src;
-            HashSet<Renderer> lod0 = null;
-            var lod = prefab.GetComponentInChildren<LODGroup>(true);
-            if (lod != null && lod.GetLODs().Length > 0) lod0 = new HashSet<Renderer>(lod.GetLODs()[0].renderers);
-            foreach (var r in from.GetComponentsInChildren<MeshRenderer>(true))
+            var go = new GameObject(prefab.name);
+            renderers = 0;
+            if (wnt != null && wnt.m_new != null) renderers = CopyRenderers(wnt.m_new.transform, src, go.transform);
+            if (renderers == 0) renderers = CopyRenderers(src, src, go.transform);
+            return go;
+        }
+
+        /// Expected outcome: copies every mesh of `from` (MeshRenderer + SkinnedMeshRenderer, LOD 0 only) under `to`; returns how many.
+        static int CopyRenderers(Transform from, Transform src, Transform to)
+        {
+            var lowerLods = new HashSet<Renderer>();
+            foreach (var lod in src.GetComponentsInChildren<LODGroup>(true))
             {
-                if (lod0 != null && !lod0.Contains(r)) continue;
-                var mf = r.GetComponent<MeshFilter>();
-                if (mf == null || mf.sharedMesh == null) continue;
+                var lods = lod.GetLODs();
+                for (int i = 1; i < lods.Length; i++) foreach (var r in lods[i].renderers) if (r != null) lowerLods.Add(r);
+            }
+            int n = 0;
+            foreach (var r in from.GetComponentsInChildren<Renderer>(true))
+            {
+                if (lowerLods.Contains(r)) continue;
+                Mesh mesh = null;
+                if (r is MeshRenderer) { var mf = r.GetComponent<MeshFilter>(); if (mf != null) mesh = mf.sharedMesh; }
+                else if (r is SkinnedMeshRenderer) mesh = ((SkinnedMeshRenderer)r).sharedMesh;
+                if (mesh == null) continue;
                 var part = new GameObject(r.name);
-                part.transform.SetParent(go.transform, false);
+                part.transform.SetParent(to, false);
                 part.transform.localPosition = src.InverseTransformPoint(r.transform.position);
                 part.transform.localRotation = Quaternion.Inverse(src.rotation) * r.transform.rotation;
                 var ls = r.transform.lossyScale; var ps = src.lossyScale;
                 part.transform.localScale = new Vector3(ls.x / ps.x, ls.y / ps.y, ls.z / ps.z);
-                part.AddComponent<MeshFilter>().sharedMesh = mf.sharedMesh;
+                part.AddComponent<MeshFilter>().sharedMesh = mesh;
                 part.AddComponent<MeshRenderer>().sharedMaterials = r.sharedMaterials;
-                renderers++;
+                n++;
             }
-            return go;
+            return n;
         }
 
         void LateUpdate()
