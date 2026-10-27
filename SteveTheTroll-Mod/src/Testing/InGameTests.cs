@@ -64,6 +64,20 @@ namespace SteveTheTroll.Testing
 
         const string ExpectedName = "Fluffy Slippers";
 
+        // T-008a: the game's Troll prefab carries a Tameable with the taming time and E commands (follow / stay).
+        static string World_TrollTameable()
+        {
+            var prefab = ZNetScene.instance != null ? ZNetScene.instance.GetPrefab(Taming.TrollTaming.TrollPrefab) : null;
+            var t = prefab != null ? prefab.GetComponent<Tameable>() : null;
+            if (t == null) return "FAIL: " + Taming.TrollTaming.TrollPrefab + " " + (prefab != null ? "has no Tameable" : "not in ZNetScene");
+            bool effects = t.m_tamedEffect != null && t.m_petEffect != null && t.m_sootheEffect != null;
+            string detail = "taming " + t.m_tamingTime + " s (expected " + ModSettings.TameSeconds.Value + "), commandable " + t.m_commandable + ", effects " + effects
+                + ", range " + ModSettings.TameRange.Value + " m, own troll limit " + ModSettings.OwnTrollRange.Value + " m";
+            ModLog.Verbose("InGameTests: World_TrollTameable " + detail);
+            bool ok = Mathf.Approximately(t.m_tamingTime, ModSettings.TameSeconds.Value) && t.m_commandable && effects;
+            return (ok ? "PASS: " : "FAIL: ") + detail;
+        }
+
         /// D-035: upgrade amounts of the slippers' TrollHide and Blueberries at quality 2, 3 and 4 (through the patched GetAmount).
         static string UpgradeAmounts(Recipe recipe, out bool ok)
         {

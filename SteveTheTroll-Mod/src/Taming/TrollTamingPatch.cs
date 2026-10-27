@@ -1,0 +1,105 @@
+using HarmonyLib;
+using Kydl.Common;
+using UnityEngine;
+
+namespace SteveTheTroll.Taming
+{
+    /// <summary>
+    /// T-008a: Tameable.TamingUpdate (InvokeRepeating, owner of the ZDO only) is replaced for the game's Troll: no food, no "not alerted"
+    /// condition (D-038: the troll fights normally while it is tamed); the time counts down while a slipper wearer is within TameRange
+    /// (TamingRules). A wearer whose own tamed troll is within OwnTrollRange calls that troll instead (it follows the wearer). Every other
+    /// tameable creature keeps the vanilla code. GetStatusString: a wild troll shows "taming" instead of "hungry".
+    /// </summary>
+    internal static class TrollTamingPatch
+    {
+        static readonly AccessTools.FieldRef<Tameable, Character> TCharacter = AccessTools.FieldRefAccess<Tameable, Character>("m_character");
+        static readonly AccessTools.FieldRef<Tameable, MonsterAI> TAI = AccessTools.FieldRefAccess<Tameable, MonsterAI>("m_monsterAI");
+        static readonly AccessTools.FieldRef<Tameable, ZNetView> TView = AccessTools.FieldRefAccess<Tameable, ZNetView>("m_nview");
+        static readonly AccessTools.FieldRef<Tameable, float> TDelta = AccessTools.FieldRefAccess<Tameable, float>("m_tameDeltaTime");
+        static readonly System.Func<Tameable, float> GetRemaining = AccessTools.MethodDelegate<System.Func<Tameable, float>>(AccessTools.Method(typeof(Tameable), "GetRemainingTime"));
+        static readonly System.Action<Tameable> DoTame = AccessTools.MethodDelegate<System.Action<Tameable>>(AccessTools.Method(typeof(Tameable), "Tame"));
+        const float DiagEverySeconds = 5f;
+        static float _nextDiag;
+
+        [HarmonyPatch(typeof(Tameable), "TamingUpdate")]
+        static class TamingUpdate
+        {
+            static bool Prefix(Tameable __instance)
+            {
+                if (!TrollTaming.IsTroll(__instance)) return true;     // vanilla for every other creature
+                if (ModSettings.On) Tick(__instance);
+                return false;
+            }
+        }
+
+        [HarmonyPatch(typeof(Tameable), nameof(Tameable.GetStatusString))]
+        static class StatusString
+        {
+            static void Postfix(Tameable __instance, ref string __result)
+            {
+                if (__result == "$hud_tamehungry" && TrollTaming.IsTroll(__instance)) __result = "$hud_tameinprogress";
+            }
+        }
+
+        // One taming tick of one troll (this client owns its ZDO).
+        static void Tick(Tameable t)
+        {
+            var nview = TView(t);
+            var troll = TCharacter(t);
+            if (nview == null || !nview.IsValid() || !nview.IsOwner() || troll == null || troll.IsDead()) return;
+            bool diag = Time.time >= _nextDiag;
+            if (troll.IsTamed()) { if (diag) Diag(troll, "tamed, owner " + TrollTaming.Owner(troll)); return; }
+            if (t.m_tamingTime != ModSettings.TameSeconds.Value)
+            {
+                ModLog.Verbose("TrollTamingPatch: " + troll.name + " taming time " + t.m_tamingTime + " -> " + ModSettings.TameSeconds.Value + " s (Tunable changed)");
+                t.m_tamingTime = ModSettings.TameSeconds.Value;
+            }
+
+            float wearerDist;
+            var wearer = TrollTaming.NearestWearer(troll.transform.position, out wearerDist);
+            float ownDist;
+            var own = TrollTaming.OwnTroll(wearer, out ownDist);
+            var step = TamingRules.DecideWild(wearerDist, ModSettings.TameRange.Value, ownDist, ModSettings.OwnTrollRange.Value);
+            float before = GetRemaining(t);
+            if (diag)
+            {
+                Diag(troll, "wild, nearest wearer " + (wearer != null ? wearer.GetPlayerName() : "none") + " at " + wearerDist.ToString("F1") + " m (range "
+                    + ModSettings.TameRange.Value + "), own tamed troll " + (own != null ? own.name : "none") + " at " + ownDist.ToString("F1") + " m (limit "
+                    + ModSettings.OwnTrollRange.Value + "), left " + before.ToString("F1") + " s (" + TamingRules.Percent(before, t.m_tamingTime) + " %), step " + step);
+            }
+            if (step == TamingRules.Step.CallOwnTroll) { CallTroll(own, wearer); return; }
+            if (step != TamingRules.Step.CountDown) return;
+
+            float left = TamingRules.CountDown(before, TDelta(t));
+            nview.GetZDO().Set(ZDOVars.s_tameTimeLeft, left);
+            float stored = GetRemaining(t);
+            ModLog.Check("TrollTamingPatch: " + troll.name + " stored taming time", stored, left, 0.01, "s");
+            ModLog.Verbose("TrollTamingPatch: " + troll.name + " taming by " + wearer.GetPlayerName() + " at " + wearerDist.ToString("F1") + " m: " + before.ToString("F1") + " -> " + left.ToString("F1") + " s left");
+            if (!TamingRules.Done(left)) return;
+
+            bool owned = TrollTaming.SetOwner(troll, wearer);
+            DoTame(t);
+            ModLog.Info("TrollTamingPatch: " + troll.name + " tamed by " + wearer.GetPlayerName() + " (owner set " + owned + ", tamed " + troll.IsTamed() + ")");
+            ModLog.Check("TrollTamingPatch: " + troll.name + " tamed after the countdown", troll.IsTamed() ? 1 : 0, 1, 0, "");
+        }
+
+        // D-037: the wearer's own tamed troll walks to the wearer (follows) instead of a second taming. Only the troll's ZDO owner may steer it.
+        static void CallTroll(Character own, Player wearer)
+        {
+            var ai = own != null ? own.GetComponent<MonsterAI>() : null;
+            var view = own != null ? own.GetComponent<ZNetView>() : null;
+            if (ai == null || wearer == null) { ModLog.VerboseWarn("TrollTamingPatch: cannot call the own troll (ai " + (ai != null) + ", wearer " + (wearer != null) + ")"); return; }
+            if (ai.GetFollowTarget() == wearer.gameObject) return;
+            if (view == null || !view.IsValid() || !view.IsOwner()) { ModLog.Verbose("TrollTamingPatch: own troll " + own.name + " is owned by another client - it is called on that client"); return; }
+            ai.SetFollowTarget(wearer.gameObject);
+            ModLog.Info("TrollTamingPatch: " + wearer.GetPlayerName() + " already has a tamed troll (" + own.name + ") - no second taming, it now follows the wearer");
+            ModLog.Check("TrollTamingPatch: called troll follows the wearer", ai.GetFollowTarget() == wearer.gameObject ? 1 : 0, 1, 0, "");
+        }
+
+        static void Diag(Character troll, string what)
+        {
+            _nextDiag = Time.time + DiagEverySeconds;
+            ModLog.Verbose("TrollTamingPatch: " + troll.name + " at " + troll.transform.position.ToString("F0") + " " + what);
+        }
+    }
+}

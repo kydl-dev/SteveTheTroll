@@ -24,6 +24,11 @@ namespace SteveTheTroll
         public static bool On { get { return EnableAll == null || EnableAll.Value; } }
 
         // --- dev-only fixed values (Tunables): not in the config file, KydlTools changes them for testing -----------------------------------
+        // --- T-008a troll taming (D-037 / D-038): the user's numbers. ---
+        public static readonly Tunable<float> TameSeconds = new Tunable<float>("TrollTaming", "TameSeconds", 60f, 5f, 600f, "Seconds a wild troll needs a slipper wearer near it to become tamed (user: 60 s).");
+        public static readonly Tunable<float> TameRange = new Tunable<float>("TrollTaming", "TameRange", 150f, 10f, 300f, "Metres from the wearer within which a wild troll is being tamed (user: 150 m).");
+        public static readonly Tunable<float> OwnTrollRange = new Tunable<float>("TrollTaming", "OwnTrollRange", 300f, 50f, 1000f, "Metres: a wearer whose own tamed troll is this close tames no second one; that troll walks to the wearer instead (user: 300 m).");
+
         public static readonly Tunable<float> ExampleSpeed = new Tunable<float>("Example", "ExampleSpeed", 1f, 0f, 10f,
             "Example dev-only value: replace or remove. Read it with ModSettings.ExampleSpeed.Value.");
 
