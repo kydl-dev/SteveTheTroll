@@ -15,8 +15,27 @@ namespace SteveTheTroll.Taming
         static readonly AccessTools.FieldRef<Tameable, Character> TCharacter = AccessTools.FieldRefAccess<Tameable, Character>("m_character");
         static readonly AccessTools.FieldRef<Tameable, MonsterAI> TAI = AccessTools.FieldRefAccess<Tameable, MonsterAI>("m_monsterAI");
         static readonly AccessTools.FieldRef<Tameable, ZNetView> TView = AccessTools.FieldRefAccess<Tameable, ZNetView>("m_nview");
-        // m_tameDeltaTime is STATIC in 1.0.20 (seconds between TamingUpdate calls): FieldRefAccess<Tameable, float> threw in the type initializer (TEST-012).
-        static readonly AccessTools.FieldRef<float> TDelta = AccessTools.StaticFieldRefAccess<float>(AccessTools.Field(typeof(Tameable), "m_tameDeltaTime"));
+        // m_tameDeltaTime is a CONST (3 s in 1.0.20, Cecil: literal) - no field ref possible (TEST-012 / TEST-014 crashed on FieldRefAccess and
+        // StaticFieldRefAccess). Read its constant value once; 3 s if the game ever changes it to something unreadable.
+        const float FallbackTick = 3f;
+        static readonly float TickSeconds = ReadTick();
+
+        static float ReadTick()
+        {
+            var f = AccessTools.Field(typeof(Tameable), "m_tameDeltaTime");
+            try
+            {
+                object v = f != null && f.IsLiteral ? f.GetRawConstantValue() : f != null && f.IsStatic ? f.GetValue(null) : null;
+                float tick = v is float x && x > 0f ? x : FallbackTick;
+                ModLog.Verbose("TrollTamingPatch: m_tameDeltaTime " + (f == null ? "not found" : (f.IsLiteral ? "const" : f.IsStatic ? "static" : "instance") + " = " + v) + " -> tick " + tick + " s");
+                return tick;
+            }
+            catch (System.InvalidOperationException e)
+            {
+                ModLog.Warn("TrollTamingPatch: m_tameDeltaTime unreadable (" + e.Message + ") - tick " + FallbackTick + " s");
+                return FallbackTick;
+            }
+        }
         static readonly System.Func<Tameable, float> GetRemaining = AccessTools.MethodDelegate<System.Func<Tameable, float>>(AccessTools.Method(typeof(Tameable), "GetRemainingTime"));
         static readonly System.Action<Tameable> DoTame = AccessTools.MethodDelegate<System.Action<Tameable>>(AccessTools.Method(typeof(Tameable), "Tame"));
         const float DiagEverySeconds = 5f;
@@ -26,7 +45,7 @@ namespace SteveTheTroll.Taming
         /// Expected outcome: "tick N s" with the game's tick interval (> 0).
         internal static string SelfCheck()
         {
-            float dt = TDelta();
+            float dt = TickSeconds;
             bool ok = dt > 0f && GetRemaining != null && DoTame != null;
             ModLog.Verbose("TrollTamingPatch: self check tick " + dt + " s, delegates " + (GetRemaining != null) + "/" + (DoTame != null));
             return (ok ? "PASS: " : "FAIL: ") + "tick " + dt + " s, GetRemainingTime " + (GetRemaining != null) + ", Tame " + (DoTame != null);
@@ -81,7 +100,7 @@ namespace SteveTheTroll.Taming
             if (step == TamingRules.Step.CallOwnTroll) { CallTroll(own, wearer); return; }
             if (step != TamingRules.Step.CountDown) return;
 
-            float left = TamingRules.CountDown(before, TDelta());
+            float left = TamingRules.CountDown(before, TickSeconds);
             nview.GetZDO().Set(ZDOVars.s_tameTimeLeft, left);
             float stored = GetRemaining(t);
             ModLog.Check("TrollTamingPatch: " + troll.name + " stored taming time", stored, left, 0.01, "s");
