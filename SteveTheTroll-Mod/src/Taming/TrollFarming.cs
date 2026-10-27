@@ -108,7 +108,7 @@ namespace SteveTheTroll.Taming
             return 40f;
         }
 
-        internal static GameObject Find(Vector3 center, Vector3 from, string item, int tier, float range, out Collider hit, GameObject lastBad = null)
+        internal static GameObject Find(Vector3 center, Vector3 from, string item, int tier, float range, out Collider hit, System.Func<GameObject, bool> skip = null)
         {
             hit = null;
             GameObject best = null;
@@ -117,13 +117,14 @@ namespace SteveTheTroll.Taming
             for (int i = 0; i < n; i++)
             {
                 var g = SourceOf(Hits[i]);
-                if (g == null || g == lastBad || MinTier(g) > tier) continue;
+                if (g == null || (skip != null && skip(g)) || MinTier(g) > tier) continue;
                 var cache = g.GetComponent<FarmSourceCache>();
                 if (cache == null) cache = g.AddComponent<FarmSourceCache>();
                 if (!cache.Yields(item)) continue;
                 // TEST-018: Collider.ClosestPoint on a non-convex mesh returned the troll's own position (0.0 m to a stump) -> distances from
                 // the collider BOUNDS; and a ranking so trees / logs / ore rocks win over stumps and small debris
-                float d = Vector3.Distance(from, Hits[i].bounds.ClosestPoint(from)) + Penalty(g);
+                var at = g.GetComponent<TreeBase>() != null ? g.transform.position : Hits[i].bounds.ClosestPoint(from);     // trees: the trunk (TEST-020)
+                float d = Vector3.Distance(from, at) + Penalty(g);
                 if (d < bestD) { bestD = d; best = g; hit = Hits[i]; }
             }
             ModLog.Verbose("TrollFarming: search '" + item + "' within " + range + " m of " + center.ToString("F0") + ": " + n + " collider(s), best " + (best != null ? best.name + " (" + KindOf(best) + ") score " + bestD.ToString("F1") + " m" : "none"));

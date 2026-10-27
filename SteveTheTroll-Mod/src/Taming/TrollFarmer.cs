@@ -15,7 +15,9 @@ namespace SteveTheTroll.Taming
         int _missed;
         uint _lastRevision;
         float _stuckSeconds, _lastDist = float.MaxValue;
-        GameObject _bad;
+        // TEST-020: only the LAST bad source was remembered, so two bad birches were picked in turns -> every given-up source is skipped for BadSeconds
+        readonly System.Collections.Generic.Dictionary<GameObject, float> _bad = new System.Collections.Generic.Dictionary<GameObject, float>();
+        const float BadSeconds = 120f;
         string _focus = "";
         Vector3 _centre;
         GameObject _target;
@@ -43,10 +45,13 @@ namespace SteveTheTroll.Taming
             if ((_target == null || _hit == null) && Time.time >= _nextSearch) Search(me, weapon);
             if (_target == null || _hit == null) return _target != null;
 
-            var point = _hit.bounds.ClosestPoint(transform.position);      // bounds: Collider.ClosestPoint is wrong on non-convex meshes (TEST-018)
-            point.y = Mathf.Clamp(transform.position.y + 1.5f, _hit.bounds.min.y, _hit.bounds.max.y);   // hit the trunk / rock at chest height, not the ground
-            float d = Vector3.Distance(transform.position, point);
-            float reach = Mathf.Max(1.5f, weapon.m_shared.m_aiAttackRange);
+            var point = AimPoint();
+            // TEST-020: a tree's collider bounds include the crown, so the troll stopped 4-6 m from the trunk and missed -> trees are aimed at
+            // their trunk (the tree's own position) and the troll walks up to FarmReach metres (horizontal) from it; logs / rocks use the bounds
+            var flat = point - transform.position; flat.y = 0f;
+            float d = flat.magnitude;
+            bool tree = _target.GetComponent<TreeBase>() != null;
+            float reach = tree ? ModSettings.FarmReach.Value : Mathf.Min(Mathf.Max(1.5f, weapon.m_shared.m_aiAttackRange), ModSettings.FarmReach.Value + 1f);
             if (Time.time >= _nextLog)
             {
                 _nextLog = Time.time + LogSeconds;
@@ -58,7 +63,7 @@ namespace SteveTheTroll.Taming
                 // no progress for StuckSeconds -> give this source up and look for another one
                 if (d < _lastDist - 0.2f) { _lastDist = d; _stuckSeconds = 0f; } else _stuckSeconds += dt;
                 if (_stuckSeconds > StuckSeconds) { GiveUp("cannot reach it (" + d.ToString("F1") + " m)"); return _target != null; }
-                moveTo(ai, dt, point, reach * 0.8f, false);
+                moveTo(ai, dt, point, reach * 0.7f, false);
                 return true;
             }
             _stuckSeconds = 0f; _lastDist = float.MaxValue;
@@ -79,6 +84,15 @@ namespace SteveTheTroll.Taming
             return true;
         }
 
+        // Trees: the trunk (tree position) at chest height; logs / rocks / others: the nearest point of the collider bounds, at chest height.
+        Vector3 AimPoint()
+        {
+            var b = _hit.bounds;
+            Vector3 p = _target.GetComponent<TreeBase>() != null ? _target.transform.position : b.ClosestPoint(transform.position);
+            p.y = Mathf.Clamp(transform.position.y + 1.5f, b.min.y, b.max.y);
+            return p;
+        }
+
         uint Revision()
         {
             var v = _target != null ? _target.GetComponent<ZNetView>() : null;
@@ -89,7 +103,14 @@ namespace SteveTheTroll.Taming
         void GiveUp(string why)
         {
             ModLog.Info("TrollFarmer: " + name + " gives up " + (_target != null ? _target.name : "?") + ": " + why + " - tries another source");
-            _bad = _target; _target = null; _hit = null; _stuckSeconds = 0f; _lastDist = float.MaxValue; _missed = 0; _lastRevision = 0u;
+            if (_target != null) _bad[_target] = Time.time + BadSeconds;
+            _target = null; _hit = null; _stuckSeconds = 0f; _lastDist = float.MaxValue; _missed = 0; _lastRevision = 0u;
+        }
+
+        bool IsBad(GameObject g)
+        {
+            float until;
+            return g != null && _bad.TryGetValue(g, out until) && Time.time < until;
         }
 
         void Search(Humanoid me, ItemDrop.ItemData weapon)
@@ -101,8 +122,8 @@ namespace SteveTheTroll.Taming
             float bed = TrollRegistry.BedDistance(transform.position);
             foreach (var item in items)
             {
-                _target = TrollFarming.Find(_centre, transform.position, item, tier, range, out _hit, _bad);
-                if (_target == null && bed >= 0f && Game.instance != null) _target = TrollFarming.Find(Game.instance.GetPlayerProfile().GetCustomSpawnPoint(), transform.position, item, tier, range, out _hit, _bad);
+                _target = TrollFarming.Find(_centre, transform.position, item, tier, range, out _hit, IsBad);
+                if (_target == null && bed >= 0f && Game.instance != null) _target = TrollFarming.Find(Game.instance.GetPlayerProfile().GetCustomSpawnPoint(), transform.position, item, tier, range, out _hit, IsBad);
                 if (_target != null) { CurrentItem = item; ModLog.Info("TrollFarmer: " + name + " farms " + item + " from " + _target.name + " (" + TrollFarming.KindOf(_target) + ", tier " + tier + ")"); return; }
             }
             CurrentItem = "";
