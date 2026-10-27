@@ -25,7 +25,7 @@ def mat(name, rgb, rough=0.85, sheen=0.0):
     if "Sheen Weight" in b.inputs: b.inputs["Sheen Weight"].default_value = sheen
     return m
 
-M_PLUSH = mat("slipper_plush", (0.20, 0.45, 0.55), 0.9, 1.0)
+M_PLUSH = mat("slipper_plush", (0.19, 0.4275, 0.5225), 0.9, 1.0)   # v2: 5% darker (user)
 M_RIM = mat("slipper_rim", (0.70, 0.68, 0.64), 0.95, 1.0)
 M_SOLE = mat("slipper_sole", (0.015, 0.015, 0.017), 0.55)
 M_LINING = mat("slipper_lining", (0.45, 0.43, 0.40), 0.95, 0.5)
@@ -148,7 +148,7 @@ K = 40
 ring = []
 for k in range(K):
     t = k / (K - 1)
-    ring.append((outline(t) * 1.06 + 0.006, -L / 2 - CAP_LEN * 0.9 + t * (L + CAP_LEN * 1.8)))     # covers the cap domes too
+    ring.append((outline(t) * 1.0 + 0.002, -L / 2 - CAP_LEN * 0.9 + t * (L + CAP_LEN * 1.8)))     # v2: narrower (user), still covers the domes
 verts = [bm.verts.new((x, y, 0.0)) for x, y in ring] + [bm.verts.new((-x, y, 0.0)) for x, y in reversed(ring)]
 face = bm.faces.new(verts)
 r = bmesh.ops.extrude_face_region(bm, geom=[face])
@@ -217,7 +217,7 @@ views = {"front34": (Vector((0.55, 0.62, 0.38)), Vector((0, 0.02, 0.06))),
 for name, (pos, tgt) in views.items():
     cam.location = pos
     cam.rotation_euler = (tgt - pos).to_track_quat('-Z', 'Y').to_euler()
-    scene.render.filepath = os.path.join(OUT_DIR, f"slipper_v1_{name}.png")
+    scene.render.filepath = os.path.join(OUT_DIR, f"slipper_v2_{name}.png")
     bpy.ops.render.render(write_still=True)
     LOG.append(f"render {name} -> {scene.render.filepath}")
 if OUT_BLEND:
