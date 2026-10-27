@@ -42,7 +42,7 @@ namespace SteveTheTroll.Taming
             float d = Vector3.Distance(transform.position, _player.transform.position);
             bool late = Time.time - _start > GiveUpSeconds;
             if (d > ArriveMetres && !late) return;
-            _ai.SetFollowTarget(null);
+            TrollTaming.StopFollow(_ai);
             _ai.SetPatrolPoint();
             ModLog.Info("TrollArrival: " + name + (late ? " gave up walking after " + GiveUpSeconds + " s" : " arrived (" + d.ToString("F1") + " m)") + " - stays and waits for orders");
             if (!late && _player == Player.m_localPlayer) Ui.Notify.Show(Loc.T("stevethetroll_troll_waits", Shown()), Ui.Notify.Kind.Good);

@@ -93,6 +93,16 @@ namespace SteveTheTroll.Taming
             return c != null && Utils.GetPrefabName(c.gameObject) == TrollPrefab;
         }
 
+        /// D-066 (TEST-029: Mouse 4 / Go farm right after E-follow - "got a follow order" again at once): the game keeps the follow order
+        /// in the ZDO too (s_follow, the player's name) and puts it back; clearing it means clearing both. Owner of the ZDO only.
+        public static void StopFollow(MonsterAI ai)
+        {
+            if (ai == null) return;
+            ai.SetFollowTarget(null);
+            var view = ai.GetComponent<ZNetView>();
+            if (view != null && view.IsValid() && view.IsOwner()) view.GetZDO().Set(ZDOVars.s_follow, "");
+        }
+
         /// The character's ZDO (null when not networked yet).
         public static ZDO Zdo(Character c)
         {

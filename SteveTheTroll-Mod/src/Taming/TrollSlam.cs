@@ -12,7 +12,7 @@ namespace SteveTheTroll.Taming
     internal sealed class TrollSlam : MonoBehaviour
     {
         const int SlamCount = 4;
-        const float Gap = 0.1f, LookAngle = 30f, MaxSeconds = 8f;
+        const float Gap = 0.1f, LookAngle = 30f, MaxSeconds = 16f, PlayerAimRange = 15f;
         int _left = SlamCount;
         float _start, _next;
         Vector3 _aim;
@@ -25,7 +25,7 @@ namespace SteveTheTroll.Taming
             var s = troll.gameObject.AddComponent<TrollSlam>();
             s._start = Time.time;
             bool club = TrollWeapons.HasClub(troll as Humanoid);
-            s._towards = club ? towards : null;
+            s._towards = club && towards != null && Vector3.Distance(towards.transform.position, troll.transform.position) <= PlayerAimRange ? towards : null;
             s._aim = crowd;
             ModLog.Info("TrollSlam: " + troll.name + " - " + mobs + " mobs on " + (towards != null ? towards.GetPlayerName() : "?") + " / the troll: " + SlamCount + " ground slams " + (club ? "towards the player" : "into the crowd"));
             return s;

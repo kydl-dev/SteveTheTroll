@@ -25,7 +25,13 @@ namespace SteveTheTroll.Taming
             var troll = Nearest(p);
             if (troll == null) { ModLog.Info("TrollOrders: attack key - no own tamed troll within " + OrderRange + " m"); return false; }
             var view = troll.GetComponent<ZNetView>();
-            if (view == null || !view.IsValid() || !view.IsOwner()) { ModLog.Warn("TrollOrders: " + troll.name + " is steered by another client"); return false; }
+            if (view != null && view.IsValid() && !view.IsOwner())
+            {
+                // D-066 (TEST-029: "steered by another client" twice): the owner of the troll gives an order -> takes over its steering
+                ModLog.Info("TrollOrders: " + troll.name + " was steered by client " + view.GetZDO().GetOwner() + " - " + p.GetPlayerName() + " takes it over");
+                view.ClaimOwnership();
+            }
+            if (view == null || !view.IsValid() || !view.IsOwner()) { ModLog.Warn("TrollOrders: " + troll.name + " cannot be steered here (valid " + (view != null && view.IsValid()) + ")"); return false; }
             GameObject source;
             var creature = Look(p, out source);
             string shown = Shown(troll);

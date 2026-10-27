@@ -49,11 +49,11 @@ namespace SteveTheTroll.Taming
                 int id = c.GetInstanceID();
                 if (Sent.Contains(id))
                 {
-                    if (ai.GetFollowTarget() != null) { ai.SetFollowTarget(null); ModLog.Info("TrollHome: " + c.name + " was told to follow without slippers - goes back to the bed"); Sent.Remove(id); }
+                    if (ai.GetFollowTarget() != null) { TrollTaming.StopFollow(ai); ModLog.Info("TrollHome: " + c.name + " was told to follow without slippers - goes back to the bed"); Sent.Remove(id); }
                     else continue;
                 }
                 Sent.Add(id);
-                ai.SetFollowTarget(null);
+                TrollTaming.StopFollow(ai);
                 if (TrollFarming.SendHome(c)) { sent++; Ui.Notify.Show(Loc.T("stevethetroll_home_noslippers", TrollOrders.Shown(c)), Ui.Notify.Kind.Good); }
             }
             return sent;
@@ -77,7 +77,7 @@ namespace SteveTheTroll.Taming
                     if (ai == null || view == null || !view.IsValid() || !view.IsOwner()) continue;
                     var f = c.GetComponent<TrollFarmer>(); if (f != null) Object.Destroy(f);
                     var spot = bed + new Vector3(2f + moved * 3f, 0.5f, 2f);
-                    ai.SetFollowTarget(null);
+                    TrollTaming.StopFollow(ai);
                     c.transform.position = spot;
                     var body = c.GetComponent<Rigidbody>(); if (body != null) body.position = spot;
                     view.GetZDO().SetPosition(spot);

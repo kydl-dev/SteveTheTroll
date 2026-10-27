@@ -27,7 +27,7 @@ namespace SteveTheTroll
         // --- dev-only fixed values (Tunables): not in the config file, KydlTools changes them for testing -----------------------------------
         // --- T-008a troll taming (D-037 / D-038): the user's numbers. ---
         public static readonly Tunable<float> TameSeconds = new Tunable<float>("TrollTaming", "TameSeconds", 60f, 5f, 600f, "Seconds a wild troll needs a slipper wearer near it to become tamed (user: 60 s).");
-        public static readonly Tunable<float> TameRange = new Tunable<float>("TrollTaming", "TameRange", 150f, 10f, 300f, "Metres from the wearer within which a wild troll is being tamed (user: 150 m).");
+        public static readonly Tunable<float> TameRange = new Tunable<float>("TrollTaming", "TameRange", 250f, 10f, 300f, "Metres from the wearer within which a wild troll is being tamed (user: 150 m; F7 value 250 m baked 2026-10-28).");
         public static readonly Tunable<float> OwnTrollRange = new Tunable<float>("TrollTaming", "OwnTrollRange", 300f, 50f, 1000f, "Metres: a wearer whose own tamed troll is this close tames no second one; that troll walks to the wearer instead (user: 300 m).");
 
         // --- D-042 tamed trolls (always while tamed) and the troll spawn boost: the user's numbers. ---
@@ -47,9 +47,9 @@ namespace SteveTheTroll
 
         // --- T-008b backpack on tamed trolls (D-053): placement behind Spine2 in the troll's frame; the user tunes it in game (F7). ---
         public static readonly Tunable<float> PickupRange = new Tunable<float>("TrollBackpack", "PickupRange", 50f, 5f, 100f, "Metres around a tamed troll from which wood, ores and scrap go into its backpack (user: 50 m).");
-        public static readonly Tunable<float> BackpackScale = new Tunable<float>("TrollBackpack", "Scale", 0.6f, 0.1f, 1.5f, "World size of the backpack (1 = the construction's 2 x 2 x 2 m).");
-        public static readonly Tunable<float> BackpackBack = new Tunable<float>("TrollBackpack", "Back", 0.5f, -1f, 3f, "Metres behind the troll's upper spine (Spine2) where the struts sit.");
-        public static readonly Tunable<float> BackpackUp = new Tunable<float>("TrollBackpack", "Up", -0.3f, -3f, 3f, "Metres up (+) / down (-) from the upper spine.");
+        public static readonly Tunable<float> BackpackScale = new Tunable<float>("TrollBackpack", "Scale", 0.671f, 0.1f, 1.5f, "World size of the backpack (1 = the construction's 2 x 2 x 2 m).");
+        public static readonly Tunable<float> BackpackBack = new Tunable<float>("TrollBackpack", "Back", -0.733f, -1f, 3f, "Metres behind the troll's upper spine (Spine2) where the struts sit.");
+        public static readonly Tunable<float> BackpackUp = new Tunable<float>("TrollBackpack", "Up", 0.127f, -3f, 3f, "Metres up (+) / down (-) from the upper spine.");
         public static readonly Tunable<float> BackpackSide = new Tunable<float>("TrollBackpack", "Side", 0f, -2f, 2f, "Metres to the troll's right (+) / left (-).");
         public static readonly Tunable<float> BackpackPitch = new Tunable<float>("TrollBackpack", "Pitch", 0f, -90f, 90f, "Tilt forward / back, degrees.");
         public static readonly Tunable<float> BackpackYaw = new Tunable<float>("TrollBackpack", "Yaw", 0f, -180f, 180f, "Turn around the up axis, degrees.");
@@ -101,15 +101,15 @@ namespace SteveTheTroll
 
         // --- D-020 fluffy fur on the mini trolls (shell fur, bundle material "TrollFur"); values of the Unity preview fur_v4 (user: v2 "kind of bad" -> denser, shorter, softer, lighter; D-026)
         public static readonly Tunable<bool> FurEnable = new Tunable<bool>("TrollFur", "Enable", false, "Fur strands (shells) on the mini trolls. Off by default since D-027 (the user chose the smooth plush look).");
-        public static readonly Tunable<int> FurShells = new Tunable<int>("TrollFur", "Shells", 24, 4, 32, "Number of fur layers (more = smoother fur, more cost).");
-        public static readonly Tunable<float> FurLength = new Tunable<float>("TrollFur", "Length", 0.007f, 0.001f, 0.04f, "Fur length in metres.");
-        public static readonly Tunable<float> FurDensity = new Tunable<float>("TrollFur", "Density", 700f, 50f, 1500f, "Strands per texture unit (higher = finer fur).");
-        public static readonly Tunable<float> FurThickness = new Tunable<float>("TrollFur", "Thickness", 1.25f, 0.2f, 1.5f, "Strand thickness at the root (share of a strand cell).");
-        public static readonly Tunable<float> FurDroop = new Tunable<float>("TrollFur", "Droop", 0.001f, 0f, 0.02f, "How far the tips hang down, in metres.");
-        public static readonly Tunable<float> FurTintR = new Tunable<float>("TrollFur", "TintR", 0.95f, 0f, 1.5f, "Fur colour multiplier, red.");
-        public static readonly Tunable<float> FurTintG = new Tunable<float>("TrollFur", "TintG", 1.15f, 0f, 1.5f, "Fur colour multiplier, green.");
-        public static readonly Tunable<float> FurTintB = new Tunable<float>("TrollFur", "TintB", 1.2f, 0f, 1.5f, "Fur colour multiplier, blue.");
-        public static readonly Tunable<float> FurTipLight = new Tunable<float>("TrollFur", "TipLight", 1.25f, 0.3f, 1.5f, "Brightness of the fur tips (1 = like the roots before darkening).");
+        public static readonly Tunable<int> FurShells = new Tunable<int>("TrollFur", "Shells", 4, 4, 32, "Number of fur layers (more = smoother fur, more cost).");
+        public static readonly Tunable<float> FurLength = new Tunable<float>("TrollFur", "Length", 0.00218f, 0.001f, 0.04f, "Fur length in metres.");
+        public static readonly Tunable<float> FurDensity = new Tunable<float>("TrollFur", "Density", 545f, 50f, 1500f, "Strands per texture unit (higher = finer fur).");
+        public static readonly Tunable<float> FurThickness = new Tunable<float>("TrollFur", "Thickness", 0.864f, 0.2f, 1.5f, "Strand thickness at the root (share of a strand cell).");
+        public static readonly Tunable<float> FurDroop = new Tunable<float>("TrollFur", "Droop", 0.02f, 0f, 0.02f, "How far the tips hang down, in metres.");
+        public static readonly Tunable<float> FurTintR = new Tunable<float>("TrollFur", "TintR", 0.73f, 0f, 1.5f, "Fur colour multiplier, red.");
+        public static readonly Tunable<float> FurTintG = new Tunable<float>("TrollFur", "TintG", 0.4545f, 0f, 1.5f, "Fur colour multiplier, green.");
+        public static readonly Tunable<float> FurTintB = new Tunable<float>("TrollFur", "TintB", 0.6f, 0f, 1.5f, "Fur colour multiplier, blue.");
+        public static readonly Tunable<float> FurTipLight = new Tunable<float>("TrollFur", "TipLight", 1.01f, 0.3f, 1.5f, "Brightness of the fur tips (1 = like the roots before darkening).");
 
         // --- D-027 smooth plush look of the mini trolls (user picked style D): the troll skin re-coloured, no strands
         public static readonly Tunable<bool> PlushEnable = new Tunable<bool>("TrollPlush", "Enable", true, "Smooth plush colour on the mini trolls (off = the game's troll skin).");

@@ -32,7 +32,7 @@ namespace SteveTheTroll.Taming
             var view = troll != null ? troll.GetComponent<ZNetView>() : null;
             var ai = troll != null ? troll.GetComponent<MonsterAI>() : null;
             if (ai == null || view == null || !view.IsValid() || !view.IsOwner()) { ModLog.Warn("TrollFarming: cannot send " + (troll != null ? troll.name : "?") + " (ai " + (ai != null) + ", owner " + (view != null && view.IsOwner()) + ")"); return false; }
-            ai.SetFollowTarget(null);
+            TrollTaming.StopFollow(ai);
             ai.SetPatrolPoint();
             var arrival = troll.GetComponent<TrollArrival>();
             if (arrival != null) Object.Destroy(arrival);
@@ -204,6 +204,7 @@ namespace SteveTheTroll.Taming
                 if (view0 == null || !view0.IsValid() || !view0.IsOwner()) return true;
                 var slam = __instance.GetComponent<TrollSlam>();
                 if (slam != null && slam.Step(__instance, LookAt)) { __result = true; return false; }   // D-065: ground slams first
+                TrollGuard.Keep(__instance);                                                                     // D-066: the forced target stays
                 if (TrollHold.Holds(__instance)) { __instance.StopMoving(); __result = true; return false; }     // D-063
                 var f = __instance.GetComponent<TrollFarmer>();
                 if (f == null) return true;

@@ -17,6 +17,10 @@ namespace SteveTheTroll.Taming
         static readonly System.Action<MonsterAI, Character> SetTarget = AccessTools.MethodDelegate<System.Action<MonsterAI, Character>>(AccessTools.Method(typeof(MonsterAI), "SetTarget"));
         static readonly AccessTools.FieldRef<MonsterAI, Character> Target = AccessTools.FieldRefAccess<MonsterAI, Character>("m_targetCreature");
         static readonly Dictionary<int, float> LastSlam = new Dictionary<int, float>();
+        // D-066 (TEST-029: the target was set again 4x a second - the game's AI dropped it for its own choice / out of sight): the creature
+        // the troll must fight, re-applied before each AI step (Keep) until it is dead, tamed or further than KeepRange.
+        static readonly Dictionary<int, Character> Forced = new Dictionary<int, Character>();
+        const float KeepRange = 70f, SlamRange = 12f;
         static readonly List<Character> Attackers = new List<Character>();
         static float _next;
 
@@ -45,10 +49,27 @@ namespace SteveTheTroll.Taming
             var ai = troll != null ? troll.GetComponent<MonsterAI>() : null;
             var view = troll != null ? troll.GetComponent<ZNetView>() : null;
             if (ai == null || creature == null || view == null || !view.IsValid() || !view.IsOwner()) return false;
+            Forced[troll.GetInstanceID()] = creature;
             if (Target(ai) == creature) return false;
             SetTarget(ai, creature);
             ai.Alert();
             ModLog.Info("TrollGuard: " + troll.name + " ordered / hit - attacks " + creature.name + " (" + Vector3.Distance(troll.transform.position, creature.transform.position).ToString("F1") + " m)");
+            return true;
+        }
+
+        /// Before each AI step of the troll (TrollFarming.Steer, owner): put the forced target back. Expected outcome: true while it has one.
+        internal static bool Keep(MonsterAI ai)
+        {
+            Character t;
+            int id = ai.GetComponent<Character>() != null ? ai.GetComponent<Character>().GetInstanceID() : 0;
+            if (id == 0 || !Forced.TryGetValue(id, out t)) return false;
+            if (t == null || t.IsDead() || t.IsTamed() || Vector3.Distance(t.transform.position, ai.transform.position) > KeepRange)
+            {
+                Forced.Remove(id);
+                ModLog.Verbose("TrollGuard: " + ai.name + " forced target gone (" + (t == null ? "removed" : t.IsDead() ? "dead" : "tamed / far") + ")");
+                return false;
+            }
+            if (Target(ai) != t) Target(ai) = t;
             return true;
         }
 
@@ -73,12 +94,15 @@ namespace SteveTheTroll.Taming
             if (Attackers.Count == 0) return false;
             int id = troll.GetInstanceID();
             float last;
-            if (TamingRules.Slam(Attackers.Count, ModSettings.CrowdCount.Value, LastSlam.TryGetValue(id, out last) ? Time.time - last : -1f, SlamCooldown))
+            int close = 0;
+            foreach (var m in Attackers) if (Vector3.Distance(m.transform.position, troll.transform.position) <= SlamRange) close++;   // D-066: a crowd far away gets no slams
+            if (TamingRules.Slam(close, ModSettings.CrowdCount.Value, LastSlam.TryGetValue(id, out last) ? Time.time - last : -1f, SlamCooldown))
             {
                 LastSlam[id] = Time.time;
                 if (TrollSlam.Begin(troll, owner, sum / Attackers.Count, Attackers.Count) != null) return true;
             }
-            var cur = Target(ai);
+            Character cur;
+            Forced.TryGetValue(id, out cur);
             if (cur != null && Attackers.Contains(cur)) return false;     // keeps the one it fights while that one still attacks
             Character nearest = null;
             float best = float.MaxValue;
@@ -87,6 +111,7 @@ namespace SteveTheTroll.Taming
                 float d = Vector3.Distance(m.transform.position, troll.transform.position);
                 if (d < best) { best = d; nearest = m; }
             }
+            Forced[id] = nearest;
             SetTarget(ai, nearest);
             ai.Alert();
             var farmer = troll.GetComponent<TrollFarmer>();

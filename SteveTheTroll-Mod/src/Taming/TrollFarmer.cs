@@ -53,7 +53,7 @@ namespace SteveTheTroll.Taming
         {
             var col = source != null ? TrollFarming.Biggest(source) : null;
             if (col == null) { ModLog.Warn("TrollFarmer: " + name + " cannot farm " + (source != null ? source.name : "?") + " (no collider)"); return false; }
-            string item = "Wood";
+            string item = Utils.GetPrefabName(source);      // shown as is when it yields none of the known items
             foreach (var g in Ui.TrollFocus.DefaultOrder) if (TrollFarming.Yields(source, g.Item)) { item = g.Item; break; }
             _target = source; _hit = col; CurrentItem = item; _home = false;
             ResetTries();
