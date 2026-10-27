@@ -88,7 +88,8 @@ namespace SteveTheTroll
             if (_cfgWatcher != null) _cfgWatcher.Tick();
             if (!ModSettings.On) return;
             MainMenu.Tick();
-            Taming.TrollRegistry.Tick();       // D-043: live values of the player's tamed trolls for the F6 lists
+            Taming.TrollRegistry.Tick();
+            Backpack.BackpackVisual.Tick();         // T-008b: backpack on every tamed troll       // D-043: live values of the player's tamed trolls for the F6 lists
         }
 
         void OnDestroy()

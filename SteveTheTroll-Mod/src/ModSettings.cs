@@ -41,6 +41,15 @@ namespace SteveTheTroll
         public static readonly Tunable<float> SpawnBoostFactor = new Tunable<float>("TrollTamed", "SpawnBoostFactor", 5f, 1f, 10f, "Troll spawns this many times as often near a slipper wearer without a tamed troll (user: 5; 1 = off).");
         public static readonly Tunable<float> SpawnBoostWearerRange = new Tunable<float>("TrollTamed", "SpawnBoostWearerRange", 150f, 20f, 300f, "Metres from a spawn zone within which a slipper wearer boosts its troll spawns (user: 150 m).");
 
+        // --- T-008b backpack on tamed trolls (D-053): placement behind Spine2 in the troll's frame; the user tunes it in game (F7). ---
+        public static readonly Tunable<float> BackpackScale = new Tunable<float>("TrollBackpack", "Scale", 0.6f, 0.1f, 1.5f, "World size of the backpack (1 = the construction's 2 x 2 x 2 m).");
+        public static readonly Tunable<float> BackpackBack = new Tunable<float>("TrollBackpack", "Back", 0.5f, -1f, 3f, "Metres behind the troll's upper spine (Spine2) where the struts sit.");
+        public static readonly Tunable<float> BackpackUp = new Tunable<float>("TrollBackpack", "Up", -0.3f, -3f, 3f, "Metres up (+) / down (-) from the upper spine.");
+        public static readonly Tunable<float> BackpackSide = new Tunable<float>("TrollBackpack", "Side", 0f, -2f, 2f, "Metres to the troll's right (+) / left (-).");
+        public static readonly Tunable<float> BackpackPitch = new Tunable<float>("TrollBackpack", "Pitch", 0f, -90f, 90f, "Tilt forward / back, degrees.");
+        public static readonly Tunable<float> BackpackYaw = new Tunable<float>("TrollBackpack", "Yaw", 0f, -180f, 180f, "Turn around the up axis, degrees.");
+        public static readonly Tunable<float> BackpackRoll = new Tunable<float>("TrollBackpack", "Roll", 0f, -90f, 90f, "Lean left / right, degrees.");
+
         public static readonly Tunable<float> ExampleSpeed = new Tunable<float>("Example", "ExampleSpeed", 1f, 0f, 10f,
             "Example dev-only value: replace or remove. Read it with ModSettings.ExampleSpeed.Value.");
 
