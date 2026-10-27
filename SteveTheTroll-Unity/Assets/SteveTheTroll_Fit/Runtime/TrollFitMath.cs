@@ -99,8 +99,17 @@ namespace SteveTheTroll.Fit
         public static float PlaceLog(Transform logRoot, MeshFilter logMesh, Transform figure, Transform hand, float height,
             float lengthRatio, Vector3 offsetRatio, Vector3 euler)
         {
+            return PlaceLog(logRoot, logMesh, figure, hand, height, lengthRatio, offsetRatio, euler, Vector3.zero, Quaternion.identity);
+        }
+
+        /// Same, plus the in-game fine tune (D-019): extraOffset in metres in the figure frame (x right, y up, z forward) and
+        /// extraTurn applied in the figure frame on top of the fitted rotation (yaw about up, pitch about right, roll about forward).
+        public static float PlaceLog(Transform logRoot, MeshFilter logMesh, Transform figure, Transform hand, float height,
+            float lengthRatio, Vector3 offsetRatio, Vector3 euler, Vector3 extraOffset, Quaternion extraTurn)
+        {
             if (logRoot == null || logMesh == null || logMesh.sharedMesh == null || figure == null || hand == null) { Warn("TrollFitMath: PlaceLog missing a part"); return 0f; }
-            logRoot.rotation = figure.rotation * Quaternion.Euler(euler);
+            offsetRatio += extraOffset / Mathf.Max(0.0001f, height);
+            logRoot.rotation = figure.rotation * extraTurn * Quaternion.Euler(euler);
             var size = logMesh.sharedMesh.bounds.size;
             float meshLong = Mathf.Max(size.x, Mathf.Max(size.y, size.z));
             float worldLong = meshLong * logMesh.transform.lossyScale.x;      // uniform scales only (checked by the caller's log line)
@@ -111,6 +120,20 @@ namespace SteveTheTroll.Fit
             float length = meshLong * logMesh.transform.lossyScale.x;
             Log("TrollFitMath: PlaceLog length " + length.ToString("F3") + " m (want " + (lengthRatio * height).ToString("F3") + "), centre " + want.ToString("F3") + ", lossy " + logMesh.transform.lossyScale.ToString("F4"));
             return length;
+        }
+
+        /// Extra log turn in the figure frame from yaw / pitch / roll degrees (yaw about up, then pitch about right, then roll about the log).
+        public static Quaternion LogTurn(float yawDeg, float pitchDeg, float rollDeg)
+        {
+            return Quaternion.AngleAxis(yawDeg, Vector3.up) * Quaternion.AngleAxis(pitchDeg, Vector3.right) * Quaternion.AngleAxis(rollDeg, Vector3.forward);
+        }
+
+        /// The right hand's knuckle line (index root -> ring root) in world space; the axis fingers curl around. Zero when a bone is missing.
+        public static Vector3 KnuckleLine(Transform figure)
+        {
+            var i = FindDeep(figure, "RightHandIndex1");
+            var r = FindDeep(figure, "RightHandRing1");
+            return i != null && r != null ? (r.position - i.position).normalized : Vector3.zero;
         }
 
         /// The SkinnedMeshRenderer with the most vertices (the troll's Body, not its Hair).

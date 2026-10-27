@@ -54,6 +54,20 @@ namespace SteveTheTroll
         public static readonly Tunable<float> PoseLeftArmZ = new Tunable<float>("TrollTune", "LeftArmZ", 0f, -90f, 90f, "Extra left upper arm on top of the fit, local Z, degrees.");
         public static readonly Tunable<float> PoseLeftForeArmX = new Tunable<float>("TrollTune", "LeftForeArmX", 0f, -90f, 90f, "Extra left forearm on top of the fit, local X, degrees.");
 
+        // --- D-019 in-game fine tune of the log and the right hand, on top of the Unity fit (all 0 / 1 = exactly the fit)
+        public static readonly Tunable<float> LogForward = new Tunable<float>("TrollLog", "OffsetForward", 0f, -0.1f, 0.1f, "Moves the log along the troll's facing direction, in metres.");
+        public static readonly Tunable<float> LogUp = new Tunable<float>("TrollLog", "OffsetUp", 0f, -0.1f, 0.1f, "Moves the log up / down, in metres.");
+        public static readonly Tunable<float> LogSide = new Tunable<float>("TrollLog", "OffsetSide", 0f, -0.1f, 0.1f, "Moves the log to the troll's right (+) / left (-), in metres.");
+        public static readonly Tunable<float> LogYaw = new Tunable<float>("TrollLog", "Yaw", 0f, -90f, 90f, "Turns the log left / right around the up axis, in degrees.");
+        public static readonly Tunable<float> LogPitch = new Tunable<float>("TrollLog", "Pitch", 0f, -90f, 90f, "Tilts the log up / down (around the troll's right axis), in degrees.");
+        public static readonly Tunable<float> LogRoll = new Tunable<float>("TrollLog", "Roll", 0f, -180f, 180f, "Rolls the log around its own length, in degrees.");
+        public static readonly Tunable<float> LogLengthScale = new Tunable<float>("TrollLog", "LengthScale", 1f, 0.3f, 2f, "Log length as a factor of the fitted length (1 = as fitted).");
+        public static readonly Tunable<float> HandWristX = new Tunable<float>("TrollHand", "WristX", 0f, -90f, 90f, "Extra right-wrist turn, local X, degrees.");
+        public static readonly Tunable<float> HandWristY = new Tunable<float>("TrollHand", "WristY", 0f, -90f, 90f, "Extra right-wrist turn, local Y, degrees.");
+        public static readonly Tunable<float> HandWristZ = new Tunable<float>("TrollHand", "WristZ", 0f, -90f, 90f, "Extra right-wrist turn, local Z, degrees.");
+        public static readonly Tunable<float> HandFingerCurl = new Tunable<float>("TrollHand", "FingerCurl", 0f, -60f, 60f, "Extra curl of index, middle and ring finger (each joint, around the knuckle line), degrees.");
+        public static readonly Tunable<float> HandThumbCurl = new Tunable<float>("TrollHand", "ThumbCurl", 0f, -60f, 60f, "Extra curl of the thumb (each joint, around the knuckle line), degrees.");
+
         /// Expected outcome: every player entry is bound (returns that check).
         public static bool Bind(ConfigFile c)
         {
