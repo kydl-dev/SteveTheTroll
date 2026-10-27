@@ -102,21 +102,46 @@ namespace SteveTheTroll.Taming
             }
         }
 
+        /// D-063: the item set a troll must keep, saved in its ZDO ("Log" = Steve's club). The game picks the set again on every load from
+        /// the troll's seed; a set we forced (boosted spawn) or a tamed Steve lost its log after leaving the loaded area (TEST-027).
+        internal const string SetKey = "stt_set";
+
+        /// At taming: remember the troll's set (a troll_log item -> "Log"). Expected outcome: the stored set name ("" = nothing stored).
+        internal static string Remember(Character troll)
+        {
+            var h = troll as Humanoid;
+            var zdo = TrollTaming.Zdo(troll);
+            if (h == null || zdo == null) return "";
+            bool log = false;
+            foreach (var it in h.GetInventory().GetAllItems()) if (it.m_dropPrefab != null && it.m_dropPrefab.name.StartsWith("troll_log")) log = true;
+            if (log) zdo.Set(SetKey, LogSet);
+            return log ? LogSet : "";
+        }
+
         [HarmonyPatch(typeof(Humanoid), nameof(Humanoid.GiveDefaultItems))]
         static class LogForBoosted
         {
             static void Prefix(Humanoid __instance)
             {
-                if (Pending.Count == 0 || !TrollTaming.IsTroll(__instance)) return;
-                Pending.RemoveAll(p => Time.time - p.Value > PendingSeconds);
-                int hit = Pending.FindIndex(p => Vector3.Distance(p.Key, __instance.transform.position) <= PendingMatchMetres);
-                if (hit < 0) return;
-                Pending.RemoveAt(hit);
+                if (!TrollTaming.IsTroll(__instance)) return;
+                var zdo = TrollTaming.Zdo(__instance);
+                string want = zdo != null ? zdo.GetString(SetKey, "") : "";
+                // a Steve tamed before D-063 has no stored set: his name says he had the log
+                if (want.Length == 0 && zdo != null && zdo.GetString(ZDOVars.s_tamedName, "").StartsWith("Steve")) want = LogSet;
+                bool boosted = false;
+                if (want.Length == 0 && Pending.Count > 0)
+                {
+                    Pending.RemoveAll(p => Time.time - p.Value > PendingSeconds);
+                    int hit = Pending.FindIndex(p => Vector3.Distance(p.Key, __instance.transform.position) <= PendingMatchMetres);
+                    if (hit >= 0) { Pending.RemoveAt(hit); want = LogSet; boosted = true; }
+                }
+                if (want.Length == 0) return;
                 var sets = __instance.m_randomSets;
-                var logs = sets != null ? System.Array.FindAll(sets, s => s != null && s.m_name == LogSet) : new Humanoid.ItemSet[0];
-                if (logs.Length == 0) { ModLog.Warn("TrollSpawnBoost: " + __instance.name + " has no '" + LogSet + "' item set (" + (sets != null ? sets.Length : 0) + " set(s)) - spawns as usual"); return; }
-                __instance.m_randomSets = logs;     // this instance only (the prefab keeps its array)
-                ModLog.Info("TrollSpawnBoost: " + __instance.name + " at " + __instance.transform.position.ToString("F0") + " gets the " + LogSet + " set (" + logs.Length + " of " + sets.Length + " sets)");
+                var keep = sets != null ? System.Array.FindAll(sets, s => s != null && s.m_name == want) : new Humanoid.ItemSet[0];
+                if (keep.Length == 0) { ModLog.Warn("TrollSpawnBoost: " + __instance.name + " has no '" + want + "' item set (" + (sets != null ? sets.Length : 0) + " set(s)) - spawns as usual"); return; }
+                __instance.m_randomSets = keep;     // this instance only (the prefab keeps its array)
+                if (zdo != null && zdo.GetString(SetKey, "") != want && (boosted || __instance.GetComponent<ZNetView>().IsOwner())) zdo.Set(SetKey, want);
+                ModLog.Info("TrollSpawnBoost: " + __instance.name + " at " + __instance.transform.position.ToString("F0") + " gets the " + want + " set (" + (boosted ? "boosted spawn" : "kept from its ZDO") + ")");
             }
         }
     }

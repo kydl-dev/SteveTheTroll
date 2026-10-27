@@ -15,7 +15,7 @@ namespace SteveTheTroll.Taming
     internal sealed class TrollFarmer : MonoBehaviour
     {
         const float SearchSeconds = 3f, LogSeconds = 5f, LookAngle = 25f, MinAttackGap = 0.3f, StuckSeconds = 8f, BadSeconds = 120f;
-        const float StepMetres = 2f, StepSeconds = 2.5f, CloseSlack = 3f, HomeMetres = 4f, CloseWaitSeconds = 0.5f, FullCheckSeconds = 2f;
+        const float StepMetres = 2f, StepSeconds = 2.5f, HomeMetres = 4f, CloseWaitSeconds = 0.5f, FullCheckSeconds = 2f, AtItSlack = 1f, UnloadMetres = 4f, UnloadWalkSeconds = 60f;
         const int SwingsPerTry = 2, Tries = 4;
         readonly Dictionary<GameObject, float> _bad = new Dictionary<GameObject, float>();
         string _focus = "";
@@ -26,7 +26,9 @@ namespace SteveTheTroll.Taming
         Vector3 _stepTo;
         int _attacks, _swingsThisTry, _try = 1, _dry;
         uint _lastRevision;
-        bool _home, _announce, _auto;
+        bool _home, _announce, _auto, _full, _unloading;
+        Vector3 _unloadAt;
+        float _unloadStart;
         float _nextFullCheck;
         ItemDrop.ItemData _lastWeapon;
 
@@ -71,12 +73,14 @@ namespace SteveTheTroll.Taming
             if (d > reach)
             {
                 if (d < _lastDist - 0.2f) { _lastDist = d; _stuckSeconds = 0f; } else _stuckSeconds += dt;
-                bool close = d <= reach + CloseSlack;
-                // D-062 (TEST-026: waited ~8 s at 2.3 m in front of a trunk): close and not getting closer for 0.5 s -> swing from here
-                if (!close || _stuckSeconds <= CloseWaitSeconds)
+                // D-062 (TEST-026: waited ~8 s at 2.3 m in front of a trunk): right at it (reach + 1 m) and not getting closer for 0.5 s ->
+                // swing from here. D-063 (TEST-027: it hit rocks in its way): further away and stuck -> it does NOT swing at whatever blocks it,
+                // it gives this source up and takes another one.
+                bool atIt = d <= reach + AtItSlack;
+                if (!atIt || _stuckSeconds <= CloseWaitSeconds)
                 {
                     if (_stuckSeconds <= StuckSeconds) { moveTo(ai, dt, point, reach * 0.7f, false); return true; }
-                    if (!close) { GiveUp("cannot reach it (" + d.ToString("F1") + " m)"); return true; }
+                    if (!atIt) { GiveUp("cannot reach it (" + d.ToString("F1") + " m, blocked)"); return true; }
                 }
             }
             _stuckSeconds = 0f; _lastDist = float.MaxValue;
@@ -208,12 +212,37 @@ namespace SteveTheTroll.Taming
                 return false;
             }
             var bed = profile.GetCustomSpawnPoint();
+            if (_unloading) return Unload(ai, dt, moveTo, bed);
             float d = Vector3.Distance(transform.position, bed);
             if (d > HomeMetres) { moveTo(ai, dt, bed, HomeMetres * 0.7f, false); return true; }
+            if (_full)
+            {
+                // D-064: at the bed with a full backpack -> to a troll depot with room (built now when there is none)
+                Vector3 at;
+                if (Backpack.TrollDepot.Plan(GetComponent<Character>(), bed, TrollTaming.Owner(GetComponent<Character>()), out at)) { _unloading = true; _unloadAt = at; _unloadStart = Time.time; return true; }
+                if (IsMine()) Ui.Notify.Show(Loc.T("stevethetroll_depot_nospot", Shown()), Ui.Notify.Kind.Warn);
+            }
             ai.StopMoving();
             ai.SetPatrolPoint();
             ModLog.Info("TrollFarmer: " + name + " is at the owner's bed (" + d.ToString("F1") + " m) - waits");
             if (!_auto) Ui.Notify.Show(Loc.T("stevethetroll_farm_home", Shown()), Ui.Notify.Kind.Farm);
+            Destroy(this);
+            return true;
+        }
+
+        // D-064: walk to the depot (within UnloadMetres), then everything goes into its chests; gives up walking after UnloadWalkSeconds.
+        bool Unload(MonsterAI ai, float dt, System.Func<BaseAI, float, Vector3, float, bool, bool> moveTo, Vector3 bed)
+        {
+            var flat = _unloadAt - transform.position; flat.y = 0f;
+            bool late = Time.time - _unloadStart > UnloadWalkSeconds;
+            if (flat.magnitude > UnloadMetres && !late) { moveTo(ai, dt, _unloadAt, UnloadMetres * 0.7f, false); return true; }
+            ai.StopMoving();
+            ai.SetPatrolPoint();
+            var me = GetComponent<Character>();
+            int left;
+            int moved = Backpack.TrollDepot.Unload(me, bed, TrollTaming.Owner(me), out left);
+            ModLog.Info("TrollFarmer: " + name + " unloaded " + moved + " stack(s) at the depot (" + flat.magnitude.ToString("F1") + " m" + (late ? ", walked too long" : "") + "), " + left + " left");
+            if (IsMine()) Ui.Notify.Show(left > 0 ? Loc.T("stevethetroll_depot_full", Shown(), left.ToString()) : Loc.T("stevethetroll_depot_done", Shown(), moved.ToString()), left > 0 ? Ui.Notify.Kind.Warn : Ui.Notify.Kind.Farm);
             Destroy(this);
             return true;
         }
@@ -225,7 +254,7 @@ namespace SteveTheTroll.Taming
             var view = GetComponent<ZNetView>();
             if (view == null || !view.IsValid() || !Backpack.BackpackStore.IsFull(view.GetZDO())) return false;
             ModLog.Info("TrollFarmer: " + name + " backpack is full - goes to the owner's bed");
-            _home = true; _auto = true; _target = null; _hit = null; CurrentItem = "";
+            _home = true; _auto = true; _full = true; _target = null; _hit = null; CurrentItem = "";
             if (IsMine()) Ui.Notify.Show(Loc.T("stevethetroll_backpack_full", Shown()), Ui.Notify.Kind.Farm);
             return true;
         }

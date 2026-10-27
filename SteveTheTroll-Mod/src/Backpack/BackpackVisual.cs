@@ -74,7 +74,7 @@ namespace SteveTheTroll.Backpack
         // D-057 (TEST-024: 50 pieces but only 35 renderers): the old code took the FIRST LODGroup of the prefab (often the worn / broken look)
         // as "LOD 0" and so dropped every renderer of the new look. Now only renderers listed in LOD 1+ of any LODGroup are skipped, and a piece
         // that still ends up empty falls back to the whole prefab.
-        static GameObject VisualCopy(GameObject prefab, out int renderers)
+        internal static GameObject VisualCopy(GameObject prefab, out int renderers)
         {
             var src = prefab.transform;
             var wnt = prefab.GetComponent<WearNTear>();

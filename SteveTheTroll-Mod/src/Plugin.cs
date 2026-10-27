@@ -49,13 +49,15 @@ namespace SteveTheTroll
 
             Bundle = LoadBundle();
             Item.SlipperItem.Install();             // T-007: needs the bundle (icon) and the vanilla prefabs (added later by Jotunn)
+            Backpack.DepotPrefab.Install();         // D-064: troll depot frame prefab (vanilla prefabs)
             Taming.TrollTaming.Install();           // T-008a: the game's Troll becomes tameable (vanilla prefabs, added later by Jotunn)
             UiInputLock.Install(ModGuid);           // the character does not move while one of the mod's menus is open
             new Harmony(ModGuid).PatchAll(Assembly.GetExecutingAssembly());
             Jotunn.Managers.CommandManager.Instance.AddConsoleCommand(new Figure.FigurePreviewCommand());   // T-004b look test: stt_preview
             Jotunn.Managers.CommandManager.Instance.AddConsoleCommand(new Backpack.BuildDumpCommand());   // T-008b: stt_dumpbuild (backpack model)
             Jotunn.Managers.CommandManager.Instance.AddConsoleCommand(new Ui.ComingPreviewCommand());     // D-058 preview: stt_coming [name]
-            ModLog.Verbose("Plugin: console commands stt_preview, stt_dumpbuild, stt_coming registered");
+            Jotunn.Managers.CommandManager.Instance.AddConsoleCommand(new Backpack.FillBackpackCommand());  // D-064 test: stt_fillbackpack [item]
+            ModLog.Verbose("Plugin: console commands stt_preview, stt_dumpbuild, stt_coming, stt_fillbackpack registered");
             ModLog.Verbose("Plugin: Awake finished (Harmony patches applied, menu key " + ModSettings.MenuKey.Value + ")");
         }
 

@@ -20,6 +20,7 @@ namespace SteveTheTroll.Backpack
         static readonly AccessTools.FieldRef<Container, uint> LastRevision = AccessTools.FieldRefAccess<Container, uint>("m_lastRevision");
         static readonly AccessTools.FieldRef<Container, bool> Loading = AccessTools.FieldRefAccess<Container, bool>("m_loading");
         static readonly AccessTools.FieldRef<Container, bool> InUse = AccessTools.FieldRefAccess<Container, bool>("m_inUse");
+        static readonly AccessTools.FieldRef<Inventory, string> InvName = AccessTools.FieldRefAccess<Inventory, string>("m_name");
         static readonly AccessTools.FieldRef<Container, Inventory> Inv = AccessTools.FieldRefAccess<Container, Inventory>("m_inventory");
         static readonly System.Func<Container, bool> LoadNow = AccessTools.MethodDelegate<System.Func<Container, bool>>(AccessTools.Method(typeof(Container), "Load"));
         static readonly Dictionary<Container, int> Active = new Dictionary<Container, int>();
@@ -116,7 +117,11 @@ namespace SteveTheTroll.Backpack
             if (c == null) { ModLog.Warn("BackpackStore: no store on " + (troll != null ? troll.name : "?")); return false; }
             if (InUse(c)) { if (user != null) user.Message(MessageHud.MessageType.Center, "$msg_inuse"); return false; }
             Active[c] = i;
-            c.m_name = Name(i);
+            // D-063 (TEST-027: the window said "Backpack chest 1" for every chest - the game shows the INVENTORY's name, set once in Awake)
+            var tame = troll.GetComponent<Tameable>();
+            string title = Loc.T("stevethetroll_backpack_hover", tame != null ? tame.GetHoverName() : troll.name, (i + 1).ToString());
+            c.m_name = title;
+            InvName(Inv(c)) = title;
             LastRevision(c) = uint.MaxValue;
             LoadNow(c);
             ModLog.Info("BackpackStore: " + troll.name + " chest " + (i + 1) + " opened by " + (user != null ? user.GetHoverName() : "?") + " (" + Inv(c).NrOfItems() + " stack(s))");

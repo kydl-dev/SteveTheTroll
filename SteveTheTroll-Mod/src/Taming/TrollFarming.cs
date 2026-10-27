@@ -176,7 +176,10 @@ namespace SteveTheTroll.Taming
             // skipped completely; it runs again when farming hands back (fight, follow order, nothing to farm).
             static bool Prefix(MonsterAI __instance, float dt, ref bool __result)
             {
-                var f = __instance != null ? __instance.GetComponent<TrollFarmer>() : null;
+                if (__instance == null) return true;
+                var view0 = __instance.GetComponent<ZNetView>();
+                if (view0 != null && view0.IsValid() && view0.IsOwner() && TrollHold.Holds(__instance)) { __instance.StopMoving(); __result = true; return false; }     // D-063
+                var f = __instance.GetComponent<TrollFarmer>();
                 if (f == null) return true;
                 var view = __instance.GetComponent<ZNetView>();
                 if (view == null || !view.IsValid() || !view.IsOwner()) return true;
