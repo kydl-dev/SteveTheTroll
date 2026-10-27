@@ -16,7 +16,7 @@ namespace SteveTheTroll.Figure
         static int _tunableVersion = 1;
         static bool _subscribed;
 
-        Transform _foot, _player;
+        Transform _foot, _toe, _player;
         bool _left;
         SkinnedMeshRenderer _body;
         Transform[] _bones;
@@ -33,6 +33,8 @@ namespace SteveTheTroll.Figure
         public bool Init(Transform foot, Transform player, bool left)
         {
             _foot = foot; _player = player; _left = left;
+            _toe = foot != null ? foot.Find(TrollFitMath.ToeOf(foot.name)) : null;     // direct child of the player's foot (D-016)
+            ModLog.Verbose("TrollFigure: toe '" + (foot != null ? TrollFitMath.ToeOf(foot.name) : "?") + "' " + (_toe != null ? "found, foot->toe " + (_toe.position - foot.position).magnitude.ToString("F3") + " m" : "MISSING (falls back to the player's forward)"));
             _body = TrollFitMath.FindBody(transform);
             int n = TrollFitMath.PosedBones.Length, found = 0;
             _bones = new Transform[n]; _rest = new Quaternion[n]; _delta = new Quaternion[n]; _extra = new Quaternion[n];
@@ -63,7 +65,7 @@ namespace SteveTheTroll.Figure
         {
             if (_subscribed) return;
             _subscribed = true;
-            var all = new[] { ModSettings.FigureHeight, ModSettings.FigureForward, ModSettings.FigureUp, ModSettings.FigureSide, ModSettings.FigureYaw,
+            var all = new[] { ModSettings.FigureHeight, ModSettings.FigureForward, ModSettings.FigureUp, ModSettings.FigureSide, ModSettings.FigureSideLeft, ModSettings.FigureSideRight, ModSettings.FigureYaw,
                 ModSettings.PoseSpineX, ModSettings.PoseUpLegX, ModSettings.PoseUpLegZ, ModSettings.PoseLegX, ModSettings.PoseRightArmX, ModSettings.PoseRightArmZ,
                 ModSettings.PoseRightForeArmX, ModSettings.PoseLeftArmX, ModSettings.PoseLeftArmZ, ModSettings.PoseLeftForeArmX };
             foreach (var t in all) t.SettingChanged += (s, e) => { _tunableVersion++; ModLog.Verbose("TrollFigure: " + s + " changed -> re-pose / re-measure (version " + _tunableVersion + ")"); };
@@ -107,7 +109,8 @@ namespace SteveTheTroll.Figure
         void Place()
         {
             Vector3 pos; Quaternion rot;
-            TrollFitMath.Place(_foot.position, _player.forward, _left, ModSettings.FigureForward.Value, ModSettings.FigureSide.Value, ModSettings.FigureUp.Value,
+            float side = ModSettings.FigureSide.Value + (_left ? ModSettings.FigureSideLeft.Value : ModSettings.FigureSideRight.Value);
+            TrollFitMath.Place(_foot.position, TrollFitMath.FootForward(_foot, _toe, _player.forward), _left, ModSettings.FigureForward.Value, side, ModSettings.FigureUp.Value,
                 ModSettings.FigureYaw.Value, _bottomBelowPivot, out pos, out rot);
             transform.SetPositionAndRotation(pos, rot);
         }
@@ -149,7 +152,7 @@ namespace SteveTheTroll.Figure
             float dist = (transform.position - _foot.position).magnitude;
             ModLog.Verbose("TrollFigure: " + name + " foot " + _foot.position.ToString("F2") + ", figure " + transform.position.ToString("F2")
                 + " (" + dist.ToString("F3") + " m from the foot), height " + _measuredHeight.ToString("F3") + " m, scale " + transform.localScale.x.ToString("F4")
-                + ", yaw " + ModSettings.FigureYaw.Value.ToString("F0") + " deg");
+                + ", yaw " + ModSettings.FigureYaw.Value.ToString("F0") + " deg, foot turned " + Vector3.SignedAngle(TrollFitMath.Flat(_player.forward, Vector3.forward), TrollFitMath.FootForward(_foot, _toe, _player.forward), Vector3.up).ToString("F0") + " deg from the player's forward");
             ModLog.CheckRange("TrollFigure: " + name + " distance to the foot", dist, 0f, 0.6f, "m");
         }
 

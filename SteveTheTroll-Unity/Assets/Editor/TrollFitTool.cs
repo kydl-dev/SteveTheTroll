@@ -135,7 +135,7 @@ namespace SteveTheTroll.EditorTools
             sb.AppendLine("    {");
             sb.AppendLine("        public const string SavedAt = \"" + System.DateTime.Now.ToString("yyyy-MM-dd HH:mm", inv) + "\";");
             sb.AppendLine("        public const float Height = " + F(rig.height) + ";          // m, world height of the posed troll body");
-            sb.AppendLine("        public const float Forward = " + F(rig.forward) + ";         // m along the player's forward from the foot bone");
+            sb.AppendLine("        public const float Forward = " + F(rig.forward) + ";         // m along the foot's forward (foot -> toe) from the foot bone");
             sb.AppendLine("        public const float Side = " + F(rig.side) + ";               // m outward from the body (mirrored per foot)");
             sb.AppendLine("        public const float Up = " + F(rig.up) + ";                 // m from the foot bone up to the troll's lowest vertex");
             sb.AppendLine("        public const float Yaw = " + F(rig.yaw) + ";                // deg around up, 0 = faces the player's forward");

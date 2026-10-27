@@ -48,7 +48,7 @@ namespace SteveTheTroll.Figure
             _right = Spawn(player, rightFoot, "RightFoot", RightName, false);
             bool ok = _left != null && _right != null;
             ModLog.Verbose("FigurePreview: on, left " + (_left != null) + ", right " + (_right != null));
-            return ok ? "troll preview on (tune it in KydlTools: TrollFigure / TrollPose)" : "troll preview failed, see the log (debug on for details)";
+            return ok ? "troll preview on (tune it in KydlTools F7: TrollPlace / TrollTune)" : "troll preview failed, see the log (debug on for details)";
         }
 
         static GameObject Spawn(Player player, Transform foot, string footBone, string name, bool left)

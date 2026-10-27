@@ -65,13 +65,13 @@ namespace SteveTheTroll.Fit
             if (_scratch == null) _scratch = new Mesh { hideFlags = HideFlags.HideAndDontSave };
             float min, max;
             Vector3 pos; Quaternion rot;
-            TrollFitMath.Place(foot.position, player.forward, left, forward, side, up, yaw, 0f, out pos, out rot);
+            TrollFitMath.Place(foot.position, TrollFitMath.FootForward(foot, TrollFitMath.FindDeep(player, TrollFitMath.ToeOf(foot.name)), player.forward), left, forward, side, up, yaw, 0f, out pos, out rot);
             troll.SetPositionAndRotation(pos, rot);
             if (!TrollFitMath.MeasureY(body, _scratch, out min, out max) || max - min < 0.0001f) return 0f;
             troll.localScale *= height / (max - min);
             TrollFitMath.MeasureY(body, _scratch, out min, out max);
             float bottom = troll.position.y - min;
-            TrollFitMath.Place(foot.position, player.forward, left, forward, side, up, yaw, bottom, out pos, out rot);
+            TrollFitMath.Place(foot.position, TrollFitMath.FootForward(foot, TrollFitMath.FindDeep(player, TrollFitMath.ToeOf(foot.name)), player.forward), left, forward, side, up, yaw, bottom, out pos, out rot);
             troll.SetPositionAndRotation(pos, rot);
             var log = troll.Find("TrollLog");
             var logMesh = log != null ? log.GetComponentInChildren<MeshFilter>() : null;

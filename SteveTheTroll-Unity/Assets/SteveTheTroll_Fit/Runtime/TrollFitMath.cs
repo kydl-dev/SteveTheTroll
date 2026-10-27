@@ -21,20 +21,34 @@ namespace SteveTheTroll.Fit
             "Root", "Spine0", "Spine1", "Spine2", "Head",
             "LeftUpLeg", "LeftLeg", "LeftFoot", "RightUpLeg", "RightLeg", "RightFoot",
             "LeftShoulder", "LeftArm", "LeftForeArm", "LeftHand", "RightShoulder", "RightArm", "RightForeArm", "RightHand",
+            // D-017: the right hand grips the log
+            "RightHandIndex1", "RightHandIndex2", "RightHandIndex3", "RightHandMiddle1", "RightHandMiddle2", "RightHandMiddle3",
+            "RightHandRing1", "RightHandRing2", "RightHandRing3", "RightHandThumb1", "RightHandThumb2", "RightHandThumb3",
         };
 
-        /// Player forward flattened to the ground; falls back to world +Z when the player looks straight up / down.
-        public static Vector3 FlatForward(Vector3 playerForward)
+        /// The player's toe bone for a foot bone name (LeftFoot -> LeftToeBase).
+        public static string ToeOf(string footBone) { return footBone.Replace("Foot", "ToeBase"); }
+
+        /// A direction flattened to the ground; `fallback` (flattened) when it is (nearly) vertical or zero.
+        public static Vector3 Flat(Vector3 dir, Vector3 fallback)
         {
-            var f = Vector3.ProjectOnPlane(playerForward, Vector3.up);
+            var f = Vector3.ProjectOnPlane(dir, Vector3.up);
+            if (f.sqrMagnitude >= 0.0001f) return f.normalized;
+            f = Vector3.ProjectOnPlane(fallback, Vector3.up);
             return f.sqrMagnitude < 0.0001f ? Vector3.forward : f.normalized;
         }
 
-        /// World pose of the figure root. Expected outcome: rotation is upright (its up equals world up within 0.1 deg).
-        public static void Place(Vector3 footPos, Vector3 playerForward, bool leftFoot, float forward, float side, float up, float yawDeg,
+        /// D-016: the foot's own forward (foot bone -> toe bone, flattened); the player's forward when the toe is missing.
+        public static Vector3 FootForward(Transform foot, Transform toe, Vector3 playerForward)
+        {
+            return toe != null ? Flat(toe.position - foot.position, playerForward) : Flat(playerForward, Vector3.forward);
+        }
+
+        /// World pose of the figure root in the FOOT's frame (footForward from FootForward). Expected outcome: rotation is upright.
+        public static void Place(Vector3 footPos, Vector3 footForward, bool leftFoot, float forward, float side, float up, float yawDeg,
             float bottomBelowPivot, out Vector3 position, out Quaternion rotation)
         {
-            var fwd = FlatForward(playerForward);
+            var fwd = Flat(footForward, Vector3.forward);
             var right = Vector3.Cross(Vector3.up, fwd);
             float outward = leftFoot ? -1f : 1f;
             position = footPos + fwd * forward + right * (outward * side);
