@@ -37,5 +37,26 @@ namespace SteveTheTroll.Tests.Unit
             Assert.That(minZ, Is.GreaterThanOrEqualTo(-1e-4f), "nothing sits inside the troll (behind the struts)");
             Assert.That(maxZ, Is.GreaterThan(3f), "the cage reaches ~3.2 m away from the troll's back");
         }
+
+        [Test]
+        public void ChestsAndStraps_MirroredAboutTheTrollsSpine()
+        {
+            // D-055: every chest / strut / strap beam has a mirror partner at -X (same prefab, height, depth); pivot X 0 = the troll's spine.
+            var all = Pieces();
+            int checkedPieces = 0;
+            foreach (var o in all)
+            {
+                string prefab = (string)F(o, "Prefab");
+                float x = (float)F(o, "X"), y = (float)F(o, "Y"), z = (float)F(o, "Z");
+                bool strap = prefab == "woodiron_beam_45" || (prefab == "woodiron_beam" && Math.Abs(z) < 1e-4);
+                if (prefab != "piece_chest_wood" && !strap) continue;
+                checkedPieces++;
+                bool found = false;
+                foreach (var m in all)
+                    if ((string)F(m, "Prefab") == prefab && Math.Abs((float)F(m, "X") + x) < 1e-3 && Math.Abs((float)F(m, "Y") - y) < 1e-3 && Math.Abs((float)F(m, "Z") - z) < 1e-3) found = true;
+                Assert.That(found, Is.True, prefab + " at x " + x + " has no mirror partner");
+            }
+            Assert.That(checkedPieces, Is.EqualTo(8), "4 chests + 2 struts + 2 strap beams");
+        }
     }
 }
