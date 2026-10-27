@@ -81,6 +81,27 @@ namespace SteveTheTroll.Taming
             return baseName;
         }
 
+        // D-050 source tiers: 0 = fallen logs and ore rocks, 1 = standing trees, 2 = anything else (stumps, saplings). -1 = not farmed.
+        public const int TierLog = 0, TierTree = 1, TierOther = 2, TierNone = -1;
+        const float TierStep = 1000f;
+
+        /// D-050 (user: "focus the fallen trees before going for trees that are still up"): a lower tier ALWAYS wins, distance (m) only decides
+        /// inside a tier. Expected outcome: the score (lower = better), or MaxValue for TierNone.
+        public static float SourceScore(int tier, float distance)
+        {
+            if (tier < 0) return float.MaxValue;
+            return tier * TierStep + (distance < 0f ? 0f : distance);
+        }
+
+        /// D-050: "other" sources (Destructible stumps, saplings, bushes) only count when at least minHeight metres tall - bushes and ground
+        /// debris made the troll slap the ground (TEST-021). Logs, rocks and trees always count.
+        public static int Tier(bool log, bool rock, bool tree, float height, float minHeight)
+        {
+            if (log || rock) return TierLog;
+            if (tree) return TierTree;
+            return height >= minHeight ? TierOther : TierNone;
+        }
+
         /// Progress 0..100 % for logs (total &lt;= 0 counts as done).
         public static int Percent(float remaining, float total)
         {

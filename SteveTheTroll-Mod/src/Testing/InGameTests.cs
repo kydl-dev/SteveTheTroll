@@ -77,6 +77,19 @@ namespace SteveTheTroll.Testing
             catch (System.TypeInitializationException e) { return "FAIL: " + (e.InnerException != null ? e.InnerException.Message : e.Message); }
         }
 
+        // D-050: a farming search around the player sees the sources (buffer not full) and ranks a log / rock before a standing tree.
+        static string World_FarmScan()
+        {
+            var p = Player.m_localPlayer;
+            if (p == null) return "SKIP: no local player";
+            Collider hit;
+            var best = Taming.TrollFarming.Find(p.transform.position, p.transform.position, "Wood", 10, ModSettings.FarmRange.Value, out hit);
+            string detail = "Wood within " + ModSettings.FarmRange.Value + " m: " + Taming.TrollFarming.LastScan;
+            ModLog.Verbose("InGameTests: World_FarmScan " + detail);
+            if (Taming.TrollFarming.LastScanFull) return "FAIL: " + detail;
+            return (best == null ? "SKIP: " : "PASS: ") + detail;
+        }
+
         // T-008a: the game's Troll prefab carries a Tameable with the taming time and E commands (follow / stay).
         static string World_TrollTameable()
         {

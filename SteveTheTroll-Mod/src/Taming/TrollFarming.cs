@@ -18,7 +18,10 @@ namespace SteveTheTroll.Taming
         static readonly System.Func<BaseAI, float, Vector3, float, bool, bool> MoveTo =
             AccessTools.MethodDelegate<System.Func<BaseAI, float, Vector3, float, bool, bool>>(AccessTools.Method(typeof(BaseAI), "MoveTo"));
         static readonly System.Action<BaseAI, Vector3> LookAt = AccessTools.MethodDelegate<System.Action<BaseAI, Vector3>>(AccessTools.Method(typeof(BaseAI), "LookAt"));
-        static readonly Collider[] Hits = new Collider[512];
+        // TEST-021: with FarmRange 50 the 512 buffer filled up (grass, pieces) and fallen logs were never seen -> 4096 + a warning when full
+        const int HitBuffer = 4096;
+        static readonly Collider[] Hits = new Collider[HitBuffer];
+        const float MinOtherHeight = 1.2f;
 
         /// In-game test Startup_TamingReflection. Expected outcome: whether both delegates were found.
         internal static bool SelfCheck() { return MoveTo != null && LookAt != null; }
@@ -100,13 +103,16 @@ namespace SteveTheTroll.Taming
         }
 
         /// Nearest source of `item` within range of `center` the troll's weapon tier can damage. Expected outcome: the source or null.
-        /// Ranking (metres added to the distance): fallen logs 0, standing trees 4, ore rocks 0, anything else (stumps, debris) 40.
-        internal static float Penalty(GameObject g)
+        /// D-050 tier of a source (TamingRules.Tier): logs / ore rocks first, then standing trees, then tall-enough others.
+        internal static int TierOf(GameObject g, Collider c)
         {
-            if (g.GetComponent<TreeLog>() != null || g.GetComponent<MineRock5>() != null || g.GetComponent<MineRock>() != null) return 0f;
-            if (g.GetComponent<TreeBase>() != null) return 4f;
-            return 40f;
+            bool rock = g.GetComponent<MineRock5>() != null || g.GetComponent<MineRock>() != null;
+            return TamingRules.Tier(g.GetComponent<TreeLog>() != null, rock, g.GetComponent<TreeBase>() != null, c != null ? c.bounds.size.y : 0f, MinOtherHeight);
         }
+
+        /// The last search, for the in-game test World_FarmScan.
+        internal static string LastScan = "";
+        internal static bool LastScanFull;
 
         internal static GameObject Find(Vector3 center, Vector3 from, string item, int tier, float range, out Collider hit, System.Func<GameObject, bool> skip = null)
         {
@@ -114,6 +120,8 @@ namespace SteveTheTroll.Taming
             GameObject best = null;
             float bestD = float.MaxValue;
             int n = Physics.OverlapSphereNonAlloc(center, range, Hits, ~0, QueryTriggerInteraction.Ignore);
+            var counts = new int[3];
+            int skipped = 0;
             for (int i = 0; i < n; i++)
             {
                 var g = SourceOf(Hits[i]);
@@ -124,10 +132,18 @@ namespace SteveTheTroll.Taming
                 // TEST-018: Collider.ClosestPoint on a non-convex mesh returned the troll's own position (0.0 m to a stump) -> distances from
                 // the collider BOUNDS; and a ranking so trees / logs / ore rocks win over stumps and small debris
                 var at = g.GetComponent<TreeBase>() != null ? g.transform.position : Hits[i].bounds.ClosestPoint(from);     // trees: the trunk (TEST-020)
-                float d = Vector3.Distance(from, at) + Penalty(g);
+                int t = TierOf(g, Hits[i]);
+                if (t == TamingRules.TierNone) { skipped++; continue; }
+                counts[t]++;
+                float d = TamingRules.SourceScore(t, Vector3.Distance(from, at));
                 if (d < bestD) { bestD = d; best = g; hit = Hits[i]; }
             }
-            ModLog.Verbose("TrollFarming: search '" + item + "' within " + range + " m of " + center.ToString("F0") + ": " + n + " collider(s), best " + (best != null ? best.name + " (" + KindOf(best) + ") score " + bestD.ToString("F1") + " m" : "none"));
+            LastScan = "colliders " + n + (n >= HitBuffer ? " (BUFFER FULL)" : "") + ", logs/rocks " + counts[0] + ", trees " + counts[1] + ", other " + counts[2] + ", too small " + skipped
+                + ", best " + (best != null ? best.name + " (" + KindOf(best) + ")" : "none");
+            LastScanFull = n >= HitBuffer;
+            if (n >= HitBuffer) ModLog.Warn("TrollFarming: collider buffer full (" + n + ") within " + range + " m - some sources may be missed");
+            ModLog.Verbose("TrollFarming: search '" + item + "' within " + range + " m of " + center.ToString("F0") + ": " + n + " collider(s), sources logs/rocks " + counts[0] + ", trees " + counts[1]
+                + ", other " + counts[2] + " (too small " + skipped + "), best " + (best != null ? best.name + " (" + KindOf(best) + ") score " + bestD.ToString("F1") : "none"));
             return best;
         }
 

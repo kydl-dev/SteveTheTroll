@@ -71,6 +71,27 @@ namespace SteveTheTroll.Tests.Unit
             Assert.That(ModAssembly.Call(T, "NextName", "Spencer", new[] { "Steve 1", "Spencer 1" }), Is.EqualTo("Spencer 2"));
         }
 
+        // D-050: a fallen log / ore rock always beats a standing tree, a tree always beats a stump / sapling; distance only inside a tier
+        [Test]
+        public void SourceScore_TierBeforeDistance()
+        {
+            float log = (float)ModAssembly.Call(T, "SourceScore", 0, 49f), tree = (float)ModAssembly.Call(T, "SourceScore", 1, 1f), other = (float)ModAssembly.Call(T, "SourceScore", 2, 0f);
+            Assert.That(log, Is.LessThan(tree), "a log 49 m away before a tree 1 m away");
+            Assert.That(tree, Is.LessThan(other));
+            Assert.That((float)ModAssembly.Call(T, "SourceScore", 0, 3f), Is.LessThan((float)ModAssembly.Call(T, "SourceScore", 0, 5f)));
+            Assert.That((float)ModAssembly.Call(T, "SourceScore", -1, 0f), Is.EqualTo(float.MaxValue));
+        }
+
+        [TestCase(true, false, false, 0.3f, 0)]
+        [TestCase(false, true, false, 0.5f, 0)]
+        [TestCase(false, false, true, 0.2f, 1)]
+        [TestCase(false, false, false, 2f, 2)]
+        [TestCase(false, false, false, 0.8f, -1)]
+        public void Tier(bool log, bool rock, bool tree, float height, int expected)
+        {
+            Assert.That((int)ModAssembly.Call(T, "Tier", log, rock, tree, height, 1.2f), Is.EqualTo(expected));
+        }
+
         [Test]
         public void Percent_Clamped()
         {
