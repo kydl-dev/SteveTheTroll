@@ -25,5 +25,19 @@ namespace SteveTheTroll.Testing
             ModLog.Verbose("InGameTests: World_PlayerPresent player " + (p != null ? p.GetPlayerName() : "null"));
             return p != null ? "PASS: " + p.GetPlayerName() + " at " + p.transform.position.ToString("F1") : "FAIL: no local player 5 s after the world loaded";
         }
+
+        /// T-004b: everything the runtime troll figure reads from the game exists (Troll/Visual, the troll's log, the player's feet).
+        static string World_TrollFigureSources()
+        {
+            var troll = ZNetScene.instance != null ? ZNetScene.instance.GetPrefab(Figure.TrollFigureFactory.TrollPrefab) : null;
+            var visual = troll != null ? troll.transform.Find("Visual") : null;
+            var logItem = ObjectDB.instance != null ? ObjectDB.instance.GetItemPrefab(Figure.TrollFigureFactory.LogItemPrefab) : null;
+            var logAttach = logItem != null ? logItem.transform.Find("attach") : null;
+            var p = Player.m_localPlayer;
+            var foot = p != null ? Utils.FindChild(p.transform, "LeftFoot") : null;
+            string detail = "Troll " + (troll != null) + ", Troll/Visual " + (visual != null) + ", " + Figure.TrollFigureFactory.LogItemPrefab + "/attach " + (logAttach != null) + ", player LeftFoot " + (foot != null);
+            ModLog.Verbose("InGameTests: World_TrollFigureSources " + detail);
+            return troll != null && visual != null && logAttach != null && foot != null ? "PASS: " + detail : "FAIL: " + detail;
+        }
     }
 }

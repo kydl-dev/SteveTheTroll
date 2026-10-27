@@ -4,13 +4,13 @@ using BepInEx;
 using HarmonyLib;
 using Jotunn.Utils;
 using Kydl.Common;
-using UnityEngine;
 using SteveTheTroll.Ui;
+using UnityEngine;
 
 namespace SteveTheTroll
 {
     /// <summary>
-    /// SteveTheTroll: TBD - ask the user and update this line.
+    /// SteveTheTroll: Steve the Troll plush slippers (utility item, troll powers) and later a fluffy troll costume (_agent/PLAN.md).
     /// Entry point. Order in Awake matters: log first, then the config (player settings), then text, then everything that uses them.
     /// </summary>
     [BepInPlugin(ModGuid, ModName, ModVersion)]
@@ -48,6 +48,8 @@ namespace SteveTheTroll
             Bundle = LoadBundle();
             UiInputLock.Install(ModGuid);           // the character does not move while one of the mod's menus is open
             new Harmony(ModGuid).PatchAll(Assembly.GetExecutingAssembly());
+            Jotunn.Managers.CommandManager.Instance.AddConsoleCommand(new Figure.FigurePreviewCommand());   // T-004b look test: stt_preview
+            ModLog.Verbose("Plugin: console command stt_preview registered");
             ModLog.Verbose("Plugin: Awake finished (Harmony patches applied, menu key " + ModSettings.MenuKey.Value + ")");
         }
 
