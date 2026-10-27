@@ -2,7 +2,7 @@
   "name": "SteveTheTroll",
   "version_number": "0.1.0",
   "website_url": "",
-  "description": "Steve the Troll plush slippers: fluffy troll slippers worn in the utility slot (frost resistance, troll taming). A fluffy troll costume follows later.",
+  "description": "Fluffy Slippers: soft plush slippers worn in the utility slot (armor, frost resistance). Wear them and see what happens. A fluffy costume follows later.",
   "dependencies": [
     "denikson-BepInExPack_Valheim-5.4.2202",
     "ValheimModding-Jotunn-2.30.2"

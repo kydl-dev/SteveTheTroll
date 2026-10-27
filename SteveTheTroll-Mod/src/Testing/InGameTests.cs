@@ -54,14 +54,36 @@ namespace SteveTheTroll.Testing
             int slippers = ground != null ? (ground.Find("SlipperDropLeft") != null ? 1 : 0) + (ground.Find("SlipperDropRight") != null ? 1 : 0) : 0;
             bool groundCol = ground != null && ground.GetComponent<BoxCollider>() != null;
             int hide = TrollHideAmount(recipe);
+            string upgrades = UpgradeAmounts(recipe, out bool upgradesOk);
             string shown = Localization.instance != null ? Localization.instance.Localize(s.m_name) : s.m_name;
-            string detail = "ground slippers " + slippers + ", ground collider " + groundCol + ", worn belt part attach_skin " + (prefab.transform.Find("attach_skin") != null) + ", type " + s.m_itemType + ", armor " + s.m_armor + " +" + s.m_armorPerLevel + "/q, max quality " + s.m_maxQuality + ", frost resistant " + frost + ", recipe " + (recipe != null) + ", TrollHide " + hide + " (expected " + Item.SlipperItem.TrollHideCost + "), name " + s.m_name + " = '" + shown + "' (expected '" + ExpectedName + "')";
+            string detail = "ground slippers " + slippers + ", ground collider " + groundCol + ", worn belt part attach_skin " + (prefab.transform.Find("attach_skin") != null) + ", type " + s.m_itemType + ", armor " + s.m_armor + " +" + s.m_armorPerLevel + "/q, max quality " + s.m_maxQuality + ", frost resistant " + frost + ", recipe " + (recipe != null) + ", TrollHide " + hide + " (expected " + Item.SlipperItem.TrollHideCost + "), upgrades q2/q3/q4 " + upgrades + " (expected " + Item.SlipperItem.UpgradeCostPerItem + " each), name " + s.m_name + " = '" + shown + "' (expected '" + ExpectedName + "')";
             ModLog.Verbose("InGameTests: World_SlipperItem " + detail);
-            bool ok = s.m_itemType == ItemDrop.ItemData.ItemType.Utility && Mathf.Approximately(s.m_armor, Item.SlipperItem.BaseArmor) && s.m_maxQuality == Item.SlipperItem.MaxQuality && frost && recipe != null && hide == Item.SlipperItem.TrollHideCost && shown == ExpectedName && slippers == 2 && groundCol && prefab.transform.Find("attach_skin") == null;
+            bool ok = s.m_itemType == ItemDrop.ItemData.ItemType.Utility && Mathf.Approximately(s.m_armor, Item.SlipperItem.BaseArmor) && s.m_maxQuality == Item.SlipperItem.MaxQuality && frost && recipe != null && hide == Item.SlipperItem.TrollHideCost && upgradesOk && shown == ExpectedName && slippers == 2 && groundCol && prefab.transform.Find("attach_skin") == null;
             return (ok ? "PASS: " : "FAIL: ") + detail;
         }
 
         const string ExpectedName = "Fluffy Slippers";
+
+        /// D-035: upgrade amounts of the slippers' TrollHide and Blueberries at quality 2, 3 and 4 (through the patched GetAmount).
+        static string UpgradeAmounts(Recipe recipe, out bool ok)
+        {
+            ok = recipe != null && recipe.m_resources != null;
+            var sb = new System.Text.StringBuilder();
+            if (!ok) return "no recipe";
+            foreach (var r in recipe.m_resources)
+            {
+                if (r == null || r.m_resItem == null || r.m_amountPerLevel <= 0) continue;
+                sb.Append(r.m_resItem.name).Append(' ');
+                for (int q = 2; q <= Item.SlipperItem.MaxQuality; q++)
+                {
+                    int a = r.GetAmount(q);
+                    sb.Append(a).Append(q < Item.SlipperItem.MaxQuality ? "/" : " ");
+                    ok &= a == Item.SlipperItem.UpgradeCostPerItem;
+                }
+            }
+            ModLog.Verbose("InGameTests: slipper upgrade amounts " + sb + "ok " + ok);
+            return sb.ToString().Trim();
+        }
 
         /// D-034: TrollHide amount in the slippers' recipe (-1 = no recipe / no TrollHide line).
         static int TrollHideAmount(Recipe recipe)

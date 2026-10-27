@@ -24,6 +24,10 @@ namespace SteveTheTroll.Item
         public const int MaxQuality = 4;
         /// D-034 (user 2026-10-27): 5 TrollHide (was 10).
         public const int TrollHideCost = 5;
+        /// TrollHide, DeerHide, Blueberries (SlipperUpgradeCostPatch tracks them).
+        public const int RequirementCount = 3;
+        /// D-035: each upgrade costs this much TrollHide and Blueberries, the same at every quality (SlipperUpgradeCostPatch).
+        public const int UpgradeCostPerItem = 2;
         static int _hash;
 
         /// The utility hash VisEquipment uses for this item (prefab name hash; 0 until the item is added).
@@ -47,10 +51,10 @@ namespace SteveTheTroll.Item
                 CraftingStation = CraftingStations.Workbench,
                 MinStationLevel = 1,
             };
-            cfg.AddRequirement(new RequirementConfig("TrollHide", TrollHideCost, 2, true));
+            cfg.AddRequirement(new RequirementConfig("TrollHide", TrollHideCost, UpgradeCostPerItem, true));
             cfg.AddRequirement(new RequirementConfig("DeerHide", 4, 0, true));
-            cfg.AddRequirement(new RequirementConfig("Blueberries", 6, 2, false));
-            ModLog.Verbose("SlipperItem: recipe TrollHide x" + TrollHideCost + " (+2 per upgrade), DeerHide x4, Blueberries x6 (+2 per upgrade), workbench level " + cfg.MinStationLevel);
+            cfg.AddRequirement(new RequirementConfig("Blueberries", 6, UpgradeCostPerItem, false));
+            ModLog.Verbose("SlipperItem: recipe TrollHide x" + TrollHideCost + " (" + UpgradeCostPerItem + " per upgrade, every quality), DeerHide x4, Blueberries x6 (" + UpgradeCostPerItem + " per upgrade), workbench level " + cfg.MinStationLevel);
             ModLog.Check("SlipperItem: recipe TrollHide", cfg.Requirements[0].Amount, TrollHideCost, 0, "");
             var icon = Plugin.Bundle != null ? Plugin.Bundle.LoadAsset<Sprite>(IconName) : null;
             if (icon != null) cfg.Icons = new[] { icon };

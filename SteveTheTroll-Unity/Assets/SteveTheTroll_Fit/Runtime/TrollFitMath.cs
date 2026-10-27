@@ -117,7 +117,8 @@ namespace SteveTheTroll.Fit
             var want = hand.position + figure.rotation * (offsetRatio * height);
             logRoot.position += want - centre;
             float length = meshLong * logMesh.transform.lossyScale.x;
-            Log("TrollFitMath: PlaceLog length " + length.ToString("F3") + " m (want " + (lengthRatio * height).ToString("F3") + "), centre " + want.ToString("F3") + ", lossy " + logMesh.transform.lossyScale.ToString("F4"));
+            // Runs every frame in game: no world position in the text, so the shared 2.5 s repeat filter throttles it (session 145215 spam).
+            Log("TrollFitMath: PlaceLog length " + length.ToString("F3") + " m (want " + (lengthRatio * height).ToString("F3") + "), lossy " + logMesh.transform.lossyScale.ToString("F4"));
             return length;
         }
 

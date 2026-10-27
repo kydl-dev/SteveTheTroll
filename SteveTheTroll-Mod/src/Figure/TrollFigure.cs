@@ -208,11 +208,12 @@ namespace SteveTheTroll.Figure
             transform.SetPositionAndRotation(a + frame * _gluePos, frame * _glueRot);
         }
 
-        // D-029 flip detector on the troll's final FORWARD (3D, not flattened: a glued troll can tilt past vertical with the foot, where a
-        // flattened heading swings 180 deg without any real jump - TEST-008, Unity sweep: smooth leg motion, largest real step 7 deg).
+        // D-029 flip detector, measured AGAINST THE FOOT (D-036): the glued troll turns with the foot, so a world-space step also counts the
+        // foot's own swing (TEST-009 / TEST-010: 10-36 "jumps" up to 158 deg per session while running / jumping, the user saw no flip).
+        // A real glue or placement flip still turns the troll against its foot. 3D, not flattened (TEST-008).
         void Watch()
         {
-            var fwd = transform.forward;
+            var fwd = _foot != null ? Quaternion.Inverse(_foot.rotation) * transform.forward : transform.forward;
             float step = FitGeometry.FlipStep(_lastFwd, fwd);
             if (step > _maxStep) _maxStep = step;
             if (FitGeometry.IsJump(step)) _jumps++;
@@ -265,7 +266,7 @@ namespace SteveTheTroll.Figure
                 + ", yaw " + ModSettings.FigureYaw.Value.ToString("F0") + " deg, foot turned " + Vector3.SignedAngle(TrollFitMath.Flat(_player.forward, Vector3.forward), TrollFitMath.FootForward(_foot, _toe, _player.forward), Vector3.up).ToString("F0") + " deg from the player's forward");
             ModLog.CheckRange("TrollFigure: " + name + " distance to the foot", dist, 0f, 0.6f, "m");
             ModLog.Verbose("TrollFigure: " + name + " " + (_glueA != null ? "glued to the slipper, tilt " + Vector3.Angle(transform.up, Vector3.up).ToString("F0") + " deg" : "placed on the foot (not glued)"));
-            ModLog.Check("TrollFigure: " + name + " frame-to-frame turns over 45 deg in the last " + DiagEverySeconds + " s (largest " + _maxStep.ToString("F0") + " deg)", _jumps, 0, 0, "");
+            ModLog.Check("TrollFigure: " + name + " frame-to-frame turns against the foot over 45 deg in the last " + DiagEverySeconds + " s (largest " + _maxStep.ToString("F0") + " deg)", _jumps, 0, 0, "");
             _jumps = 0; _maxStep = 0f;
         }
 
