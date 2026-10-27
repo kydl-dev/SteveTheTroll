@@ -53,14 +53,31 @@ namespace SteveTheTroll.Tests.Unit
         }
 
         [Test]
-        public void SpawnBoost_ThreeTimes_Clamped()
+        public void SpawnBoost_TryEveryNSeconds_FullChance()
         {
-            Assert.That((float)ModAssembly.Call(T, "BoostedInterval", 300f, 3f), Is.EqualTo(100f).Within(1e-3));
-            Assert.That((float)ModAssembly.Call(T, "BoostedInterval", 2f, 3f), Is.EqualTo(1f), "never below 1 s");
-            Assert.That((float)ModAssembly.Call(T, "BoostedInterval", 300f, 1f), Is.EqualTo(300f), "factor 1 = off");
-            Assert.That((float)ModAssembly.Call(T, "BoostedChance", 20f, 3f), Is.EqualTo(60f).Within(1e-3));
-            Assert.That((float)ModAssembly.Call(T, "BoostedChance", 50f, 3f), Is.EqualTo(100f), "never above 100 %");
-            Assert.That((float)ModAssembly.Call(T, "BoostedChance", 50f, 0.5f), Is.EqualTo(50f));
+            Assert.That((float)ModAssembly.Call(T, "BoostedInterval", 4000f, 120f), Is.EqualTo(120f), "the game's troll entry: 4000 s -> 120 s");
+            Assert.That((float)ModAssembly.Call(T, "BoostedInterval", 60f, 120f), Is.EqualTo(60f), "a shorter game interval stays");
+            Assert.That((float)ModAssembly.Call(T, "BoostedInterval", 4000f, 0.2f), Is.EqualTo(1f), "never below 1 s");
+            Assert.That((float)ModAssembly.Call(T, "BoostedInterval", 4000f, 0f), Is.EqualTo(4000f), "0 = off");
+            Assert.That((float)ModAssembly.Call(T, "BoostedChance", 5f, 120f), Is.EqualTo(100f));
+            Assert.That((float)ModAssembly.Call(T, "BoostedChance", 5f, 0f), Is.EqualTo(5f), "0 = off");
+        }
+
+        [Test]
+        public void SegmentT_NearestPointOnALog()
+        {
+            Assert.That((float)ModAssembly.Call(T, "SegmentT", 0f, 0f, 10f, 0f, 3f, 5f), Is.EqualTo(0.3f).Within(1e-4), "beside the log");
+            Assert.That((float)ModAssembly.Call(T, "SegmentT", 0f, 0f, 10f, 0f, -4f, 1f), Is.EqualTo(0f), "before its start");
+            Assert.That((float)ModAssembly.Call(T, "SegmentT", 0f, 0f, 10f, 0f, 14f, -2f), Is.EqualTo(1f), "past its end");
+            Assert.That((float)ModAssembly.Call(T, "SegmentT", 2f, 2f, 2f, 2f, 9f, 9f), Is.EqualTo(0f), "zero length");
+        }
+
+        [Test]
+        public void FarmDamage_HigherOfChopAndPickaxe()
+        {
+            Assert.That((float)ModAssembly.Call(T, "FarmDamage", 120f, 0f), Is.EqualTo(120f));
+            Assert.That((float)ModAssembly.Call(T, "FarmDamage", 30f, 90f), Is.EqualTo(90f));
+            Assert.That((float)ModAssembly.Call(T, "FarmDamage", 0f, 0f), Is.EqualTo(0f));
         }
 
         [Test]

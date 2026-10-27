@@ -7,7 +7,7 @@ namespace SteveTheTroll.Taming
 {
     /// <summary>
     /// D-042: while a slipper wearer whose own tamed-troll limit is not met (no own tamed troll within OwnTrollRange) is near a spawn zone, its
-    /// Troll spawn entries run SpawnBoostFactor x as often (interval / factor, chance x factor, TamingRules) and the trolls spawned that way get the
+    /// Troll spawn entries try every SpawnBoostSeconds with 100 % chance, day and night (D-059, TamingRules) and the trolls spawned that way get the
     /// game's "Log" item set (the troll's random sets: 2x Unarmed, 1x Log). Runs where the game spawns: the owner of the zone's SpawnSystem.
     /// The SpawnData values are changed only for the duration of SpawnSystem.UpdateSpawnList and put back in a finalizer.
     /// </summary>
@@ -15,9 +15,17 @@ namespace SteveTheTroll.Taming
     {
         const string LogSet = "Log";
         const float PendingSeconds = 10f, PendingMatchMetres = 3f;
-        static readonly List<KeyValuePair<SpawnSystem.SpawnData, Vector2>> Changed = new List<KeyValuePair<SpawnSystem.SpawnData, Vector2>>();
+        static readonly List<Saved> Changed = new List<Saved>();
         static readonly List<KeyValuePair<Vector3, float>> Pending = new List<KeyValuePair<Vector3, float>>();
-        static bool _active;
+        static bool _active, _loggedEntry;
+
+        // The game's values of one boosted entry, put back in the finalizer.
+        sealed class Saved
+        {
+            internal SpawnSystem.SpawnData Data;
+            internal float Interval, Chance;
+            internal bool Day, Night;
+        }
         static float _nextLog;
 
         /// A wearer within WearerRange of the zone whose own troll limit is not met. Expected outcome: that wearer, or null.
@@ -42,33 +50,41 @@ namespace SteveTheTroll.Taming
             {
                 Changed.Clear();
                 _active = false;
-                if (!ModSettings.On || eventSpawners || spawners == null || ModSettings.SpawnBoostFactor.Value <= 1f) return;
+                if (!ModSettings.On || eventSpawners || spawners == null || ModSettings.SpawnBoostSeconds.Value <= 0f) return;
                 bool hasTroll = false;
                 foreach (var s in spawners) if (s != null && s.m_enabled && s.m_prefab != null && s.m_prefab.name == TrollTaming.TrollPrefab) { hasTroll = true; break; }
                 if (!hasTroll) return;
                 var wearer = BoostingWearer(__instance.transform.position);
                 if (wearer == null) return;
-                float f = ModSettings.SpawnBoostFactor.Value;
+                float f = ModSettings.SpawnBoostSeconds.Value;
                 foreach (var s in spawners)
                 {
                     if (s == null || !s.m_enabled || s.m_prefab == null || s.m_prefab.name != TrollTaming.TrollPrefab) continue;
-                    Changed.Add(new KeyValuePair<SpawnSystem.SpawnData, Vector2>(s, new Vector2(s.m_spawnInterval, s.m_spawnChance)));
+                    if (!_loggedEntry)
+                    {
+                        _loggedEntry = true;
+                        ModLog.Info("TrollSpawnBoost: the game's troll entry: interval " + s.m_spawnInterval + " s, chance " + s.m_spawnChance + " %, max spawned " + s.m_maxSpawned
+                            + ", day " + s.m_spawnAtDay + " / night " + s.m_spawnAtNight + ", global key '" + s.m_requiredGlobalKey + "', environments " + (s.m_requiredEnvironments != null ? s.m_requiredEnvironments.Count : 0)
+                            + ", spawn distance " + s.m_spawnDistance + " m, radius " + s.m_spawnRadiusMin + " .. " + s.m_spawnRadiusMax + " m, in forest " + s.m_inForest + " / outside " + s.m_outsideForest);
+                    }
+                    Changed.Add(new Saved { Data = s, Interval = s.m_spawnInterval, Chance = s.m_spawnChance, Day = s.m_spawnAtDay, Night = s.m_spawnAtNight });
                     s.m_spawnInterval = TamingRules.BoostedInterval(s.m_spawnInterval, f);
                     s.m_spawnChance = TamingRules.BoostedChance(s.m_spawnChance, f);
+                    s.m_spawnAtDay = true; s.m_spawnAtNight = true;
                 }
                 _active = Changed.Count > 0;
                 if (Time.time >= _nextLog)
                 {
                     _nextLog = Time.time + 30f;
                     ModLog.Verbose("TrollSpawnBoost: zone at " + __instance.transform.position.ToString("F0") + ", wearer " + wearer.GetPlayerName() + " without a tamed troll near: "
-                        + Changed.Count + " troll entr(y/ies) x" + f + " (first: interval " + Changed[0].Value.x + " -> " + Changed[0].Key.m_spawnInterval + " s, chance "
-                        + Changed[0].Value.y + " -> " + Changed[0].Key.m_spawnChance + " %)");
+                        + Changed.Count + " troll entr(y/ies) boosted (first: interval " + Changed[0].Interval + " -> " + Changed[0].Data.m_spawnInterval + " s, chance "
+                        + Changed[0].Chance + " -> " + Changed[0].Data.m_spawnChance + " %, day and night)");
                 }
             }
 
             static void Finalizer()
             {
-                foreach (var c in Changed) { c.Key.m_spawnInterval = c.Value.x; c.Key.m_spawnChance = c.Value.y; }
+                foreach (var c in Changed) { c.Data.m_spawnInterval = c.Interval; c.Data.m_spawnChance = c.Chance; c.Data.m_spawnAtDay = c.Day; c.Data.m_spawnAtNight = c.Night; }
                 Changed.Clear();
                 _active = false;
             }

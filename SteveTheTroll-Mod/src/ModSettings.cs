@@ -39,7 +39,7 @@ namespace SteveTheTroll
         public static readonly Tunable<float> FarmReach = new Tunable<float>("TrollTamed", "FarmReach", 2f, 1f, 6f, "Metres (flat) from a tree trunk / log / rock at which a farming troll stops walking and swings (user: 2 m, TEST-021).");
         public static readonly Tunable<float> AutoFarmSeconds = new Tunable<float>("TrollTamed", "AutoFarmSeconds", 120f, 10f, 600f, "Seconds a newly tamed troll waits at the player for an order; no order -> it farms the default priority on its own (user: 2 minutes).");
         public static readonly Tunable<float> DeadKeepSeconds = new Tunable<float>("TrollTamed", "DeadKeepSeconds", 60f, 5f, 600f, "Seconds a dead troll stays in the F6 lists before it is removed and its name is free again (user: 60 s).");
-        public static readonly Tunable<float> SpawnBoostFactor = new Tunable<float>("TrollTamed", "SpawnBoostFactor", 5f, 1f, 10f, "Troll spawns this many times as often near a slipper wearer without a tamed troll (user: 5; 1 = off).");
+        public static readonly Tunable<float> SpawnBoostSeconds = new Tunable<float>("TrollTamed", "SpawnBoostSeconds", 120f, 0f, 1800f, "Seconds between troll spawn tries (100 % chance, day and night) near a slipper wearer without a tamed troll; the game's own entry tries every 4000 s with 5 % (D-059; 0 = off).");
         public static readonly Tunable<float> SpawnBoostWearerRange = new Tunable<float>("TrollTamed", "SpawnBoostWearerRange", 150f, 20f, 300f, "Metres from a spawn zone within which a slipper wearer boosts its troll spawns (user: 150 m).");
 
         // --- T-008b backpack on tamed trolls (D-053): placement behind Spine2 in the troll's frame; the user tunes it in game (F7). ---

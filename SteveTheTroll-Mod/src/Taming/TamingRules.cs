@@ -53,20 +53,33 @@ namespace SteveTheTroll.Taming
             return trollToOwner >= 0f && trollToOwner <= range;
         }
 
-        /// D-042 troll spawn boost: interval / factor (never below 1 s), chance x factor (never above 100 %). factor &lt;= 1 changes nothing.
-        public static float BoostedInterval(float interval, float factor)
+        /// D-059 troll spawn boost: a spawn try at least every `seconds` (the game's interval when it is shorter; never below 1 s), each try
+        /// with 100 % chance (BoostedChance). seconds &lt;= 0 = off (the game's values). The old x-factor (D-042 / D-052: interval 4000 s ->
+        /// 800 s, chance 5 % -> 25 %) still meant about one troll per 53 minutes.
+        public static float BoostedInterval(float interval, float seconds)
         {
-            if (factor <= 1f) return interval;
-            float v = interval / factor;
-            return v < 1f ? 1f : v;
+            if (seconds <= 0f) return interval;
+            float v = seconds < 1f ? 1f : seconds;
+            return interval < v ? interval : v;
         }
 
-        public static float BoostedChance(float chancePercent, float factor)
+        public static float BoostedChance(float chancePercent, float seconds) { return seconds <= 0f ? chancePercent : 100f; }
+
+        /// D-059: what a farm hit of a tamed troll carries: the higher of chop / pickaxe in both (so trees, logs, rocks and ore veins all take
+        /// the full damage). Expected outcome: (chop, pickaxe) both = max(chop, pickaxe).
+        public static float FarmDamage(float chop, float pickaxe) { return chop > pickaxe ? chop : pickaxe; }
+
+        /// D-059: where on the segment a..b (x / z, metres) the point p is nearest, as 0..1 (0 for a zero-length segment).
+        public static float SegmentT(float ax, float az, float bx, float bz, float px, float pz)
         {
-            if (factor <= 1f) return chancePercent;
-            float v = chancePercent * factor;
-            return v > 100f ? 100f : v;
+            float dx = bx - ax, dz = bz - az, len2 = dx * dx + dz * dz;
+            if (len2 < 1e-6f) return 0f;
+            float t = ((px - ax) * dx + (pz - az) * dz) / len2;
+            return t < 0f ? 0f : (t > 1f ? 1f : t);
         }
+
+        /// D-059: a tamed troll's farm hits count as this tool tier (any tree / rock / vein of the game needs less).
+        public const int TamedToolTier = 100;
 
         /// D-044: "Steve 1", "Spencer 2", ...: the lowest number of `baseName` not used by a living troll's name in `taken`.
         public static string NextName(string baseName, System.Collections.Generic.IEnumerable<string> taken)
