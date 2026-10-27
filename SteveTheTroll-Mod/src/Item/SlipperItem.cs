@@ -11,7 +11,7 @@ namespace SteveTheTroll.Item
 {
     /// <summary>
     /// T-007 (D-030): the craftable item "Steve the Troll Slippers" in the utility slot (D-009). Cloned from the vanilla belt so the
-    /// utility-slot handling is the game's own; the belt's carry-weight effect and worn visual are removed, the look comes from SlipperSet.
+    /// utility-slot handling is the game's own; nothing of the belt's look stays: worn look = SlipperSet, ground look = SlipperDropModel.
     /// Stats (D-005): armor 5 (+1 per quality), max quality 4, frost resistant, workbench level 1.
     /// </summary>
     internal static class SlipperItem
@@ -54,6 +54,7 @@ namespace SteveTheTroll.Item
             var item = new CustomItem(PrefabName, BasePrefab, cfg);
             if (item.ItemPrefab == null || item.ItemDrop == null) { ModLog.Error("SlipperItem: could not clone " + BasePrefab + " - no slipper item"); return; }
             int removed = Strip(item.ItemPrefab);
+            bool dropLook = SlipperDropModel.Build(item.ItemPrefab);
             var shared = item.ItemDrop.m_itemData.m_shared;
             shared.m_itemType = ItemDrop.ItemData.ItemType.Utility;
             shared.m_armor = BaseArmor;
@@ -68,16 +69,17 @@ namespace SteveTheTroll.Item
             };
             bool added = ItemManager.Instance.AddItem(item);
             _hash = PrefabName.GetStableHashCode();
-            ModLog.Info("SlipperItem: " + PrefabName + " added " + added + " (armor " + shared.m_armor + " +" + shared.m_armorPerLevel + "/quality, max quality " + shared.m_maxQuality + ", worn belt parts removed " + removed + ", hash " + _hash + ")");
+            ModLog.Info("SlipperItem: " + PrefabName + " added " + added + " (armor " + shared.m_armor + " +" + shared.m_armorPerLevel + "/quality, max quality " + shared.m_maxQuality + ", worn belt parts removed " + removed + ", ground look slippers " + dropLook + ", hash " + _hash + ")");
             ModLog.Check("SlipperItem: armor at quality 1", shared.m_armor, BaseArmor, 0.001, "");
             ModLog.Check("SlipperItem: max quality", shared.m_maxQuality, MaxQuality, 0, "");
         }
 
-        /// Removes the belt's worn visual (children named attach*); the ground model stays. Returns how many were removed.
+        /// Removes the belt's worn visual (children named attach_*, e.g. attach_skin); the ground model "attach" stays and gets the
+        /// slipper pair (SlipperDropModel). Returns how many worn parts were removed.
         static int Strip(GameObject prefab)
         {
             var doomed = new List<GameObject>();
-            foreach (Transform child in prefab.transform) if (child.name.StartsWith("attach")) doomed.Add(child.gameObject);
+            foreach (Transform child in prefab.transform) if (child.name.StartsWith("attach_")) doomed.Add(child.gameObject);
             foreach (var go in doomed) { ModLog.Verbose("SlipperItem: removing belt part " + go.name); Object.DestroyImmediate(go, true); }
             return doomed.Count;
         }

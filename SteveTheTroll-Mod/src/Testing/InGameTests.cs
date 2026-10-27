@@ -50,9 +50,12 @@ namespace SteveTheTroll.Testing
             var s = drop.m_itemData.m_shared;
             bool frost = s.m_damageModifiers != null && s.m_damageModifiers.Exists(m => m.m_type == HitData.DamageType.Frost && m.m_modifier == HitData.DamageModifier.Resistant);
             var recipe = ObjectDB.instance.GetRecipe(drop.m_itemData);
-            string detail = "type " + s.m_itemType + ", armor " + s.m_armor + " +" + s.m_armorPerLevel + "/q, max quality " + s.m_maxQuality + ", frost resistant " + frost + ", recipe " + (recipe != null) + ", name " + s.m_name;
+            var ground = prefab.transform.Find("attach");
+            int slippers = ground != null ? (ground.Find("SlipperDropLeft") != null ? 1 : 0) + (ground.Find("SlipperDropRight") != null ? 1 : 0) : 0;
+            bool groundCol = ground != null && ground.GetComponent<BoxCollider>() != null;
+            string detail = "ground slippers " + slippers + ", ground collider " + groundCol + ", worn belt part attach_skin " + (prefab.transform.Find("attach_skin") != null) + ", type " + s.m_itemType + ", armor " + s.m_armor + " +" + s.m_armorPerLevel + "/q, max quality " + s.m_maxQuality + ", frost resistant " + frost + ", recipe " + (recipe != null) + ", name " + s.m_name;
             ModLog.Verbose("InGameTests: World_SlipperItem " + detail);
-            bool ok = s.m_itemType == ItemDrop.ItemData.ItemType.Utility && Mathf.Approximately(s.m_armor, Item.SlipperItem.BaseArmor) && s.m_maxQuality == Item.SlipperItem.MaxQuality && frost && recipe != null;
+            bool ok = s.m_itemType == ItemDrop.ItemData.ItemType.Utility && Mathf.Approximately(s.m_armor, Item.SlipperItem.BaseArmor) && s.m_maxQuality == Item.SlipperItem.MaxQuality && frost && recipe != null && slippers == 2 && groundCol && prefab.transform.Find("attach_skin") == null;
             return (ok ? "PASS: " : "FAIL: ") + detail;
         }
     }
