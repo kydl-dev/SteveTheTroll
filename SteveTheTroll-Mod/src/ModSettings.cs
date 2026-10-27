@@ -85,7 +85,7 @@ namespace SteveTheTroll
         public static readonly Tunable<float> PlushTintR = new Tunable<float>("TrollPlush", "TintR", 1.0f, 0f, 2f, "Plush colour multiplier on the troll skin, red.");
         public static readonly Tunable<float> PlushTintG = new Tunable<float>("TrollPlush", "TintG", 1.2f, 0f, 2f, "Plush colour multiplier on the troll skin, green.");
         public static readonly Tunable<float> PlushTintB = new Tunable<float>("TrollPlush", "TintB", 1.25f, 0f, 2f, "Plush colour multiplier on the troll skin, blue.");
-        public static readonly Tunable<float> PlushSmoothness = new Tunable<float>("TrollPlush", "Smoothness", 0f, 0f, 0.6f, "Shine of the plush (0 = matt fabric).");
+        public static readonly Tunable<float> PlushSmoothness = new Tunable<float>("TrollPlush", "Smoothness", 0.0727f, 0f, 0.6f, "Shine of the plush (0 = matt fabric; 0.07 = the user's TEST-008 choice).");
 
         // --- D-025 slipper on each foot (bundle prefab "SlipperParts", skinned to the player's foot + toe bones). Placement defaults = Unity fit.
         public static readonly Tunable<float> SlipperBrightness = new Tunable<float>("Slipper", "Brightness", 0.84f, 0.3f, 1.7f, "Brightness of the blue plush slipper (1 = as modelled; 0.84 = the user's choice, TEST-005).");
@@ -95,7 +95,7 @@ namespace SteveTheTroll
         public static readonly Tunable<float> SlipperSide = new Tunable<float>("Slipper", "OffsetSide", Fit.TrollFitData.SlipperSide, -0.1f, 0.1f, "Moves the slippers outward (+) / inward (-), in metres.");
         public static readonly Tunable<float> SlipperYaw = new Tunable<float>("Slipper", "Yaw", Fit.TrollFitData.SlipperYaw, -45f, 45f, "Turns the slippers around the up axis, in degrees.");
         public static readonly Tunable<float> SlipperScale = new Tunable<float>("Slipper", "Scale", Fit.TrollFitData.SlipperScale, 0.6f, 1.6f, "Size of the slippers (1 = as modelled, 0.40 m long).");
-        public static readonly Tunable<float> SlipperWidth = new Tunable<float>("Slipper", "Width", 0.88f, 0.6f, 1.3f, "Width of the slippers across the foot (1 = as modelled, 16 cm at the widest; the foot is 12.3 cm there, so 0.88 leaves ~1 cm of plush each side - measured in the Unity fit scene after TEST-007).");
+        public static readonly Tunable<float> SlipperWidth = new Tunable<float>("Slipper", "Width", Fit.TrollFitData.SlipperWidth, 0.6f, 1.3f, "Width of the slippers across the foot (1 = as modelled, 16 cm at the widest; the user's TEST-008 choice 1.05 with Scale 1.1).");
 
         /// Expected outcome: every player entry is bound (returns that check).
         public static bool Bind(ConfigFile c)

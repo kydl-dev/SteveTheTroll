@@ -32,6 +32,7 @@ namespace SteveTheTroll.Fit
         public float slipperSide;
         public float slipperYaw;
         public float slipperScale = 1f;
+        public float slipperWidth = 1f;
         public int slipperFurShells = 16;
         public float slipperFurLength = 0.006f;
 
@@ -49,7 +50,7 @@ namespace SteveTheTroll.Fit
                 var foot = left ? leftFoot : rightFoot;
                 Transform root;
                 var parts = SlipperFit.Build(prefab, transform, foot, TrollFitMath.FindDeep(player, TrollFitMath.ToeOf(foot.name)), player.forward, left,
-                    slipperForward, slipperSide, slipperUp, slipperYaw, slipperScale, out root);
+                    slipperForward, slipperSide, slipperUp, slipperYaw, slipperScale, slipperWidth, null, out root);
                 foreach (var p in parts)
                 {
                     if (p.Name == "SlipperSole" || fur == null) continue;

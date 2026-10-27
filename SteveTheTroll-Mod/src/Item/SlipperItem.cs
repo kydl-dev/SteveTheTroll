@@ -119,7 +119,24 @@ namespace SteveTheTroll.Item
             if (on) _set = SlipperSet.Spawn(transform, name);
             else if (_set != null) { _set.Despawn(); _set = null; }
             ModLog.Verbose("SlipperWearer: " + name + " slippers " + (on ? "on" : "off") + ", set " + (_set != null ? (_set.Complete ? "complete" : "incomplete") : "none"));
+            _fills = 0;
             return (_set != null) == on;
+        }
+
+        const float FillEverySeconds = 1f;
+        const int MaxFills = 60;
+        float _nextFill;
+        int _fills;
+
+        // TEST-008: worn while the world loads -> the trolls could not be made yet; add the missing parts once it is ready (1 s steps, 60 tries).
+        void Update()
+        {
+            if (!_on || _set == null || _set.Complete || _fills >= MaxFills || Time.time < _nextFill) return;
+            _nextFill = Time.time + FillEverySeconds;
+            _fills++;
+            int n = _set.Fill();
+            ModLog.Verbose("SlipperWearer: " + name + " filled the set, try " + _fills + ": " + n + "/4 parts");
+            if (_fills == MaxFills && !_set.Complete) ModLog.Warn("SlipperWearer: " + name + " set still incomplete after " + MaxFills + " tries (" + n + "/4)");
         }
 
         void OnDestroy()

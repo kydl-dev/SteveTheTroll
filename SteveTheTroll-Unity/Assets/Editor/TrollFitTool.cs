@@ -113,7 +113,7 @@ namespace SteveTheTroll.EditorTools
             rig.height = TrollFitData.Height; rig.forward = TrollFitData.Forward; rig.side = TrollFitData.Side; rig.up = TrollFitData.Up; rig.yaw = TrollFitData.Yaw;
             rig.logLength = TrollFitData.LogLength;
             rig.slipperForward = TrollFitData.SlipperForward; rig.slipperUp = TrollFitData.SlipperUp; rig.slipperSide = TrollFitData.SlipperSide;
-            rig.slipperYaw = TrollFitData.SlipperYaw; rig.slipperScale = TrollFitData.SlipperScale;
+            rig.slipperYaw = TrollFitData.SlipperYaw; rig.slipperScale = TrollFitData.SlipperScale; rig.slipperWidth = TrollFitData.SlipperWidth;
             rig.logOffset = new Vector3(TrollFitData.LogOffset[0], TrollFitData.LogOffset[1], TrollFitData.LogOffset[2]);
             rig.logEuler = new Vector3(TrollFitData.LogEuler[0], TrollFitData.LogEuler[1], TrollFitData.LogEuler[2]);
             int n = TrollFitMath.PosedBones.Length;
@@ -147,6 +147,7 @@ namespace SteveTheTroll.EditorTools
             sb.AppendLine("        public const float SlipperSide = " + F(rig.slipperSide) + ";          // m outward (mirrored per foot)");
             sb.AppendLine("        public const float SlipperYaw = " + F(rig.slipperYaw) + ";           // deg");
             sb.AppendLine("        public const float SlipperScale = " + F(rig.slipperScale) + ";         // x the modelled size (0.163 x 0.395 x 0.106 m)");
+        sb.AppendLine("        public const float SlipperWidth = " + F(rig.slipperWidth) + ";         // x across the foot only (D-031)");
             sb.AppendLine("        public const float LogLength = " + F(rig.logLength) + ";        // log length / troll height");
             sb.AppendLine("        public static readonly float[] LogOffset = { " + F(rig.logOffset.x) + ", " + F(rig.logOffset.y) + ", " + F(rig.logOffset.z) + " };   // log centre from the right hand, figure frame, / troll height");
             sb.AppendLine("        public static readonly float[] LogEuler = { " + F(rig.logEuler.x) + ", " + F(rig.logEuler.y) + ", " + F(rig.logEuler.z) + " };      // log rotation in the figure frame, degrees");

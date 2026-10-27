@@ -10,11 +10,12 @@ namespace SteveTheTroll.Fit
         public const float Side = 0.004f;               // m outward from the body (mirrored per foot)
         public const float Up = -0.09495f;                 // m from the foot bone up to the troll's lowest vertex
         public const float Yaw = 0f;                // deg around up, 0 = faces the player's forward
-        public const float SlipperForward = 0.086f;   // m along the foot's forward from the foot bone to the slipper's middle
-        public const float SlipperUp = -0.125f;       // m from the foot bone down to the slipper's ground plane
-        public const float SlipperSide = 0f;          // m outward (mirrored per foot)
-        public const float SlipperYaw = 0f;           // deg
-        public const float SlipperScale = 1f;         // x the modelled size (0.163 x 0.395 x 0.106 m)
+        public const float SlipperForward = 0.09727f;   // m along the foot's forward from the foot bone to the slipper's middle
+        public const float SlipperUp = -0.131f;       // m from the foot bone down to the slipper's ground plane
+        public const float SlipperSide = 0.00909f;          // m outward (mirrored per foot)
+        public const float SlipperYaw = 2.63637f;           // deg
+        public const float SlipperScale = 1.1f;         // x the modelled size (0.163 x 0.395 x 0.106 m)
+        public const float SlipperWidth = 1.05394f;         // x across the foot only (D-031)
         public const float LogLength = 0.55f;        // log length / troll height
         public static readonly float[] LogOffset = { -0.05071f, -0.00696f, 0.17099f };   // log centre from the right hand, figure frame, / troll height
         public static readonly float[] LogEuler = { 327.5392f, 305.5487f, 349.9485f };      // log rotation in the figure frame, degrees

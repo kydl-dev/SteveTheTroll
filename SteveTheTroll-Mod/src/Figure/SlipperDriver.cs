@@ -92,7 +92,7 @@ namespace SteveTheTroll.Figure
                 p.Renderer.gameObject.layer = _foot.gameObject.layer;
             }
             ModLog.Verbose("SlipperDriver: " + name + " built " + parts.Count + " part(s), " + _own.Count + " material copy(ies), forward " + ModSettings.SlipperForward.Value.ToString("F3")
-                + " m, up " + ModSettings.SlipperUp.Value.ToString("F3") + " m, side " + ModSettings.SlipperSide.Value.ToString("F3") + " m, yaw " + ModSettings.SlipperYaw.Value.ToString("F0") + ", scale " + ModSettings.SlipperScale.Value.ToString("F2"));
+                + " m, up " + ModSettings.SlipperUp.Value.ToString("F3") + " m, side " + ModSettings.SlipperSide.Value.ToString("F3") + " m, yaw " + ModSettings.SlipperYaw.Value.ToString("F0") + ", scale " + ModSettings.SlipperScale.Value.ToString("F2") + ", width " + ModSettings.SlipperWidth.Value.ToString("F2"));
             ModLog.Check("SlipperDriver: " + name + " parts", parts.Count, 3, 0, "");
             foreach (var p in parts) ModLog.Verbose("SlipperDriver: " + name + " " + p.Name + " skinned to " + p.Renderer.bones.Length + " bone(s): " + string.Join(", ", System.Array.ConvertAll(p.Renderer.bones, b => b != null ? b.name : "null")));
             Colour();

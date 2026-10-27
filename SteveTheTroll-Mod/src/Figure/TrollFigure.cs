@@ -208,10 +208,11 @@ namespace SteveTheTroll.Figure
             transform.SetPositionAndRotation(a + frame * _gluePos, frame * _glueRot);
         }
 
-        // D-029 flip detector on the troll's final heading.
+        // D-029 flip detector on the troll's final FORWARD (3D, not flattened: a glued troll can tilt past vertical with the foot, where a
+        // flattened heading swings 180 deg without any real jump - TEST-008, Unity sweep: smooth leg motion, largest real step 7 deg).
         void Watch()
         {
-            var fwd = TrollFitMath.Flat(transform.forward, _player.forward);
+            var fwd = transform.forward;
             float step = FitGeometry.FlipStep(_lastFwd, fwd);
             if (step > _maxStep) _maxStep = step;
             if (FitGeometry.IsJump(step)) _jumps++;

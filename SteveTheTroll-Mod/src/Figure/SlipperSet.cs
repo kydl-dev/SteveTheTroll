@@ -11,24 +11,37 @@ namespace SteveTheTroll.Figure
     internal sealed class SlipperSet
     {
         GameObject _slipLeft, _slipRight, _trollLeft, _trollRight;
+        Transform _character;
         string _owner;
 
         public bool Complete { get { return _slipLeft != null && _slipRight != null && _trollLeft != null && _trollRight != null; } }
 
-        /// Expected outcome: all four parts exist (returns the set; check Complete for partial failures, logged).
+        /// The troll copies come from ZNetScene: a player loading in with the slippers on is dressed before it exists (TEST-008).
+        public static bool WorldReady { get { return ZNetScene.instance != null; } }
+
+        /// Expected outcome: all four parts exist, or the slippers now and the trolls once the world is ready (Fill again; SlipperWearer does).
         public static SlipperSet Spawn(Transform character, string owner)
         {
-            var set = new SlipperSet { _owner = owner };
-            var leftFoot = character != null ? Utils.FindChild(character, "LeftFoot") : null;
-            var rightFoot = character != null ? Utils.FindChild(character, "RightFoot") : null;
-            ModLog.Verbose("SlipperSet: spawn on " + owner + ", feet " + (leftFoot != null) + " / " + (rightFoot != null));
-            set._slipLeft = SpawnSlipper(character, leftFoot, true, owner);
-            set._slipRight = SpawnSlipper(character, rightFoot, false, owner);
-            set._trollLeft = SpawnTroll(character, leftFoot, true, owner, Driver(set._slipLeft));
-            set._trollRight = SpawnTroll(character, rightFoot, false, owner, Driver(set._slipRight));
-            ModLog.Verbose("SlipperSet: " + owner + " slippers " + (set._slipLeft != null) + "/" + (set._slipRight != null) + ", trolls " + (set._trollLeft != null) + "/" + (set._trollRight != null));
-            ModLog.Check("SlipperSet: " + owner + " parts built", (set._slipLeft != null ? 1 : 0) + (set._slipRight != null ? 1 : 0) + (set._trollLeft != null ? 1 : 0) + (set._trollRight != null ? 1 : 0), 4, 0, "");
+            var set = new SlipperSet { _owner = owner, _character = character };
+            set.Fill();
             return set;
+        }
+
+        /// Spawns whatever part is missing. Expected outcome: returns how many parts exist now (4 = complete).
+        public int Fill()
+        {
+            var leftFoot = _character != null ? Utils.FindChild(_character, "LeftFoot") : null;
+            var rightFoot = _character != null ? Utils.FindChild(_character, "RightFoot") : null;
+            ModLog.Verbose("SlipperSet: fill on " + _owner + ", feet " + (leftFoot != null) + " / " + (rightFoot != null) + ", world ready " + WorldReady);
+            if (_slipLeft == null) _slipLeft = SpawnSlipper(_character, leftFoot, true, _owner);
+            if (_slipRight == null) _slipRight = SpawnSlipper(_character, rightFoot, false, _owner);
+            if (WorldReady && _trollLeft == null) _trollLeft = SpawnTroll(_character, leftFoot, true, _owner, Driver(_slipLeft));
+            if (WorldReady && _trollRight == null) _trollRight = SpawnTroll(_character, rightFoot, false, _owner, Driver(_slipRight));
+            int n = (_slipLeft != null ? 1 : 0) + (_slipRight != null ? 1 : 0) + (_trollLeft != null ? 1 : 0) + (_trollRight != null ? 1 : 0);
+            ModLog.Verbose("SlipperSet: " + _owner + " slippers " + (_slipLeft != null) + "/" + (_slipRight != null) + ", trolls " + (_trollLeft != null) + "/" + (_trollRight != null));
+            if (WorldReady) ModLog.Check("SlipperSet: " + _owner + " parts built", n, 4, 0, "");
+            else ModLog.Verbose("SlipperSet: " + _owner + " trolls wait for the world (ZNetScene not ready yet)");
+            return n;
         }
 
         /// Expected outcome: nothing of the set is left (returns that check).
