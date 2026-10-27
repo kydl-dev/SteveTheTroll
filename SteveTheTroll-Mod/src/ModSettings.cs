@@ -68,16 +68,16 @@ namespace SteveTheTroll
         public static readonly Tunable<float> HandFingerCurl = new Tunable<float>("TrollHand", "FingerCurl", 0f, -60f, 60f, "Extra curl of index, middle and ring finger (each joint, around the knuckle line), degrees.");
         public static readonly Tunable<float> HandThumbCurl = new Tunable<float>("TrollHand", "ThumbCurl", 0f, -60f, 60f, "Extra curl of the thumb (each joint, around the knuckle line), degrees.");
 
-        // --- D-020 fluffy fur on the mini trolls (shell fur, bundle material "TrollFur"); first values from the Unity preview fur_v2
+        // --- D-020 fluffy fur on the mini trolls (shell fur, bundle material "TrollFur"); first values from the Unity preview fur_v2, tint 5% darker (user 2026-10-27)
         public static readonly Tunable<bool> FurEnable = new Tunable<bool>("TrollFur", "Enable", true, "Fluffy fur on the mini trolls (off = the game's troll skin).");
         public static readonly Tunable<int> FurShells = new Tunable<int>("TrollFur", "Shells", 16, 4, 32, "Number of fur layers (more = smoother fur, more cost).");
         public static readonly Tunable<float> FurLength = new Tunable<float>("TrollFur", "Length", 0.01f, 0.001f, 0.04f, "Fur length in metres.");
         public static readonly Tunable<float> FurDensity = new Tunable<float>("TrollFur", "Density", 300f, 50f, 1500f, "Strands per texture unit (higher = finer fur).");
         public static readonly Tunable<float> FurThickness = new Tunable<float>("TrollFur", "Thickness", 1.0f, 0.2f, 1.5f, "Strand thickness at the root (share of a strand cell).");
         public static readonly Tunable<float> FurDroop = new Tunable<float>("TrollFur", "Droop", 0.003f, 0f, 0.02f, "How far the tips hang down, in metres.");
-        public static readonly Tunable<float> FurTintR = new Tunable<float>("TrollFur", "TintR", 0.62f, 0f, 1.5f, "Fur colour multiplier, red.");
-        public static readonly Tunable<float> FurTintG = new Tunable<float>("TrollFur", "TintG", 0.85f, 0f, 1.5f, "Fur colour multiplier, green.");
-        public static readonly Tunable<float> FurTintB = new Tunable<float>("TrollFur", "TintB", 0.95f, 0f, 1.5f, "Fur colour multiplier, blue.");
+        public static readonly Tunable<float> FurTintR = new Tunable<float>("TrollFur", "TintR", 0.589f, 0f, 1.5f, "Fur colour multiplier, red.");
+        public static readonly Tunable<float> FurTintG = new Tunable<float>("TrollFur", "TintG", 0.8075f, 0f, 1.5f, "Fur colour multiplier, green.");
+        public static readonly Tunable<float> FurTintB = new Tunable<float>("TrollFur", "TintB", 0.9025f, 0f, 1.5f, "Fur colour multiplier, blue.");
         public static readonly Tunable<float> FurTipLight = new Tunable<float>("TrollFur", "TipLight", 0.95f, 0.3f, 1.5f, "Brightness of the fur tips (1 = like the roots before darkening).");
 
         /// Expected outcome: every player entry is bound (returns that check).
