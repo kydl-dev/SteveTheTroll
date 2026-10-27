@@ -59,15 +59,16 @@ for te, dy, shrink in layout:
     y = -L / 2 + te * L + dy
     a = max(outline(te), 0.006)
     top = height(te)
-    c = (top - SOLE_T) * 0.5
-    zc = SOLE_T + c
+    c = (top - 0.004) * 0.5
+    zc = 0.004 + c
     ring = []
     for k in range(NR):
         phi = -math.pi / 2 + 2 * math.pi * k / NR    # k = 0: bottom centre
         cx, sz = math.cos(phi), math.sin(phi)
-        x = a * shrink * math.copysign(abs(cx) ** 0.55, cx)
+        lower = sz < 0                                  # v3 (user: foot skin showed between sole and upper): boxy lower half,
+        x = a * shrink * math.copysign(abs(cx) ** (0.25 if lower else 0.55), cx)   # full width down to the sole
         z = zc + c * shrink * math.copysign(abs(sz) ** 0.75, sz)
-        z = max(z, SOLE_T)                            # flat on the sole
+        z = max(z, 0.004)                             # and the wall goes down INTO the sole (sole top = SOLE_T), no gap
         ring.append(bm.verts.new((x, y, z)))
     rings.append((te, ring))
 faces_open = []
@@ -95,7 +96,7 @@ sol.offset = -1.0
 sol.material_offset = 1                              # inner wall = lining
 sol.use_rim = True
 sub = body.modifiers.new("soft", 'SUBSURF')
-sub.levels = sub.render_levels = 2
+sub.levels = sub.render_levels = 1                   # game mesh budget (level 2 = 26k verts on the upper)
 for p in me.polygons: p.use_smooth = True
 LOG.append(f"body: {NT + 1} rings x {NR}, {len(faces_open)} faces cut for the opening, dims {tuple(round(d, 3) for d in body.dimensions)}")
 
@@ -131,7 +132,8 @@ for bp, p in zip(sp.bezier_points, pts):
     bp.handle_left_type = bp.handle_right_type = 'AUTO'
 sp.use_cyclic_u = True
 crv.bevel_depth = 0.016
-crv.bevel_resolution = 6
+crv.bevel_resolution = 3
+crv.resolution_u = 3                                  # game mesh budget (v2 export: rim 12k verts -> ~2.5k)
 rim = bpy.data.objects.new("slipper_rim", crv)
 scene.collection.objects.link(rim)
 crv.materials.append(M_RIM)
@@ -217,7 +219,7 @@ views = {"front34": (Vector((0.55, 0.62, 0.38)), Vector((0, 0.02, 0.06))),
 for name, (pos, tgt) in views.items():
     cam.location = pos
     cam.rotation_euler = (tgt - pos).to_track_quat('-Z', 'Y').to_euler()
-    scene.render.filepath = os.path.join(OUT_DIR, f"slipper_v2_{name}.png")
+    scene.render.filepath = os.path.join(OUT_DIR, f"slipper_v3_{name}.png")
     bpy.ops.render.render(write_still=True)
     LOG.append(f"render {name} -> {scene.render.filepath}")
 if OUT_BLEND:

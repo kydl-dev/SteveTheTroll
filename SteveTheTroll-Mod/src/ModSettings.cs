@@ -87,6 +87,15 @@ namespace SteveTheTroll
         public static readonly Tunable<float> PlushTintB = new Tunable<float>("TrollPlush", "TintB", 1.35f, 0f, 2f, "Plush colour multiplier on the troll skin, blue.");
         public static readonly Tunable<float> PlushSmoothness = new Tunable<float>("TrollPlush", "Smoothness", 0f, 0f, 0.6f, "Shine of the plush (0 = matt fabric).");
 
+        // --- D-025 slipper on each foot (bundle prefab "SlipperParts", skinned to the player's foot + toe bones). Placement defaults = Unity fit.
+        public static readonly Tunable<float> SlipperBrightness = new Tunable<float>("Slipper", "Brightness", 1f, 0.3f, 1.7f, "Brightness of the blue plush slipper (1 = as made).");
+        public static readonly Tunable<float> SlipperRimBrightness = new Tunable<float>("Slipper", "RimBrightness", 1f, 0.3f, 1.7f, "Brightness of the fluffy rim around the opening (1 = as made).");
+        public static readonly Tunable<float> SlipperForward = new Tunable<float>("Slipper", "OffsetForward", Fit.TrollFitData.SlipperForward, -0.15f, 0.25f, "Slipper middle along the foot from the foot bone, in metres.");
+        public static readonly Tunable<float> SlipperUp = new Tunable<float>("Slipper", "OffsetUp", Fit.TrollFitData.SlipperUp, -0.25f, 0f, "Slipper ground plane below the foot bone, in metres.");
+        public static readonly Tunable<float> SlipperSide = new Tunable<float>("Slipper", "OffsetSide", Fit.TrollFitData.SlipperSide, -0.1f, 0.1f, "Moves the slippers outward (+) / inward (-), in metres.");
+        public static readonly Tunable<float> SlipperYaw = new Tunable<float>("Slipper", "Yaw", Fit.TrollFitData.SlipperYaw, -45f, 45f, "Turns the slippers around the up axis, in degrees.");
+        public static readonly Tunable<float> SlipperScale = new Tunable<float>("Slipper", "Scale", Fit.TrollFitData.SlipperScale, 0.6f, 1.6f, "Size of the slippers (1 = as modelled, 0.40 m long).");
+
         /// Expected outcome: every player entry is bound (returns that check).
         public static bool Bind(ConfigFile c)
         {

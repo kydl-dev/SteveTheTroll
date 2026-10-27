@@ -1,0 +1,126 @@
+using System.Collections.Generic;
+using Kydl.Common;
+using SteveTheTroll.Fit;
+using UnityEngine;
+
+namespace SteveTheTroll.Figure
+{
+    /// <summary>
+    /// D-025: one plush slipper on one foot. Builds it through the shared SlipperFit (same code as the Unity fit scene) from the bundle
+    /// prefab "SlipperParts", skinned to the player's own foot + toe bones. Placement Tunables rebuild it (bindposes are taken at build),
+    /// brightness Tunables only re-colour its own material copies. Logs the size / place every few seconds.
+    /// </summary>
+    internal sealed class SlipperDriver : MonoBehaviour
+    {
+        const string PrefabName = "SlipperParts";
+        const float DiagEverySeconds = 5f;
+        static GameObject _prefab;
+        static bool _prefabLooked;
+        static int _placeVersion = 1, _colourVersion = 1;
+        static bool _subscribed;
+
+        Transform _foot, _toe, _player, _root;
+        bool _left;
+        int _builtPlace, _builtColour;
+        readonly List<Material> _own = new List<Material>();
+        readonly Dictionary<Material, Color> _base = new Dictionary<Material, Color>();
+        readonly List<string> _partOf = new List<string>();
+        float _nextDiag;
+
+        static GameObject Prefab()
+        {
+            if (_prefabLooked) return _prefab;
+            _prefabLooked = true;
+            _prefab = Plugin.Bundle != null ? Plugin.Bundle.LoadAsset<GameObject>(PrefabName) : null;
+            if (_prefab == null) ModLog.Warn("SlipperDriver: prefab '" + PrefabName + "' not in the bundle (" + (Plugin.Bundle != null ? "bundle loaded" : "no bundle") + ")");
+            else ModLog.Verbose("SlipperDriver: prefab '" + PrefabName + "' loaded, " + _prefab.GetComponentsInChildren<MeshFilter>(true).Length + " part(s)");
+            return _prefab;
+        }
+
+        /// Expected outcome: foot and player are set and the slipper is built (returns that check).
+        public bool Init(Transform foot, Transform player, bool left)
+        {
+            _foot = foot; _player = player; _left = left;
+            _toe = foot != null ? foot.Find(TrollFitMath.ToeOf(foot.name)) : null;
+            Subscribe();
+            ModLog.Verbose("SlipperDriver: Init " + (left ? "left" : "right") + " foot " + (foot != null ? foot.name : "null") + ", toe " + (_toe != null ? _toe.name : "MISSING (no toe bend)"));
+            Build();
+            return _foot != null && _player != null && _root != null;
+        }
+
+        static void Subscribe()
+        {
+            if (_subscribed) return;
+            _subscribed = true;
+            foreach (var t in new[] { ModSettings.SlipperForward, ModSettings.SlipperUp, ModSettings.SlipperSide, ModSettings.SlipperYaw, ModSettings.SlipperScale })
+                t.SettingChanged += (s, e) => { _placeVersion++; ModLog.Verbose("SlipperDriver: " + s + " changed -> rebuild"); };
+            foreach (var t in new[] { ModSettings.SlipperBrightness, ModSettings.SlipperRimBrightness })
+                t.SettingChanged += (s, e) => { _colourVersion++; ModLog.Verbose("SlipperDriver: " + s + " changed -> re-colour"); };
+        }
+
+        void Build()
+        {
+            _builtPlace = _placeVersion;
+            if (_root != null) Destroy(_root.gameObject);
+            foreach (var m in _own) if (m != null) Destroy(m);
+            _own.Clear(); _base.Clear(); _partOf.Clear();
+            var parts = SlipperFit.Build(Prefab(), transform, _foot, _toe, _player.forward, _left, ModSettings.SlipperForward.Value, ModSettings.SlipperSide.Value,
+                ModSettings.SlipperUp.Value, ModSettings.SlipperYaw.Value, ModSettings.SlipperScale.Value, out _root);
+            foreach (var p in parts)
+            {
+                var mats = p.Renderer.sharedMaterials;
+                for (int i = 0; i < mats.Length; i++)
+                {
+                    if (mats[i] == null) continue;
+                    var copy = new Material(mats[i]) { name = mats[i].name + "_" + name };
+                    _base[copy] = copy.GetColor("_Color");
+                    _own.Add(copy);
+                    _partOf.Add(p.Name);
+                    mats[i] = copy;
+                }
+                p.Renderer.sharedMaterials = mats;
+                p.Renderer.gameObject.layer = _foot.gameObject.layer;
+            }
+            ModLog.Verbose("SlipperDriver: " + name + " built " + parts.Count + " part(s), " + _own.Count + " material copy(ies), forward " + ModSettings.SlipperForward.Value.ToString("F3")
+                + " m, up " + ModSettings.SlipperUp.Value.ToString("F3") + " m, side " + ModSettings.SlipperSide.Value.ToString("F3") + " m, yaw " + ModSettings.SlipperYaw.Value.ToString("F0") + ", scale " + ModSettings.SlipperScale.Value.ToString("F2"));
+            ModLog.Check("SlipperDriver: " + name + " parts", parts.Count, 3, 0, "");
+            Colour();
+        }
+
+        // Upper (and its lining) follow Brightness, the rim RimBrightness; the sole stays black.
+        void Colour()
+        {
+            _builtColour = _colourVersion;
+            for (int i = 0; i < _own.Count; i++)
+            {
+                var m = _own[i];
+                float k = _partOf[i] == "SlipperRim" ? ModSettings.SlipperRimBrightness.Value : _partOf[i] == "SlipperUpper" ? ModSettings.SlipperBrightness.Value : 1f;
+                var c = _base[m] * k;
+                c.a = 1f;
+                m.SetColor("_Color", c);
+            }
+            ModLog.Verbose("SlipperDriver: " + name + " colour: plush x" + ModSettings.SlipperBrightness.Value.ToString("F2") + ", rim x" + ModSettings.SlipperRimBrightness.Value.ToString("F2"));
+        }
+
+        void LateUpdate()
+        {
+            if (_foot == null || _player == null) { ModLog.Verbose("SlipperDriver: foot or player gone, removing " + name); Destroy(gameObject); return; }
+            if (_builtPlace != _placeVersion) Build();
+            else if (_builtColour != _colourVersion) Colour();
+            if (Time.time >= _nextDiag && _root != null)
+            {
+                _nextDiag = Time.time + DiagEverySeconds;
+                var r = _root.GetComponentInChildren<SkinnedMeshRenderer>();
+                var b = r != null ? r.bounds : new Bounds();
+                ModLog.Verbose("SlipperDriver: " + name + " bounds centre " + b.center.ToString("F2") + " size " + b.size.ToString("F3") + " m, foot " + _foot.position.ToString("F2"));
+                ModLog.CheckRange("SlipperDriver: " + name + " distance bounds centre -> foot", (b.center - _foot.position).magnitude, 0f, 0.4f, "m");
+            }
+        }
+
+        void OnDestroy()
+        {
+            foreach (var m in _own) if (m != null) Destroy(m);
+            ModLog.Verbose("SlipperDriver: " + name + " destroyed");
+        }
+    }
+}

@@ -26,7 +26,7 @@ namespace SteveTheTroll.Figure
     {
         const string LeftName = "SteveTheTroll_FigureLeft";
         const string RightName = "SteveTheTroll_FigureRight";
-        static GameObject _left, _right;
+        static GameObject _left, _right, _slipLeft, _slipRight;
 
         /// Expected outcome: both figures exist after "on", none after "off"; returns the text shown in the console.
         public static string Toggle()
@@ -35,7 +35,9 @@ namespace SteveTheTroll.Figure
             {
                 if (_left != null) Object.Destroy(_left);
                 if (_right != null) Object.Destroy(_right);
-                _left = _right = null;
+                if (_slipLeft != null) Object.Destroy(_slipLeft);
+                if (_slipRight != null) Object.Destroy(_slipRight);
+                _left = _right = _slipLeft = _slipRight = null;
                 return "troll preview off";
             }
             var player = Player.m_localPlayer;
@@ -44,11 +46,24 @@ namespace SteveTheTroll.Figure
             // both feet are looked up BEFORE any figure is parented to the player: the troll copy has bones with the same names
             var leftFoot = Utils.FindChild(player.transform, "LeftFoot");
             var rightFoot = Utils.FindChild(player.transform, "RightFoot");
+            _slipLeft = SpawnSlipper(player, leftFoot, true);
+            _slipRight = SpawnSlipper(player, rightFoot, false);
             _left = Spawn(player, leftFoot, "LeftFoot", LeftName, true);
             _right = Spawn(player, rightFoot, "RightFoot", RightName, false);
             bool ok = _left != null && _right != null;
-            ModLog.Verbose("FigurePreview: on, left " + (_left != null) + ", right " + (_right != null));
+            ModLog.Verbose("FigurePreview: on, trolls left " + (_left != null) + " right " + (_right != null) + ", slippers left " + (_slipLeft != null) + " right " + (_slipRight != null));
             return ok ? "troll preview on (tune it in KydlTools F7: TrollPlace / TrollTune)" : "troll preview failed, see the log (debug on for details)";
+        }
+
+        // D-025: the plush slipper on this foot, skinned to the player's own foot + toe bones.
+        static GameObject SpawnSlipper(Player player, Transform foot, bool left)
+        {
+            if (foot == null) { ModLog.Warn("FigurePreview: no foot for the " + (left ? "left" : "right") + " slipper"); return null; }
+            var go = new GameObject(left ? "SteveTheTroll_SlipperLeft" : "SteveTheTroll_SlipperRight");
+            go.transform.SetParent(player.transform, false);
+            bool ok = go.AddComponent<SlipperDriver>().Init(foot, player.transform, left);
+            ModLog.Verbose("FigurePreview: " + go.name + " " + (ok ? "built" : "NOT built (see warnings above)"));
+            return go;
         }
 
         static GameObject Spawn(Player player, Transform foot, string footBone, string name, bool left)

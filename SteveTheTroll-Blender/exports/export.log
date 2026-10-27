@@ -1,10 +1,10 @@
-00:01.390  blend            | Read blend: "E:\Projects\Valheim\SteveTheTroll\SteveTheTroll-Blender\source\slipper_v1.blend"
+00:01.343  blend            | Read blend: "E:\Projects\Valheim\SteveTheTroll\SteveTheTroll-Blender\source\slipper_v1.blend"
 
 FBX export starting... 'E:\\Projects\\Valheim\\SteveTheTroll\\SteveTheTroll-Blender\\exports\\Slipper.fbx'
-export finished in 0.0364 sec.
+export finished in 0.0123 sec.
 EXPORT_LOG
-SlipperUpper: 25826 verts, 25824 faces, uv 1, materials ['slipper_plush', 'slipper_lining'], dims (0.163, 0.395, 0.106)
-SlipperRim: 12288 verts, 12288 faces, uv 1, materials ['slipper_rim'], dims (0.175, 0.211, 0.083)
+SlipperUpper: 6458 verts, 6456 faces, uv 1, materials ['slipper_plush', 'slipper_lining'], dims (0.164, 0.395, 0.119)
+SlipperRim: 1920 verts, 1920 faces, uv 1, materials ['slipper_rim'], dims (0.175, 0.21, 0.085)
 SlipperSole: 2632 verts, 1866 faces, uv 1, materials ['slipper_sole'], dims (0.169, 0.389, 0.021)
 exported E:\Projects\Valheim\SteveTheTroll\SteveTheTroll-Blender\exports\Slipper.fbx
 Blender 5.2.2 LTS (hash d13f752e3b9c built 2026-09-15 01:37:04)
