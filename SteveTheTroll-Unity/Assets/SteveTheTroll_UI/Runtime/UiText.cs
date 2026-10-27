@@ -17,8 +17,8 @@ namespace SteveTheTroll.Ui
             { "stevethetroll_menu_example_switch", "Example switch" },
             { "stevethetroll_menu_example_slider", "Example value" },
             { "stevethetroll_menu_close", "Close" },
-            { "stevethetroll_slippers", "Steve the Troll Slippers" },
-            { "stevethetroll_slippers_desc", "Fluffy plush slippers, each with a tiny troll holding a log. Warm toes, brave heart." },
+            { "stevethetroll_slippers", "Fluffy Slippers" },
+            { "stevethetroll_slippers_desc", "Soft, fluffy plush slippers with a fur-lined rim. Warm toes, brave heart." },
         };
 
 

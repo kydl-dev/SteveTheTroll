@@ -53,10 +53,29 @@ namespace SteveTheTroll.Testing
             var ground = prefab.transform.Find("attach");
             int slippers = ground != null ? (ground.Find("SlipperDropLeft") != null ? 1 : 0) + (ground.Find("SlipperDropRight") != null ? 1 : 0) : 0;
             bool groundCol = ground != null && ground.GetComponent<BoxCollider>() != null;
-            string detail = "ground slippers " + slippers + ", ground collider " + groundCol + ", worn belt part attach_skin " + (prefab.transform.Find("attach_skin") != null) + ", type " + s.m_itemType + ", armor " + s.m_armor + " +" + s.m_armorPerLevel + "/q, max quality " + s.m_maxQuality + ", frost resistant " + frost + ", recipe " + (recipe != null) + ", name " + s.m_name;
+            int hide = TrollHideAmount(recipe);
+            string shown = Localization.instance != null ? Localization.instance.Localize(s.m_name) : s.m_name;
+            string detail = "ground slippers " + slippers + ", ground collider " + groundCol + ", worn belt part attach_skin " + (prefab.transform.Find("attach_skin") != null) + ", type " + s.m_itemType + ", armor " + s.m_armor + " +" + s.m_armorPerLevel + "/q, max quality " + s.m_maxQuality + ", frost resistant " + frost + ", recipe " + (recipe != null) + ", TrollHide " + hide + " (expected " + Item.SlipperItem.TrollHideCost + "), name " + s.m_name + " = '" + shown + "' (expected '" + ExpectedName + "')";
             ModLog.Verbose("InGameTests: World_SlipperItem " + detail);
-            bool ok = s.m_itemType == ItemDrop.ItemData.ItemType.Utility && Mathf.Approximately(s.m_armor, Item.SlipperItem.BaseArmor) && s.m_maxQuality == Item.SlipperItem.MaxQuality && frost && recipe != null && slippers == 2 && groundCol && prefab.transform.Find("attach_skin") == null;
+            bool ok = s.m_itemType == ItemDrop.ItemData.ItemType.Utility && Mathf.Approximately(s.m_armor, Item.SlipperItem.BaseArmor) && s.m_maxQuality == Item.SlipperItem.MaxQuality && frost && recipe != null && hide == Item.SlipperItem.TrollHideCost && shown == ExpectedName && slippers == 2 && groundCol && prefab.transform.Find("attach_skin") == null;
             return (ok ? "PASS: " : "FAIL: ") + detail;
+        }
+
+        const string ExpectedName = "Fluffy Slippers";
+
+        /// D-034: TrollHide amount in the slippers' recipe (-1 = no recipe / no TrollHide line).
+        static int TrollHideAmount(Recipe recipe)
+        {
+            int amount = -1;
+            if (recipe != null && recipe.m_resources != null)
+            {
+                foreach (var r in recipe.m_resources)
+                {
+                    if (r != null && r.m_resItem != null && r.m_resItem.name == "TrollHide") amount = r.m_amount;
+                }
+            }
+            ModLog.Verbose("InGameTests: slipper recipe TrollHide amount " + amount);
+            return amount;
         }
     }
 }

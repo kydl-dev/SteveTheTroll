@@ -10,9 +10,9 @@ using UnityEngine;
 namespace SteveTheTroll.Item
 {
     /// <summary>
-    /// T-007 (D-030): the craftable item "Steve the Troll Slippers" in the utility slot (D-009). Cloned from the vanilla belt so the
+    /// T-007 (D-030): the craftable item "Fluffy Slippers" (D-034; was "Steve the Troll Slippers") in the utility slot (D-009). Cloned from the vanilla belt so the
     /// utility-slot handling is the game's own; nothing of the belt's look stays: worn look = SlipperSet, ground look = SlipperDropModel.
-    /// Stats (D-005): armor 5 (+1 per quality), max quality 4, frost resistant, workbench level 1.
+    /// Stats (D-005): armor 5 (+1 per quality), max quality 4, frost resistant, workbench level 1. Recipe: 5 TrollHide (D-034), 4 DeerHide, 6 Blueberries.
     /// </summary>
     internal static class SlipperItem
     {
@@ -22,6 +22,8 @@ namespace SteveTheTroll.Item
         const string IconName = "SlipperIcon";
         public const float BaseArmor = 5f, ArmorPerLevel = 1f;
         public const int MaxQuality = 4;
+        /// D-034 (user 2026-10-27): 5 TrollHide (was 10).
+        public const int TrollHideCost = 5;
         static int _hash;
 
         /// The utility hash VisEquipment uses for this item (prefab name hash; 0 until the item is added).
@@ -45,9 +47,11 @@ namespace SteveTheTroll.Item
                 CraftingStation = CraftingStations.Workbench,
                 MinStationLevel = 1,
             };
-            cfg.AddRequirement(new RequirementConfig("TrollHide", 10, 2, true));
+            cfg.AddRequirement(new RequirementConfig("TrollHide", TrollHideCost, 2, true));
             cfg.AddRequirement(new RequirementConfig("DeerHide", 4, 0, true));
             cfg.AddRequirement(new RequirementConfig("Blueberries", 6, 2, false));
+            ModLog.Verbose("SlipperItem: recipe TrollHide x" + TrollHideCost + " (+2 per upgrade), DeerHide x4, Blueberries x6 (+2 per upgrade), workbench level " + cfg.MinStationLevel);
+            ModLog.Check("SlipperItem: recipe TrollHide", cfg.Requirements[0].Amount, TrollHideCost, 0, "");
             var icon = Plugin.Bundle != null ? Plugin.Bundle.LoadAsset<Sprite>(IconName) : null;
             if (icon != null) cfg.Icons = new[] { icon };
             else ModLog.Warn("SlipperItem: icon '" + IconName + "' not in the bundle (bundle loaded " + (Plugin.Bundle != null) + ") - the belt icon stays");
