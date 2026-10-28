@@ -5,7 +5,7 @@ using Kydl.Common;
 namespace SteveTheTroll.Item
 {
     /// <summary>
-    /// D-035: constant upgrade cost for the slippers only (UpgradeCost). Postfix on Piece.Requirement.GetAmount, which the crafting GUI,
+    /// D-035: constant upgrade cost for the slippers and (D-070 / D-071) the costume pieces and the club (UpgradeCost). Postfix on Piece.Requirement.GetAmount, which the crafting GUI,
     /// Player.HaveRequirementItems and Player.ConsumeResources all use (1.0.20), so the shown cost and the paid cost stay the same.
     /// The slippers' Requirement objects are found by reference in ObjectDB's recipe (re-read when ObjectDB or its recipe count changes);
     /// every other recipe keeps the vanilla amounts.
@@ -13,6 +13,15 @@ namespace SteveTheTroll.Item
     internal static class SlipperUpgradeCostPatch
     {
         static readonly HashSet<Piece.Requirement> Ours = new HashSet<Piece.Requirement>();
+        /// Items whose upgrades cost the same at every quality: the slippers (D-035) and the costume pieces + club (D-070 / D-071).
+        static readonly HashSet<string> Items = new HashSet<string> { SlipperItem.PrefabName };
+        static int _expected = SlipperItem.RequirementCount;
+
+        /// Adds an item (its prefab name and how many requirements its recipe has) to the constant-upgrade-cost list.
+        internal static void Track(string prefabName, int requirements)
+        {
+            if (Items.Add(prefabName)) { _expected += requirements; _db = null; }
+        }
         static ObjectDB _db;
         static int _recipeCount = -1;
         static int _logs;
@@ -29,11 +38,11 @@ namespace SteveTheTroll.Item
             if (db == null || db.m_recipes == null) { ModLog.Verbose("SlipperUpgradeCostPatch: no ObjectDB recipes yet"); return Ours.Count; }
             foreach (var r in db.m_recipes)
             {
-                if (r == null || r.m_item == null || r.m_item.name != SlipperItem.PrefabName || r.m_resources == null) continue;
+                if (r == null || r.m_item == null || !Items.Contains(r.m_item.name) || r.m_resources == null) continue;
                 foreach (var req in r.m_resources) if (req != null) Ours.Add(req);
             }
-            ModLog.Verbose("SlipperUpgradeCostPatch: ObjectDB recipes " + count + ", slipper requirements tracked " + Ours.Count);
-            if (count > 0) ModLog.Check("SlipperUpgradeCostPatch: slipper requirements", Ours.Count, SlipperItem.RequirementCount, 0, "");
+            ModLog.Verbose("SlipperUpgradeCostPatch: ObjectDB recipes " + count + ", requirements tracked " + Ours.Count + " for " + string.Join(", ", Items));
+            if (count > 0) ModLog.Check("SlipperUpgradeCostPatch: constant-cost requirements", Ours.Count, _expected, 0, "");
             return Ours.Count;
         }
 

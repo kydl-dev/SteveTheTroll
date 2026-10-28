@@ -137,6 +137,9 @@ namespace SteveTheTroll.Item
         SlipperSet _set;
         bool _on;
 
+        /// The slippers are worn by this character now (the costume legs hide their plush feet then).
+        public bool On { get { return _on; } }
+
         /// Expected outcome: the set exists exactly when on is true (returns that check).
         public bool Set(bool on)
         {
