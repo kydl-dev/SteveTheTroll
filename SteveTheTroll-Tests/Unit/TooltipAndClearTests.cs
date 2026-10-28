@@ -34,12 +34,33 @@ namespace SteveTheTroll.Tests.Unit
         [TestCase(null, false)]
         public void StaminaLines(string line, bool expected) { Assert.That((bool)ModAssembly.Call(Tip, "IsStaminaLine", line), Is.EqualTo(expected)); }
 
-        [TestCase(1.08f, 0.95f, 0.02f, 0.15f)]
-        [TestCase(0.80f, 0.95f, 0.02f, 0f)]
-        [TestCase(0.93f, 0.95f, 0.02f, 0f)]
-        public void FloorLift(float chestTop, float underside, float clearance, float expected)
+        // floor top face 1.123 m (TEST-040): a lid at the same height needs 2 cm; a lid inside the slab (below the top face) needs nothing
+        [TestCase(1.123f, 1.123f, 0.02f, 0.02f)]
+        [TestCase(1.13f, 1.123f, 0.02f, 0.027f)]
+        [TestCase(1.00f, 1.123f, 0.02f, 0f)]
+        [TestCase(1.103f, 1.123f, 0.02f, 0f)]
+        public void FloorLift(float chestTop, float floorTop, float clearance, float expected)
         {
-            Assert.That((float)ModAssembly.Call(Depot, "FloorLift", chestTop, underside, clearance), Is.EqualTo(expected).Within(1e-4));
+            Assert.That((float)ModAssembly.Call(Depot, "FloorLift", chestTop, floorTop, clearance), Is.EqualTo(expected).Within(1e-4));
+        }
+
+        // D-095: level ops cover the whole depot footprint (+ margin): spacing never above the op's radius, corners included
+        [TestCase(3.1f, 2.1f, 2f)]
+        [TestCase(3.1f, 2.1f, 1f)]
+        [TestCase(0.5f, 0.5f, 4f)]
+        public void LevelGrid_CoversTheFootprint(float halfX, float halfZ, float radius)
+        {
+            var pts = (System.Collections.Generic.List<Vector3>)ModAssembly.Call("SteveTheTroll.Backpack.DepotGround", "Grid", halfX, halfZ, radius);
+            // every point of the rectangle is within `radius` (square ops: per axis) of some op centre
+            for (float x = -halfX; x <= halfX + 1e-3f; x += 0.1f)
+                for (float z = -halfZ; z <= halfZ + 1e-3f; z += 0.1f)
+                {
+                    bool covered = false;
+                    foreach (var p in pts) if (System.Math.Abs(p.x - x) <= radius + 1e-3f && System.Math.Abs(p.z - z) <= radius + 1e-3f) { covered = true; break; }
+                    Assert.That(covered, Is.True, "(" + x + ", " + z + ") not levelled");
+                }
+            Assert.That(pts, Has.Some.Matches<Vector3>(p => System.Math.Abs(p.x + halfX) < 1e-3 && System.Math.Abs(p.z + halfZ) < 1e-3), "corner");
+            Assert.That(pts.Count, Is.LessThanOrEqualTo(60), "not hundreds of terrain ops");
         }
 
         [Test]

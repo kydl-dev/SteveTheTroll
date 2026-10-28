@@ -17,7 +17,7 @@ namespace SteveTheTroll.Backpack
         internal static float Height = 1.05f;
 
         const string FloorPrefab = "wood_floor";
-        const float Clearance = 0.02f;
+        const float Clearance = 0.02f, MaxLift = 0.15f;
 
         internal static void Install() { PrefabManager.OnVanillaPrefabsAvailable += Build; }
 
@@ -32,8 +32,11 @@ namespace SteveTheTroll.Backpack
             MeshSpan(floor, out floorBottom, out floorTop);
             float floorY = 0f;
             foreach (var p in DepotData.Frame) if (p.Prefab == FloorPrefab) { floorY = p.Y; break; }
-            float lift = DepotData.FloorLift(chestTop, floorY + floorBottom, Clearance);
-            ModLog.Info("DepotPrefab: chest lid at " + chestTop.ToString("F3") + " m, floor underside at " + (floorY + floorBottom).ToString("F3") + " m (top " + (floorY + floorTop).ToString("F3") + ") -> floors lifted " + lift.ToString("F3") + " m");
+            // D-095 (TEST-040: an inactive chest part measured 1.61 m and lifted the floors 0.77 m): only drawn parts count, and only the
+            // floors' TOP face has to clear the lid (a lid inside the floor slab is hidden; the flicker was the two top faces at one height)
+            float lift = DepotData.FloorLift(chestTop, floorY + floorTop, Clearance);
+            if (lift > MaxLift) { ModLog.Warn("DepotPrefab: floor lift " + lift.ToString("F3") + " m is more than " + MaxLift + " m - measuring went wrong, capped"); lift = MaxLift; }
+            ModLog.Info("DepotPrefab: chest lid at " + chestTop.ToString("F3") + " m, floor top at " + (floorY + floorTop).ToString("F3") + " m (underside " + (floorY + floorBottom).ToString("F3") + ") -> floors lifted " + lift.ToString("F3") + " m");
             return lift;
         }
 
@@ -45,7 +48,9 @@ namespace SteveTheTroll.Backpack
             {
                 if (mf.sharedMesh == null) continue;
                 var r = mf.GetComponent<Renderer>();
-                if (r == null || mf.gameObject.name.ToLowerInvariant().Contains("lod1") || mf.gameObject.name.ToLowerInvariant().Contains("lod2")) continue;
+                if (r == null || !r.enabled || !Drawn(mf.transform, prefab.transform)) continue;
+                string n = mf.gameObject.name.ToLowerInvariant();
+                if (n.Contains("lod1") || n.Contains("lod2") || n.Contains("lod3")) continue;
                 var b = mf.sharedMesh.bounds;
                 for (int k = 0; k < 8; k++)
                 {
@@ -55,6 +60,13 @@ namespace SteveTheTroll.Backpack
                 }
             }
             if (bottom > top) { bottom = 0f; top = 0f; }
+        }
+
+        // Every part between the mesh and the prefab root is switched on (worn / broken / open variants are off in the prefab).
+        static bool Drawn(Transform t, Transform root)
+        {
+            for (var c = t; c != null && c != root; c = c.parent) if (!c.gameObject.activeSelf) return false;
+            return true;
         }
 
         static void Build()

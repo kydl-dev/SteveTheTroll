@@ -8,14 +8,19 @@ namespace SteveTheTroll.Backpack
     /// <summary>
     /// D-064 (user spec): a troll with a FULL backpack that reaches its owner's bed empties it into the owner's troll depots near the bed.
     /// No depot with room -> a new one is built: on top of the latest stack while it is under 5 high, else a new stack at a spot that is
-    /// near the bed (6 .. 26 m), not inside a house (nothing built above it), free (no pieces / rocks in the footprint), on fairly level ground,
+    /// near the bed (5 .. 25 m, D-095), not inside a house (nothing built above it), free (no pieces / rocks in the footprint), on ground that
+    /// is level or that the game's level op flattens first (up to 2.5 m uneven, D-095),
     /// and that the troll can walk to within 5 m of (the game's pathfinding for the troll). Depot chests are the game's reinforced chests
     /// marked stt_depot: they need no support (stacks never crumble) and cannot be removed for their materials.
     /// </summary>
     internal static class TrollDepot
     {
         internal const string FlagKey = "stt_depot", OwnerKey = "stt_depot_owner";
-        const float SearchRadius = 40f, MinFromBed = 6f, MaxFromBed = 26f, RingStep = 2f, Reach = 5f, MaxSlope = 1f, ColumnMatch = 0.5f;
+        /// D-095 (user: "5-25m from the bed"): new depot stacks stand this far from the bed, and a full troll unloads once within MaxFromBed.
+        internal const float MinFromBed = 5f, MaxFromBed = 25f;
+        // MaxSlope: ground this even is used as is; MaxSlopeLevelled: what the level op (DepotGround) flattens first; MaxSlopeAsIs: the old
+        // limit (depot on the highest point) when the game has no level op.
+        const float SearchRadius = 40f, RingStep = 2f, Reach = 5f, MaxSlope = 0.15f, MaxSlopeLevelled = 2.5f, MaxSlopeAsIs = 1f, ColumnMatch = 0.5f;
         const int Angles = 16, MaxNewDepots = 6;
         static readonly AccessTools.FieldRef<ZNetScene, Dictionary<ZDO, ZNetView>> Instances = AccessTools.FieldRefAccess<ZNetScene, Dictionary<ZDO, ZNetView>>("m_instances");
         static readonly List<Vector3> Path = new List<Vector3>();
@@ -111,7 +116,8 @@ namespace SteveTheTroll.Backpack
         {
             at = bed;
             Quaternion rot;
-            if (!OnStack(bed, owner, out at, out rot) && !FindSpot(troll, bed, out at, out rot))
+            bool level = false;
+            if (!OnStack(bed, owner, out at, out rot) && !FindSpot(troll, bed, out at, out rot, out level))
             {
                 ModLog.Warn("TrollDepot: no spot for a troll depot near the bed at " + bed.ToString("F0"));
                 return false;
@@ -119,6 +125,7 @@ namespace SteveTheTroll.Backpack
             var framePrefab = ZNetScene.instance.GetPrefab(DepotPrefab.Name);
             var chestPrefab = ZNetScene.instance.GetPrefab(DepotData.ChestPrefab);
             if (framePrefab == null || chestPrefab == null) { ModLog.Warn("TrollDepot: prefab missing (frame " + (framePrefab != null) + ", chest " + (chestPrefab != null) + ")"); return false; }
+            if (level) DepotGround.Flatten(at, rot);                // D-095: uneven spot -> the ground is levelled first
             var frame = Object.Instantiate(framePrefab, at, rot);
             var fz = frame.GetComponent<ZNetView>().GetZDO();
             fz.Set(OwnerKey, owner);
@@ -175,9 +182,11 @@ namespace SteveTheTroll.Backpack
         static float Flat(Vector3 v) { v.y = 0f; return v.magnitude; }
 
         // Rings around the bed, nearest first. Expected outcome: true + the depot's ground position and facing (long side towards the bed).
-        static bool FindSpot(Character troll, Vector3 bed, out Vector3 at, out Quaternion rot)
+        static bool FindSpot(Character troll, Vector3 bed, out Vector3 at, out Quaternion rot, out bool level)
         {
-            at = bed; rot = Quaternion.identity;
+            at = bed; rot = Quaternion.identity; level = false;
+            bool canLevel = DepotGround.CanLevel;
+            float maxSlope = canLevel ? MaxSlopeLevelled : MaxSlopeAsIs;
             var ai = troll.GetComponent<BaseAI>();
             var agent = ai != null ? ai.m_pathAgentType : Pathfinding.AgentType.TrollSize;
             int tried = 0;
@@ -190,10 +199,11 @@ namespace SteveTheTroll.Backpack
                     var toBed = bed - p; toBed.y = 0f;
                     var q = Quaternion.LookRotation(toBed.normalized, Vector3.up);
                     tried++;
-                    Vector3 ground;
-                    if (!Level(p, q, out ground) || !Free(ground, q) || Covered(ground, q) || !Reachable(troll, agent, ground)) continue;
-                    at = ground; rot = q;
-                    ModLog.Info("TrollDepot: new stack at " + at.ToString("F1") + ", " + r.ToString("0") + " m from the bed (" + tried + " spot(s) checked)");
+                    Vector3 ground; float slope;
+                    bool flatten;
+                    if (!Level(p, q, maxSlope, canLevel, out ground, out slope, out flatten) || !Free(ground, q) || Covered(ground, q) || !Reachable(troll, agent, ground)) continue;
+                    at = ground; rot = q; level = flatten;
+                    ModLog.Info("TrollDepot: new stack at " + at.ToString("F1") + ", " + r.ToString("0") + " m from the bed, ground uneven by " + slope.ToString("F2") + " m" + (level ? " -> levelled" : "") + " (" + tried + " spot(s) checked)");
                     return true;
                 }
             }
@@ -201,21 +211,25 @@ namespace SteveTheTroll.Backpack
             return false;
         }
 
-        // Ground under the footprint: corners within MaxSlope of each other; the depot stands on the highest one.
-        static bool Level(Vector3 p, Quaternion q, out Vector3 ground)
+        // Ground under the footprint (corners, edge middles, centre): within maxSlope of each other. Flat enough as is -> the depot stands
+        // on the highest point; uneven (levelled first, D-095) -> on the mean height, so the level op cuts and fills about the same.
+        static bool Level(Vector3 p, Quaternion q, float maxSlope, bool canLevel, out Vector3 ground, out float slope, out bool flatten)
         {
-            ground = p;
+            ground = p; slope = 0f; flatten = false;
             var zs = ZoneSystem.instance;
             if (zs == null) return false;
-            float lo = float.MaxValue, hi = float.MinValue;
-            for (int k = 0; k < 5; k++)
-            {
-                var off = k == 4 ? Vector3.zero : new Vector3((k & 1) == 0 ? -DepotData.HalfX : DepotData.HalfX, 0f, (k & 2) == 0 ? -DepotData.HalfZ : DepotData.HalfZ);
-                float h = zs.GetGroundHeight(p + q * off);
-                lo = Mathf.Min(lo, h); hi = Mathf.Max(hi, h);
-            }
-            ground = new Vector3(p.x, hi, p.z);
-            return hi - lo <= MaxSlope;
+            float lo = float.MaxValue, hi = float.MinValue, sum = 0f;
+            int n = 0;
+            for (int ix = -1; ix <= 1; ix++)
+                for (int iz = -1; iz <= 1; iz++)
+                {
+                    float h = zs.GetGroundHeight(p + q * new Vector3(ix * DepotData.HalfX, 0f, iz * DepotData.HalfZ));
+                    lo = Mathf.Min(lo, h); hi = Mathf.Max(hi, h); sum += h; n++;
+                }
+            slope = hi - lo;
+            flatten = canLevel && slope > MaxSlope;
+            ground = new Vector3(p.x, flatten ? sum / n : hi, p.z);
+            return slope <= maxSlope;
         }
 
         static int _blockMask, _roofMask;

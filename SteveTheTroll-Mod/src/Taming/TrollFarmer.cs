@@ -15,7 +15,8 @@ namespace SteveTheTroll.Taming
     internal sealed class TrollFarmer : MonoBehaviour
     {
         const float SearchSeconds = 3f, LogSeconds = 5f, LookAngle = 25f, MinAttackGap = 0.3f, StuckSeconds = 8f, BadSeconds = 120f;
-        const float StepMetres = 2f, StepSeconds = 2.5f, HomeMetres = 4f, CloseWaitSeconds = 0.5f, FullCheckSeconds = 2f, AtItSlack = 1f, UnloadMetres = 4f, UnloadWalkSeconds = 60f;
+        const float StepMetres = 2f, StepSeconds = 2.5f, HomeMetres = 4f, CloseWaitSeconds = 0.5f, FullCheckSeconds = 2f, AtItSlack = 1f, UnloadMetres = 4f, UnloadWalkSeconds = 60f, StuckHomeSeconds = 8f;
+        float _homeBest = float.MaxValue, _homeBestAt;
         const int SwingsPerTry = 2, Tries = 4;
         readonly Dictionary<GameObject, float> _bad = new Dictionary<GameObject, float>();
         string _focus = "";
@@ -247,7 +248,14 @@ namespace SteveTheTroll.Taming
             var bed = profile.GetCustomSpawnPoint();
             if (_unloading) return Unload(ai, dt, moveTo, bed);
             float d = Vector3.Distance(transform.position, bed);
-            if (d > HomeMetres) { moveTo(ai, dt, bed, HomeMetres * 0.7f, false); return true; }
+            // D-095 (user: "5-25m from the bed ... don't just keep walking trying to get closer without being able to do so"): a full troll
+            // unloads as soon as it is within the depot ring (25 m); any troll counts as home once within 25 m when it stops getting closer
+            // (bed inside a house it cannot enter) for StuckHomeSeconds.
+            if (d < _homeBest - 0.5f) { _homeBest = d; _homeBestAt = Time.time; }
+            bool stuck = d <= Backpack.TrollDepot.MaxFromBed && Time.time - _homeBestAt > StuckHomeSeconds;
+            bool there = d <= HomeMetres || (_full && d <= Backpack.TrollDepot.MaxFromBed) || stuck;
+            if (!there) { moveTo(ai, dt, bed, HomeMetres * 0.7f, false); return true; }
+            if (stuck && d > HomeMetres && !_full) ModLog.Info("TrollFarmer: " + name + " gets no closer to the bed than " + d.ToString("F1") + " m - counts as home");
             if (_full)
             {
                 // D-064: at the bed with a full backpack -> to a troll depot with room (built now when there is none)
