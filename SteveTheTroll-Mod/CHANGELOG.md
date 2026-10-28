@@ -1,8 +1,5 @@
 # Changelog
 
-Newest version first. The top `## x.y.z` heading = `Plugin.ModVersion` = `manifest.json` `version_number` (integration tests check it).
-Write "not tested in game" for anything that was not run in game.
-
 ## 1.0.0
 - First release.
 - Fluffy Slippers (utility slot, armor, frost resistance) with a little plush troll on each foot.
