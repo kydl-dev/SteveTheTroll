@@ -181,7 +181,7 @@ namespace SteveTheTroll.Tests.Unit
         public void Sample_EveryRow()
         {
             var expected = new List<string> { "# stevethetroll_details_set: Steve The Troll (2 rows)", "stevethetroll_details_set_worn = 3 / 4",
-                "stevethetroll_details_set_effects = +50 % movement speed, +25 % carry weight, -50 % stamina use, Up to 5 tamed trolls" };
+                "stevethetroll_details_set_effects = +50 % movement speed, +25 % carry weight, -50 % stamina use, Up to 5 tamed trolls, -75 % stagger" };
             string[] names = { "Troll Mascot Head", "Troll Mascot Suit", "Troll Mascot Trousers" };
             string[] slots = { "helmet", "chest", "legs" };
             for (int i = 0; i < 3; i++)

@@ -89,6 +89,12 @@ namespace SteveTheTroll.Taming
         }
 
         /// The loaded troll with our id (null when far).
+        /// D-126: the game's biome name at a position ("" before the world generator exists).
+        internal static string BiomeAt(Vector3 pos)
+        {
+            return WorldGenerator.instance != null ? WorldGenerator.instance.GetBiome(pos).ToString() : "";
+        }
+
         /// D-081: a troll moved without being loaded (logout to the bed): its last known position becomes the new one (map pin, F6).
         internal static void MovedTo(string id, Vector3 pos)
         {
@@ -98,6 +104,7 @@ namespace SteveTheTroll.Taming
             if (t == null) return;
             t.X = pos.x; t.Y = pos.y; t.Z = pos.z;
             t.BedDistance = BedDistance(pos);
+            t.Biome = BiomeAt(pos);
             t.LastSeenTicks = DateTime.UtcNow.Ticks;
             Save();
         }
@@ -172,6 +179,7 @@ namespace SteveTheTroll.Taming
             var pos = c.transform.position;
             t.X = pos.x; t.Y = pos.y; t.Z = pos.z;
             t.BedDistance = BedDistance(pos);
+            t.Biome = BiomeAt(pos);                                                         // D-126: the focus drop-down's biome items
             Backpack.BackpackStore.Fill(zdo, out t.BackpackUsed, out t.BackpackSlots);     // D-096
             t.LastSeenTicks = DateTime.UtcNow.Ticks;
         }

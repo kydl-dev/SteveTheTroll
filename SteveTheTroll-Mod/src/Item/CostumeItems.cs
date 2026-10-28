@@ -41,6 +41,7 @@ namespace SteveTheTroll.Item
         public const float SetSpeed = 0.5f;                          // run 50 % faster
         public const float SetCarryPercent = 0.25f;                  // D-112: carry weight x 1.25 of the TOTAL (Megingjord included; SetCarryPatch)
         public const int SetTrollLimit = 5;
+        public const float SetStaggerResistance = Taming.BreakRules.SetStaggerResistance;   // D-125: 75 % less stagger (SE_Stats.m_staggerModifier -0.75)
         public const float SetStamina = -0.5f;                       // D-077: -50 % stamina use (run, jump, attack, block, dodge, swim, sneak, tools)
         static StatusEffect _set;
 
@@ -102,8 +103,10 @@ namespace SteveTheTroll.Item
             se.m_runStaminaDrainModifier = SetStamina; se.m_jumpStaminaUseModifier = SetStamina; se.m_attackStaminaUseModifier = SetStamina;
             se.m_blockStaminaUseModifier = SetStamina; se.m_dodgeStaminaUseModifier = SetStamina; se.m_swimStaminaUseModifier = SetStamina;
             se.m_sneakStaminaUseModifier = SetStamina; se.m_homeItemStaminaUseModifier = SetStamina;
+            se.m_staggerModifier = -SetStaggerResistance;                 // D-125 (user: "stagger resistance 75%"): the game adds damage x modifier (SEMan.ModifyStagger) and shows the tooltip line
             bool added = ItemManager.Instance.AddStatusEffect(new CustomStatusEffect(se, false));
-            ModLog.Verbose("CostumeItems: set effect " + SetEffectName + " added " + added + " (icon " + (se.m_icon != null) + ", speed +" + (SetSpeed * 100f) + " %, carry +" + (SetCarryPercent * 100f) + " %, stamina use " + (SetStamina * 100f) + " %, trolls " + SetTrollLimit + ")");
+            ModLog.Verbose("CostumeItems: set effect " + SetEffectName + " added " + added + " (icon " + (se.m_icon != null) + ", speed +" + (SetSpeed * 100f) + " %, carry +" + (SetCarryPercent * 100f) + " %, stamina use " + (SetStamina * 100f) + " %, trolls " + SetTrollLimit + ", stagger " + (se.m_staggerModifier * 100f).ToString("0") + " %)");
+            ModLog.Check("CostumeItems: set stagger modifier", se.m_staggerModifier, -0.75f, 0.0001, "");
             ModLog.Check("CostumeItems: set effect registered", added ? 1 : 0, 1, 0, "");
             return se;
         }

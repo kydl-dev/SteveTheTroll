@@ -65,6 +65,7 @@ namespace SteveTheTroll.Ui
             d.SetEffects.Add("+25 % carry weight");
             d.SetEffects.Add("-50 % stamina use");
             d.SetEffects.Add("Up to 5 tamed trolls");
+            d.SetEffects.Add("-75 % stagger");
             d.ClubRecipe.Add(new SlipperData.Ingredient("Core wood", 15, 5));
             d.ClubRecipe.Add(new SlipperData.Ingredient("Fine wood", 15, 5));
             d.ClubRecipe.Add(new SlipperData.Ingredient("Thistle", 10, 0));

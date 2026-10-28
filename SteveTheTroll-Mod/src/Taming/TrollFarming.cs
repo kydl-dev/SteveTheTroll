@@ -73,7 +73,7 @@ namespace SteveTheTroll.Taming
             return f != null ? f.CurrentItem : "";
         }
 
-        /// The source's drop table contains `item` (through felled trees and their log pieces, 4 levels deep).
+        /// The source's drop table contains `item` (through felled trees and their log pieces and what a destructible turns into, 4 levels deep).
         internal static bool Yields(GameObject source, string item, int depth = 0)
         {
             if (source == null || depth > 4) return false;
@@ -86,7 +86,10 @@ namespace SteveTheTroll.Taming
             var rock = source.GetComponent<MineRock>();
             if (rock != null) return Has(rock.m_dropItems, item);
             var drop = source.GetComponent<DropOnDestroyed>();
-            return drop != null && Has(drop.m_dropWhenDestroyed, item);
+            if (drop != null && Has(drop.m_dropWhenDestroyed, item)) return true;
+            // D-126: a destructible that turns into another object (giant_skull -> giant_skull_frac -> BlackMarble)
+            var des = source.GetComponent<Destructible>();
+            return des != null && des.m_spawnWhenDestroyed != null && Yields(des.m_spawnWhenDestroyed, item, depth + 1);
         }
 
         static bool Has(DropTable t, string item)

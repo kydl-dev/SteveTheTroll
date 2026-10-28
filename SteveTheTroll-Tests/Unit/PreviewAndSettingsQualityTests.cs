@@ -118,6 +118,7 @@ namespace SteveTheTroll.Tests.Unit
                 "+" + F(Const("SetCarryPercent") * 100f) + " % carry weight",
                 F(Const("SetStamina") * 100f) + " % stamina use",
                 "Up to " + (int)ModAssembly.GetStatic(Items, "SetTrollLimit") + " tamed trolls",
+                "-" + F(Const("SetStaggerResistance") * 100f) + " % stagger",
             }));
             Assert.That(d.SetSize, Is.EqualTo((int)ModAssembly.GetStatic(Items, "SetSize")));
         }
@@ -161,7 +162,7 @@ namespace SteveTheTroll.Tests.Unit
         public void ToString_SampleAndPiece()
         {
             var d = CostumeData.Sample();
-            Assert.That(d.ToString(), Is.EqualTo("costume 3 piece(s), set 'Steve The Troll' 3/4 worn, 4 effect(s), club 'Troll Club' 150/50/50"));
+            Assert.That(d.ToString(), Is.EqualTo("costume 3 piece(s), set 'Steve The Troll' 3/4 worn, 5 effect(s), club 'Troll Club' 150/50/50"));
             Assert.That(d.Pieces[1].ToString(), Is.EqualTo("Troll Mascot Suit (armor 20 +5/q, max q4, worn q1, recipe 3)"));
         }
     }

@@ -27,6 +27,28 @@ namespace SteveTheTroll.Ui
             new KeyValuePair<string, string>("Wood", "stevethetroll_focus_wood"),
         };
 
+        /// D-126 (user: "make this stuff be visible in the drop down menu if the trolls are in those biomes"): items offered only while the
+        /// troll is in the biome (the game's Heightmap.Biome name). Value, text key, biome. Not in the default priority (D-058 stays).
+        internal static readonly IList<string[]> BiomeChoices = new List<string[]>
+        {
+            new[] { "Blackwood", "stevethetroll_focus_blackwood", "AshLands" },      // scorched trees
+            new[] { "BlackMarble", "stevethetroll_focus_blackmarble", "Mistlands" },  // giant remains (skull / ribs -> frac)
+            new[] { "Timberwood", "stevethetroll_focus_timberwood", "DeepNorth" },   // Deep North trees
+            new[] { "GoldOre", "stevethetroll_focus_goldore", "DeepNorth" },         // petrified Gammeltroll (DN_gammeltrollFrac*)
+        };
+
+        /// The drop-down values for a troll in `biome`: every Choice, then the biome's items, then `current` when it is a biome item of
+        /// another biome (so a troll that walked out keeps showing its focus). Expected outcome: never empty, no duplicates.
+        internal static List<string> ChoicesFor(string biome, string current)
+        {
+            var list = new List<string>();
+            foreach (var c in Choices) list.Add(c.Key);
+            foreach (var b in BiomeChoices) if (string.Equals(b[2], biome, StringComparison.OrdinalIgnoreCase) && !list.Contains(b[0])) list.Add(b[0]);
+            string cur = Normalize(current);
+            if (cur.Length > 0 && !list.Contains(cur)) list.Add(cur);
+            return list;
+        }
+
         /// One step of the default priority: the item and the source prefabs it is taken from (name starts with one of them, any case;
         /// empty = any source that drops the item).
         internal struct Goal
@@ -56,6 +78,7 @@ namespace SteveTheTroll.Ui
         {
             "Wood", "FineWood", "RoundLog", "ElderBark", "YggdrasilWood", "Blackwood",
             "CopperOre", "TinOre", "IronOre", "SilverOre", "CopperScrap", "IronScrap", "BlackMetalScrap", "FlametalOre", "FlametalOreNew",
+            "BlackMarble", "Timberwood", "GoldOre",                                   // D-126: the biome focus items
         };
 
         /// The source prefab (name without "(Clone)") counts for the goal. Expected outcome: true when the goal has no source list or the
@@ -82,6 +105,7 @@ namespace SteveTheTroll.Ui
         internal static string Normalize(string value)
         {
             foreach (var c in Choices) if (c.Key == (value ?? None)) return c.Key;
+            foreach (var b in BiomeChoices) if (b[0] == value) return b[0];
             return None;
         }
 
@@ -90,6 +114,7 @@ namespace SteveTheTroll.Ui
         {
             string v = Normalize(value);
             foreach (var c in Choices) if (c.Key == v) return c.Value;
+            foreach (var b in BiomeChoices) if (b[0] == v) return b[1];
             return Choices[0].Value;
         }
 

@@ -25,7 +25,7 @@ namespace SteveTheTroll.Ui
             var trolls = new System.Collections.Generic.List<TrollInfo>
             {
                 new TrollInfo { Id = "1:1", Number = 1, Loaded = true, Status = "stevethetroll_status_following", Focus = "CopperOre", Health = 1800, MaxHealth = 1800, DamageFactor = 3f, X = 412, Y = 77, Z = 268, BedDistance = 35 },
-                new TrollInfo { Id = "1:2", Number = 2, Name = "Steve", Stars = 1, Status = "stevethetroll_status_staying", Health = 2400, MaxHealth = 3600, DamageFactor = 3f, X = 800, Y = 60, Z = -120, BedDistance = 420,
+                new TrollInfo { Id = "1:2", Number = 2, Name = "Steve", Stars = 1, Biome = "AshLands", Status = "stevethetroll_status_staying", Health = 2400, MaxHealth = 3600, DamageFactor = 3f, X = 800, Y = 60, Z = -120, BedDistance = 420,
                     LastSeenTicks = System.DateTime.UtcNow.Ticks - System.TimeSpan.TicksPerMinute * 12 },
             };
             root.Add(MainMenuView.Build(UiText.English, () => Debug.Log("[MenuPreview] close pressed"), SlipperData.Sample(), null, null, trolls,

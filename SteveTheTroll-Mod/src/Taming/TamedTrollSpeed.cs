@@ -20,7 +20,7 @@ namespace SteveTheTroll.Taming
         static readonly AccessTools.FieldRef<CharacterAnimEvent, Character> EventCharacter = AccessTools.FieldRefAccess<CharacterAnimEvent, Character>("m_character");
         static readonly AccessTools.FieldRef<CharacterAnimEvent, Animator> EventAnimator = AccessTools.FieldRefAccess<CharacterAnimEvent, Animator>("m_animator");
 
-        sealed class Base { public float Speed, Walk, Run, Factor; }
+        sealed class Base { public float Speed, Walk, Run, Factor, Swim, SwimDepth; }
         static readonly Dictionary<int, Base> Bases = new Dictionary<int, Base>();     // by GameObject instance id: the instance's own vanilla speeds (a few per session)
         static float _nextLog;
 
@@ -38,7 +38,7 @@ namespace SteveTheTroll.Taming
             Base b;
             if (!Bases.TryGetValue(id, out b))
             {
-                b = new Base { Speed = c.m_speed, Walk = c.m_walkSpeed, Run = c.m_runSpeed, Factor = 1f };
+                b = new Base { Speed = c.m_speed, Walk = c.m_walkSpeed, Run = c.m_runSpeed, Factor = 1f, Swim = c.m_swimSpeed, SwimDepth = c.m_swimDepth };
                 Bases[id] = b;
                 ModLog.Verbose("TamedTrollSpeed: " + c.name + " vanilla speeds jog " + b.Speed + ", walk " + b.Walk + ", run " + b.Run + " m/s");
             }
@@ -53,6 +53,34 @@ namespace SteveTheTroll.Taming
             return Mathf.Approximately(c.m_runSpeed, b.Run * factor);
         }
 
+        static float _nextSwimLog;
+
+        /// D-122 (user: "swim animation for trolls; up to 300% of base run speed while swimming; when following a slower player, keep up with
+        /// the player's speed"; "Swim from shallower water"): a tamed troll starts swimming at SwimDepth (game 5 m) and swims at
+        /// BreakRules.SwimSpeed (vanilla run x SwimRunFactor; following the player: the player's speed). `tamed` false puts the vanilla values
+        /// back. The troll animator's own In Water state (inWater) plays while the game says it swims. Expected outcome: the swim speed in use.
+        internal static float Swim(Character c, bool tamed)
+        {
+            if (c == null) return 0f;
+            Base b;
+            if (!Bases.TryGetValue(c.gameObject.GetInstanceID(), out b)) return c.m_swimSpeed;
+            if (!tamed) { c.m_swimSpeed = b.Swim; c.m_swimDepth = b.SwimDepth; return c.m_swimSpeed; }
+            c.m_swimDepth = Mathf.Min(b.SwimDepth, ModSettings.SwimDepth.Value);
+            var ai = c.GetComponent<MonsterAI>();
+            var target = ai != null ? ai.GetFollowTarget() : null;
+            var player = target != null ? target.GetComponent<Player>() : null;
+            float playerSpeed = player != null ? player.GetVelocity().magnitude : 0f;
+            float want = BreakRules.SwimSpeed(b.Swim, b.Run, ModSettings.SwimRunFactor.Value, player != null, playerSpeed);
+            if (!Mathf.Approximately(c.m_swimSpeed, want)) c.m_swimSpeed = want;
+            if (c.IsSwimming() && Time.time >= _nextSwimLog)
+            {
+                _nextSwimLog = Time.time + 5f;
+                ModLog.Verbose("TamedTrollSpeed: " + c.name + " swims at " + want.ToString("F1") + " m/s (vanilla swim " + b.Swim.ToString("F1") + ", run " + b.Run.ToString("F1")
+                    + ", following " + (player != null ? player.GetPlayerName() + " at " + playerSpeed.ToString("F1") + " m/s" : "nobody") + "), swim depth " + c.m_swimDepth.ToString("F1") + " m");
+            }
+            return c.m_swimSpeed;
+        }
+
         [HarmonyPatch(typeof(CharacterAnimEvent), nameof(CharacterAnimEvent.CustomFixedUpdate))]
         static class Free
         {
@@ -63,11 +91,12 @@ namespace SteveTheTroll.Taming
                 bool tamed = TamedTrollStats.IsTamedTroll(c);
                 if (!tamed)
                 {
-                    if (Bases.ContainsKey(c.gameObject.GetInstanceID())) Movement(c, 1f);   // no longer tamed / mod off: vanilla again
+                    if (Bases.ContainsKey(c.gameObject.GetInstanceID())) { Movement(c, 1f); Swim(c, false); }   // no longer tamed / mod off: vanilla again
                     return;
                 }
                 float f = Factor;
                 Movement(c, f);
+                Swim(c, true);
                 var anim = EventAnimator(__instance);
                 if (anim == null) return;
                 float was = anim.speed;

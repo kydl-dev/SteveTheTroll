@@ -81,7 +81,7 @@ namespace SteveTheTroll.Testing
                 && club.m_itemData.m_shared.m_secondaryAttack != null && club.m_itemData.m_shared.m_secondaryAttack.m_attackAnimation == Item.CostumeItems.ClubSecondaryAnimation
                 && Mathf.Approximately(club.m_itemData.m_shared.m_secondaryAttack.m_damageMultiplier, Item.CostumeItems.ClubSecondaryDamage) && club.transform.Find("attach/stt_club_model") != null && db.GetRecipe(club.m_itemData) != null;
             var se = db.GetStatusEffect(Item.CostumeItems.SetEffectName.GetStableHashCode()) as SE_Stats;
-            bool seOk = se != null && se.m_icon != null && Mathf.Approximately(se.m_speedModifier, Item.CostumeItems.SetSpeed) && se.m_addMaxCarryWeight == 0f && Mathf.Approximately(se.m_runStaminaDrainModifier, Item.CostumeItems.SetStamina);
+            bool seOk = se != null && se.m_icon != null && Mathf.Approximately(se.m_speedModifier, Item.CostumeItems.SetSpeed) && se.m_addMaxCarryWeight == 0f && Mathf.Approximately(se.m_runStaminaDrainModifier, Item.CostumeItems.SetStamina) && Mathf.Approximately(se.m_staggerModifier, -Item.CostumeItems.SetStaggerResistance);   // D-125
             sb.Append("slippers in the set " + slippersInSet + ", club " + clubOk + ", set effect " + seOk);
             ModLog.Verbose("InGameTests: World_CostumeItems " + sb);
             return (ok && slippersInSet && clubOk && seOk ? "PASS: " : "FAIL: ") + sb;

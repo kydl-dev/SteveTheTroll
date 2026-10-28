@@ -83,13 +83,12 @@ namespace SteveTheTroll.Ui
             if (trolls == null || trolls.Count == 0) { tab.Add(UiControls.Note(text("stevethetroll_troll_none"))); return tab; }
             tab.Add(Row(Cell(text("stevethetroll_troll_name"), NameWidth, true), Cell(text("stevethetroll_troll_doing"), StatusWidth, true),
                 Cell(text("stevethetroll_focus_label"), FocusWidth, true), Cell("", GoWidth, true), Cell(text("stevethetroll_troll_farming"), -1f, true)));
-            var values = new List<string>();
-            foreach (var c in TrollFocus.Choices) values.Add(c.Key);
             foreach (var t in trolls)
             {
                 var troll = t;
                 string doing = text(t.Status) + (t.Loaded ? "" : " *");
-                var drop = UiControls.Dropdown(values, TrollFocus.Normalize(t.Focus), v => text(TrollFocus.KeyOf(v)), v =>
+                // D-126: the choices + the items of the biome the troll is in
+                var drop = UiControls.Dropdown(TrollFocus.ChoicesFor(t.Biome, t.Focus), TrollFocus.Normalize(t.Focus), v => text(TrollFocus.KeyOf(v)), v =>
                 {
                     string n = TrollFocus.Normalize(v);
                     UiLog.Verbose("MainMenuView: focus of " + troll.Shown(null) + " [" + troll.Id + "] -> '" + n + "'");

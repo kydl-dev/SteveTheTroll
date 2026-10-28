@@ -33,6 +33,7 @@ namespace SteveTheTroll.Ui
             d.SetEffects.Add(string.Format(Loc.T("stevethetroll_set_carry"), (Item.CostumeItems.SetCarryPercent * 100f).ToString("0")));
             d.SetEffects.Add(string.Format(Loc.T("stevethetroll_set_stamina"), (Item.CostumeItems.SetStamina * 100f).ToString("0")));
             d.SetEffects.Add(string.Format(Loc.T("stevethetroll_set_trolls"), Item.CostumeItems.SetTrollLimit));
+            d.SetEffects.Add(string.Format(Loc.T("stevethetroll_set_stagger"), (Item.CostumeItems.SetStaggerResistance * 100f).ToString("0")));   // D-125
 
             var club = Drop(db, Item.CostumeItems.ClubName);
             if (club != null)

@@ -44,7 +44,7 @@ namespace SteveTheTroll.Taming
             string focus = Ui.TrollFocus.Normalize(view.GetZDO().GetString(TrollRegistry.FocusKey, ""));
             if (source != null)
             {
-                bool ok = TrollFarming.BeginOn(troll, source, focus);
+                bool ok = TrollWalls.IsWall(source) ? TrollWalls.Order(troll, source, focus) : TrollFarming.BeginOn(troll, source, focus);   // D-124: walls only for 2-star trolls
                 if (ok) Ui.Notify.Show(Loc.T("stevethetroll_order_break", shown, Localization.instance.Localize(Name(source))), Ui.Notify.Kind.Farm);
                 return ok;
             }
@@ -97,7 +97,7 @@ namespace SteveTheTroll.Taming
                 }
                 var view = col.GetComponentInParent<ZNetView>();
                 var g = view != null ? view.gameObject : null;
-                if (g != null && (g.GetComponent<TreeBase>() != null || g.GetComponent<TreeLog>() != null || g.GetComponent<MineRock5>() != null || g.GetComponent<MineRock>() != null || g.GetComponent<Destructible>() != null))
+                if (g != null && (g.GetComponent<TreeBase>() != null || g.GetComponent<TreeLog>() != null || g.GetComponent<MineRock5>() != null || g.GetComponent<MineRock>() != null || g.GetComponent<Destructible>() != null || TrollWalls.IsWall(g)))   // D-124: fortress walls too
                 {
                     source = g;
                     ModLog.Info("TrollOrders: attack key on " + g.name + " (" + TrollFarming.KindOf(g) + ") at " + Hits[i].distance.ToString("F1") + " m");
