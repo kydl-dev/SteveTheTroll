@@ -151,6 +151,27 @@ namespace SteveTheTroll.Tests.Unit
         }
 
         [Test]
+        public void Settings_Clamp_PutsTheLightsIntoTheirRanges()
+        {
+            var s = new ViewerSettings { KeyLight = 5f, FillLight = -1f, Ambient = float.NaN };
+            int changed = s.Clamp();
+            Assert.That(changed, Is.EqualTo(3));
+            Assert.That(s.KeyLight, Is.EqualTo(ViewerSettings.KeyLightMax));
+            Assert.That(s.FillLight, Is.EqualTo(ViewerSettings.FillLightMin));
+            Assert.That(s.Ambient, Is.EqualTo(ViewerSettings.AmbientDefault));
+        }
+
+        [Test]
+        public void DefaultLight_KeepsAPaleColourBelowWhite()
+        {
+            // user 2026-10-28: the pale-blue costume (brightest channel ~0.85 with the fur tips' x1.3) showed white: key + fill + ambient
+            // facing the camera must stay below 1 for such a colour (the view has no tone mapping, every channel above 1 clips)
+            float lit = ViewerSettings.KeyLightDefault + ViewerSettings.FillLightDefault + ViewerSettings.AmbientDefault;
+            Assert.That(0.85f * lit, Is.LessThan(1f), "light sum " + lit);
+            Assert.That(lit, Is.GreaterThan(0.8f), "and not too dark either");
+        }
+
+        [Test]
         public void CameraAxes_FrontView_RightIsX_UpIsY()
         {
             ViewerMath.CameraAxes(0f, 0f, out float rx, out float ry, out float rz, out float ux, out float uy, out float uz);

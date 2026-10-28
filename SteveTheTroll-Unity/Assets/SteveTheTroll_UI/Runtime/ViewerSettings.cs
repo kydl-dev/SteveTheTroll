@@ -21,6 +21,10 @@ namespace SteveTheTroll.Ui
         internal const float StartPitchMin = -89f, StartPitchMax = 89f, StartPitchDefault = 12f;         // degrees the default view looks down
         internal const float PanSpeedMin = 0.2f, PanSpeedMax = 3f, PanSpeedDefault = 1f;                 // right-drag: 1 = the model follows the mouse exactly
         internal const float PanLimitMin = 0f, PanLimitMax = 3f, PanLimitDefault = 0.8f;                 // how far the model may be moved, in view heights at zoom 1 (0.8 = about half a model length)
+        // Studio light of the view (user 2026-10-28: the pale-blue costume showed white - 1.1 + 0.45 + 0.37 ambient clipped every channel; no tone mapping here)
+        internal const float KeyLightMin = 0f, KeyLightMax = 2f, KeyLightDefault = 0.7f;                 // main light, from up-left behind the camera
+        internal const float FillLightMin = 0f, FillLightMax = 1.5f, FillLightDefault = 0.25f;           // softer light from the right
+        internal const float AmbientMin = 0f, AmbientMax = 1f, AmbientDefault = 0.22f;                   // grey level of the light from everywhere
 
         internal float RotateSpeed = RotateSpeedDefault;
         internal float ZoomStep = ZoomStepDefault;
@@ -33,6 +37,9 @@ namespace SteveTheTroll.Ui
         internal float StartPitch = StartPitchDefault;
         internal float PanSpeed = PanSpeedDefault;
         internal float PanLimit = PanLimitDefault;
+        internal float KeyLight = KeyLightDefault;
+        internal float FillLight = FillLightDefault;
+        internal float Ambient = AmbientDefault;
 
         /// Puts every value into its range (NaN = the default). Expected outcome: returns how many values were changed.
         internal int Clamp(Action<string> log = null)
@@ -49,6 +56,9 @@ namespace SteveTheTroll.Ui
             StartPitch = Fix("StartPitch", StartPitch, StartPitchMin, StartPitchMax, StartPitchDefault, ref changed, log);
             PanSpeed = Fix("PanSpeed", PanSpeed, PanSpeedMin, PanSpeedMax, PanSpeedDefault, ref changed, log);
             PanLimit = Fix("PanLimit", PanLimit, PanLimitMin, PanLimitMax, PanLimitDefault, ref changed, log);
+            KeyLight = Fix("KeyLight", KeyLight, KeyLightMin, KeyLightMax, KeyLightDefault, ref changed, log);
+            FillLight = Fix("FillLight", FillLight, FillLightMin, FillLightMax, FillLightDefault, ref changed, log);
+            Ambient = Fix("Ambient", Ambient, AmbientMin, AmbientMax, AmbientDefault, ref changed, log);
             if (StartPitch > PitchLimit || StartPitch < -PitchLimit)
             {
                 float was = StartPitch;
@@ -77,7 +87,7 @@ namespace SteveTheTroll.Ui
         {
             return "rotate " + F(RotateSpeed) + " deg/px, zoom step x" + F(ZoomStep) + ", zoom " + F(ZoomMin) + ".." + F(ZoomMax) + ", pitch limit " + F(PitchLimit)
                 + " deg, frame " + F(FrameHeight) + " px, margin " + F(Margin) + ", start yaw " + F(StartYaw) + " / pitch " + F(StartPitch) + " deg, pan speed x" + F(PanSpeed)
-                + ", pan limit " + F(PanLimit) + " view heights";
+                + ", pan limit " + F(PanLimit) + " view heights, light key " + F(KeyLight) + " / fill " + F(FillLight) + " / ambient " + F(Ambient);
         }
     }
 }

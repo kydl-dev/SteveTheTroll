@@ -21,7 +21,6 @@ namespace SteveTheTroll.Ui
         internal static readonly Vector3 Park = new Vector3(0f, -1500f, 0f);
         internal const float FieldOfView = 30f;
         const float LogEverySeconds = 0.5f;
-        static readonly Color Ambient = new Color(0.38f, 0.36f, 0.34f);
 
         readonly Func<string, GameObject> _makeModel;
         readonly ViewerSettings _settings;
@@ -74,8 +73,8 @@ namespace SteveTheTroll.Ui
             _camera.useOcclusionCulling = false;
             _camera.renderingPath = RenderingPath.Forward;              // light culling masks + MSAA only work in forward (the game may run deferred)
 
-            AddLight(camGo.transform, "KeyLight", new Vector3(25f, 30f, 0f), 1.1f);     // from up-left behind the camera
-            AddLight(camGo.transform, "FillLight", new Vector3(-10f, -45f, 0f), 0.45f); // softer from the right
+            AddLight(camGo.transform, "KeyLight", new Vector3(25f, 30f, 0f), _settings.KeyLight);    // from up-left behind the camera
+            AddLight(camGo.transform, "FillLight", new Vector3(-10f, -45f, 0f), _settings.FillLight); // softer from the right
             Log("ModelViewerRig: made at " + V(_park) + ", layer " + _layer + ", fov " + FieldOfView + " deg, background " + background + ", " + _settings);
         }
 
@@ -216,9 +215,12 @@ namespace SteveTheTroll.Ui
             bool fog = RenderSettings.fog;
             try
             {
+                // intensities read every render: ViewerSettings can change while the view is open (Tunables in game)
+                if (_lights.Count > 0 && _lights[0] != null) _lights[0].intensity = _settings.KeyLight;
+                if (_lights.Count > 1 && _lights[1] != null) _lights[1].intensity = _settings.FillLight;
                 for (int i = 0; i < _lights.Count; i++) { if (_lights[i] != null) _lights[i].enabled = true; }
                 RenderSettings.ambientMode = AmbientMode.Flat;
-                RenderSettings.ambientLight = Ambient;
+                RenderSettings.ambientLight = new Color(_settings.Ambient, _settings.Ambient * 0.95f, _settings.Ambient * 0.9f);   // slightly warm grey
                 RenderSettings.ambientIntensity = 1f;
                 RenderSettings.fog = false;
                 _camera.Render();

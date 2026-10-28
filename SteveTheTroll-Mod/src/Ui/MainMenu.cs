@@ -14,6 +14,7 @@ namespace SteveTheTroll.Ui
     {
         const string LockName = "SteveTheTroll.MainMenu";
         static VisualElement _window;
+        static ViewerSettings _viewer;
 
         internal static bool IsOpen { get { return _window != null; } }
 
@@ -32,6 +33,7 @@ namespace SteveTheTroll.Ui
                 Open();
                 return IsOpen;
             }
+            Light(_viewer);
             if (ZInput.GetKeyDown(key, true) || ZInput.GetKeyDown(KeyCode.Escape, true)) Close("key");
             return IsOpen;
         }
@@ -40,7 +42,8 @@ namespace SteveTheTroll.Ui
         {
             var root = UiKit.Root;
             if (root == null) { ModLog.Warn("MainMenu: UI Toolkit is not available, the menu cannot open"); return; }
-            var viewer = new ViewerSettings();
+            var viewer = _viewer = new ViewerSettings();
+            Light(viewer);
             var data = SlipperMenuData.Read();
             var trolls = Taming.TrollRegistry.Trolls();
             var costume = CostumeMenuData.Read();
@@ -52,10 +55,20 @@ namespace SteveTheTroll.Ui
             ModLog.Verbose("MainMenu: opened (slippers data " + (data != null) + ", " + trolls.Count + " troll(s))");
         }
 
+        /// The views' studio light from the Tunables (F7): read at open and every frame while open, the rig uses it on its next render.
+        static void Light(ViewerSettings v)
+        {
+            if (v == null) return;
+            v.KeyLight = ModSettings.ViewerKeyLight.Value;
+            v.FillLight = ModSettings.ViewerFillLight.Value;
+            v.Ambient = ModSettings.ViewerAmbient.Value;
+        }
+
         static void Close(string why)
         {
             if (_window != null) _window.RemoveFromHierarchy();
             _window = null;
+            _viewer = null;
             UiInputLock.Release(LockName);
             ModLog.Verbose("MainMenu: closed (" + why + ")");
         }

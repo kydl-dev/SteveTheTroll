@@ -59,6 +59,11 @@ namespace SteveTheTroll
         public static readonly Tunable<float> DepotMaxFromBed = new Tunable<float>("TrollBackpack", "DepotMaxFromBed", 50f, 10f, 150f, "D-097: farthest a new troll depot stands from the bed (m); a full troll unloads once this close.");
         public static readonly Tunable<float> SpawnBedMinRadius = new Tunable<float>("TrollTamed", "SpawnBedMinRadius", 200f, 0f, 1000f, "D-094: boosted trolls spawn in any biome, but never closer than this to the bed (they must not wreck the house before they are tamed). Black Forest trolls closer than this do not spawn either while the boost runs.");
 
+        // --- F6 menu 3D views (slippers / costume): studio light, live in F7 (user 2026-10-28: the costume looked white). Ranges = Ui.ViewerSettings. ---
+        public static readonly Tunable<float> ViewerKeyLight = new Tunable<float>("Viewer", "KeyLight", Ui.ViewerSettings.KeyLightDefault, Ui.ViewerSettings.KeyLightMin, Ui.ViewerSettings.KeyLightMax, "Main light of the F6 3D views (slippers, costume).");
+        public static readonly Tunable<float> ViewerFillLight = new Tunable<float>("Viewer", "FillLight", Ui.ViewerSettings.FillLightDefault, Ui.ViewerSettings.FillLightMin, Ui.ViewerSettings.FillLightMax, "Softer second light of the F6 3D views.");
+        public static readonly Tunable<float> ViewerAmbient = new Tunable<float>("Viewer", "Ambient", Ui.ViewerSettings.AmbientDefault, Ui.ViewerSettings.AmbientMin, Ui.ViewerSettings.AmbientMax, "Light from everywhere in the F6 3D views (grey level 0 - 1).");
+
         // --- T-008b backpack on tamed trolls (D-053): placement behind Spine2 in the troll's frame; the user tunes it in game (F7). ---
         public static readonly Tunable<float> PickupRange = new Tunable<float>("TrollBackpack", "PickupRange", 50f, 5f, 100f, "Metres around a tamed troll from which wood, ores and scrap go into its backpack (user: 50 m).");
         public static readonly Tunable<float> BackpackScale = new Tunable<float>("TrollBackpack", "Scale", 0.671f, 0.1f, 1.5f, "World size of the backpack (1 = the construction's 2 x 2 x 2 m).");
