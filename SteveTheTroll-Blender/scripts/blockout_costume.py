@@ -1,11 +1,13 @@
 # T-009a block-out of the troll MASCOT costume (Claude-Agent-2, 2026-10-28, D-069 .. D-072).
 # v2 (user on v1): body less round, troll-like shading (darker back / shoulders / head top / outer limbs, lighter belly),
-# a real hand that grips the club (palm + curled fingers + thumb around the trunk); the club itself stays. Primitives only: proportions + colours for
+# a real hand that grips the club (palm + curled fingers + thumb around the trunk); the club itself stays.
+# v3 (user on v2: "2 rows of fingers on the bat"): each finger is ONE curled band (part of a ring round the trunk) from the palm
+# round the front, the thumb one shorter band from the other side - a fist, not two columns of balls. Primitives only: proportions + colours for
 # the user's sign-off of the one-sentence look (user "yes" 2026-10-28). Not the final model, not exported.
 # Run: blender -b --factory-startup --python scripts/blockout_costume.py -- <out_prefix> <out_blend>
 # Axes: Blender Z up, the player faces +Y, the player's RIGHT is +X. 1 unit = 1 m. Player ~1.8 m (head top), shoulders ~1.45 m.
-import bpy, sys, math
-from mathutils import Vector
+import bpy, bmesh, sys, math
+from mathutils import Vector, Matrix
 
 argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
 OUT = argv[0] if argv else "//costume_blockout"
@@ -50,6 +52,23 @@ def add(kind, name, loc, scale=(1, 1, 1), rot=(0, 0, 0), material="blue", **kw):
     if kind in ("sphere", "torus", "cyl", "cone"):
         bpy.ops.object.shade_smooth()
     log.append(f"{name}: loc={tuple(round(v,3) for v in loc)} scale={scale}")
+    return o
+
+def arc(name, centre, z_axis, x_axis, radius, thick, a0, a1, material="blue"):
+    """Part of a ring round z_axis (angles a0..a1 deg from x_axis towards z x x): a curled finger round the club."""
+    bpy.ops.mesh.primitive_torus_add(major_radius=radius, minor_radius=thick, major_segments=64, minor_segments=12)
+    o = bpy.context.active_object
+    o.name = name
+    bm = bmesh.new(); bm.from_mesh(o.data)
+    lo, hi = math.radians(a0), math.radians(a1)
+    gone = [v for v in bm.verts if not (lo <= math.atan2(v.co.y, v.co.x) <= hi)]
+    bmesh.ops.delete(bm, geom=gone, context="VERTS")
+    bm.to_mesh(o.data); bm.free()
+    z = Vector(z_axis).normalized(); x = Vector(x_axis).normalized(); y = z.cross(x).normalized()
+    o.matrix_world = Matrix.Translation(Vector(centre)) @ Matrix((x, y, z)).transposed().to_4x4()
+    o.data.materials.append(M[material])
+    bpy.ops.object.shade_smooth()
+    log.append(f"{name}: arc {a0}..{a1} deg r={radius:.3f}")
     return o
 
 def limb(name, a, b, r, material="blue"):
@@ -97,17 +116,14 @@ limb("fore_arm_R", tuple(elbow_R), tuple(palm + n * 0.05), 0.095)
 pq = n.to_track_quat("Z", "X").to_euler()
 add("sphere", "palm_R", tuple(palm), (0.075, 0.09, 0.05), tuple(math.degrees(a) for a in pq), "blue_light")
 FR = 0.032                                                         # finger thickness (plush)
-for k, t in enumerate((0.06, 0.02, -0.02, -0.06)):                 # 4 fingers along the trunk, curled round it
-    for j, ang in enumerate((35, 95, 155)):
-        a = math.radians(ang)
-        p = grip + up * t + (n * math.cos(a) + b * math.sin(a)) * (grip_r + FR * 0.8)
-        add("sphere", f"finger_R{k}_{j}", tuple(p), (FR, FR, FR), material="blue")
-    tip = grip + up * t + (n * math.cos(math.radians(190)) + b * math.sin(math.radians(190))) * (grip_r + FR * 0.6)
-    add("cone", f"claw_R{k}", tuple(tip), (0.012, 0.012, 0.025), tuple(math.degrees(x) for x in (-n).to_track_quat("Z", "Y").to_euler()), "claw")
-for j, ang in enumerate((-40, -100)):                              # thumb from the other side
-    a = math.radians(ang)
-    p = grip + up * 0.10 + (n * math.cos(a) + b * math.sin(a)) * (grip_r + FR * 0.9)
-    add("sphere", f"thumb_R{j}", tuple(p), (FR * 1.1, FR * 1.1, FR * 1.1), material="blue")
+FINGER_END = 200                                                   # deg round the trunk from the palm side
+for k, t in enumerate((0.075, 0.025, -0.025, -0.075)):             # 4 fingers next to each other along the trunk, one band each
+    arc(f"finger_R{k}", tuple(grip + up * t), up, n, grip_r + FR * 0.85, FR * (1.0 if k < 3 else 0.85), 0, FINGER_END)
+    a = math.radians(FINGER_END)
+    tip = grip + up * t + (n * math.cos(a) + b * math.sin(a)) * (grip_r + FR * 0.85)
+    tang = (-n * math.sin(a) + b * math.cos(a)).normalized()
+    add("cone", f"claw_R{k}", tuple(tip + tang * 0.012), (0.012, 0.012, 0.022), tuple(math.degrees(x) for x in tang.to_track_quat("Z", "Y").to_euler()), "claw")
+arc("thumb_R", tuple(grip + up * 0.12), up, n, grip_r + FR * 0.95, FR * 1.15, -115, 0)   # thumb from the other side, above the fingers
 log.append(f"right hand: grip={tuple(round(v,3) for v in grip)} trunk radius at grip {grip_r:.3f} m, palm {tuple(round(v,3) for v in palm)}")
 
 # left arm: relaxed, open plush hand
