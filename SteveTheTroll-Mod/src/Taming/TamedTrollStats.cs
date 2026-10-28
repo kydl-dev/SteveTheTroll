@@ -73,7 +73,7 @@ namespace SteveTheTroll.Taming
                 {
                     var tame = __instance.GetComponent<Tameable>();
                     TrollDefend.UnderAttack(tame != null && !string.IsNullOrEmpty(tame.GetText()) ? tame.GetText() : __instance.name);
-                    TrollGuard.Order(__instance, a);                // D-065: hit -> attacks the attacker at once
+                    TrollCounter.OnHit(__instance, a);             // D-084: slams first, then 15 s of farming on, then it goes for the attacker
                 }
             }
         }

@@ -20,11 +20,21 @@ namespace SteveTheTroll.Taming
         }
 
         /// D-076: as DecideWild, with a troll limit: ownNear = the wearer's own tamed trolls within OwnTrollRange, limit = how many it may have
-        /// (1, or 5 with the full costume set). Expected outcome: CountDown while ownNear is below the limit, else CallOwnTroll.
+        /// (1, or 5 with the full costume set). Expected outcome: CountDown while ownNear is below the limit, else Nothing (D-084: no own troll is called to follow any more).
         public static Step DecideWildLimit(float wearerDistance, float tameRange, int ownNear, int limit)
         {
             if (wearerDistance < 0f || wearerDistance > tameRange) return Step.Nothing;
-            return ownNear >= (limit < 1 ? 1 : limit) ? Step.CallOwnTroll : Step.CountDown;
+            return ownNear >= (limit < 1 ? 1 : limit) ? Step.Nothing : Step.CountDown;     // D-084: at the limit the wild troll is left alone (no follow call)
+        }
+
+        /// D-084 boosted troll spawns around the wearer's bed: the game's max spawned for a zone within BedRadius of the bed. 0 = no boost
+        /// (vanilla rates and limits): slippers with 0 or 1 tamed troll(s) in total -> 2; the whole set (3 pieces + slippers) with at most
+        /// 5 tamed trolls in total -> 6. Expected outcome: the cap (2 / 6) or 0.
+        public static int SpawnCap(bool slippers, bool fullSet, int tamedTotal, float zoneToBed, float bedRadius)
+        {
+            if (!slippers || zoneToBed < 0f || zoneToBed > bedRadius) return 0;
+            if (fullSet && tamedTotal <= 5) return 6;
+            return tamedTotal <= 1 ? 2 : 0;
         }
 
         /// Seconds left after one tick (never below 0).

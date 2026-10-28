@@ -13,7 +13,7 @@ namespace SteveTheTroll.Taming
     /// </summary>
     internal sealed class TrollRage : MonoBehaviour
     {
-        const float SeekRange = 15f, Reach = 3.5f, Gap = 0.05f, LookAngle = 40f, LogSeconds = 2f;
+        const float SeekRange = 15f, Gap = 0.05f, LookAngle = 40f, LogSeconds = 2f, WeaponReach = 2.5f;
         static readonly Dictionary<long, float> HitAt = new Dictionary<long, float>();
         static readonly Dictionary<long, Character> Attacker = new Dictionary<long, Character>();
         long _owner;
@@ -68,16 +68,24 @@ namespace SteveTheTroll.Taming
                 _nextLog = Time.time + LogSeconds;
                 ModLog.Verbose("TrollRage: " + name + " -> " + (target != null ? target.name + " " + d.ToString("F1") + " m" : "no creature near - stays by the player, swinging") + ", " + _swings + " swing(s)");
             }
-            if (d > Reach) moveTo(ai, dt, point, Reach * 0.6f, true);
+            // D-084 (TEST-036: 0 swings - a wild troll's centre stays 5-9 m away, the old 3.5 m reach was never met): reach = both body radii + the weapon
+            float reach = target != null ? ReachTo(me, target) : 2.5f;
+            if (d > reach) moveTo(ai, dt, point, reach * 0.8f, true);
             else ai.StopMoving();
             lookAt(ai, point);
-            if (me.InAttack() || Time.time < _next || d > Reach + 1.5f) return true;
+            if (me.InAttack() || Time.time < _next || d > reach + 1f) return true;
             if (target != null && !ai.IsLookingAt(point, LookAngle, false)) return true;
             var weapon = TrollWeapons.Pick(me, Attack.AttackType.Horizontal, false) ?? TrollWeapons.Pick(me, Attack.AttackType.Vertical, false);
             if (weapon == null) return true;
             if (!me.IsItemEquiped(weapon)) me.EquipItem(weapon, false);
             if (me.StartAttack(target, false)) { _swings++; _next = Time.time + Gap; }
             return true;
+        }
+
+        /// D-084: centre-to-centre distance from which the troll's swing reaches the other creature (both body radii + WeaponReach).
+        internal static float ReachTo(Character me, Character other)
+        {
+            return (me != null ? me.GetRadius() : 1f) + (other != null ? other.GetRadius() : 0.5f) + WeaponReach;
         }
 
         // The nearest living hostile creature within SeekRange of the troll; the player's last attacker when nothing else is near.

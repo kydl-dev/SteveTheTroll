@@ -122,7 +122,37 @@ namespace SteveTheTroll.Taming
         internal static string LastScan = "";
         internal static bool LastScanFull;
 
+        /// D-084 performance: one farm-source candidate near a troll (gathered once per search, then filtered per goal / range).
+        internal struct Candidate { internal GameObject G; internal FarmSourceCache Src; internal Vector3 Pos; }
+
+        /// D-084 performance: every farm source within range of center in ONE pass over the scene (a search used to walk all networked
+        /// objects once per goal and range - up to 30 passes over ~5000 objects). Expected outcome: the list filled (cleared first).
+        internal static List<Candidate> Gather(Vector3 center, float range, List<Candidate> into)
+        {
+            into.Clear();
+            var scene = ZNetScene.instance;
+            var all = scene != null ? Instances(scene) : null;
+            if (all == null) return into;
+            float r2 = range * range;
+            foreach (var v in all.Values)
+            {
+                if (v == null) continue;
+                var pos = v.transform.position;
+                if ((pos - center).sqrMagnitude > r2) continue;
+                var src = Source(v);
+                if (src == null || src.Collider == null) continue;
+                into.Add(new Candidate { G = v.gameObject, Src = src, Pos = pos });
+            }
+            return into;
+        }
+
         internal static GameObject Find(Vector3 center, Vector3 from, Ui.TrollFocus.Goal goal, int tier, float range, out Collider hit, System.Func<GameObject, bool> skip = null)
+        {
+            return FindIn(Gather(center, range, new List<Candidate>()), center, from, goal, tier, range, out hit, skip);
+        }
+
+        /// The best source of the goal among gathered candidates within range of center (see Find). Expected outcome: the source or null.
+        internal static GameObject FindIn(List<Candidate> cands, Vector3 center, Vector3 from, Ui.TrollFocus.Goal goal, int tier, float range, out Collider hit, System.Func<GameObject, bool> skip = null)
         {
             string item = goal.Item;
             hit = null;
@@ -130,29 +160,26 @@ namespace SteveTheTroll.Taming
             float bestD = float.MaxValue, r2 = range * range;
             var counts = new int[3];
             int seen = 0, skipped = 0;
-            var scene = ZNetScene.instance;
-            var all = scene != null ? Instances(scene) : null;
-            if (all == null) { LastScan = "no ZNetScene"; LastScanFull = false; return null; }
-            foreach (var v in all.Values)
+            foreach (var c in cands)
             {
-                if (v == null) continue;
-                var pos = v.transform.position;
-                if ((pos - center).sqrMagnitude > r2) continue;
+                if (c.G == null || (c.Pos - center).sqrMagnitude > r2) continue;
                 seen++;
-                var src = Source(v);
-                if (src == null || src.Collider == null) continue;
-                var g = v.gameObject;
-                if ((skip != null && skip(g)) || src.MinTier > tier || !src.Yields(item) || !Ui.TrollFocus.SourceMatches(goal, src.PrefabName)) continue;
+                var src = c.Src;
+                if ((skip != null && skip(c.G)) || src.MinTier > tier || !src.Yields(item) || !Ui.TrollFocus.SourceMatches(goal, src.PrefabName)) continue;
                 if (src.Tier == TamingRules.TierNone) { skipped++; continue; }
                 counts[src.Tier]++;
-                var at = src.IsTree ? pos : src.Collider.bounds.ClosestPoint(from);     // trees: the trunk (TEST-020)
+                var at = src.IsTree ? c.Pos : src.Collider.bounds.ClosestPoint(from);     // trees: the trunk (TEST-020)
                 float d = TamingRules.SourceScore(src.Tier, Vector3.Distance(from, at));
-                if (d < bestD) { bestD = d; best = g; hit = src.Collider; }
+                if (d < bestD) { bestD = d; best = c.G; hit = src.Collider; }
             }
-            LastScan = "objects " + seen + ", logs/rocks " + counts[0] + ", trees " + counts[1] + ", other " + counts[2] + ", too small " + skipped
-                + ", best " + (best != null ? best.name + " (" + KindOf(best) + ")" : "none");
             LastScanFull = false;
-            ModLog.Verbose("TrollFarming: search '" + item + "'" + (goal.Sources.Length > 0 ? " from " + string.Join(" / ", goal.Sources) : "") + " within " + range + " m of " + center.ToString("F0") + ": " + LastScan + (best != null ? " score " + bestD.ToString("F1") : ""));
+            if (ModLog.DebugOn)
+            {
+                LastScan = "sources " + seen + ", logs/rocks " + counts[0] + ", trees " + counts[1] + ", other " + counts[2] + ", too small " + skipped
+                    + ", best " + (best != null ? best.name + " (" + KindOf(best) + ")" : "none");
+                ModLog.Verbose("TrollFarming: search '" + item + "'" + (goal.Sources.Length > 0 ? " from " + string.Join(" / ", goal.Sources) : "") + " within " + range + " m of " + center.ToString("F0") + ": " + LastScan + (best != null ? " score " + bestD.ToString("F1") : ""));
+            }
+            else LastScan = "best " + (best != null ? best.name : "none");
             return best;
         }
 
@@ -231,6 +258,10 @@ namespace SteveTheTroll.Taming
                 if (slam != null && slam.Step(__instance, LookAt)) { __result = true; return false; }   // D-065: ground slams first
                 var rage = __instance.GetComponent<TrollRage>();
                 if (rage != null && rage.Step(__instance, dt, MoveTo, LookAt)) { __result = true; return false; }   // D-082: rage while the player is hit
+                var chase = __instance.GetComponent<TrollChase>();
+                if (chase != null && chase.Step(__instance, dt, MoveTo, LookAt)) { __result = true; return false; }   // D-084: goes for the one that hit it
+                var self = __instance.GetComponent<Character>();
+                if (TrollCounter.Ignoring(self) && !TrollGuard.HasForced(self) && __instance.GetComponent<TrollFarmer>() != null) TrollGuard.ClearTarget(__instance);   // D-084: hits ignored, keeps farming
                 TrollGuard.Keep(__instance);                                                                     // D-066: the forced target stays
                 if (TrollHold.Holds(__instance)) { __instance.StopMoving(); __result = true; return false; }     // D-063
                 var f = __instance.GetComponent<TrollFarmer>();

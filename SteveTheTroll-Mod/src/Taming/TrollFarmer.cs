@@ -22,6 +22,7 @@ namespace SteveTheTroll.Taming
         Vector3 _centre;
         GameObject _target;
         Collider _hit;
+        readonly List<TrollFarming.Candidate> _cands = new List<TrollFarming.Candidate>();
         float _nextSearch, _nextAttack, _nextLog, _stuckSeconds, _lastDist = float.MaxValue, _stepUntil;
         Vector3 _stepTo;
         int _attacks, _swingsThisTry, _try = 1, _dry;
@@ -42,6 +43,14 @@ namespace SteveTheTroll.Taming
         }
 
         /// T-008e: no farming, straight to the bed (silent).
+        /// D-084: after a fight - look for the nearest source again from where the troll stands now. Expected outcome: none (the next step searches).
+        internal void Retarget()
+        {
+            _target = null; _hit = null; _nextSearch = 0f; _home = _full;
+            ResetTries();
+            _centre = transform.position;
+        }
+
         internal void SetupHome()
         {
             Setup("", transform.position, true);
@@ -199,12 +208,13 @@ namespace SteveTheTroll.Taming
             ResetTries();
             int tier = TamingRules.TamedToolTier;      // D-059: tamed trolls break any tree / rock (TrollFarmHits)
             var goals = Ui.TrollFocus.SearchOrder(_focus);         // D-058: focus item first, then the default priority
+            TrollFarming.Gather(transform.position, ModSettings.FarmMaxRange.Value, _cands);   // D-084: one pass over the scene per search
             foreach (var range in new[] { ModSettings.FarmQuickRange.Value, ModSettings.FarmRange.Value, ModSettings.FarmMaxRange.Value })
             {
                 foreach (var goal in goals)
                 {
                     string item = goal.Item;
-                    _target = TrollFarming.Find(transform.position, transform.position, goal, tier, range, out _hit, IsBad);
+                    _target = TrollFarming.FindIn(_cands, transform.position, transform.position, goal, tier, range, out _hit, IsBad);
                     if (_target == null) continue;
                     string was = CurrentItem;
                     CurrentItem = item;

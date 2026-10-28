@@ -13,14 +13,13 @@ namespace SteveTheTroll.Taming
     /// </summary>
     internal static class TrollGuard
     {
-        const float TickSeconds = 0.25f, SlamCooldown = 15f;
+        const float TickSeconds = 0.25f;
         static readonly System.Action<MonsterAI, Character> SetTarget = AccessTools.MethodDelegate<System.Action<MonsterAI, Character>>(AccessTools.Method(typeof(MonsterAI), "SetTarget"));
         static readonly AccessTools.FieldRef<MonsterAI, Character> Target = AccessTools.FieldRefAccess<MonsterAI, Character>("m_targetCreature");
-        static readonly Dictionary<int, float> LastSlam = new Dictionary<int, float>();
         // D-066 (TEST-029: the target was set again 4x a second - the game's AI dropped it for its own choice / out of sight): the creature
         // the troll must fight, re-applied before each AI step (Keep) until it is dead, tamed or further than KeepRange.
         static readonly Dictionary<int, Character> Forced = new Dictionary<int, Character>();
-        const float KeepRange = 70f, SlamRange = 12f;
+        const float KeepRange = 70f;
         static readonly List<Character> Attackers = new List<Character>();
         static float _next;
 
@@ -57,6 +56,27 @@ namespace SteveTheTroll.Taming
             return true;
         }
 
+        /// D-084: the troll's forced target is dropped (its counter is over / it ignores hits). Expected outcome: whether one was dropped.
+        internal static bool Forget(Character troll)
+        {
+            return troll != null && Forced.Remove(troll.GetInstanceID());
+        }
+
+        /// D-084: the game AI's target is cleared (the troll keeps farming). Expected outcome: whether it had one.
+        internal static bool ClearTarget(MonsterAI ai)
+        {
+            if (ai == null || Target(ai) == null) return false;
+            Target(ai) = null;
+            return true;
+        }
+
+        /// D-084: the troll has a forced target from the player's defence (TrollDefend / the attack key). Expected outcome: true when it has one.
+        internal static bool HasForced(Character troll)
+        {
+            Character t;
+            return troll != null && Forced.TryGetValue(troll.GetInstanceID(), out t) && t != null && !t.IsDead();
+        }
+
         /// Before each AI step of the troll (TrollFarming.Steer, owner): put the forced target back. Expected outcome: true while it has one.
         internal static bool Keep(MonsterAI ai)
         {
@@ -82,14 +102,13 @@ namespace SteveTheTroll.Taming
             // itself is within DefendRange of the player (as TrollDefend), and no attacker further than KeepRange from the troll
             bool ownerNear = Vector3.Distance(owner.transform.position, troll.transform.position) <= range;
             Attackers.Clear();
-            Vector3 sum = Vector3.zero;
             foreach (var m in Character.GetAllCharacters())
             {
                 if (m == null || m.IsDead() || m.IsPlayer() || m.IsTamed() || m == troll) continue;
                 var mai = m.GetComponent<MonsterAI>();
                 if (mai == null) continue;
                 var t = Target(mai);
-                if (t != owner && t != troll) continue;
+                if (t != owner) continue;                                 // D-084: creatures that go for the troll itself: TrollCounter (on its hits)
                 if (t == owner && !TamingRules.DefendsOwner(wears, raid)) continue;            // T-008e: slippers off -> it defends the player only during a raid
                 if (t == owner && !ownerNear) continue;
                 // D-081 (TEST-034: a farming Steve ran 60 m back home to a greydwarf that only aimed at the player): a creature that goes for the
@@ -98,18 +117,10 @@ namespace SteveTheTroll.Taming
                 if (Vector3.Distance(m.transform.position, troll.transform.position) > KeepRange) continue;
                 if (Vector3.Distance(m.transform.position, troll.transform.position) > range && Vector3.Distance(m.transform.position, owner.transform.position) > range) continue;
                 Attackers.Add(m);
-                sum += m.transform.position;
             }
             if (Attackers.Count == 0) return false;
             int id = troll.GetInstanceID();
-            float last;
-            int close = 0;
-            foreach (var m in Attackers) if (Vector3.Distance(m.transform.position, troll.transform.position) <= SlamRange) close++;   // D-066: a crowd far away gets no slams
-            if (TamingRules.Slam(close, ModSettings.CrowdCount.Value, LastSlam.TryGetValue(id, out last) ? Time.time - last : -1f, SlamCooldown))
-            {
-                LastSlam[id] = Time.time;
-                if (TrollSlam.Begin(troll, owner, sum / Attackers.Count, Attackers.Count) != null) return true;
-            }
+            // D-084: no crowd slams here any more (TrollCounter answers hits on the troll, TrollRage hits on the player)
             Character cur;
             Forced.TryGetValue(id, out cur);
             if (cur != null && Attackers.Contains(cur)) return false;     // keeps the one it fights while that one still attacks

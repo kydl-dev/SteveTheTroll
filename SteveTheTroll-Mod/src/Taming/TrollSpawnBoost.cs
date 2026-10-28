@@ -6,7 +6,8 @@ using UnityEngine;
 namespace SteveTheTroll.Taming
 {
     /// <summary>
-    /// D-042: while a slipper wearer whose own tamed-troll limit is not met (no own tamed troll within OwnTrollRange) is near a spawn zone, its
+    /// D-042 / D-084: within SpawnBedRadius (500 m) of the local slipper wearer's bed (cap 2 with the slippers and 0-1 tamed trolls, 6 with the set
+    /// and up to 5; TamingRules.SpawnCap), its
     /// Troll spawn entries try every SpawnBoostSeconds with 100 % chance, day and night (D-059, TamingRules) and the trolls spawned that way get the
     /// game's "Log" item set (the troll's random sets: 2x Unarmed, 1x Log). Runs where the game spawns: the owner of the zone's SpawnSystem.
     /// The SpawnData values are changed only for the duration of SpawnSystem.UpdateSpawnList and put back in a finalizer.
@@ -29,16 +30,24 @@ namespace SteveTheTroll.Taming
         }
         static float _nextLog;
 
-        /// A wearer within WearerRange of the zone (D-081: always - also at the troll limit, for troll hide; the game's max spawned = limit + 1). Expected outcome: that wearer, or null.
-        static Player BoostingWearer(Vector3 zone)
+        /// D-084 (user: 500 m around the bed - 2 with the slippers and 0 or 1 tamed troll, 6 with the whole set and up to 5 tamed trolls,
+        /// outside that the game's own rates): the local wearer when this zone is within SpawnBedRadius of its bed, with the cap for the zone.
+        /// Expected outcome: that wearer (cap 2 / 6), or null (cap 0 = vanilla). Only the local player's bed is known here (multiplayer: each
+        /// player's own client boosts the zones it runs).
+        static Player BoostingWearer(Vector3 zone, out int cap, out string why)
         {
-            foreach (var p in Player.GetAllPlayers())
-            {
-                if (p == null || p.IsDead() || !TrollTaming.Wears(p)) continue;
-                if (Vector3.Distance(p.transform.position, zone) > ModSettings.SpawnBoostWearerRange.Value) continue;
-                return p;
-            }
-            return null;
+            cap = 0; why = "";
+            var p = Player.m_localPlayer;
+            if (p == null || p.IsDead() || !TrollTaming.Wears(p)) { why = "no local slipper wearer"; return null; }
+            var profile = Game.instance != null ? Game.instance.GetPlayerProfile() : null;
+            if (profile == null || !profile.HaveCustomSpawnPoint()) { why = "no bed"; return null; }
+            var bed = profile.GetCustomSpawnPoint();
+            var flat = zone - bed; flat.y = 0f;
+            bool set = TrollTaming.TrollLimit(p) > 1;
+            int tamed = TrollRegistry.LivingCount();
+            cap = TamingRules.SpawnCap(true, set, tamed, flat.magnitude, ModSettings.SpawnBedRadius.Value);
+            why = "bed " + flat.magnitude.ToString("0") + " m (radius " + ModSettings.SpawnBedRadius.Value + "), set " + set + ", tamed " + tamed;
+            return cap > 0 ? p : null;
         }
 
         [HarmonyPatch(typeof(SpawnSystem), "UpdateSpawnList")]
@@ -52,7 +61,8 @@ namespace SteveTheTroll.Taming
                 bool hasTroll = false;
                 foreach (var s in spawners) if (s != null && s.m_enabled && s.m_prefab != null && s.m_prefab.name == TrollTaming.TrollPrefab) { hasTroll = true; break; }
                 if (!hasTroll) return;
-                var wearer = BoostingWearer(__instance.transform.position);
+                int cap; string why;
+                var wearer = BoostingWearer(__instance.transform.position, out cap, out why);
                 if (wearer == null) return;
                 float f = ModSettings.SpawnBoostSeconds.Value;
                 foreach (var s in spawners)
@@ -67,7 +77,7 @@ namespace SteveTheTroll.Taming
                     }
                     Changed.Add(new Saved { Data = s, Interval = s.m_spawnInterval, Chance = s.m_spawnChance, Day = s.m_spawnAtDay, Night = s.m_spawnAtNight, Max = s.m_maxSpawned });
                     // D-077 (TEST-032: no troll spawned with the set): the game counts the wearer's tamed trolls nearby against max spawned (1)
-                    s.m_maxSpawned = Mathf.Max(s.m_maxSpawned, TrollTaming.TrollLimit(wearer) + 1);
+                    s.m_maxSpawned = cap;                                                     // D-084: 2 / 6 around the bed
                     s.m_spawnInterval = TamingRules.BoostedInterval(s.m_spawnInterval, f);
                     s.m_spawnChance = TamingRules.BoostedChance(s.m_spawnChance, f);
                     s.m_spawnAtDay = true; s.m_spawnAtNight = true;
@@ -76,7 +86,7 @@ namespace SteveTheTroll.Taming
                 if (Time.time >= _nextLog)
                 {
                     _nextLog = Time.time + 30f;
-                    ModLog.Verbose("TrollSpawnBoost: zone at " + __instance.transform.position.ToString("F0") + ", wearer " + wearer.GetPlayerName() + " (troll limit " + TrollTaming.TrollLimit(wearer) + "): "
+                    ModLog.Verbose("TrollSpawnBoost: zone at " + __instance.transform.position.ToString("F0") + ", wearer " + wearer.GetPlayerName() + " (" + why + ", cap " + cap + "): "
                         + Changed.Count + " troll entr(y/ies) boosted (first: interval " + Changed[0].Interval + " -> " + Changed[0].Data.m_spawnInterval + " s, chance "
                         + Changed[0].Chance + " -> " + Changed[0].Data.m_spawnChance + " %, max spawned " + Changed[0].Max + " -> " + Changed[0].Data.m_maxSpawned + ", day and night)");
                 }

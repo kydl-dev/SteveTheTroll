@@ -93,6 +93,7 @@ namespace SteveTheTroll
             if (!ModSettings.On) return;
             MainMenu.Tick();
             Taming.TrollRegistry.Tick();
+            Taming.TrollZones.Tick();               // D-084: zones around far own trolls stay loaded (they keep farming)
             Ui.TrollMapPins.Tick();                 // D-081: a map pin (costume head icon) per own tamed troll
             Backpack.BackpackVisual.Tick();
             Backpack.BackpackPickup.Tick();         // T-008c: wood / ores / scrap within 50 m into the backpack

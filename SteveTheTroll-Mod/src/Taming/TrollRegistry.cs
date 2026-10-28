@@ -39,6 +39,15 @@ namespace SteveTheTroll.Taming
             return Known;
         }
 
+        /// D-084: the player's living tamed trolls in total (near or far, from the saved list). Expected outcome: 0 or more.
+        internal static int LivingCount()
+        {
+            Load();
+            int n = 0;
+            foreach (var t in Known) if (t.DiedTicks <= 0) n++;
+            return n;
+        }
+
         /// Plugin.Update. Expected outcome: returns whether a refresh ran this frame.
         internal static bool Tick()
         {

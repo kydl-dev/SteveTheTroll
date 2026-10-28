@@ -26,10 +26,21 @@ namespace SteveTheTroll.Tests.Unit
         static string Limit(float wearer, int ownNear, int limit) { return ModAssembly.Call(T, "DecideWildLimit", wearer, 150f, ownNear, limit).ToString(); }
         [Test] public void Limit_NoWearer_Nothing() { Assert.That(Limit(-1f, 0, 5), Is.EqualTo("Nothing")); }
         [Test] public void Limit_OneAllowed_NoneNear_CountsDown() { Assert.That(Limit(10f, 0, 1), Is.EqualTo("CountDown")); }
-        [Test] public void Limit_OneAllowed_OneNear_Calls() { Assert.That(Limit(10f, 1, 1), Is.EqualTo("CallOwnTroll")); }
+        [Test] public void Limit_OneAllowed_OneNear_LeftAlone() { Assert.That(Limit(10f, 1, 1), Is.EqualTo("Nothing")); }
         [Test] public void Limit_FiveAllowed_FourNear_CountsDown() { Assert.That(Limit(10f, 4, 5), Is.EqualTo("CountDown")); }
-        [Test] public void Limit_FiveAllowed_FiveNear_Calls() { Assert.That(Limit(10f, 5, 5), Is.EqualTo("CallOwnTroll")); }
-        [Test] public void Limit_ZeroMeansOne() { Assert.That(Limit(10f, 1, 0), Is.EqualTo("CallOwnTroll")); }
+        [Test] public void Limit_FiveAllowed_FiveNear_LeftAlone() { Assert.That(Limit(10f, 5, 5), Is.EqualTo("Nothing")); }
+        [Test] public void Limit_ZeroMeansOne() { Assert.That(Limit(10f, 1, 0), Is.EqualTo("Nothing")); }
+
+        // D-084: spawn cap around the bed
+        static int Cap(bool slippers, bool set, int tamed, float toBed) { return (int)ModAssembly.Call(T, "SpawnCap", slippers, set, tamed, toBed, 500f); }
+        [Test] public void Cap_NoSlippers_None() { Assert.That(Cap(false, false, 0, 10f), Is.EqualTo(0)); }
+        [Test] public void Cap_Slippers_NoTroll_Two() { Assert.That(Cap(true, false, 0, 10f), Is.EqualTo(2)); }
+        [Test] public void Cap_Slippers_OneTroll_Two() { Assert.That(Cap(true, false, 1, 499f), Is.EqualTo(2)); }
+        [Test] public void Cap_Slippers_TwoTrolls_None() { Assert.That(Cap(true, false, 2, 10f), Is.EqualTo(0)); }
+        [Test] public void Cap_Set_FiveTrolls_Six() { Assert.That(Cap(true, true, 5, 10f), Is.EqualTo(6)); }
+        [Test] public void Cap_Set_SixTrolls_None() { Assert.That(Cap(true, true, 6, 10f), Is.EqualTo(0)); }
+        [Test] public void Cap_OutsideBedRadius_None() { Assert.That(Cap(true, true, 0, 500.5f), Is.EqualTo(0)); }
+        [Test] public void Cap_NoBed_None() { Assert.That(Cap(true, true, 0, -1f), Is.EqualTo(0)); }
 
         [Test]
         public void CountDown_SubtractsAndStopsAtZero()
