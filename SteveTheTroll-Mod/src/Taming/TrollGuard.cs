@@ -77,6 +77,10 @@ namespace SteveTheTroll.Taming
         {
             float range = ModSettings.DefendRange.Value;
             bool wears = TrollTaming.Wears(owner), raid = !wears && TrollHome.Raid();
+            // D-078 (TEST-032: Spencer at the house stayed 'fighting' while the player hunted 80 m away - a target near the player was set,
+            // dropped as too far (KeepRange) and set again 4x a second, so he never farmed): the player's attackers count only while the troll
+            // itself is within DefendRange of the player (as TrollDefend), and no attacker further than KeepRange from the troll
+            bool ownerNear = Vector3.Distance(owner.transform.position, troll.transform.position) <= range;
             Attackers.Clear();
             Vector3 sum = Vector3.zero;
             foreach (var m in Character.GetAllCharacters())
@@ -87,6 +91,8 @@ namespace SteveTheTroll.Taming
                 var t = Target(mai);
                 if (t != owner && t != troll) continue;
                 if (t == owner && !TamingRules.DefendsOwner(wears, raid)) continue;            // T-008e: slippers off -> it defends the player only during a raid
+                if (t == owner && !ownerNear) continue;
+                if (Vector3.Distance(m.transform.position, troll.transform.position) > KeepRange) continue;
                 if (Vector3.Distance(m.transform.position, troll.transform.position) > range && Vector3.Distance(m.transform.position, owner.transform.position) > range) continue;
                 Attackers.Add(m);
                 sum += m.transform.position;
