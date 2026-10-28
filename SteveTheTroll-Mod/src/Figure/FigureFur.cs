@@ -40,7 +40,7 @@ namespace SteveTheTroll.Figure
             RefreshPlush();
             int want = ModSettings.FurEnable.Value ? ModSettings.FurShells.Value : 0;
             if (want != _builtCount) Rebuild(want);
-            var tint = new Color(ModSettings.FurTintR.Value, ModSettings.FurTintG.Value, ModSettings.FurTintB.Value, 1f);
+            var tint = ModSettings.Rgb(ModSettings.FurColorR, ModSettings.FurColorG, ModSettings.FurColorB, ModSettings.FurBrightness);
             float t = ModSettings.FurTipLight.Value;
             TrollFur.Apply(_shells, ModSettings.FurLength.Value, ModSettings.FurDensity.Value, ModSettings.FurThickness.Value, ModSettings.FurDroop.Value, tint, new Color(t, t, t, 1f));
             ModLog.Check("FigureFur: " + _owner + " shells", _shells.Count, want, 0, "");
@@ -52,7 +52,7 @@ namespace SteveTheTroll.Figure
         {
             if (_body == null) return;
             if (_original == null) _original = _body.sharedMaterial;
-            var tint = new Color(ModSettings.PlushTintR.Value, ModSettings.PlushTintG.Value, ModSettings.PlushTintB.Value, 1f);
+            var tint = ModSettings.Rgb(ModSettings.PlushColorR, ModSettings.PlushColorG, ModSettings.PlushColorB, ModSettings.PlushBrightness);
             if (ModSettings.PlushEnable.Value)
             {
                 if (_plush == null && Template() != null)

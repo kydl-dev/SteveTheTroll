@@ -110,16 +110,28 @@ namespace SteveTheTroll
         public static readonly Tunable<float> FurDensity = new Tunable<float>("TrollFur", "Density", 545f, 50f, 1500f, "Strands per texture unit (higher = finer fur).");
         public static readonly Tunable<float> FurThickness = new Tunable<float>("TrollFur", "Thickness", 0.864f, 0.2f, 1.5f, "Strand thickness at the root (share of a strand cell).");
         public static readonly Tunable<float> FurDroop = new Tunable<float>("TrollFur", "Droop", 0.02f, 0f, 0.02f, "How far the tips hang down, in metres.");
-        public static readonly Tunable<float> FurTintR = new Tunable<float>("TrollFur", "TintR", 0.73f, 0f, 1.5f, "Fur colour multiplier, red.");
-        public static readonly Tunable<float> FurTintG = new Tunable<float>("TrollFur", "TintG", 0.4545f, 0f, 1.5f, "Fur colour multiplier, green.");
-        public static readonly Tunable<float> FurTintB = new Tunable<float>("TrollFur", "TintB", 0.6f, 0f, 1.5f, "Fur colour multiplier, blue.");
+        // D-083 (user: "change them to 0-255 ... with 0-255 I know exactly"): colour as R / G / B 0..255 (as any colour picker) + a Brightness factor;
+        // the old multipliers 0.73 / 0.4545 / 0.6 = colour (186, 116, 153) x 1.0
+        public static readonly Tunable<int> FurColorR = new Tunable<int>("TrollFur", "ColorR", 186, 0, 255, "Fur colour, red (0-255).");
+        public static readonly Tunable<int> FurColorG = new Tunable<int>("TrollFur", "ColorG", 116, 0, 255, "Fur colour, green (0-255).");
+        public static readonly Tunable<int> FurColorB = new Tunable<int>("TrollFur", "ColorB", 153, 0, 255, "Fur colour, blue (0-255).");
+        public static readonly Tunable<float> FurBrightness = new Tunable<float>("TrollFur", "Brightness", 1f, 0f, 1.5f, "Brightness factor on the fur colour (1 = the colour as set).");
         public static readonly Tunable<float> FurTipLight = new Tunable<float>("TrollFur", "TipLight", 1.01f, 0.3f, 1.5f, "Brightness of the fur tips (1 = like the roots before darkening).");
 
         // --- D-027 smooth plush look of the mini trolls (user picked style D): the troll skin re-coloured, no strands
         public static readonly Tunable<bool> PlushEnable = new Tunable<bool>("TrollPlush", "Enable", true, "Smooth plush colour on the mini trolls (off = the game's troll skin).");
-        public static readonly Tunable<float> PlushTintR = new Tunable<float>("TrollPlush", "TintR", 1.0f, 0f, 2f, "Plush colour multiplier on the troll skin, red.");
-        public static readonly Tunable<float> PlushTintG = new Tunable<float>("TrollPlush", "TintG", 1.2f, 0f, 2f, "Plush colour multiplier on the troll skin, green.");
-        public static readonly Tunable<float> PlushTintB = new Tunable<float>("TrollPlush", "TintB", 1.25f, 0f, 2f, "Plush colour multiplier on the troll skin, blue.");
+        // D-083: the old multipliers 1.0 / 1.2 / 1.25 = colour (204, 245, 255) x brightness 1.25 (the troll skin texture is multiplied by it)
+        public static readonly Tunable<int> PlushColorR = new Tunable<int>("TrollPlush", "ColorR", 204, 0, 255, "Plush colour on the troll skin, red (0-255).");
+        public static readonly Tunable<int> PlushColorG = new Tunable<int>("TrollPlush", "ColorG", 245, 0, 255, "Plush colour on the troll skin, green (0-255).");
+        public static readonly Tunable<int> PlushColorB = new Tunable<int>("TrollPlush", "ColorB", 255, 0, 255, "Plush colour on the troll skin, blue (0-255).");
+        public static readonly Tunable<float> PlushBrightness = new Tunable<float>("TrollPlush", "Brightness", 1.25f, 0f, 2f, "Brightness factor on the plush colour (1 = the colour as set; above 1 lightens the dark troll skin).");
+
+        /// D-083: a colour from 0..255 channels and a brightness factor (alpha 1).
+        public static UnityEngine.Color Rgb(Tunable<int> r, Tunable<int> g, Tunable<int> b, Tunable<float> brightness)
+        {
+            float k = brightness.Value / 255f;
+            return new UnityEngine.Color(r.Value * k, g.Value * k, b.Value * k, 1f);
+        }
         public static readonly Tunable<float> PlushSmoothness = new Tunable<float>("TrollPlush", "Smoothness", 0.0727f, 0f, 0.6f, "Shine of the plush (0 = matt fabric; 0.07 = the user's TEST-008 choice).");
 
         // --- D-025 slipper on each foot (bundle prefab "SlipperParts", skinned to the player's foot + toe bones). Placement defaults = Unity fit.

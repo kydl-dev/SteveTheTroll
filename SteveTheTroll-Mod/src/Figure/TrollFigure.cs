@@ -106,10 +106,12 @@ namespace SteveTheTroll.Figure
                 ModSettings.HandWristX, ModSettings.HandWristY, ModSettings.HandWristZ, ModSettings.HandFingerCurl, ModSettings.HandThumbCurl };
             foreach (var t in all) t.SettingChanged += (s, e) => { _tunableVersion++; ModLog.Verbose("TrollFigure: " + s + " changed -> re-pose / re-measure (version " + _tunableVersion + ")"); };
             ModSettings.PlushEnable.SettingChanged += (s, e) => { _tunableVersion++; ModLog.Verbose("TrollFigure: " + s + " changed -> plush"); };
-            foreach (var p in new[] { ModSettings.PlushTintR, ModSettings.PlushTintG, ModSettings.PlushTintB, ModSettings.PlushSmoothness }) p.SettingChanged += (s, e) => { _tunableVersion++; ModLog.Verbose("TrollFigure: " + s + " changed -> plush colour"); };
+            foreach (var p in new[] { ModSettings.PlushBrightness, ModSettings.PlushSmoothness }) p.SettingChanged += (s, e) => { _tunableVersion++; ModLog.Verbose("TrollFigure: " + s + " changed -> plush colour"); };
+            foreach (var c in new[] { ModSettings.PlushColorR, ModSettings.PlushColorG, ModSettings.PlushColorB }) c.SettingChanged += (s, e) => { _tunableVersion++; ModLog.Verbose("TrollFigure: " + s + " changed -> plush colour"); };
+            foreach (var c in new[] { ModSettings.FurColorR, ModSettings.FurColorG, ModSettings.FurColorB }) c.SettingChanged += (s, e) => { _tunableVersion++; ModLog.Verbose("TrollFigure: " + s + " changed -> fur update"); };
             ModSettings.FurEnable.SettingChanged += (s, e) => { _tunableVersion++; ModLog.Verbose("TrollFigure: " + s + " changed -> fur rebuild"); };
             ModSettings.FurShells.SettingChanged += (s, e) => { _tunableVersion++; ModLog.Verbose("TrollFigure: " + s + " changed -> fur rebuild"); };
-            var fur = new[] { ModSettings.FurLength, ModSettings.FurDensity, ModSettings.FurThickness, ModSettings.FurDroop, ModSettings.FurTintR, ModSettings.FurTintG, ModSettings.FurTintB, ModSettings.FurTipLight };
+            var fur = new[] { ModSettings.FurLength, ModSettings.FurDensity, ModSettings.FurThickness, ModSettings.FurDroop, ModSettings.FurBrightness, ModSettings.FurTipLight };
             foreach (var t in fur) t.SettingChanged += (s, e) => { _tunableVersion++; ModLog.Verbose("TrollFigure: " + s + " changed -> fur update"); };
             ModLog.Verbose("TrollFigure: listening to " + (all.Length + fur.Length + 2) + " Tunables");
         }
