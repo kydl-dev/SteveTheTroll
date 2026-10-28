@@ -82,6 +82,20 @@ namespace SteveTheTroll.Taming
             return d > 0f ? d : 0f;
         }
 
+        public const float WadeDepth = 1.5f, WadeFactor = 3f, WadeLeaveMargin = 0.3f;
+
+        /// D-129 (user: "make them walk at 3x speed when they are in 1.5m into the water"): the troll wades now. Starts at `wadeDepth` of water,
+        /// stops below wadeDepth - WadeLeaveMargin (no flapping at the edge); never while the game has it swimming. Expected outcome: wading or not.
+        public static bool Wading(bool wasWading, float depth, float wadeDepth, bool swimming)
+        {
+            if (swimming) return false;
+            return depth >= (wasWading ? wadeDepth - WadeLeaveMargin : wadeDepth);
+        }
+
+        /// D-129: the movement factor on the vanilla speeds - `wadeFactor` while wading ("3x faster than normal walking speed"), else the tamed
+        /// factor (D-111). Expected outcome: wadeFactor or tamedFactor.
+        public static float MoveFactor(bool wading, float tamedFactor, float wadeFactor) { return wading ? wadeFactor : tamedFactor; }
+
         /// D-122 (user: "up to 300% of base run speed while swimming; when following a slower player keep up with the player's speed"):
         /// the swim speed of a tamed troll. Not following: baseRun x maxFactor. Following: the player's speed, at least the vanilla swim speed,
         /// at most baseRun x maxFactor. Expected outcome: a speed in m/s.

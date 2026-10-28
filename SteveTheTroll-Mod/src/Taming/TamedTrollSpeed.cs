@@ -20,7 +20,7 @@ namespace SteveTheTroll.Taming
         static readonly AccessTools.FieldRef<CharacterAnimEvent, Character> EventCharacter = AccessTools.FieldRefAccess<CharacterAnimEvent, Character>("m_character");
         static readonly AccessTools.FieldRef<CharacterAnimEvent, Animator> EventAnimator = AccessTools.FieldRefAccess<CharacterAnimEvent, Animator>("m_animator");
 
-        sealed class Base { public float Speed, Walk, Run, Factor, Swim, SwimDepth; }
+        sealed class Base { public float Speed, Walk, Run, Factor, Swim, SwimDepth; public bool Wading; }
         static readonly Dictionary<int, Base> Bases = new Dictionary<int, Base>();     // by GameObject instance id: the instance's own vanilla speeds (a few per session)
         static float _nextLog;
 
@@ -55,17 +55,33 @@ namespace SteveTheTroll.Taming
 
         static float _nextSwimLog;
 
+        /// D-129: wading state of the troll from the water depth at its feet; logs every change. Expected outcome: the movement factor to use.
+        internal static float Wade(Character c, float tamedFactor)
+        {
+            Base b;
+            if (c == null || !Bases.TryGetValue(c.gameObject.GetInstanceID(), out b)) return tamedFactor;
+            float depth = c.GetLiquidLevel() - c.transform.position.y;
+            bool now = BreakRules.Wading(b.Wading, depth, ModSettings.WadeDepth.Value, c.IsSwimming());
+            if (now != b.Wading)
+            {
+                b.Wading = now;
+                ModLog.Info("TamedTrollSpeed: " + c.name + (now ? " wades" : " out of deep water") + " (water " + depth.ToString("F1") + " m, wade from " + ModSettings.WadeDepth.Value.ToString("F1")
+                    + " m, swimming " + c.IsSwimming() + ") -> speed x" + BreakRules.MoveFactor(now, tamedFactor, ModSettings.WadeFactor.Value).ToString("0.00"));
+            }
+            return BreakRules.MoveFactor(now, tamedFactor, ModSettings.WadeFactor.Value);
+        }
+
         /// D-122 (user: "swim animation for trolls; up to 300% of base run speed while swimming; when following a slower player, keep up with
-        /// the player's speed"; "Swim from shallower water"): a tamed troll starts swimming at SwimDepth (game 5 m) and swims at
+        /// the player's speed"): a tamed troll swims where the game lets it (its own swim depth, 5 m - D-129: changing it did not work) and swims at
         /// BreakRules.SwimSpeed (vanilla run x SwimRunFactor; following the player: the player's speed). `tamed` false puts the vanilla values
-        /// back. The troll animator's own In Water state (inWater) plays while the game says it swims. Expected outcome: the swim speed in use.
+        /// back. The troll has no swim animation of its own (user 2026-10-29; real swimming later, T-013 n). Expected outcome: the swim speed in use.
         internal static float Swim(Character c, bool tamed)
         {
             if (c == null) return 0f;
             Base b;
             if (!Bases.TryGetValue(c.gameObject.GetInstanceID(), out b)) return c.m_swimSpeed;
             if (!tamed) { c.m_swimSpeed = b.Swim; c.m_swimDepth = b.SwimDepth; return c.m_swimSpeed; }
-            c.m_swimDepth = Mathf.Min(b.SwimDepth, ModSettings.SwimDepth.Value);
+            c.m_swimDepth = b.SwimDepth;                      // D-129: the game's own swim depth (changing it only sank / lifted the body)
             var ai = c.GetComponent<MonsterAI>();
             var target = ai != null ? ai.GetFollowTarget() : null;
             var player = target != null ? target.GetComponent<Player>() : null;
@@ -94,7 +110,7 @@ namespace SteveTheTroll.Taming
                     if (Bases.ContainsKey(c.gameObject.GetInstanceID())) { Movement(c, 1f); Swim(c, false); }   // no longer tamed / mod off: vanilla again
                     return;
                 }
-                float f = Factor;
+                float f = Wade(c, Factor);                       // D-129: WadeFactor x in water from WadeDepth, else the tamed factor
                 Movement(c, f);
                 Swim(c, true);
                 var anim = EventAnimator(__instance);

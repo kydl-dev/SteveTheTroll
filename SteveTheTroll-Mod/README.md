@@ -32,8 +32,8 @@ Stop reading here if you want the surprise.
 - **Taming:** wear the slippers near a wild troll for a minute and it becomes yours, named Steve 1, Steve 2, ... Tamed trolls are tougher,
   hit harder, move and swing 25 % faster, are immune to fire, frost, lightning, poison and spirit damage
   and can be renamed. One tamed troll near you with the slippers alone, up to 5 near you with the whole costume, and never more than
-  15 living tamed trolls in total per player. Tamed trolls swim already in water 2.5 m deep and swim up to three times their running
-  speed; when they follow you they keep to your speed instead of racing ahead.
+  15 living tamed trolls in total per player. In water from 1.5 m deep, tamed trolls wade three times as fast as they walk; in very
+  deep water they swim up to three times their running speed, and when they follow you they keep to your speed.
 - **More trolls near home:** with the slippers on, trolls spawn 200 - 500 m from your bed in any land biome (never closer to the house),
   up to 2 at a time; with the whole costume, up to 6. Ashlands and the Deep North count too when your bed is there. Without the costume's
   set power every troll spawned this way carries a club; with the set power half of them come unarmed.

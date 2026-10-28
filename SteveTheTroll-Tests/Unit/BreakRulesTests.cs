@@ -96,10 +96,28 @@ namespace SteveTheTroll.Tests.Unit
 
         [Test] public void SwimSpeed_MaxBelowSwim_KeepsSwim() { Assert.That((float)Call("SwimSpeed", 2f, 1f, 1f, false, 0f), Is.EqualTo(2f)); }
 
+        // D-129: wading from 1.5 m, leaving below 1.2 m, never while swimming
+        [TestCase(false, 1.49f, false, false)]
+        [TestCase(false, 1.5f, false, true)]
+        [TestCase(false, 3f, false, true)]
+        [TestCase(true, 1.25f, false, true)]
+        [TestCase(true, 1.2f, false, true)]
+        [TestCase(true, 1.19f, false, false)]
+        [TestCase(false, 3f, true, false)]
+        [TestCase(true, 3f, true, false)]
+        [TestCase(false, -2f, false, false)]
+        public void Wading(bool was, float depth, bool swimming, bool expected) { Assert.That((bool)Call("Wading", was, depth, 1.5f, swimming), Is.EqualTo(expected)); }
+
+        [TestCase(true, 3f)]
+        [TestCase(false, 1.25f)]
+        public void MoveFactor(bool wading, float expected) { Assert.That((float)Call("MoveFactor", wading, 1.25f, 3f), Is.EqualTo(expected)); }
+
         [Test] public void Constants()
         {
             Assert.That(ModAssembly.GetStatic(T, "GlobalTameCap"), Is.EqualTo(15));
             Assert.That(ModAssembly.GetStatic(T, "SetStaggerResistance"), Is.EqualTo(0.75f));
+            Assert.That(ModAssembly.GetStatic(T, "WadeDepth"), Is.EqualTo(1.5f));
+            Assert.That(ModAssembly.GetStatic(T, "WadeFactor"), Is.EqualTo(3f));
         }
     }
 }
