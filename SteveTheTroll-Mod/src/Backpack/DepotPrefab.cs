@@ -16,7 +16,46 @@ namespace SteveTheTroll.Backpack
         /// Level height (m): the next depot of a stack stands here (top of the wood floors); measured when the prefab is built.
         internal static float Height = 1.05f;
 
+        const string FloorPrefab = "wood_floor";
+        const float Clearance = 0.02f;
+
         internal static void Install() { PrefabManager.OnVanillaPrefabsAvailable += Build; }
+
+        /// How far the floors go up so the chest lids (chest on y 0) stay below the floors' underside. 0 when they already do.
+        static float FloorLift()
+        {
+            var chest = PrefabManager.Instance.GetPrefab(DepotData.ChestPrefab);
+            var floor = PrefabManager.Instance.GetPrefab(FloorPrefab);
+            if (chest == null || floor == null) { ModLog.Warn("DepotPrefab: chest / floor prefab missing - floors not lifted"); return 0f; }
+            float chestBottom, chestTop, floorBottom, floorTop;
+            MeshSpan(chest, out chestBottom, out chestTop);
+            MeshSpan(floor, out floorBottom, out floorTop);
+            float floorY = 0f;
+            foreach (var p in DepotData.Frame) if (p.Prefab == FloorPrefab) { floorY = p.Y; break; }
+            float lift = DepotData.FloorLift(chestTop, floorY + floorBottom, Clearance);
+            ModLog.Info("DepotPrefab: chest lid at " + chestTop.ToString("F3") + " m, floor underside at " + (floorY + floorBottom).ToString("F3") + " m (top " + (floorY + floorTop).ToString("F3") + ") -> floors lifted " + lift.ToString("F3") + " m");
+            return lift;
+        }
+
+        /// Lowest / highest mesh point of a prefab in its own space (inactive prefabs have no renderer bounds).
+        static void MeshSpan(GameObject prefab, out float bottom, out float top)
+        {
+            bottom = float.MaxValue; top = float.MinValue;
+            foreach (var mf in prefab.GetComponentsInChildren<MeshFilter>(true))
+            {
+                if (mf.sharedMesh == null) continue;
+                var r = mf.GetComponent<Renderer>();
+                if (r == null || mf.gameObject.name.ToLowerInvariant().Contains("lod1") || mf.gameObject.name.ToLowerInvariant().Contains("lod2")) continue;
+                var b = mf.sharedMesh.bounds;
+                for (int k = 0; k < 8; k++)
+                {
+                    var corner = b.center + Vector3.Scale(b.extents, new Vector3((k & 1) == 0 ? -1 : 1, (k & 2) == 0 ? -1 : 1, (k & 4) == 0 ? -1 : 1));
+                    float y = prefab.transform.InverseTransformPoint(mf.transform.TransformPoint(corner)).y;
+                    bottom = Mathf.Min(bottom, y); top = Mathf.Max(top, y);
+                }
+            }
+            if (bottom > top) { bottom = 0f; top = 0f; }
+        }
 
         static void Build()
         {
@@ -31,13 +70,28 @@ namespace SteveTheTroll.Backpack
             view.m_persistent = true;
             int parts = 0, cols = 0, missing = 0;
             float top = 0f;
+            // D-090 (user: "the top of the chest structure is flickering"): the reinforced chests' lids reached the floors' top face (z-fighting).
+            // The floors are lifted until their underside clears the chest lids by Clearance.
+            float lift = FloorLift();
             foreach (var p in DepotData.Frame)
             {
                 var prefab = PrefabManager.Instance.GetPrefab(p.Prefab);
                 if (prefab == null) { missing++; ModLog.Warn("DepotPrefab: piece '" + p.Prefab + "' not found"); continue; }
                 var copy = BackpackVisual.VisualCopy(prefab, out int r);
                 copy.transform.SetParent(go.transform, false);
-                copy.transform.localPosition = new Vector3(p.X, p.Y, p.Z);
+                copy.transform.localPosition = new Vector3(p.X, p.Y + (p.Prefab == FloorPrefab ? lift : 0f), p.Z);
+                if (p.Prefab != FloorPrefab && lift > 0f)
+                {
+                    // poles grow by the lift (bottom stays where it was) so the floors still rest on them
+                    float pb, pt;
+                    MeshSpan(prefab, out pb, out pt);
+                    if (pt - pb > 0.1f)
+                    {
+                        float s = 1f + lift / (pt - pb);
+                        copy.transform.localScale = new Vector3(1f, s, 1f);
+                        copy.transform.localPosition = new Vector3(p.X, p.Y + pb - pb * s, p.Z);
+                    }
+                }
                 copy.transform.localRotation = Quaternion.Euler(0f, p.Yaw, 0f);
                 cols += PieceCopy.Colliders(prefab, copy.transform);
                 // the prefab container is inactive (no physics bounds): measure the meshes

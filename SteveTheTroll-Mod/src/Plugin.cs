@@ -56,9 +56,10 @@ namespace SteveTheTroll
             new Harmony(ModGuid).PatchAll(Assembly.GetExecutingAssembly());
             Jotunn.Managers.CommandManager.Instance.AddConsoleCommand(new Figure.FigurePreviewCommand());   // T-004b look test: stt_preview
             Jotunn.Managers.CommandManager.Instance.AddConsoleCommand(new Backpack.BuildDumpCommand());   // T-008b: stt_dumpbuild (backpack model)
+            Jotunn.Managers.CommandManager.Instance.AddConsoleCommand(new Testing.ClearCommand());        // D-093: stt_clear (clean test area)
             Jotunn.Managers.CommandManager.Instance.AddConsoleCommand(new Ui.ComingPreviewCommand());     // D-058 preview: stt_coming [name]
             Jotunn.Managers.CommandManager.Instance.AddConsoleCommand(new Backpack.FillBackpackCommand());  // D-064 test: stt_fillbackpack [item]
-            ModLog.Verbose("Plugin: console commands stt_preview, stt_dumpbuild, stt_coming, stt_fillbackpack registered");
+            ModLog.Verbose("Plugin: console commands stt_preview, stt_dumpbuild, stt_clear, stt_coming, stt_fillbackpack registered");
             ModLog.Verbose("Plugin: Awake finished (Harmony patches applied, menu key " + ModSettings.MenuKey.Value + ")");
         }
 

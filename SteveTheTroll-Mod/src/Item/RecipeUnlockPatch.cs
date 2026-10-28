@@ -41,8 +41,17 @@ namespace SteveTheTroll.Item
                 var drop = go != null ? go.GetComponent<ItemDrop>() : null;
                 names.Add(drop != null ? drop.m_itemData.m_shared.m_name : null);
             }
-            return AllKnown(names, Known(p));
+            var known = Known(p);
+            bool all = AllKnown(names, known);
+            string missing = all ? "" : string.Join(", ", names.FindAll(n => n == null || known == null || !known.Contains(n)).ConvertAll(n => n ?? "(item missing)").ToArray());
+            if (missing != _lastMissing)                                  // asked by every tooltip frame: log only changes
+            {
+                _lastMissing = missing;
+                ModLog.Verbose("RecipeUnlockPatch: costume " + (all ? "complete" : "not complete") + " for " + p.GetPlayerName() + (all ? "" : " - not known yet: " + missing));
+            }
+            return all;
         }
+        static string _lastMissing;
 
         /// Pure rule: a recipe is discovered when any of its materials is known. Expected outcome: true for one known material.
         internal static bool AnyKnown(IEnumerable<string> materials, ICollection<string> known)

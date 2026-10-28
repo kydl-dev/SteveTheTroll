@@ -35,6 +35,14 @@ namespace SteveTheTroll.Backpack
             new Part(ChestPrefab, 1f, 0f, 0.52f, 0f),
         };
 
+        /// D-090: how far the floors go up so the chest lids stay `clearance` below the floors' underside (both heights in m above the
+        /// depot's ground). Expected outcome: 0 when they already clear it, else the missing height.
+        internal static float FloorLift(float chestTop, float floorUnderside, float clearance)
+        {
+            float need = chestTop + clearance - floorUnderside;
+            return need > 0f ? need : 0f;
+        }
+
         internal struct Part
         {
             internal readonly string Prefab;

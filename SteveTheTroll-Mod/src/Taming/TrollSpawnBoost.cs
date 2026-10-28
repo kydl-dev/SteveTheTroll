@@ -75,7 +75,7 @@ namespace SteveTheTroll.Taming
                     if (!_loggedEntry)
                     {
                         _loggedEntry = true;
-                        ModLog.Info("TrollSpawnBoost: the game's troll entry: interval " + s.m_spawnInterval + " s, chance " + s.m_spawnChance + " %, max spawned " + s.m_maxSpawned
+                        ModLog.Info("TrollSpawnBoost: the game's troll entry: biome " + s.m_biome + " / area " + s.m_biomeArea + ", interval " + s.m_spawnInterval + " s, chance " + s.m_spawnChance + " %, max spawned " + s.m_maxSpawned
                             + ", day " + s.m_spawnAtDay + " / night " + s.m_spawnAtNight + ", global key '" + s.m_requiredGlobalKey + "', environments " + (s.m_requiredEnvironments != null ? s.m_requiredEnvironments.Count : 0)
                             + ", spawn distance " + s.m_spawnDistance + " m, radius " + s.m_spawnRadiusMin + " .. " + s.m_spawnRadiusMax + " m, in forest " + s.m_inForest + " / outside " + s.m_outsideForest);
                     }
