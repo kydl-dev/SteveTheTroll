@@ -179,6 +179,31 @@ namespace SteveTheTroll.Taming
             return c;
         }
 
+        static readonly System.Reflection.FieldInfo HitAreas = AccessTools.Field(typeof(MineRock5), "m_hitAreas");
+
+        /// D-082 (TEST-035: Steve 4 circled a silver vein - the game said 'Minerock hit has no collider or invalid hit area'): for a MineRock5
+        /// (veins, big rocks) the nearest hit area that still has health, else null (then the source's biggest collider is used).
+        internal static Collider LiveArea(GameObject source, Vector3 from)
+        {
+            var mr = source != null ? source.GetComponentInParent<MineRock5>() : null;
+            if (mr == null || HitAreas == null) return null;
+            var list = HitAreas.GetValue(mr) as System.Collections.IList;
+            if (list == null) return null;
+            Collider best = null;
+            float bestD = float.MaxValue;
+            foreach (var a in list)
+            {
+                if (a == null) continue;
+                var t = a.GetType();
+                var col = AccessTools.Field(t, "m_collider") != null ? AccessTools.Field(t, "m_collider").GetValue(a) as Collider : null;
+                var hp = AccessTools.Field(t, "m_health") != null ? (float)AccessTools.Field(t, "m_health").GetValue(a) : 1f;
+                if (col == null || !col.enabled || hp <= 0f) continue;
+                float d = (col.bounds.center - from).sqrMagnitude;
+                if (d < bestD) { bestD = d; best = col; }
+            }
+            return best;
+        }
+
         internal static Collider Biggest(GameObject g)
         {
             Collider best = null;
@@ -204,6 +229,8 @@ namespace SteveTheTroll.Taming
                 if (view0 == null || !view0.IsValid() || !view0.IsOwner()) return true;
                 var slam = __instance.GetComponent<TrollSlam>();
                 if (slam != null && slam.Step(__instance, LookAt)) { __result = true; return false; }   // D-065: ground slams first
+                var rage = __instance.GetComponent<TrollRage>();
+                if (rage != null && rage.Step(__instance, dt, MoveTo, LookAt)) { __result = true; return false; }   // D-082: rage while the player is hit
                 TrollGuard.Keep(__instance);                                                                     // D-066: the forced target stays
                 if (TrollHold.Holds(__instance)) { __instance.StopMoving(); __result = true; return false; }     // D-063
                 var f = __instance.GetComponent<TrollFarmer>();

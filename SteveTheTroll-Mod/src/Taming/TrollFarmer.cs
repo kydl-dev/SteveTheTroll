@@ -135,6 +135,8 @@ namespace SteveTheTroll.Taming
         // Others: the nearest point of the collider bounds (its centre when the troll stands inside them). Always at chest height.
         Vector3 AimPoint()
         {
+            var area = TrollFarming.LiveArea(_target, transform.position);          // D-082: a vein / big rock: its nearest live hit area
+            if (area != null && area != _hit) { _hit = area; }
             var b = _hit.bounds;
             var me = transform.position;
             Vector3 p, a, e;

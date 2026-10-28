@@ -27,6 +27,7 @@ namespace SteveTheTroll.Taming
                 if (player == null || hit == null || !ModSettings.On) return;
                 var attacker = hit.GetAttacker();
                 if (attacker == null || attacker == __instance || attacker.IsPlayer() || attacker.IsTamed()) return;
+                TrollRage.OwnerHit(player, attacker);       // D-082: trolls within 10 m go into rage
                 Defend(player, attacker);
             }
         }
@@ -59,8 +60,9 @@ namespace SteveTheTroll.Taming
                 var view = troll.GetComponent<ZNetView>();
                 var ai = troll.GetComponent<MonsterAI>();
                 if (ai == null || view == null || !view.IsValid() || !view.IsOwner()) { ModLog.Verbose("TrollDefend: " + troll.name + " is owned by another client - not steered here"); continue; }
-                SetTarget(ai, attacker);
-                ai.Alert();
+                // D-082 (TEST-035: Steve 1 stood 2.5 m from two wild trolls hitting the player and did nothing - the game's AI dropped / ignored the
+                // target): the attacker becomes the troll's FORCED target (TrollGuard.Keep puts it back before every AI step)
+                if (!TrollGuard.Order(troll, attacker)) { SetTarget(ai, attacker); ai.Alert(); }
                 set++;
                 ModLog.Info("TrollDefend: " + owner.GetPlayerName() + " hit by " + attacker.name + " - " + troll.name + " (" + d.ToString("F1") + " m) attacks it");
             }
