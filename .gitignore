@@ -84,3 +84,6 @@ SteveTheTroll-Unity/Assets/RipReference/
 SteveTheTroll-Unity/Assets/RipReference.meta
 # files the Claude app saves into the connected folder (chat deliverables, not project files)
 /Claude outputs/
+
+# --- game reference meshes exported from the rip for fitting (never in git, never shipped; D-014) ---
+/SteveTheTroll-Blender/reference/
