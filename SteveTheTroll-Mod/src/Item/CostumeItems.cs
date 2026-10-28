@@ -277,16 +277,27 @@ namespace SteveTheTroll.Item
             bool full = ModSettings.On && Helmet(__instance) == H && Chest(__instance) == C && Legs(__instance) == L;
             object o;
             bool was = Hidden.TryGetValue(__instance, out o);
+            // D-079 (TEST-033: the player froze in place with the suit on): a disabled body renderer let the Animator cull itself (no root
+            // motion = no walking). The body stays enabled and only stops drawing (forceRenderingOff), and the Animator always animates
+            // while the costume is on (its culling mode is put back after).
+            var anim = __instance.GetComponentInChildren<Animator>();
             if (full)
             {
-                if (body.enabled) body.enabled = false;
-                if (!was) { Hidden.Add(__instance, new object()); ModLog.Verbose("CostumeBodyPatch: " + __instance.name + " wears the whole costume - own body hidden"); }
+                if (!body.forceRenderingOff) body.forceRenderingOff = true;
+                if (!body.enabled) body.enabled = true;
+                if (!was)
+                {
+                    Hidden.Add(__instance, anim != null ? (object)anim.cullingMode : new object());
+                    if (anim != null) anim.cullingMode = AnimatorCullingMode.AlwaysAnimate;
+                    ModLog.Verbose("CostumeBodyPatch: " + __instance.name + " wears the whole costume - own body hidden, animator " + (anim != null ? "always animates" : "not found"));
+                }
             }
             else if (was)
             {
                 Hidden.Remove(__instance);
-                body.enabled = true;
-                ModLog.Verbose("CostumeBodyPatch: " + __instance.name + " costume incomplete - own body shown again");
+                body.forceRenderingOff = false;
+                if (anim != null && o is AnimatorCullingMode) anim.cullingMode = (AnimatorCullingMode)o;
+                ModLog.Verbose("CostumeBodyPatch: " + __instance.name + " costume incomplete - own body shown again, animator culling " + (anim != null ? anim.cullingMode.ToString() : "-"));
             }
         }
     }
