@@ -13,7 +13,7 @@ namespace SteveTheTroll.Figure
     /// </summary>
     internal sealed class SlipperDriver : MonoBehaviour
     {
-        const string PrefabName = "SlipperParts";
+        const string PrefabName = BundleAssets.SlipperParts;
         const float DiagEverySeconds = 5f;
         static GameObject _prefab;
         static bool _prefabLooked;
@@ -34,7 +34,7 @@ namespace SteveTheTroll.Figure
         {
             if (_prefabLooked) return _prefab;
             _prefabLooked = true;
-            _prefab = Plugin.Bundle != null ? Plugin.Bundle.LoadAsset<GameObject>(PrefabName) : null;
+            _prefab = BundleAssets.Load<GameObject>(PrefabName);
             if (_prefab == null) ModLog.Warn("SlipperDriver: prefab '" + PrefabName + "' not in the bundle (" + (Plugin.Bundle != null ? "bundle loaded" : "no bundle") + ")");
             else ModLog.Verbose("SlipperDriver: prefab '" + PrefabName + "' loaded, " + _prefab.GetComponentsInChildren<MeshFilter>(true).Length + " part(s)");
             return _prefab;

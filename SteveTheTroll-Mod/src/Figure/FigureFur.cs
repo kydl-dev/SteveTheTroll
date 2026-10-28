@@ -12,7 +12,7 @@ namespace SteveTheTroll.Figure
     /// </summary>
     internal sealed class FigureFur
     {
-        const string MaterialName = "TrollFur";
+        const string MaterialName = BundleAssets.TrollFur;
         static Material _template;
         static bool _templateLooked;
 
@@ -28,7 +28,7 @@ namespace SteveTheTroll.Figure
         {
             if (_templateLooked) return _template;
             _templateLooked = true;
-            _template = Plugin.Bundle != null ? Plugin.Bundle.LoadAsset<Material>(MaterialName) : null;
+            _template = BundleAssets.Load<Material>(MaterialName);
             if (_template == null) ModLog.Warn("FigureFur: material '" + MaterialName + "' not in the bundle (" + (Plugin.Bundle != null ? "bundle loaded" : "no bundle") + ") - trolls stay without fur");
             else ModLog.Verbose("FigureFur: material '" + MaterialName + "' loaded, shader " + _template.shader.name + ", supported " + _template.shader.isSupported);
             return _template;

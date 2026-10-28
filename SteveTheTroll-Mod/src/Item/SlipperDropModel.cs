@@ -11,7 +11,7 @@ namespace SteveTheTroll.Item
     /// </summary>
     internal static class SlipperDropModel
     {
-        const string PartsPrefab = "SlipperParts";
+        const string PartsPrefab = BundleAssets.SlipperParts;
         const string GroundChild = "attach";
         const float PairGap = 0.015f;        // m between the two slippers
         const float PairToeIn = 8f;          // deg each slipper turns inwards (looks placed, not lined up)
@@ -19,7 +19,7 @@ namespace SteveTheTroll.Item
         /// Expected outcome: "attach" holds 2 slippers and a collider (returns that check; false keeps whatever was there).
         public static bool Build(GameObject itemPrefab)
         {
-            var parts = Plugin.Bundle != null ? Plugin.Bundle.LoadAsset<GameObject>(PartsPrefab) : null;
+            var parts = BundleAssets.Load<GameObject>(PartsPrefab);
             var ground = itemPrefab != null ? itemPrefab.transform.Find(GroundChild) : null;
             if (parts == null || ground == null) { ModLog.Warn("SlipperDropModel: parts prefab " + (parts != null) + ", ground child '" + GroundChild + "' " + (ground != null) + " - the dropped item keeps the belt look"); return false; }
 

@@ -19,7 +19,7 @@ namespace SteveTheTroll.Item
         public const string PrefabName = "STT_TrollSlippers";
         public const string TokenName = "$stevethetroll_slippers";
         const string BasePrefab = "BeltStrength";
-        const string IconName = "SlipperIcon";
+        const string IconName = BundleAssets.SlipperIcon;
         public const float BaseArmor = 5f, ArmorPerLevel = 1f;
         public const int MaxQuality = 4;
         /// D-034 (user 2026-10-27): 5 TrollHide (was 10).
@@ -59,7 +59,7 @@ namespace SteveTheTroll.Item
             cfg.AddRequirement(new RequirementConfig("Blueberries", 6, UpgradeCostPerItem, false));
             ModLog.Verbose("SlipperItem: recipe TrollHide x" + TrollHideCost + " (" + UpgradeCostPerItem + " per upgrade, every quality), DeerHide x4, Blueberries x6 (" + UpgradeCostPerItem + " per upgrade), workbench level " + cfg.MinStationLevel);
             ModLog.Check("SlipperItem: recipe TrollHide", cfg.Requirements[0].Amount, TrollHideCost, 0, "");
-            var icon = Plugin.Bundle != null ? Plugin.Bundle.LoadAsset<Sprite>(IconName) : null;
+            var icon = BundleAssets.Load<Sprite>(IconName);
             if (icon != null) cfg.Icons = new[] { icon };
             else ModLog.Warn("SlipperItem: icon '" + IconName + "' not in the bundle (bundle loaded " + (Plugin.Bundle != null) + ") - the belt icon stays");
 

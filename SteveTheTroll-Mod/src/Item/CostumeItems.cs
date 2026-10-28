@@ -57,9 +57,9 @@ namespace SteveTheTroll.Item
             if (Plugin.Bundle == null) { ModLog.Error("CostumeItems: no asset bundle - no costume items"); return; }
             _set = SetEffect();
             int ok = 0;
-            if (AddArmor(HelmetName, "HelmetTrollLeather", "stevethetroll_costume_helmet", "CostumeHelmetParts", "attach", ItemDrop.ItemData.ItemType.Helmet)) ok++;
-            if (AddArmor(ChestName, "ArmorTrollLeatherChest", "stevethetroll_costume_chest", "CostumeChestParts", "attach_skin", ItemDrop.ItemData.ItemType.Chest)) ok++;
-            if (AddArmor(LegsName, "ArmorTrollLeatherLegs", "stevethetroll_costume_legs", "CostumeLegsParts", "attach_skin", ItemDrop.ItemData.ItemType.Legs)) ok++;
+            if (AddArmor(HelmetName, "HelmetTrollLeather", "stevethetroll_costume_helmet", BundleAssets.CostumeHelmetParts, "attach", ItemDrop.ItemData.ItemType.Helmet)) ok++;
+            if (AddArmor(ChestName, "ArmorTrollLeatherChest", "stevethetroll_costume_chest", BundleAssets.CostumeChestParts, "attach_skin", ItemDrop.ItemData.ItemType.Chest)) ok++;
+            if (AddArmor(LegsName, "ArmorTrollLeatherLegs", "stevethetroll_costume_legs", BundleAssets.CostumeLegsParts, "attach_skin", ItemDrop.ItemData.ItemType.Legs)) ok++;
             if (AddClub()) ok++;
             _helmetHash = HelmetName.GetStableHashCode(); _chestHash = ChestName.GetStableHashCode(); _legsHash = LegsName.GetStableHashCode(); _clubHash = ClubName.GetStableHashCode();
             if (SlipperItem.Shared != null) { SlipperItem.Shared.m_setName = SetName; SlipperItem.Shared.m_setSize = SetSize; SlipperItem.Shared.m_setStatusEffect = _set; }
@@ -70,13 +70,13 @@ namespace SteveTheTroll.Item
 
         static string IconOf(ItemDrop.ItemData.ItemType type)
         {
-            return type == ItemDrop.ItemData.ItemType.Helmet ? "CostumeHelmetIcon" : type == ItemDrop.ItemData.ItemType.Chest ? "CostumeChestIcon" : "CostumeLegsIcon";
+            return type == ItemDrop.ItemData.ItemType.Helmet ? BundleAssets.CostumeHelmetIcon : type == ItemDrop.ItemData.ItemType.Chest ? BundleAssets.CostumeChestIcon : BundleAssets.CostumeLegsIcon;
         }
 
         /// Our icon from the bundle (rendered by scripts/costume_icon.py); the vanilla icon stays when it is missing.
         static void Icon(ItemConfig cfg, string name)
         {
-            var icon = Plugin.Bundle.LoadAsset<Sprite>(name);
+            var icon = BundleAssets.Load<Sprite>(name);
             if (icon != null) cfg.Icons = new[] { icon };
             else ModLog.Warn("CostumeItems: icon '" + name + "' not in the bundle - the vanilla icon stays");
         }
@@ -89,7 +89,7 @@ namespace SteveTheTroll.Item
             se.name = SetEffectName;
             se.m_name = "$stevethetroll_se_set";
             se.m_tooltip = "$stevethetroll_se_set_tooltip";
-            se.m_icon = Plugin.Bundle.LoadAsset<Sprite>("SteveTheTrollSetIcon");
+            se.m_icon = BundleAssets.Load<Sprite>(BundleAssets.SetIcon);
             se.m_speedModifier = SetSpeed;
             se.m_addMaxCarryWeight = SetCarry;
             // D-077 (user: "-50% stamina usage"): every stamina use of the player halves
@@ -104,7 +104,7 @@ namespace SteveTheTroll.Item
 
         static GameObject Part(string prefab, string child)
         {
-            var p = Plugin.Bundle.LoadAsset<GameObject>(prefab);
+            var p = BundleAssets.Load<GameObject>(prefab);
             var c = p != null ? p.transform.Find(child) : null;
             if (c == null) ModLog.Error("CostumeItems: bundle part " + prefab + "/" + child + " missing (bundle has prefab " + (p != null) + ")");
             return c != null ? c.gameObject : null;
@@ -134,10 +134,10 @@ namespace SteveTheTroll.Item
             foreach (var r in item.ItemPrefab.GetComponentsInChildren<Renderer>(true))
                 if (!r.transform.IsChildOf(mine.transform)) { var mf = r.GetComponent<MeshFilter>(); Object.DestroyImmediate(r, true); if (mf != null) Object.DestroyImmediate(mf, true); groundRemoved++; }
             GameObject ground = mine;
-            string groundName = type == ItemDrop.ItemData.ItemType.Chest ? "CostumeChestGround" : type == ItemDrop.ItemData.ItemType.Legs ? "CostumeLegsGround" : null;
+            string groundName = type == ItemDrop.ItemData.ItemType.Chest ? BundleAssets.CostumeChestGround : type == ItemDrop.ItemData.ItemType.Legs ? BundleAssets.CostumeLegsGround : null;
             if (groundName != null)
             {
-                var gp = Plugin.Bundle.LoadAsset<GameObject>(groundName);
+                var gp = BundleAssets.Load<GameObject>(groundName);
                 if (gp != null) { ground = Object.Instantiate(gp, item.ItemPrefab.transform, false); ground.name = "stt_ground"; }
                 else ModLog.Warn("CostumeItems: ground model '" + groundName + "' not in the bundle - " + name + " has no ground look");
             }
@@ -203,14 +203,14 @@ namespace SteveTheTroll.Item
 
         static bool AddClub()
         {
-            var part = Part("ClubParts", "attach/model");
+            var part = Part(BundleAssets.ClubParts, "attach/model");
             if (part == null) return false;
             var cfg = new ItemConfig { Name = "$stevethetroll_club", Description = "$stevethetroll_club_desc", CraftingStation = CraftingStations.Workbench, MinStationLevel = 1 };
             cfg.AddRequirement(new RequirementConfig("RoundLog", 15, 5, true));        // D-071: core wood
             cfg.AddRequirement(new RequirementConfig("FineWood", 15, 5, true));
             cfg.AddRequirement(new RequirementConfig("Thistle", 10, 0, true));
             cfg.AddRequirement(new RequirementConfig("TrollHide", 2, 0, true));
-            Icon(cfg, "TrollClubIcon");
+            Icon(cfg, BundleAssets.TrollClubIcon);
             var item = new CustomItem(ClubName, "SledgeIron", cfg);
             if (item.ItemPrefab == null || item.ItemDrop == null) { ModLog.Error("CostumeItems: could not clone SledgeIron for the club"); return false; }
             var attach = item.ItemPrefab.transform.Find("attach");

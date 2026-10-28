@@ -110,7 +110,6 @@ namespace SteveTheTroll.Ui
             { "stevethetroll_troll_noattacks", "not known yet (seen when the troll is near you)" },
             { "stevethetroll_troll_died", "{0} has died." },
             { "stevethetroll_gofarm", "Go farm" },
-            { "stevethetroll_gofarm_nofocus", "Pick what {0} should farm first." },
             { "stevethetroll_gofarm_far", "{0} is too far away to get orders." },
             { "stevethetroll_gofarm_started", "{0} goes to farm {1}." },
             { "stevethetroll_status_farming", "Farming" },

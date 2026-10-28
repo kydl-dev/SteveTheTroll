@@ -10,21 +10,13 @@ namespace SteveTheTroll.Testing
     /// e.g. "FAIL: coil radius 0.900 m, expected 0.180 m". null or an exception counts as FAIL. Results land in the session report.
     /// Keep them cheap and read-only: they also run in players' games when GameProbe is installed there (it never is for players).
     /// </summary>
-    internal static class InGameTests
+    internal static partial class InGameTests
     {
         /// The player config is bound and the mod is switched on.
         static string Startup_ConfigBound()
         {
             if (ModSettings.EnableAll == null) return "FAIL: ModSettings.Bind did not run (EnableAll is null)";
             return ModSettings.On ? "PASS: EnableAll on, menu key " + ModSettings.MenuKey.Value : "SKIP: EnableAll is off in the config";
-        }
-
-        /// The local player exists once a world is loaded (example of a World_ test; replace with the mod's own checks).
-        static string World_PlayerPresent()
-        {
-            var p = Player.m_localPlayer;
-            ModLog.Verbose("InGameTests: World_PlayerPresent player " + (p != null ? p.GetPlayerName() : "null"));
-            return p != null ? "PASS: " + p.GetPlayerName() + " at " + p.transform.position.ToString("F1") : "FAIL: no local player 5 s after the world loaded";
         }
 
         /// T-004b: everything the runtime troll figure reads from the game exists (Troll/Visual, the troll's log, the player's feet).

@@ -12,7 +12,7 @@ namespace SteveTheTroll.Ui
     /// </summary>
     internal static class TrollMapPins
     {
-        const string IconName = "CostumeHelmetIcon";
+        const string IconName = BundleAssets.CostumeHelmetIcon;
         const float RefreshSeconds = 2f;
         static readonly Dictionary<string, Minimap.PinData> Pins = new Dictionary<string, Minimap.PinData>();
         static readonly System.Reflection.MethodInfo AddPinMethod = AccessTools.Method(typeof(Minimap), "AddPin");
@@ -66,7 +66,7 @@ namespace SteveTheTroll.Ui
         {
             if (_iconLooked) return _icon;
             _iconLooked = true;
-            _icon = Plugin.Bundle != null ? Plugin.Bundle.LoadAsset<Sprite>(IconName) : null;
+            _icon = BundleAssets.Load<Sprite>(IconName);
             if (_icon == null) ModLog.Warn("TrollMapPins: icon '" + IconName + "' not in the bundle - the game's pin icon is used");
             return _icon;
         }

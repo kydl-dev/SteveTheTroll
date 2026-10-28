@@ -9,7 +9,7 @@ namespace SteveTheTroll.Ui
     /// </summary>
     internal static class CostumeMenuData
     {
-        const string ViewerPrefab = "CostumeViewer";
+        const string ViewerPrefab = BundleAssets.CostumeViewer;
 
         /// Expected outcome: the costume's data, or null before a world is loaded / when the items are missing (logged).
         internal static CostumeData Read()
@@ -83,7 +83,7 @@ namespace SteveTheTroll.Ui
         internal static GameObject MakeModel(string id)
         {
             if (id != MainMenuView.CostumeModel) { ModLog.Warn("CostumeMenuData: unknown viewer model '" + id + "'"); return null; }
-            var prefab = Plugin.Bundle != null ? Plugin.Bundle.LoadAsset<GameObject>(ViewerPrefab) : null;
+            var prefab = BundleAssets.Load<GameObject>(ViewerPrefab);
             if (prefab == null) { ModLog.Warn("CostumeMenuData: '" + ViewerPrefab + "' not in the bundle"); return null; }
             var copy = Object.Instantiate(prefab);
             copy.name = "SteveTheTroll_ViewerCostume";
