@@ -62,6 +62,66 @@ namespace SteveTheTroll.Testing
             return (ok ? "PASS: " : "FAIL: ") + detail;
         }
 
+        // D-075 / D-076 / D-080: the four costume items, their set, the plush feet, the ground looks and the club numbers.
+        static string World_CostumeItems()
+        {
+            var db = ObjectDB.instance;
+            if (db == null) return "SKIP: no ObjectDB";
+            var sb = new System.Text.StringBuilder();
+            bool ok = true;
+            foreach (var n in new[] { Item.CostumeItems.HelmetName, Item.CostumeItems.ChestName, Item.CostumeItems.LegsName })
+            {
+                var drop = db.GetItemPrefab(n) != null ? db.GetItemPrefab(n).GetComponent<ItemDrop>() : null;
+                if (drop == null) { sb.Append(n + " missing; "); ok = false; continue; }
+                var sh = drop.m_itemData.m_shared;
+                bool recipe = db.GetRecipe(drop.m_itemData) != null;
+                bool col = drop.GetComponent<BoxCollider>() != null;
+                bool good = Mathf.Approximately(sh.m_armor, Item.CostumeItems.Armor) && Mathf.Approximately(sh.m_armorPerLevel, Item.CostumeItems.ArmorPerLevel) && sh.m_maxQuality == Item.CostumeItems.MaxQuality
+                    && sh.m_setName == Item.CostumeItems.SetName && sh.m_setSize == Item.CostumeItems.SetSize && sh.m_setStatusEffect != null && recipe && col && sh.m_icons != null && sh.m_icons.Length > 0;
+                if (n == Item.CostumeItems.LegsName) { var skin = drop.transform.Find("attach_skin/CostumeFeet"); good &= skin != null && skin.GetComponent<Item.CostumeFeet>() != null; }
+                sb.Append(n + " armor " + sh.m_armor + " +" + sh.m_armorPerLevel + " q" + sh.m_maxQuality + " set '" + sh.m_setName + "' " + sh.m_setSize + " recipe " + recipe + " ground collider " + col + (good ? " ok; " : " WRONG; "));
+                ok &= good;
+            }
+            bool slippersInSet = Item.SlipperItem.Shared != null && Item.SlipperItem.Shared.m_setName == Item.CostumeItems.SetName;
+            var club = db.GetItemPrefab(Item.CostumeItems.ClubName) != null ? db.GetItemPrefab(Item.CostumeItems.ClubName).GetComponent<ItemDrop>() : null;
+            bool clubOk = club != null && Mathf.Approximately(club.m_itemData.m_shared.m_damages.m_blunt, Item.CostumeItems.ClubBlunt) && Mathf.Approximately(club.m_itemData.m_shared.m_damages.m_pickaxe, Item.CostumeItems.ClubPickaxe)
+                && club.m_itemData.m_shared.m_itemType == ItemDrop.ItemData.ItemType.TwoHandedWeapon && club.transform.Find("attach/stt_club_model") != null && db.GetRecipe(club.m_itemData) != null;
+            var se = db.GetStatusEffect(Item.CostumeItems.SetEffectName.GetStableHashCode()) as SE_Stats;
+            bool seOk = se != null && se.m_icon != null && Mathf.Approximately(se.m_speedModifier, Item.CostumeItems.SetSpeed) && Mathf.Approximately(se.m_addMaxCarryWeight, Item.CostumeItems.SetCarry) && Mathf.Approximately(se.m_runStaminaDrainModifier, Item.CostumeItems.SetStamina);
+            sb.Append("slippers in the set " + slippersInSet + ", club " + clubOk + ", set effect " + seOk);
+            ModLog.Verbose("InGameTests: World_CostumeItems " + sb);
+            return (ok && slippersInSet && clubOk && seOk ? "PASS: " : "FAIL: ") + sb;
+        }
+
+        // D-076: our five recipes show once the player knows ANY of their materials (the pure rule + the local player's known recipes).
+        static string World_RecipeUnlock()
+        {
+            bool rule = Item.RecipeUnlockPatch.AnyKnown(new[] { "$item_trollhide", "$item_deerhide" }, new System.Collections.Generic.HashSet<string> { "$item_deerhide" })
+                && !Item.RecipeUnlockPatch.AnyKnown(new[] { "$item_trollhide" }, new System.Collections.Generic.HashSet<string> { "$item_wood" });
+            var p = Player.m_localPlayer;
+            var db = ObjectDB.instance;
+            if (p == null || db == null) return (rule ? "SKIP: " : "FAIL: ") + "rule " + rule + ", no player / ObjectDB for the known recipes";
+            var known = HarmonyLib.AccessTools.FieldRefAccess<Player, System.Collections.Generic.HashSet<string>>("m_knownMaterial")(p);
+            bool station = (bool)HarmonyLib.AccessTools.Method(typeof(Player), "KnowStationLevel").Invoke(p, new object[] { "$piece_workbench", 1 });   // private in 1.0.20
+            var sb = new System.Text.StringBuilder("rule " + rule + ", workbench known " + station + "; ");
+            bool ok = rule;
+            foreach (var n in new[] { Item.SlipperItem.PrefabName, Item.CostumeItems.HelmetName, Item.CostumeItems.ChestName, Item.CostumeItems.LegsName, Item.CostumeItems.ClubName })
+            {
+                var drop = db.GetItemPrefab(n) != null ? db.GetItemPrefab(n).GetComponent<ItemDrop>() : null;
+                var recipe = drop != null ? db.GetRecipe(drop.m_itemData) : null;
+                if (recipe == null) { sb.Append(n + " no recipe; "); ok = false; continue; }
+                var mats = new System.Collections.Generic.List<string>();
+                foreach (var r in recipe.m_resources) if (r != null && r.m_resItem != null) mats.Add(r.m_resItem.m_itemData.m_shared.m_name);
+                bool any = Item.RecipeUnlockPatch.AnyKnown(mats, known);
+                bool isKnown = p.IsRecipeKnown(drop.m_itemData.m_shared.m_name);
+                bool good = !station || !any || isKnown;              // with the workbench known and a material known the recipe must be known
+                sb.Append(n + " material known " + any + ", recipe known " + isKnown + (good ? "; " : " WRONG; "));
+                ok &= good;
+            }
+            ModLog.Verbose("InGameTests: World_RecipeUnlock " + sb);
+            return (ok ? "PASS: " : "FAIL: ") + sb;
+        }
+
         const string ExpectedName = "Fluffy Slippers";
 
         // TEST-012 lesson: the patch class's reflection lookups (static m_tameDeltaTime) must load without an exception.

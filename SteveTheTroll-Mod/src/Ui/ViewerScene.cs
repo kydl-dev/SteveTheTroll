@@ -15,14 +15,14 @@ namespace SteveTheTroll.Ui
         const int FirstLayer = 31, LastLayer = 24;
 
         /// Expected outcome: a rig (never null; with no free layer it uses the last one tried and says so).
-        internal static IModelScene Make(Func<string, GameObject> makeModel, ViewerSettings settings)
+        internal static IModelScene Make(Func<string, GameObject> makeModel, ViewerSettings settings, int slot = 0)
         {
             int layer = PickLayer();
             var main = Camera.main;
             bool mainSees = main != null && (main.cullingMask & (1 << layer)) != 0;
             ModLog.Verbose("ViewerScene: layer " + layer + " ('" + LayerMask.LayerToName(layer) + "'), main camera " + (main != null ? "'" + main.name + "' far clip " + main.farClipPlane.ToString("0") + " m, sees the layer " + mainSees + ", rendering path " + main.actualRenderingPath : "none")
                 + " (the rig stands " + Vector3.Distance(main != null ? main.transform.position : Vector3.zero, ModelViewerRig.Park).ToString("0") + " m away)");
-            return new ModelViewerRig(makeModel, layer, settings, UiKit.Track, s => ModLog.Verbose(s), "SteveTheTroll_ViewerRig");
+            return new ModelViewerRig(makeModel, layer, settings, UiKit.Track, s => ModLog.Verbose(s), "SteveTheTroll_ViewerRig" + (slot > 0 ? slot.ToString() : ""), ModelViewerRig.Park + Vector3.right * 500f * slot);   // D-080: one rig per viewport, 500 m apart
         }
 
         static int PickLayer()

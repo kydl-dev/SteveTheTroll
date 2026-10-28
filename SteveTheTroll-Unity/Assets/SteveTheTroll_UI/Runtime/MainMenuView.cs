@@ -6,33 +6,42 @@ using UnityEngine.UIElements;
 namespace SteveTheTroll.Ui
 {
     /// <summary>
-    /// WHAT the mod's menu shows (UI Toolkit, shared Kydl.Ui look; D-039 / D-043): tab 1 Slippers = a 3D view of the slippers + their details
-    /// (later the troll costume), tab 2 Troll work = every tamed troll, what it does and its focus, tab 3 Trolls = one troll's stats and position. Compiled into the mod AND shown by the Unity preview
+    /// WHAT the mod's menu shows (UI Toolkit, shared Kydl.Ui look; D-039 / D-043): tab 1 Slippers = a 3D view of the slippers + their details,
+    /// Costume (D-080) = the mascot set, its pieces and the club, tab 2 Troll work = every tamed troll, what it does and its focus, tab 3 Trolls = one troll's stats and position. Compiled into the mod AND shown by the Unity preview
     /// (Assets/SteveTheTroll_UI/Preview/MenuPreview.cs). Keep game types OUT of this folder; the game side is src/Ui/MainMenu.cs.
     /// </summary>
     internal static class MainMenuView
     {
         internal const string SlippersModel = "slippers";
+        internal const string CostumeModel = "costume";
 
         /// `slippers` = the item's data, `makeScene` = the 3D scene (null = name only), `trolls` = the player's tamed trolls (D-043, live or last
         /// seen), `focusChosen(id, value)` = a troll's new focus; `startTab` 0 Slippers, 1 Troll work, 2 Trolls (the preview can start on any).
         internal static VisualElement Build(Func<string, string> text, Action onClose, SlipperData slippers, Func<IModelScene> makeScene, ViewerSettings viewer,
-            IList<TrollInfo> trolls, Action<string, string> focusChosen, Action<string> goFarm, int startTab = 0, long nowTicks = 0)
+            IList<TrollInfo> trolls, Action<string, string> focusChosen, Action<string> goFarm, int startTab = 0, long nowTicks = 0,
+            CostumeData costume = null, Func<IModelScene> makeCostumeScene = null)
         {
             var w = UiKit.Window(text("stevethetroll_menu_title"), text("stevethetroll_menu_footer"), onClose, out UiScroll body);
             // D-046: the two troll tabs only exist while the player has at least one living tamed troll (near or far)
             bool anyTroll = false;
             if (trolls != null) foreach (var t in trolls) if (t.DiedTicks <= 0) anyTroll = true;
-            var tabs = anyTroll
-                ? new[] { SlippersTab(text, slippers, makeScene, viewer), WorkTab(text, trolls, focusChosen, goFarm), TrollsTab(text, trolls, nowTicks) }
-                : new[] { SlippersTab(text, slippers, makeScene, viewer) };
+            // D-080: tab 2 Costume (the set, its pieces and the club) whenever the costume items exist
+            var tabList = new List<VisualElement> { SlippersTab(text, slippers, makeScene, viewer) };
+            var nameList = new List<string> { text("stevethetroll_tab_slippers") };
+            if (costume != null) { tabList.Add(CostumeTab(text, costume, makeCostumeScene, viewer)); nameList.Add(text("stevethetroll_tab_costume")); }
+            if (anyTroll)
+            {
+                tabList.Add(WorkTab(text, trolls, focusChosen, goFarm)); nameList.Add(text("stevethetroll_tab_troll"));
+                tabList.Add(TrollsTab(text, trolls, nowTicks)); nameList.Add(text("stevethetroll_tab_trolls"));
+            }
+            var tabs = tabList.ToArray();
             foreach (var t in tabs) body.Content.Add(t);
-            var names = anyTroll ? new[] { text("stevethetroll_tab_slippers"), text("stevethetroll_tab_troll"), text("stevethetroll_tab_trolls") } : new[] { text("stevethetroll_tab_slippers") };
+            var names = nameList.ToArray();
             var bar = new TabBar(names, startTab, index => ShowTab(tabs, index));
             ShowTab(tabs, bar.Selected);
             w.Insert(1, bar.Root);               // between the title bar and the scrolling body: the tabs stay put while the content scrolls
             UiLog.Verbose("MainMenuView: built (" + tabs.Length + " tabs, start tab " + bar.Selected + ", slippers " + (slippers != null ? slippers.ToString() : "none")
-                + ", 3D scene " + (makeScene != null ? "yes" : "no") + ", trolls " + (trolls != null ? trolls.Count : 0) + ", troll tabs " + (anyTroll ? "shown" : "hidden (no living tamed troll)") + ")");
+                + ", 3D scene " + (makeScene != null ? "yes" : "no") + ", costume " + (costume != null ? costume.ToString() : "none") + ", trolls " + (trolls != null ? trolls.Count : 0) + ", troll tabs " + (anyTroll ? "shown" : "hidden (no living tamed troll)") + ")");
             return w;
         }
 
@@ -46,6 +55,18 @@ namespace SteveTheTroll.Ui
             tab.Add(UiControls.Heading(d.Name));
             tab.Add(UiControls.Note(d.Description));
             tab.Add(DetailsView.Build(SlipperDetailsBuilder.Build(d, text), text("stevethetroll_details_q1"), text("stevethetroll_details_qmax") + " " + d.MaxQuality));
+            return tab;
+        }
+
+        // D-080 Costume tab: a 3D view of the whole mascot + the set / pieces / club details.
+        static VisualElement CostumeTab(Func<string, string> text, CostumeData d, Func<IModelScene> makeScene, ViewerSettings viewer)
+        {
+            var tab = new VisualElement { name = "stevethetroll-costume-tab" };
+            tab.style.flexShrink = 0;
+            tab.Add(ModelViewportView.Build(d.SetName, CostumeModel, makeScene, viewer, text("stevethetroll_viewer_hint"), text("stevethetroll_viewer_reset"), text("stevethetroll_viewer_unavailable")));
+            tab.Add(UiControls.Heading(d.SetName));
+            tab.Add(UiControls.Note(d.SetDescription));
+            tab.Add(DetailsView.Build(CostumeDetailsBuilder.Build(d, text), text("stevethetroll_details_q1"), text("stevethetroll_details_qmax") + " 4"));
             return tab;
         }
 

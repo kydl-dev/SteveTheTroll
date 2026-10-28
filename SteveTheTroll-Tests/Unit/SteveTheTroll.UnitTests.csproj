@@ -17,6 +17,8 @@
     <Compile Include="..\..\SteveTheTroll-Unity\Assets\SteveTheTroll_UI\Runtime\DetailGroup.cs" Link="Ui\DetailGroup.cs" />
     <Compile Include="..\..\SteveTheTroll-Unity\Assets\SteveTheTroll_UI\Runtime\SlipperData.cs" Link="Ui\SlipperData.cs" />
     <Compile Include="..\..\SteveTheTroll-Unity\Assets\SteveTheTroll_UI\Runtime\SlipperDetailsBuilder.cs" Link="Ui\SlipperDetailsBuilder.cs" />
+    <Compile Include="..\..\SteveTheTroll-Unity\Assets\SteveTheTroll_UI\Runtime\CostumeData.cs" Link="Ui\CostumeData.cs" />
+    <Compile Include="..\..\SteveTheTroll-Unity\Assets\SteveTheTroll_UI\Runtime\CostumeDetailsBuilder.cs" Link="Ui\CostumeDetailsBuilder.cs" />
     <Compile Include="..\..\SteveTheTroll-Unity\Assets\SteveTheTroll_UI\Runtime\TrollFocus.cs" Link="Ui\TrollFocus.cs" />
     <Compile Include="..\..\SteveTheTroll-Unity\Assets\SteveTheTroll_UI\Runtime\TrollInfo.cs" Link="Ui\TrollInfo.cs" />
     <Compile Include="..\..\SteveTheTroll-Unity\Assets\SteveTheTroll_UI\Runtime\TrollDetailsBuilder.cs" Link="Ui\TrollDetailsBuilder.cs" />

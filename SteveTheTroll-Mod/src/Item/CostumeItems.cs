@@ -15,7 +15,7 @@ namespace SteveTheTroll.Item
     ///  - chest   <- ArmorTrollLeatherChest: child "attach_skin" = CostumeChestParts/attach_skin (skinned, the game swaps in the wearer's bones)
     ///  - legs    <- ArmorTrollLeatherLegs: child "attach_skin" = CostumeLegsParts/attach_skin (+ plush feet, hidden while the slippers are worn)
     ///  - club    <- SledgeIron (two-handed slam, knockback, stagger): the meshes under "attach" swapped for ClubParts/attach/model
-    /// Ground look: the helmet shows our head, chest / legs / club keep the vanilla ground model (club: our trunk); our icons (scripts/costume_icon.py). Armor pieces: 20 armor +5 per quality, max quality 4, recipe as the slippers
+    /// Ground look (D-080): the helmet shows our head, chest / legs our laid-down suit / trousers, the club our trunk; our icons (scripts/costume_icon.py). Armor pieces: 20 armor +5 per quality, max quality 4, recipe as the slippers
     /// (5 TrollHide, 4 DeerHide, 6 Blueberries, workbench 1, every upgrade 2 TrollHide + 2 Blueberries). Club: 70 blunt + 30 chop + 30 pickaxe,
     /// +10 / +5 / +5 per quality, max quality 4, knockback x1.5, workbench 1, 15 RoundLog + 15 FineWood + 10 Thistle + 2 TrollHide, every
     /// upgrade 5 RoundLog + 5 FineWood. The vanilla troll-leather set bonus is replaced by ours (D-076, set 'Steve The Troll' with the slippers).
@@ -127,10 +127,20 @@ namespace SteveTheTroll.Item
             // as vanilla: attach_skin is inactive in the item (VisEquipment activates its copy), a helmet's "attach" is active and is
             // also the ground look (HelmetBronze) - so the helmet's vanilla ground model goes
             mine.SetActive(partChild != "attach_skin");
+            // D-080: the vanilla ground model goes for every piece; chest / legs get our laid-down suit / trousers (bundle CostumeChestGround /
+            // CostumeLegsGround), the helmet shows its 'attach' head; one box collider fitted to our ground look (so it rests on the ground)
             int groundRemoved = 0;
-            if (partChild == "attach")
-                foreach (var r in item.ItemPrefab.GetComponentsInChildren<Renderer>(true))
-                    if (!r.transform.IsChildOf(mine.transform)) { var mf = r.GetComponent<MeshFilter>(); Object.DestroyImmediate(r, true); if (mf != null) Object.DestroyImmediate(mf, true); groundRemoved++; }
+            foreach (var r in item.ItemPrefab.GetComponentsInChildren<Renderer>(true))
+                if (!r.transform.IsChildOf(mine.transform)) { var mf = r.GetComponent<MeshFilter>(); Object.DestroyImmediate(r, true); if (mf != null) Object.DestroyImmediate(mf, true); groundRemoved++; }
+            GameObject ground = mine;
+            string groundName = type == ItemDrop.ItemData.ItemType.Chest ? "CostumeChestGround" : type == ItemDrop.ItemData.ItemType.Legs ? "CostumeLegsGround" : null;
+            if (groundName != null)
+            {
+                var gp = Plugin.Bundle.LoadAsset<GameObject>(groundName);
+                if (gp != null) { ground = Object.Instantiate(gp, item.ItemPrefab.transform, false); ground.name = "stt_ground"; }
+                else ModLog.Warn("CostumeItems: ground model '" + groundName + "' not in the bundle - " + name + " has no ground look");
+            }
+            string collider = FitCollider(item.ItemPrefab, ground);
             if (type == ItemDrop.ItemData.ItemType.Legs)
             {
                 var feet = mine.transform.Find("CostumeFeet");
@@ -147,11 +157,38 @@ namespace SteveTheTroll.Item
             bool added = ItemManager.Instance.AddItem(item);
             SlipperUpgradeCostPatch.Track(name, 3);
             int renderers = mine.GetComponentsInChildren<Renderer>(true).Length;
-            ModLog.Verbose("CostumeItems: " + name + " (" + type + ", from " + basePrefab + ") added " + added + ": vanilla worn parts removed " + removed + ", vanilla ground renderers removed " + groundRemoved + ", ours '" + partChild
+            ModLog.Verbose("CostumeItems: " + name + " (" + type + ", from " + basePrefab + ") added " + added + ": vanilla worn parts removed " + removed + ", vanilla ground renderers removed " + groundRemoved + ", ground look " + (ground != null ? ground.name : "none") + ", " + collider + ", ours '" + partChild
                 + "' with " + renderers + " renderer(s), armor " + s.m_armor + " +" + s.m_armorPerLevel + "/quality, max quality " + s.m_maxQuality
                 + (type == ItemDrop.ItemData.ItemType.Helmet ? ", hair " + s.m_helmetHideHair + ", beard " + s.m_helmetHideBeard : ""));
             ModLog.Check("CostumeItems: " + name + " armor at quality 4", s.m_armor + s.m_armorPerLevel * 3, 35f, 0.001, "");
             return added;
+        }
+
+        /// D-080: replaces the item's colliders with one box around our ground look (mesh bounds in the item's space; the prefab is not
+        /// instantiated, so renderer bounds are empty). Expected outcome: a short description of the new box ("no collider" when no mesh).
+        static string FitCollider(GameObject item, GameObject look)
+        {
+            if (look == null) return "no collider (no ground look)";
+            var root = item.transform;
+            bool any = false; var b = new Bounds();
+            foreach (var mf in look.GetComponentsInChildren<MeshFilter>(true))
+            {
+                if (mf.sharedMesh == null) continue;
+                var m = root.worldToLocalMatrix * mf.transform.localToWorldMatrix;
+                var mb = mf.sharedMesh.bounds;
+                for (int i = 0; i < 8; i++)
+                {
+                    var c = mb.center + Vector3.Scale(mb.extents, new Vector3((i & 1) == 0 ? -1 : 1, (i & 2) == 0 ? -1 : 1, (i & 4) == 0 ? -1 : 1));
+                    var p = m.MultiplyPoint3x4(c);
+                    if (!any) { b = new Bounds(p, Vector3.zero); any = true; } else b.Encapsulate(p);
+                }
+            }
+            if (!any) return "no collider (no mesh)";
+            int removed = 0;
+            foreach (var c in item.GetComponentsInChildren<Collider>(true)) { Object.DestroyImmediate(c, true); removed++; }
+            var box = item.AddComponent<BoxCollider>();
+            box.center = b.center; box.size = Vector3.Max(b.size, Vector3.one * 0.1f);
+            return "box collider " + box.size.ToString("F2") + " m at " + box.center.ToString("F2") + " (vanilla colliders removed " + removed + ")";
         }
 
         /// Removes the vanilla worn visual: children named attach / attach_* (the ground model stays).

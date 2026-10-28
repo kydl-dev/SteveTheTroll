@@ -27,6 +27,7 @@ namespace SteveTheTroll.Ui
         readonly ViewerSettings _settings;
         readonly Action<string> _log;
         readonly int _layer;
+        readonly Vector3 _park;
         readonly string _rigName;
         GameObject _root, _pivot, _model;
         Camera _camera;
@@ -40,7 +41,7 @@ namespace SteveTheTroll.Ui
         public Texture Texture { get { return _texture; } }
 
         /// `layer` 0..31: the layer only this rig uses (the game's cameras must not draw it, S5). `background` = the clear colour of the view.
-        internal ModelViewerRig(Func<string, GameObject> makeModel, int layer, ViewerSettings settings, Color background, Action<string> log, string rigName = "Kydl_ViewerRig")
+        internal ModelViewerRig(Func<string, GameObject> makeModel, int layer, ViewerSettings settings, Color background, Action<string> log, string rigName = "Kydl_ViewerRig", Vector3? park = null)
         {
             _makeModel = makeModel;
             _settings = settings ?? new ViewerSettings();
@@ -50,7 +51,8 @@ namespace SteveTheTroll.Ui
             if (_layer != layer) Log("ModelViewerRig: layer " + layer + " is outside 0..31, using " + _layer);
 
             _root = new GameObject(_rigName);
-            _root.transform.position = Park;
+            _park = park ?? Park;                                    // D-080: a second viewer (Costume tab) stands 500 m beside the first
+            _root.transform.position = _park;
             _pivot = new GameObject("Pivot");
             _pivot.transform.SetParent(_root.transform, false);
 
@@ -70,7 +72,7 @@ namespace SteveTheTroll.Ui
 
             AddLight(camGo.transform, "KeyLight", new Vector3(25f, 30f, 0f), 1.1f);     // from up-left behind the camera
             AddLight(camGo.transform, "FillLight", new Vector3(-10f, -45f, 0f), 0.45f); // softer from the right
-            Log("ModelViewerRig: made at " + V(Park) + ", layer " + _layer + ", fov " + FieldOfView + " deg, background " + background + ", " + _settings);
+            Log("ModelViewerRig: made at " + V(_park) + ", layer " + _layer + ", fov " + FieldOfView + " deg, background " + background + ", " + _settings);
         }
 
         void AddLight(Transform parent, string name, Vector3 euler, float intensity)

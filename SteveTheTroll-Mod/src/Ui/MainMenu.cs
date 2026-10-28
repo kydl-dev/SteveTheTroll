@@ -43,8 +43,10 @@ namespace SteveTheTroll.Ui
             var viewer = new ViewerSettings();
             var data = SlipperMenuData.Read();
             var trolls = Taming.TrollRegistry.Trolls();
+            var costume = CostumeMenuData.Read();
             _window = MainMenuView.Build(k => Loc.T(k), () => Close("X"), data, data != null ? () => ViewerScene.Make(SlipperMenuData.MakeModel, viewer) : (System.Func<IModelScene>)null,
-                viewer, trolls, (id, v) => SlipperMenuData.FocusChosen(id, v), id => SlipperMenuData.GoFarm(id), 0, System.DateTime.UtcNow.Ticks);
+                viewer, trolls, (id, v) => SlipperMenuData.FocusChosen(id, v), id => SlipperMenuData.GoFarm(id), 0, System.DateTime.UtcNow.Ticks,
+                costume, costume != null ? () => ViewerScene.Make(CostumeMenuData.MakeModel, viewer, 1) : (System.Func<IModelScene>)null);
             root.Add(_window);
             UiInputLock.Hold(LockName);
             ModLog.Verbose("MainMenu: opened (slippers data " + (data != null) + ", " + trolls.Count + " troll(s))");

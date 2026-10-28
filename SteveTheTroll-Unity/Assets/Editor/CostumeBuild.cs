@@ -96,6 +96,11 @@ namespace SteveTheTroll.EditorTools
                 RigidPrefab("CostumeHelmetParts", costume, "CostumeHelmet", helmetJoint.worldToLocalMatrix, Quaternion.identity);
                 // club: Blender +Z (trunk) arrives as Unity +Y; the vanilla sledges' attach space has the shaft along +Z -> model rotated +90 deg about X
                 RigidPrefab("ClubParts", club, "Club", Matrix4x4.identity, Quaternion.Euler(90f, 0f, 0f));
+                // D-080 ground looks (the item lying on the ground): suit / trousers + feet laid on their back, half size
+                GroundPrefab("CostumeChestGround", costume, new[] { "CostumeChest" }, 0.5f, true);
+                GroundPrefab("CostumeLegsGround", costume, new[] { "CostumeLegs", "CostumeFeet" }, 0.5f, true);
+                // D-080 the F6 Costume tab's 3D model: the whole mascot standing (static)
+                GroundPrefab("CostumeViewer", costume, new[] { "CostumeHelmet", "CostumeChest", "CostumeLegs", "CostumeFeet" }, 1f, false);
             }
             finally { Object.DestroyImmediate(player); }
             AssetDatabase.SaveAssets();
@@ -273,6 +278,43 @@ namespace SteveTheTroll.EditorTools
             Object.DestroyImmediate(root);
             Tag(saved);
             Log(prefabName + ": attach_skin with armature '" + armature.name + "' (" + map.Count + " transforms, " + missing + " body bone(s) missing) + " + string.Join(", ", parts.Select(x => x.Name)) + " -> " + path);
+        }
+
+        /// D-080: a static model of FBX parts (ground look or the F6 viewer's mascot): centred on the origin, laid on its back (front up) or standing, scaled. Child "model_<part>" per part.
+        static void GroundPrefab(string prefabName, GameObject fbx, string[] parts, float scale, bool layDown)
+        {
+            var srcs = parts.Select(n => Part(fbx, n)).ToArray();
+            var b = new Bounds(); bool first = true;
+            foreach (var (mf, _) in srcs)
+            {
+                var toRoot = Fix * mf.transform.localToWorldMatrix;
+                foreach (var v in mf.sharedMesh.vertices) { var p = toRoot.MultiplyPoint3x4(v); if (first) { b = new Bounds(p, Vector3.zero); first = false; } else b.Encapsulate(p); }
+            }
+            var lay = Matrix4x4.Scale(Vector3.one * scale) * Matrix4x4.Rotate(Quaternion.Euler(layDown ? -90f : 0f, 0f, 0f)) * Matrix4x4.Translate(-b.center);
+            var root = new GameObject(prefabName);
+            int verts = 0;
+            for (int i = 0; i < parts.Length; i++)
+            {
+                var (mf, mats) = srcs[i];
+                var m = Matrix4x4.Rotate(Quaternion.identity) * lay * Fix * mf.transform.localToWorldMatrix;
+                var src = mf.sharedMesh; var v = src.vertices; var n = src.normals;
+                var outV = new Vector3[v.Length]; var outN = new Vector3[v.Length];
+                for (int k = 0; k < v.Length; k++) { outV[k] = m.MultiplyPoint3x4(v[k]); outN[k] = m.MultiplyVector(n[k]).normalized; }
+                var mesh = new Mesh { name = parts[i] + (layDown ? "_Ground" : "_Viewer"), indexFormat = v.Length > 65000 ? UnityEngine.Rendering.IndexFormat.UInt32 : UnityEngine.Rendering.IndexFormat.UInt16 };
+                mesh.vertices = outV; mesh.normals = outN; mesh.subMeshCount = src.subMeshCount;
+                for (int sm = 0; sm < src.subMeshCount; sm++) mesh.SetTriangles(src.GetTriangles(sm), sm);
+                mesh.RecalculateBounds();
+                mesh = Save(mesh, parts[i] + (layDown ? "_Ground" : "_Viewer"));
+                var go = new GameObject("model_" + parts[i]); go.transform.SetParent(root.transform, false);
+                go.AddComponent<MeshFilter>().sharedMesh = mesh;
+                go.AddComponent<MeshRenderer>().sharedMaterials = mats.Select(x => Mat(x.name)).ToArray();
+                verts += v.Length;
+            }
+            string path = Root + "/" + prefabName + ".prefab";
+            var saved = PrefabUtility.SaveAsPrefabAsset(root, path);
+            Object.DestroyImmediate(root);
+            Tag(saved);
+            Log(prefabName + ": " + parts.Length + " part(s), " + verts + " verts, " + (layDown ? "laid down" : "standing") + ", scale " + scale + ", size " + (b.size * scale).ToString("F2") + " m -> " + path);
         }
 
         static void RigidPrefab(string prefabName, GameObject fbx, string part, Matrix4x4 rootToLocal, Quaternion modelRot)
