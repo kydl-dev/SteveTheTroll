@@ -2,7 +2,10 @@
 # v2 (user on v1): body less round, troll-like shading (darker back / shoulders / head top / outer limbs, lighter belly),
 # a real hand that grips the club (palm + curled fingers + thumb around the trunk); the club itself stays.
 # v3 (user on v2: "2 rows of fingers on the bat"): each finger is ONE curled band (part of a ring round the trunk) from the palm
-# round the front, the thumb one shorter band from the other side - a fist, not two columns of balls. Primitives only: proportions + colours for
+# round the front, the thumb one shorter band from the other side - a fist, not two columns of balls.
+# v4 (user on v3: the hand "very different from the other hand", fingers too long, need not reach the front of the club): both
+# hands are built by the same make_hand (palm, 4 curled fingers, thumb, claws); fingers curl only ~130 deg round the club; the
+# left hand is the same hand loosely closed round nothing. Primitives only: proportions + colours for
 # the user's sign-off of the one-sentence look (user "yes" 2026-10-28). Not the final model, not exported.
 # Run: blender -b --factory-startup --python scripts/blockout_costume.py -- <out_prefix> <out_blend>
 # Axes: Blender Z up, the player faces +Y, the player's RIGHT is +X. 1 unit = 1 m. Player ~1.8 m (head top), shoulders ~1.45 m.
@@ -68,6 +71,9 @@ def arc(name, centre, z_axis, x_axis, radius, thick, a0, a1, material="blue"):
     o.matrix_world = Matrix.Translation(Vector(centre)) @ Matrix((x, y, z)).transposed().to_4x4()
     o.data.materials.append(M[material])
     bpy.ops.object.shade_smooth()
+    for end, ang in (("a", a0), ("b", a1)):          # round caps: the cut ring ends are open tubes otherwise (v4 render)
+        t = math.radians(ang)
+        add("sphere", f"{name}_cap_{end}", tuple(Vector(centre) + (x * math.cos(t) + y * math.sin(t)) * radius), (thick, thick, thick), material=material)
     log.append(f"{name}: arc {a0}..{a1} deg r={radius:.3f}")
     return o
 
@@ -113,26 +119,36 @@ b = up.cross(n).normalized()                                       # around the 
 palm = grip + n * (grip_r + 0.05)
 limb("upper_arm_R", (0.40, 0.0, 1.35), tuple(elbow_R), 0.11, "blue_dark")
 limb("fore_arm_R", tuple(elbow_R), tuple(palm + n * 0.05), 0.095)
-pq = n.to_track_quat("Z", "X").to_euler()
-add("sphere", "palm_R", tuple(palm), (0.075, 0.09, 0.05), tuple(math.degrees(a) for a in pq), "blue_light")
 FR = 0.032                                                         # finger thickness (plush)
-FINGER_END = 200                                                   # deg round the trunk from the palm side
-for k, t in enumerate((0.075, 0.025, -0.025, -0.075)):             # 4 fingers next to each other along the trunk, one band each
-    arc(f"finger_R{k}", tuple(grip + up * t), up, n, grip_r + FR * 0.85, FR * (1.0 if k < 3 else 0.85), 0, FINGER_END)
-    a = math.radians(FINGER_END)
-    tip = grip + up * t + (n * math.cos(a) + b * math.sin(a)) * (grip_r + FR * 0.85)
-    tang = (-n * math.sin(a) + b * math.cos(a)).normalized()
-    add("cone", f"claw_R{k}", tuple(tip + tang * 0.012), (0.012, 0.012, 0.022), tuple(math.degrees(x) for x in tang.to_track_quat("Z", "Y").to_euler()), "claw")
-arc("thumb_R", tuple(grip + up * 0.12), up, n, grip_r + FR * 0.95, FR * 1.15, -115, 0)   # thumb from the other side, above the fingers
+
+def make_hand(side, grip, axis, n, held_r, finger_end, thumb_from):
+    """One plush hand: palm on the n side of `axis` at `grip`, 4 fingers curled finger_end deg round a cylinder of radius held_r
+    (the club, or nothing for a loose fist), thumb from the other side, a claw at each finger tip. Same for both hands."""
+    b = axis.cross(n).normalized()
+    palm = grip + n * (held_r + 0.05)
+    pq = n.to_track_quat("Z", "X").to_euler()
+    add("sphere", f"palm_{side}", tuple(palm), (0.075, 0.09, 0.05), tuple(math.degrees(a) for a in pq), "blue_light")
+    for k, t in enumerate((0.075, 0.025, -0.025, -0.075)):
+        arc(f"finger_{side}{k}", tuple(grip + axis * t), axis, n, held_r + FR * 0.85, FR * (1.0 if k < 3 else 0.85), 0, finger_end)
+        a = math.radians(finger_end)
+        tip = grip + axis * t + (n * math.cos(a) + b * math.sin(a)) * (held_r + FR * 0.85)
+        tang = (-n * math.sin(a) + b * math.cos(a)).normalized()
+        add("cone", f"claw_{side}{k}", tuple(tip + tang * 0.012), (0.012, 0.012, 0.022), tuple(math.degrees(x) for x in tang.to_track_quat("Z", "Y").to_euler()), "claw")
+    arc(f"thumb_{side}", tuple(grip + axis * 0.11), axis, n, held_r + FR * 0.95, FR * 1.15, thumb_from, 0)
+    return palm
+
+make_hand("R", grip, up, n, grip_r, 130, -80)                      # round the club: fingers ~130 deg, not to its front
 log.append(f"right hand: grip={tuple(round(v,3) for v in grip)} trunk radius at grip {grip_r:.3f} m, palm {tuple(round(v,3) for v in palm)}")
 
-# left arm: relaxed, open plush hand
-limb("upper_arm_L", (-0.40, 0.0, 1.35), (-0.50, 0.05, 1.05), 0.11, "blue_dark")
-limb("fore_arm_L", (-0.50, 0.05, 1.05), (-0.52, 0.18, 0.86), 0.095)
-add("sphere", "palm_L", (-0.53, 0.22, 0.81), (0.08, 0.09, 0.06), material="blue_light")
-for k in range(4):
-    add("sphere", f"finger_L{k}", (-0.50 - 0.025 * k, 0.29, 0.74 + 0.01 * k), (FR, FR, FR * 1.6), material="blue")
-    add("cone", f"claw_L{k}", (-0.50 - 0.025 * k, 0.30, 0.69 + 0.01 * k), (0.012, 0.012, 0.025), (180, 0, 0), material="claw")
+# left arm: the same hand, loosely closed (round nothing), hanging at the side
+elbow_L = Vector((-0.50, 0.02, 1.08))
+grip_L = Vector((-0.52, 0.20, 0.80))
+axis_L = Vector((0.15, 0.35, 1.0)).normalized()
+nL = elbow_L - grip_L; nL = (nL - axis_L * nL.dot(axis_L)).normalized()
+loose_r = 0.035
+palm_L = make_hand("L", grip_L, axis_L, nL, loose_r, 150, -80)
+limb("upper_arm_L", (-0.40, 0.0, 1.35), tuple(elbow_L), 0.11, "blue_dark")
+limb("fore_arm_L", tuple(elbow_L), tuple(palm_L + nL * 0.05), 0.095)
 
 # --- LEGS piece: fluffy trousers + straw loincloth (the Fluffy Slippers are the feet)
 add("sphere", "hips", (0, 0.0, 0.78), (0.36, 0.29, 0.20))
@@ -184,7 +200,8 @@ cam.data.lens = 50
 scene.camera = cam
 target = Vector((0, 0, 1.05))
 views = (("front34", (2.6, 4.2, 1.6), target), ("side", (5.0, 0.0, 1.3), target), ("back34", (-2.8, -4.0, 1.7), target),
-         ("hand", tuple(grip + Vector((0.9, 0.7, 0.25))), grip))
+         ("hand", tuple(grip + Vector((0.9, 0.7, 0.25))), grip),
+         ("handL", tuple(grip_L + Vector((-0.9, 0.7, 0.25))), grip_L))
 for view, loc, aim in views:
     cam.location = loc
     cam.rotation_euler = (aim - cam.location).to_track_quat("-Z", "Y").to_euler()
