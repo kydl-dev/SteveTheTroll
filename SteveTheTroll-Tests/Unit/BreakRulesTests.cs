@@ -26,8 +26,12 @@ namespace SteveTheTroll.Tests.Unit
         [TestCase(null, false)]
         public void ClubTarget_ByName(string name, bool expected) { Assert.That((bool)Call("ClubTarget", name, false), Is.EqualTo(expected)); }
 
+        [Test] public void TimberwoodItem_IsFrostwood() { Assert.That(ModAssembly.GetStatic(T, "TimberwoodItem"), Is.EqualTo("Frostwood")); }
+
         [Test] public void ClubTarget_TimberDrops_Counts() { Assert.That((bool)Call("ClubTarget", "SomeNorthTree", true), Is.True); }
 
+        [TestCase("Frostwood", true)]
+        [TestCase("frostwood", true)]
         [TestCase("Timberwood", true)]
         [TestCase("TIMBER", true)]
         [TestCase("Wood", false)]

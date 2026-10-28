@@ -20,7 +20,7 @@ namespace SteveTheTroll.Tests.Unit
         [TestCase("AshLands", "Blackwood")]
         [TestCase("ashlands", "Blackwood")]
         [TestCase("Mistlands", "BlackMarble")]
-        [TestCase("DeepNorth", "Timberwood")]
+        [TestCase("DeepNorth", "Frostwood")]
         [TestCase("DeepNorth", "GoldOre")]
         public void Biome_AddsItsItems(string biome, string item)
         {
@@ -36,8 +36,8 @@ namespace SteveTheTroll.Tests.Unit
         [Test]
         public void DeepNorth_BothItems_Once()
         {
-            var l = TrollFocus.ChoicesFor("DeepNorth", "Timberwood");
-            Assert.That(l.FindAll(v => v == "Timberwood").Count, Is.EqualTo(1));
+            var l = TrollFocus.ChoicesFor("DeepNorth", "Frostwood");
+            Assert.That(l.FindAll(v => v == "Frostwood").Count, Is.EqualTo(1));
             Assert.That(l.Count, Is.EqualTo(TrollFocus.Choices.Count + 2));
         }
 
@@ -54,7 +54,7 @@ namespace SteveTheTroll.Tests.Unit
 
         [TestCase("Blackwood", "stevethetroll_focus_blackwood")]
         [TestCase("BlackMarble", "stevethetroll_focus_blackmarble")]
-        [TestCase("Timberwood", "stevethetroll_focus_timberwood")]
+        [TestCase("Frostwood", "stevethetroll_focus_timberwood")]
         [TestCase("GoldOre", "stevethetroll_focus_goldore")]
         public void BiomeItems_KeptAndNamed(string v, string key)
         {

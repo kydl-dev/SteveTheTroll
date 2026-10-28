@@ -8,6 +8,8 @@ namespace SteveTheTroll.Taming
     {
         /// D-120: prefab name starts the Troll Club breaks (case-insensitive): Yggdrasil shoots, scorched (Ashlands) trees, giant remains,
         /// petrified Gammeltrolls. Timberwood trees are found by their drops (TimberDrop) because their prefab names vary.
+        /// Timberwood's item prefab is "Frostwood" (user 2026-10-28: "Timberwood has prefab: Frostwood").
+        public const string TimberwoodItem = "Frostwood";
         public static readonly string[] ClubPrefixes = { "YggaShoot", "yggashoot_log", "AshlandsTree", "giant_skull", "giant_ribs", "DN_gammeltroll" };
 
         /// D-124: Ashlands fortress wall pieces a 2-star tamed troll may break (WearNTear). The Troll Club never damages them.
@@ -29,8 +31,12 @@ namespace SteveTheTroll.Taming
             return false;
         }
 
-        /// A drop item name that is Timberwood (or another "timber" material). Expected outcome: true for "Timberwood", false for "Wood".
-        public static bool TimberDrop(string item) { return !string.IsNullOrEmpty(item) && item.IndexOf("timber", System.StringComparison.OrdinalIgnoreCase) >= 0; }
+        /// A drop item name that is Timberwood: the prefab "Frostwood" (or a "timber" material). Expected outcome: true for "Frostwood", false for "Wood".
+        public static bool TimberDrop(string item)
+        {
+            if (string.IsNullOrEmpty(item)) return false;
+            return string.Equals(item, TimberwoodItem, System.StringComparison.OrdinalIgnoreCase) || item.IndexOf("timber", System.StringComparison.OrdinalIgnoreCase) >= 0;
+        }
 
         /// D-120: the Troll Club hit on this object gets its full chop / pickaxe at any tool tier. Expected outcome: true for the listed
         /// prefabs and for a tree / log that drops timber.

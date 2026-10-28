@@ -33,7 +33,7 @@ namespace SteveTheTroll.Ui
         {
             new[] { "Blackwood", "stevethetroll_focus_blackwood", "AshLands" },      // scorched trees
             new[] { "BlackMarble", "stevethetroll_focus_blackmarble", "Mistlands" },  // giant remains (skull / ribs -> frac)
-            new[] { "Timberwood", "stevethetroll_focus_timberwood", "DeepNorth" },   // Deep North trees
+            new[] { "Frostwood", "stevethetroll_focus_timberwood", "DeepNorth" },    // Timberwood (item prefab Frostwood) from Deep North trees
             new[] { "GoldOre", "stevethetroll_focus_goldore", "DeepNorth" },         // petrified Gammeltroll (DN_gammeltrollFrac*)
         };
 
@@ -78,7 +78,7 @@ namespace SteveTheTroll.Ui
         {
             "Wood", "FineWood", "RoundLog", "ElderBark", "YggdrasilWood", "Blackwood",
             "CopperOre", "TinOre", "IronOre", "SilverOre", "CopperScrap", "IronScrap", "BlackMetalScrap", "FlametalOre", "FlametalOreNew",
-            "BlackMarble", "Timberwood", "GoldOre",                                   // D-126: the biome focus items
+            "BlackMarble", "Frostwood", "GoldOre",                                    // D-126: the biome focus items (Frostwood = Timberwood)
         };
 
         /// The source prefab (name without "(Clone)") counts for the goal. Expected outcome: true when the goal has no source list or the

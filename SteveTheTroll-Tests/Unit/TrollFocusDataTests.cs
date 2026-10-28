@@ -41,7 +41,7 @@ namespace SteveTheTroll.Tests.Unit
             {
                 "Wood", "FineWood", "RoundLog", "ElderBark", "YggdrasilWood", "Blackwood",
                 "CopperOre", "TinOre", "IronOre", "SilverOre", "CopperScrap", "IronScrap", "BlackMetalScrap", "FlametalOre", "FlametalOreNew",
-                "BlackMarble", "Timberwood", "GoldOre",
+                "BlackMarble", "Frostwood", "GoldOre",
             };
             Assert.That(TrollFocus.PickupItems, Is.EqualTo(expected));
         }
