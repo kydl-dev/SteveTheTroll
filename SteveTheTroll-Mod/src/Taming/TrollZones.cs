@@ -150,13 +150,30 @@ namespace SteveTheTroll.Taming
         [HarmonyPatch(typeof(ZNetScene), "CreateObjects")]
         static class Create
         {
+            // TEST-048: a kept zone can also be in the game's own near list (1.0.21 simulation distance, or the player moved since the last Tick).
+            // Its ZDOs were then listed twice and the game created the troll twice (two GameObjects, one ZDO). Only ZDOs not listed yet are added.
+            static readonly List<ZDO> Found = new List<ZDO>();
+            static readonly HashSet<ZDO> Seen = new HashSet<ZDO>();
+            static float _nextLog;
+
             static void Prefix(List<ZDO> currentNearObjects)
             {
                 if (_broken || Kept.Count == 0 || currentNearObjects == null || FindObjects == null || ZDOMan.instance == null) return;
                 try
                 {
+                    Found.Clear();
                     var visited = NewVisited();
-                    foreach (var zone in Kept) FindObjects.Invoke(ZDOMan.instance, new object[] { zone, currentNearObjects, visited });
+                    foreach (var zone in Kept) FindObjects.Invoke(ZDOMan.instance, new object[] { zone, Found, visited });
+                    int before = currentNearObjects.Count;
+                    int added = TamingRules.AddMissing(currentNearObjects, Found, Seen);
+                    int skipped = Found.Count - added;
+                    if (Time.time >= _nextLog)
+                    {
+                        _nextLog = Time.time + 5f;
+                        ModLog.Verbose("TrollZones: CreateObjects - game listed " + before + " ZDO(s), kept zones " + Kept.Count + " found " + Found.Count
+                            + ", added " + added + ", already listed (not added twice) " + skipped);
+                    }
+                    ModLog.Check("TrollZones: near list grew by the new ZDOs only", currentNearObjects.Count - before, added, 0f, "ZDO(s)");
                 }
                 catch (System.Exception e) { Break("CreateObjects", e); }
             }

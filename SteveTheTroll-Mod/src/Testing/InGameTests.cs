@@ -79,7 +79,7 @@ namespace SteveTheTroll.Testing
             bool clubOk = club != null && Mathf.Approximately(club.m_itemData.m_shared.m_damages.m_blunt, Item.CostumeItems.ClubBlunt) && Mathf.Approximately(club.m_itemData.m_shared.m_damages.m_pickaxe, Item.CostumeItems.ClubPickaxe)
                 && club.m_itemData.m_shared.m_itemType == ItemDrop.ItemData.ItemType.TwoHandedWeapon && club.transform.Find("attach/stt_club_model") != null && db.GetRecipe(club.m_itemData) != null;
             var se = db.GetStatusEffect(Item.CostumeItems.SetEffectName.GetStableHashCode()) as SE_Stats;
-            bool seOk = se != null && se.m_icon != null && Mathf.Approximately(se.m_speedModifier, Item.CostumeItems.SetSpeed) && Mathf.Approximately(se.m_addMaxCarryWeight, Item.CostumeItems.SetCarry) && Mathf.Approximately(se.m_runStaminaDrainModifier, Item.CostumeItems.SetStamina);
+            bool seOk = se != null && se.m_icon != null && Mathf.Approximately(se.m_speedModifier, Item.CostumeItems.SetSpeed) && se.m_addMaxCarryWeight == 0f && Mathf.Approximately(se.m_runStaminaDrainModifier, Item.CostumeItems.SetStamina);
             sb.Append("slippers in the set " + slippersInSet + ", club " + clubOk + ", set effect " + seOk);
             ModLog.Verbose("InGameTests: World_CostumeItems " + sb);
             return (ok && slippersInSet && clubOk && seOk ? "PASS: " : "FAIL: ") + sb;
@@ -151,9 +151,9 @@ namespace SteveTheTroll.Testing
             try
             {
                 string r = Taming.TrollTamingPatch.SelfCheck();
-                bool stats = Taming.TamedTrollStats.SelfCheck(), defend = Taming.TrollDefend.SelfCheck(), farm = Taming.TrollFarming.SelfCheck(), store = Backpack.BackpackStore.SelfCheck();
-                string more = ", TamedTrollStats " + stats + ", TrollDefend " + defend + ", TrollFarming " + farm + ", BackpackStore " + store;
-                return r.StartsWith("PASS") && stats && defend && farm && store ? r + more : "FAIL: " + r + more;
+                bool speed = Taming.TamedTrollSpeed.SelfCheck(), stats = Taming.TamedTrollStats.SelfCheck(), defend = Taming.TrollDefend.SelfCheck(), farm = Taming.TrollFarming.SelfCheck(), store = Backpack.BackpackStore.SelfCheck();
+                string more = ", TamedTrollSpeed " + speed + ", TamedTrollStats " + stats + ", TrollDefend " + defend + ", TrollFarming " + farm + ", BackpackStore " + store;
+                return r.StartsWith("PASS") && speed && stats && defend && farm && store ? r + more : "FAIL: " + r + more;
             }
             catch (System.TypeInitializationException e) { return "FAIL: " + (e.InnerException != null ? e.InnerException.Message : e.Message); }
         }

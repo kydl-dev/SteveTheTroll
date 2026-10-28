@@ -25,7 +25,8 @@ namespace SteveTheTroll.Item
         public const string HelmetName = "STT_CostumeHelmet", ChestName = "STT_CostumeChest", LegsName = "STT_CostumeLegs", ClubName = "STT_TrollClub";
         public const float Armor = 20f, ArmorPerLevel = 5f;
         public const int MaxQuality = 4;
-        public const float ClubBlunt = 70f, ClubChop = 30f, ClubPickaxe = 30f, ClubBluntPerLevel = 10f, ClubChopPerLevel = 5f, ClubPickaxePerLevel = 5f;
+        // D-113 (user 2026-10-28): 150 blunt + 50 chop + 50 pickaxe, +35 / +20 / +20 per upgrade -> 255 / 110 / 110 at quality 4
+        public const float ClubBlunt = 150f, ClubChop = 50f, ClubPickaxe = 50f, ClubBluntPerLevel = 35f, ClubChopPerLevel = 20f, ClubPickaxePerLevel = 20f;
         public const float ClubKnockbackFactor = 1.5f;
         public const float ClubDurability = 500f;
         static int _helmetHash, _chestHash, _legsHash, _clubHash;
@@ -33,7 +34,8 @@ namespace SteveTheTroll.Item
         public const string SetName = "stevethetroll_set";
         public const int SetSize = 4;
         public const string SetEffectName = "SE_STT_SteveTheTroll";
-        public const float SetSpeed = 0.5f, SetCarry = 75f;          // run 50 % faster, carry 25 % more (25 % of the base 300)
+        public const float SetSpeed = 0.5f;                          // run 50 % faster
+        public const float SetCarryPercent = 0.25f;                  // D-112: carry weight x 1.25 of the TOTAL (Megingjord included; SetCarryPatch)
         public const int SetTrollLimit = 5;
         public const float SetStamina = -0.5f;                       // D-077: -50 % stamina use (run, jump, attack, block, dodge, swim, sneak, tools)
         static StatusEffect _set;
@@ -81,7 +83,7 @@ namespace SteveTheTroll.Item
             else ModLog.Warn("CostumeItems: icon '" + name + "' not in the bundle - the vanilla icon stays");
         }
 
-        /// D-076: "Steve The Troll" - the set effect (all 3 costume pieces + the Fluffy Slippers): run 50 % faster, carry 75 more,
+        /// D-076: "Steve The Troll" - the set effect (all 3 costume pieces + the Fluffy Slippers): run 50 % faster, carry 25 % more (D-112, SetCarryPatch),
         /// up to SetTrollLimit tamed trolls (TrollTaming.TrollLimit). Registered with Jotunn; shown with its own icon.
         static StatusEffect SetEffect()
         {
@@ -91,13 +93,13 @@ namespace SteveTheTroll.Item
             se.m_tooltip = "$stevethetroll_se_set_tooltip";
             se.m_icon = BundleAssets.Load<Sprite>(BundleAssets.SetIcon);
             se.m_speedModifier = SetSpeed;
-            se.m_addMaxCarryWeight = SetCarry;
+            se.m_addMaxCarryWeight = 0f;                                 // D-112: a percentage of the total instead (SetCarryPatch)
             // D-077 (user: "-50% stamina usage"): every stamina use of the player halves
             se.m_runStaminaDrainModifier = SetStamina; se.m_jumpStaminaUseModifier = SetStamina; se.m_attackStaminaUseModifier = SetStamina;
             se.m_blockStaminaUseModifier = SetStamina; se.m_dodgeStaminaUseModifier = SetStamina; se.m_swimStaminaUseModifier = SetStamina;
             se.m_sneakStaminaUseModifier = SetStamina; se.m_homeItemStaminaUseModifier = SetStamina;
             bool added = ItemManager.Instance.AddStatusEffect(new CustomStatusEffect(se, false));
-            ModLog.Verbose("CostumeItems: set effect " + SetEffectName + " added " + added + " (icon " + (se.m_icon != null) + ", speed +" + (SetSpeed * 100f) + " %, carry +" + SetCarry + ", stamina use " + (SetStamina * 100f) + " %, trolls " + SetTrollLimit + ")");
+            ModLog.Verbose("CostumeItems: set effect " + SetEffectName + " added " + added + " (icon " + (se.m_icon != null) + ", speed +" + (SetSpeed * 100f) + " %, carry +" + (SetCarryPercent * 100f) + " %, stamina use " + (SetStamina * 100f) + " %, trolls " + SetTrollLimit + ")");
             ModLog.Check("CostumeItems: set effect registered", added ? 1 : 0, 1, 0, "");
             return se;
         }
@@ -238,7 +240,9 @@ namespace SteveTheTroll.Item
             ModLog.Verbose("CostumeItems: " + ClubName + " (from SledgeIron) added " + added + ": sledge meshes removed " + hidden + ", damage blunt " + s.m_damages.m_blunt + " chop " + s.m_damages.m_chop
                 + " pickaxe " + s.m_damages.m_pickaxe + " (+" + ClubBluntPerLevel + "/" + ClubChopPerLevel + "/" + ClubPickaxePerLevel + "), vanilla blunt " + v.m_blunt + ", knockback " + knock + " -> " + s.m_attackForce
                 + ", durability " + dur + " -> " + s.m_maxDurability + ", movement " + (slow * 100f).ToString("0") + " % -> 0 %, stagger x" + (s.m_attack != null ? s.m_attack.m_staggerMultiplier.ToString("F2") : "?") + ", tool tier " + s.m_toolTier + ", skill " + s.m_skillType + ", two-handed " + (s.m_itemType == ItemDrop.ItemData.ItemType.TwoHandedWeapon));
-            ModLog.Check("CostumeItems: club blunt at quality 4", s.m_damages.m_blunt + s.m_damagesPerLevel.m_blunt * 3, 100f, 0.001, "");
+            ModLog.Check("CostumeItems: club blunt at quality 4", s.m_damages.m_blunt + s.m_damagesPerLevel.m_blunt * 3, 255f, 0.001, "");
+            ModLog.Check("CostumeItems: club chop at quality 4", s.m_damages.m_chop + s.m_damagesPerLevel.m_chop * 3, 110f, 0.001, "");
+            ModLog.Check("CostumeItems: club pickaxe at quality 4", s.m_damages.m_pickaxe + s.m_damagesPerLevel.m_pickaxe * 3, 110f, 0.001, "");
             return added;
         }
     }

@@ -30,7 +30,7 @@ namespace SteveTheTroll.Ui
             if (d.Pieces.Count == 0) { ModLog.Warn("CostumeMenuData: no costume item in ObjectDB - no Costume tab"); return null; }
             d.SetWorn = p != null ? (int)HarmonyLib.AccessTools.Method(typeof(Humanoid), "GetSetCount").Invoke(p, new object[] { Item.CostumeItems.SetName }) : 0;   // private in 1.0.20
             d.SetEffects.Add(string.Format(Loc.T("stevethetroll_set_move"), (Item.CostumeItems.SetSpeed * 100f).ToString("0")));
-            d.SetEffects.Add(string.Format(Loc.T("stevethetroll_set_carry"), Item.CostumeItems.SetCarry.ToString("0")));
+            d.SetEffects.Add(string.Format(Loc.T("stevethetroll_set_carry"), (Item.CostumeItems.SetCarryPercent * 100f).ToString("0")));
             d.SetEffects.Add(string.Format(Loc.T("stevethetroll_set_stamina"), (Item.CostumeItems.SetStamina * 100f).ToString("0")));
             d.SetEffects.Add(string.Format(Loc.T("stevethetroll_set_trolls"), Item.CostumeItems.SetTrollLimit));
 

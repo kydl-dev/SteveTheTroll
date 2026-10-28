@@ -12,12 +12,20 @@ namespace SteveTheTroll.Item
     [HarmonyPatch(typeof(SE_Stats), nameof(SE_Stats.GetTooltipString))]
     internal static class SetTooltipPatch
     {
-        internal const string StaminaLabel = "$stevethetroll_se_stamina";
+        internal const string StaminaLabel = "$stevethetroll_se_stamina", CarryLabel = "$stevethetroll_se_carry";
 
         static void Postfix(SE_Stats __instance, ref string __result)
         {
             if (__instance == null || !__instance.name.StartsWith(CostumeItems.SetEffectName, System.StringComparison.Ordinal)) return;   // also the active copy "(Clone)"
             __result = Compact(__result, StaminaLabel, CostumeItems.SetStamina);
+            __result = WithPercent(__result, CarryLabel, CostumeItems.SetCarryPercent);   // D-112: not an SE_Stats field, so the game shows no line for it
+        }
+
+        /// Pure: one more "label: +25%" line at the end (in the game's orange). Expected outcome: the tooltip with that line.
+        internal static string WithPercent(string tooltip, string label, float fraction)
+        {
+            string line = label + ": <color=orange>" + (fraction > 0f ? "+" : "") + (fraction * 100f).ToString("0", System.Globalization.CultureInfo.InvariantCulture) + "%</color>";
+            return string.IsNullOrEmpty(tooltip) ? line : tooltip.TrimEnd('\n') + "\n" + line;
         }
 
         /// 1.0.20 SE_Stats lines: $se_runstamina, $se_jumpstamina, ..., $se_sneakstamina and "$base_item_modifier" (the base item stamina line).

@@ -181,5 +181,32 @@ namespace SteveTheTroll.Taming
             if (p > 100f) p = 100f;
             return (int)p;
         }
-    }
+    
+        /// TEST-048 (Steve 3 twice): adds the items of `found` that are not in `into` yet (nor twice in `found`). `seen` is filled with `into`
+        /// first. The game's ZNetScene.CreateObjectsSorted creates every listed ZDO that is not created yet WITHOUT checking again inside the
+        /// loop, so a ZDO listed twice became two GameObjects. Expected outcome: how many were added (= into grew by exactly that much).
+        internal static int AddMissing<T>(System.Collections.Generic.List<T> into, System.Collections.Generic.List<T> found, System.Collections.Generic.HashSet<T> seen)
+        {
+            if (into == null || found == null || seen == null) return 0;
+            seen.Clear();
+            foreach (var x in into) seen.Add(x);
+            int before = into.Count;
+            foreach (var x in found) if (seen.Add(x)) into.Add(x);
+            return into.Count - before;
+        }
+
+        /// D-111: the animator speed of a FREE tamed troll (the game has just put it back to 1): 1 becomes the factor. A freeze frame (the hit
+        /// pause, speed below 0.01) and any other speed the game set stay as they are. Expected outcome: the speed to use.
+        internal static float FreeAnimSpeed(float gameSpeed, float factor)
+        {
+            if (gameSpeed < 0.01f || factor <= 0f) return gameSpeed;
+            return System.Math.Abs(gameSpeed - 1f) < 0.0001f ? factor : gameSpeed;
+        }
+
+        /// D-111: an attack clip's speed event (scale) for a tamed troll. Expected outcome: scale x factor (factor 0 or less = the clip's own scale).
+        internal static float AttackAnimSpeed(float scale, float factor)
+        {
+            return factor > 0f ? scale * factor : scale;
+        }
+}
 }

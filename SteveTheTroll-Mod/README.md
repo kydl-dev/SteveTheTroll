@@ -30,7 +30,7 @@ Every player needs the mod (same minor version). Each player's trolls belong to 
 Stop reading here if you want the surprise.
 
 - **Taming:** wear the slippers near a wild troll for a minute and it becomes yours, named Steve 1, Steve 2, ... Tamed trolls are tougher,
-  hit harder and can be renamed. One tamed troll with the slippers alone.
+  hit harder, move and swing 25 % faster and can be renamed. One tamed troll with the slippers alone.
 - **More trolls near home:** with the slippers on, trolls spawn 200 - 500 m from your bed in any land biome (never closer to the house),
   up to 2 at a time; with the whole costume, up to 6.
 - **Farming:** a tamed troll fells trees and breaks rocks and ore veins on its own, and picks up wood, ores and scrap within 50 m into a
@@ -44,7 +44,7 @@ Stop reading here if you want the surprise.
 - **Map:** every tamed troll has a pin on the map at its last known place. The Trolls tab shows each troll's health, stars, attacks,
   resistances, position and how full its backpack is.
 - **The Troll Mascot costume:** head, suit and trousers plus the **Troll Club** (a whole tree trunk). Slippers + the 3 pieces = the set
-  **Steve The Troll**: +50 % movement speed, +75 carry weight, -50 % stamina usage, up to 5 tamed trolls. The Costume tab appears once you
+  **Steve The Troll**: +50 % movement speed, +25 % carry weight, -50 % stamina usage, up to 5 tamed trolls. The Costume tab appears once you
   have crafted all four costume items.
 
 ## Bug reports
