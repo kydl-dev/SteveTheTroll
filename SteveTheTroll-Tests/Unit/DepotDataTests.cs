@@ -41,6 +41,22 @@ namespace SteveTheTroll.Tests.Unit
         }
 
         [Test]
+        public void Frame_PolesAtTheCorners_FloorsSideBySide()
+        {
+            // D-064 / D-086: 4 x 2 m frame -> poles at x -2 / 0 / 2 and z -1 / 1 (each once), floors at x -1 / 1
+            var poles = new System.Collections.Generic.HashSet<string>();
+            var floors = new System.Collections.Generic.HashSet<string>();
+            foreach (var p in Get("Frame"))
+            {
+                string at = (float)F(p, "X") + "/" + (float)F(p, "Z");
+                if ((string)F(p, "Prefab") == "wood_pole") { Assert.That(poles.Add(at), Is.True, "two poles at " + at); Assert.That((float)F(p, "Y"), Is.EqualTo(0.5f)); }
+                else { Assert.That(floors.Add(at), Is.True, "two floors at " + at); Assert.That((float)F(p, "Y"), Is.EqualTo(1f)); }
+            }
+            Assert.That(poles, Is.EquivalentTo(new[] { "-2/-1", "0/-1", "2/-1", "-2/1", "0/1", "2/1" }));
+            Assert.That(floors, Is.EquivalentTo(new[] { "-1/0", "1/0" }));
+        }
+
+        [Test]
         public void StackLimitFive() { Assert.That((int)ModAssembly.GetStatic(T, "MaxStack"), Is.EqualTo(5)); }
     }
 }

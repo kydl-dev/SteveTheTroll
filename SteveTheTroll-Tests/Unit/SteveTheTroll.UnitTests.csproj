@@ -8,7 +8,9 @@
     <AssemblyName>SteveTheTroll.UnitTests</AssemblyName>
     <RootNamespace>SteveTheTroll.Tests.Unit</RootNamespace>
   </PropertyGroup>
-  <ItemGroup>
+  <!-- Linked copies only in normal runs; in test-quality runs (KydlQuality=true) the tests use the mod's types (InternalsVisibleTo), so
+       Stryker / coverage measure the mod code itself (D-086). -->
+  <ItemGroup Condition="'$(KydlQuality)' != 'true'">
     <!-- D-039 menu: pure UI logic from the Unity project (shared viewer from the template + Slippers / Troll work tabs) -->
     <Compile Include="..\..\SteveTheTroll-Unity\Assets\SteveTheTroll_UI\Runtime\ViewerSettings.cs" Link="Ui\ViewerSettings.cs" />
     <Compile Include="..\..\SteveTheTroll-Unity\Assets\SteveTheTroll_UI\Runtime\ViewerMath.cs" Link="Ui\ViewerMath.cs" />

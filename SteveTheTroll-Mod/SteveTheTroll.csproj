@@ -22,5 +22,13 @@
     <Compile Include="..\SteveTheTroll-Unity\Assets\SteveTheTroll_Fit\Runtime\*.cs" Link="Fit\%(Filename)%(Extension)" />
   </ItemGroup>
 
+  <!-- Test-quality runs only (KydlQuality=true, _agent\tools\test-quality.ps1 / sonar.ps1): the unit tests use the mod's own internal UI
+       types instead of linked copies, so Stryker's mutated mod DLL is the code the tests run (D-086). Never set in a release build.
+       (An attribute file, not an <InternalsVisibleTo> item: Kydl.Mod.props turns GenerateAssemblyInfo off.) -->
+  <ItemGroup>
+    <Compile Remove="quality\**" />
+    <Compile Include="quality\QualityAccess.cs" Condition="'$(KydlQuality)' == 'true'" />
+  </ItemGroup>
+
   <Import Project="..\..\Claude\shared\Kydl.Mod.targets" />
 </Project>

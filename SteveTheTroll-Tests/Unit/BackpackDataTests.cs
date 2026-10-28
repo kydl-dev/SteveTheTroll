@@ -23,6 +23,39 @@ namespace SteveTheTroll.Tests.Unit
         }
 
         [Test]
+        public void PieceCounts_PerPrefab()
+        {
+            // D-053 / D-086: the dump's piece mix; a renamed / empty prefab name would spawn nothing in game
+            var count = new System.Collections.Generic.Dictionary<string, int>();
+            foreach (var o in Pieces()) { string n = (string)F(o, "Prefab"); count[n] = (count.TryGetValue(n, out int c) ? c : 0) + 1; }
+            Assert.That(count, Is.EquivalentTo(new System.Collections.Generic.Dictionary<string, int>
+            {
+                { "woodiron_beam", 19 }, { "iron_wall_2x2", 6 }, { "woodiron_pole", 6 }, { "piece_chest", 4 }, { "iron_floor_2x2", 4 }, { "woodiron_beam_45", 2 },
+            }));
+        }
+
+        [Test]
+        public void Heights_FromTheFloorToTheRoof()
+        {
+            // pivot y 1.5 in the dump: the floor beams (dump y 0.5) are 1 m below the pivot, the roof beams (2.5) 1 m above
+            float minY = 1e9f, maxY = -1e9f;
+            foreach (var o in Pieces()) { float y = (float)F(o, "Y"); minY = Math.Min(minY, y); maxY = Math.Max(maxY, y); }
+            Assert.That(minY, Is.EqualTo(-1f).Within(1e-3));
+            Assert.That(maxY, Is.EqualTo(1f).Within(1e-3));
+        }
+
+        [Test]
+        public void NoTwoPiecesInTheSamePlace()
+        {
+            var seen = new System.Collections.Generic.HashSet<string>();
+            foreach (var o in Pieces())
+            {
+                string key = F(o, "Prefab") + " " + Math.Round((float)F(o, "X"), 2) + " " + Math.Round((float)F(o, "Y"), 2) + " " + Math.Round((float)F(o, "Z"), 2) + " " + F(o, "Yaw");
+                Assert.That(seen.Add(key), Is.True, "duplicate " + key);
+            }
+        }
+
+        [Test]
         public void StrutsAtPivot_CageReachesAway()
         {
             float maxZ = -1e9f, minZ = 1e9f;

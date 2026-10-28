@@ -87,3 +87,6 @@ SteveTheTroll-Unity/Assets/RipReference.meta
 
 # --- game reference meshes exported from the rip for fitting (never in git, never shipped; D-014) ---
 /SteveTheTroll-Blender/reference/
+
+# SonarScanner work folder (_agent\tools\sonar.ps1, D-086)
+.sonarqube/

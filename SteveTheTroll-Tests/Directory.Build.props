@@ -28,6 +28,8 @@
     <!-- property-based tests (Claude\testing\TEST_QUALITY.md): FsCheck generates hundreds of inputs per rule and shrinks a failure to the
          smallest case. Use through Common\Props.cs (Props.Check). 2.16.6 (2.x C# API, runs on net48). -->
     <PackageReference Include="FsCheck" Version="2.16.6" />
+    <!-- coverage for SonarQube (user 2026-10-28: "coverlet + sonarqube + stryker.net"): XPlat Code Coverage, OpenCover format; _agent\tools\sonar.ps1 -->
+    <PackageReference Include="coverlet.collector" Version="6.0.4" />
   </ItemGroup>
 
   <ItemGroup>
