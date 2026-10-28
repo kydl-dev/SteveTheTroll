@@ -122,6 +122,21 @@ namespace SteveTheTroll.Testing
             return (ok ? "PASS: " : "FAIL: ") + sb;
         }
 
+        // D-085 (TEST-037: TrollZones passed a HashSet<int> where the game wants HashSet<SectorIndex> - an exception every frame): every method
+        // the mod calls through reflection is called once here with the real argument types.
+        static string World_ReflectionCalls()
+        {
+            string zones = Taming.TrollZones.SelfCheck();
+            bool pins = typeof(Minimap).GetMethod("AddPin") != null || HarmonyLib.AccessTools.Method(typeof(Minimap), "AddPin") != null;
+            bool setCount = HarmonyLib.AccessTools.Method(typeof(Humanoid), "GetSetCount") != null;
+            bool station = HarmonyLib.AccessTools.Method(typeof(Player), "KnowStationLevel") != null;
+            bool areas = HarmonyLib.AccessTools.Field(typeof(MineRock5), "m_hitAreas") != null;
+            string detail = "TrollZones " + zones + "; Minimap.AddPin " + pins + ", Humanoid.GetSetCount " + setCount + ", Player.KnowStationLevel " + station + ", MineRock5.m_hitAreas " + areas;
+            ModLog.Verbose("InGameTests: World_ReflectionCalls " + detail);
+            bool ok = !zones.StartsWith("FAIL") && pins && setCount && station && areas;
+            return (ok ? (zones.StartsWith("SKIP") ? "SKIP: " : "PASS: ") : "FAIL: ") + detail;
+        }
+
         const string ExpectedName = "Fluffy Slippers";
 
         // TEST-012 lesson: the patch class's reflection lookups (static m_tameDeltaTime) must load without an exception.

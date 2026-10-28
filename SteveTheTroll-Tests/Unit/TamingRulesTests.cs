@@ -40,6 +40,18 @@ namespace SteveTheTroll.Tests.Unit
         [Test] public void Cap_Set_FiveTrolls_Six() { Assert.That(Cap(true, true, 5, 10f), Is.EqualTo(6)); }
         [Test] public void Cap_Set_SixTrolls_None() { Assert.That(Cap(true, true, 6, 10f), Is.EqualTo(0)); }
         [Test] public void Cap_OutsideBedRadius_None() { Assert.That(Cap(true, true, 0, 500.5f), Is.EqualTo(0)); }
+        // D-085: global count around the bed against the cap; bed heal
+        [Test] public void Spawn_UnderCap_Allowed() { Assert.That((bool)ModAssembly.Call(T, "SpawnAllowed", 5, 6), Is.True); }
+        [Test] public void Spawn_AtCap_Blocked() { Assert.That((bool)ModAssembly.Call(T, "SpawnAllowed", 6, 6), Is.False); }
+        [Test] public void Spawn_OverCap_Blocked() { Assert.That((bool)ModAssembly.Call(T, "SpawnAllowed", 11, 6), Is.False); }
+        [Test] public void Spawn_NotCounted_Blocked() { Assert.That((bool)ModAssembly.Call(T, "SpawnAllowed", -1, 6), Is.False); }
+        [Test] public void Spawn_NoCap_Blocked() { Assert.That((bool)ModAssembly.Call(T, "SpawnAllowed", 0, 0), Is.False); }
+        [Test] public void Heal_FiftyPerSecond() { Assert.That((float)ModAssembly.Call(T, "BedHeal", 1000f, 5400f, 50f, 1f), Is.EqualTo(50f).Within(1e-4)); }
+        [Test] public void Heal_NotAboveMax() { Assert.That((float)ModAssembly.Call(T, "BedHeal", 5380f, 5400f, 50f, 1f), Is.EqualTo(20f).Within(1e-4)); }
+        [Test] public void Heal_Full_Nothing() { Assert.That((float)ModAssembly.Call(T, "BedHeal", 5400f, 5400f, 50f, 1f), Is.EqualTo(0f)); }
+        [Test] public void Heal_Dead_Nothing() { Assert.That((float)ModAssembly.Call(T, "BedHeal", 0f, 5400f, 50f, 1f), Is.EqualTo(0f)); }
+        [Test] public void Heal_Off_Nothing() { Assert.That((float)ModAssembly.Call(T, "BedHeal", 10f, 5400f, 0f, 1f), Is.EqualTo(0f)); }
+
         [Test] public void Cap_NoBed_None() { Assert.That(Cap(true, true, 0, -1f), Is.EqualTo(0)); }
 
         [Test]

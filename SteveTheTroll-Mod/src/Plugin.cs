@@ -87,20 +87,37 @@ namespace SteveTheTroll
             return fromFile;
         }
 
+        // D-085 (TEST-037: one exception in TrollZones.Tick, every second, also stopped every tick after it): each tick runs on its own; a
+        // failing tick is logged (once per name, then every 60 s) and the others still run.
+        static readonly System.Collections.Generic.Dictionary<string, float> TickErrorAt = new System.Collections.Generic.Dictionary<string, float>();
+        static void Run(string name, System.Action tick)
+        {
+            try { tick(); }
+            catch (System.Exception e)
+            {
+                float last;
+                if (TickErrorAt.TryGetValue(name, out last) && Time.time - last < 60f) return;
+                TickErrorAt[name] = Time.time;
+                ModLog.Error("Plugin: " + name + " failed: " + e.GetType().Name + ": " + e.Message + "\n" + e.StackTrace);
+            }
+        }
+
         void Update()
         {
             if (_cfgWatcher != null) _cfgWatcher.Tick();
             if (!ModSettings.On) return;
-            MainMenu.Tick();
-            Taming.TrollRegistry.Tick();
-            Taming.TrollZones.Tick();               // D-084: zones around far own trolls stay loaded (they keep farming)
-            Ui.TrollMapPins.Tick();                 // D-081: a map pin (costume head icon) per own tamed troll
-            Backpack.BackpackVisual.Tick();
-            Backpack.BackpackPickup.Tick();         // T-008c: wood / ores / scrap within 50 m into the backpack
-            Taming.TrollOrders.Tick();              // D-065: attack key (Mouse 4)
-            Taming.TrollGuard.Tick();               // D-065: attackers of the player / troll are targeted at once, crowds get ground slams
-            Taming.TrollHome.Tick();                // T-008e: slippers off -> own trolls wait at the bed
-            Taming.TrollIdle.Tick();                // D-062: no job for 2 min -> farms on its own         // T-008b: backpack on every tamed troll       // D-043: live values of the player's tamed trolls for the F6 lists
+            Run("MainMenu", () => MainMenu.Tick());
+            Run("TrollRegistry", () => Taming.TrollRegistry.Tick());
+            Run("TrollZones", () => Taming.TrollZones.Tick());               // D-084: zones around far own trolls stay loaded (they keep farming)
+            Run("TrollCensus", () => Taming.TrollCensus.Tick());             // D-085: trolls within 500 m of the bed (spawn cap)
+            Run("TrollMapPins", () => Ui.TrollMapPins.Tick());               // D-081: a map pin (costume head icon) per own tamed troll
+            Run("TrollBedHeal", () => Taming.TrollBedHeal.Tick());           // D-085: +50 HP/s within 50 m of the bed
+            Run("BackpackVisual", () => Backpack.BackpackVisual.Tick());
+            Run("BackpackPickup", () => Backpack.BackpackPickup.Tick());     // T-008c: wood / ores / scrap within 50 m into the backpack
+            Run("TrollOrders", () => Taming.TrollOrders.Tick());             // D-065: attack key (Mouse 4)
+            Run("TrollGuard", () => Taming.TrollGuard.Tick());               // D-065 / D-084: creatures going for the player near a troll
+            Run("TrollHome", () => Taming.TrollHome.Tick());                 // T-008e: slippers off -> own trolls wait at the bed
+            Run("TrollIdle", () => Taming.TrollIdle.Tick());                 // D-062: no job for 2 min -> farms on its own
         }
 
         void OnDestroy()

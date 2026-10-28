@@ -27,6 +27,28 @@ namespace SteveTheTroll.Taming
         static readonly List<ZDO> Scan = new List<ZDO>();
         static readonly System.Reflection.MethodInfo Poke = AccessTools.Method(typeof(ZoneSystem), "PokeLocalZone");
         static readonly System.Reflection.MethodInfo FindObjects = AccessTools.Method(typeof(ZDOMan), "FindObjects");
+        // TEST-037: the 3rd parameter is HashSet<ZoneSystem.SectorIndex> in 1.0.20, not HashSet<int> - made from the real parameter type
+        static readonly System.Type VisitedType = FindObjects != null && FindObjects.GetParameters().Length == 3 ? FindObjects.GetParameters()[2].ParameterType : null;
+        static bool _broken;
+
+        /// A fresh "visited sectors" set of the type the game's FindObjects wants. Expected outcome: the set, or null when it cannot be made.
+        internal static object NewVisited() { return VisitedType != null ? System.Activator.CreateInstance(VisitedType) : null; }
+
+        /// In-game test: the reflected methods exist with the parameters this class passes, and one FindObjects call on the player's zone works.
+        /// Expected outcome: "PASS: ..." / "FAIL: ...".
+        internal static string SelfCheck()
+        {
+            if (Poke == null || FindObjects == null || VisitedType == null) return "FAIL: PokeLocalZone " + (Poke != null) + ", FindObjects " + (FindObjects != null) + ", visited type " + (VisitedType != null ? VisitedType.Name : "none");
+            var p = Player.m_localPlayer;
+            if (p == null || ZDOMan.instance == null) return "SKIP: no player / ZDOMan (methods found, visited " + VisitedType + ")";
+            try
+            {
+                var list = new List<ZDO>();
+                FindObjects.Invoke(ZDOMan.instance, new object[] { ZoneSystem.GetZone(p.transform.position), list, NewVisited() });
+                return "PASS: FindObjects on the player's zone -> " + list.Count + " object(s), visited set " + VisitedType.Name + ", poke " + Poke.GetParameters()[0].ParameterType.Name;
+            }
+            catch (System.Exception e) { return "FAIL: FindObjects threw " + (e.InnerException ?? e).GetType().Name + ": " + (e.InnerException ?? e).Message; }
+        }
         static int _scanIndex;
         static bool _scanDone;
         static ZDOMan _scanFor;
@@ -38,6 +60,22 @@ namespace SteveTheTroll.Taming
 
         /// Plugin.Update. Expected outcome: how many zones are kept alive this second (-1 = nothing done this frame).
         internal static int Tick()
+        {
+            if (_broken || Time.time < _next) return -1;
+            try { return TickInner(); }
+            catch (System.Exception e) { Break("Tick", e); return -1; }
+        }
+
+        // TEST-037: an exception here ran every frame and stopped the mod's later ticks - now it switches the zones off once, with one error line.
+        static void Break(string where, System.Exception e)
+        {
+            _broken = true;
+            Kept.Clear(); KeptSet.Clear();
+            var inner = e.InnerException ?? e;
+            ModLog.Error("TrollZones: " + where + " failed - kept zones switched OFF for this session: " + inner.GetType().Name + ": " + inner.Message);
+        }
+
+        static int TickInner()
         {
             if (Time.time < _next) return -1;
             _next = Time.time + TickSeconds;
@@ -74,7 +112,7 @@ namespace SteveTheTroll.Taming
             {
                 if (Poke != null) Poke.Invoke(zs, new object[] { zone });
                 Temp.Clear();
-                if (FindObjects != null) FindObjects.Invoke(zm, new object[] { zone, Temp, new HashSet<int>() });
+                if (FindObjects != null) FindObjects.Invoke(zm, new object[] { zone, Temp, NewVisited() });
                 foreach (var z in Temp) if (z != null && z.Persistent && !z.HasOwner()) { z.SetOwner(session); claimed++; }
             }
             if (claimed > 0 && ModLog.DebugOn) ModLog.Verbose("TrollZones: " + claimed + " unowned object(s) claimed in " + Kept.Count + " kept zone(s)");
@@ -112,12 +150,15 @@ namespace SteveTheTroll.Taming
         [HarmonyPatch(typeof(ZNetScene), "CreateObjects")]
         static class Create
         {
-            static readonly HashSet<int> Visited = new HashSet<int>();
             static void Prefix(List<ZDO> currentNearObjects)
             {
-                if (Kept.Count == 0 || currentNearObjects == null || FindObjects == null || ZDOMan.instance == null) return;
-                Visited.Clear();
-                foreach (var zone in Kept) FindObjects.Invoke(ZDOMan.instance, new object[] { zone, currentNearObjects, Visited });
+                if (_broken || Kept.Count == 0 || currentNearObjects == null || FindObjects == null || ZDOMan.instance == null) return;
+                try
+                {
+                    var visited = NewVisited();
+                    foreach (var zone in Kept) FindObjects.Invoke(ZDOMan.instance, new object[] { zone, currentNearObjects, visited });
+                }
+                catch (System.Exception e) { Break("CreateObjects", e); }
             }
         }
     }

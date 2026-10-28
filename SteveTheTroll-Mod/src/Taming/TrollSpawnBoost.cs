@@ -65,6 +65,10 @@ namespace SteveTheTroll.Taming
                 var wearer = BoostingWearer(__instance.transform.position, out cap, out why);
                 if (wearer == null) return;
                 float f = ModSettings.SpawnBoostSeconds.Value;
+                // D-085: the cap counts EVERY troll within the bed radius (TrollCensus), not only the ones near this spawn zone
+                int count = TrollCensus.Count;
+                if (count < 0) return;                                                     // not counted yet: the game's own rates
+                bool full = !TamingRules.SpawnAllowed(count, cap);
                 foreach (var s in spawners)
                 {
                     if (s == null || !s.m_enabled || s.m_prefab == null || s.m_prefab.name != TrollTaming.TrollPrefab) continue;
@@ -77,16 +81,17 @@ namespace SteveTheTroll.Taming
                     }
                     Changed.Add(new Saved { Data = s, Interval = s.m_spawnInterval, Chance = s.m_spawnChance, Day = s.m_spawnAtDay, Night = s.m_spawnAtNight, Max = s.m_maxSpawned });
                     // D-077 (TEST-032: no troll spawned with the set): the game counts the wearer's tamed trolls nearby against max spawned (1)
+                    if (full) { s.m_spawnChance = 0f; continue; }                            // D-085: cap reached around the bed - no troll spawns here
                     s.m_maxSpawned = cap;                                                     // D-084: 2 / 6 around the bed
                     s.m_spawnInterval = TamingRules.BoostedInterval(s.m_spawnInterval, f);
                     s.m_spawnChance = TamingRules.BoostedChance(s.m_spawnChance, f);
                     s.m_spawnAtDay = true; s.m_spawnAtNight = true;
                 }
-                _active = Changed.Count > 0;
+                _active = Changed.Count > 0 && !full;
                 if (Time.time >= _nextLog)
                 {
                     _nextLog = Time.time + 30f;
-                    ModLog.Verbose("TrollSpawnBoost: zone at " + __instance.transform.position.ToString("F0") + ", wearer " + wearer.GetPlayerName() + " (" + why + ", cap " + cap + "): "
+                    ModLog.Verbose("TrollSpawnBoost: zone at " + __instance.transform.position.ToString("F0") + ", wearer " + wearer.GetPlayerName() + " (" + why + ", cap " + cap + ", trolls around the bed " + count + (full ? " - FULL, no troll spawns" : "") + "): "
                         + Changed.Count + " troll entr(y/ies) boosted (first: interval " + Changed[0].Interval + " -> " + Changed[0].Data.m_spawnInterval + " s, chance "
                         + Changed[0].Chance + " -> " + Changed[0].Data.m_spawnChance + " %, max spawned " + Changed[0].Max + " -> " + Changed[0].Data.m_maxSpawned + ", day and night)");
                 }
@@ -108,6 +113,7 @@ namespace SteveTheTroll.Taming
             {
                 if (!_active || critter == null || critter.m_prefab == null || critter.m_prefab.name != TrollTaming.TrollPrefab) return;
                 Pending.Add(new KeyValuePair<Vector3, float>(spawnPoint, Time.time));
+                TrollCensus.Spawned();                                                         // D-085: counted at once (bursts)
                 ModLog.Info("TrollSpawnBoost: boosted troll spawn at " + spawnPoint.ToString("F0") + " (gets a log)");
             }
         }

@@ -37,6 +37,21 @@ namespace SteveTheTroll.Taming
             return tamedTotal <= 1 ? 2 : 0;
         }
 
+        /// D-085: one more troll may spawn around the bed while the trolls counted there (wild + tamed) are fewer than the cap.
+        /// Expected outcome: false at / over the cap or with no count yet (negative).
+        public static bool SpawnAllowed(int trollsAroundBed, int cap)
+        {
+            return trollsAroundBed >= 0 && trollsAroundBed < cap;
+        }
+
+        /// D-085: healing of a tamed troll near the bed for dt seconds (rate HP/s, never above the max). Expected outcome: the HP to add (0 or more).
+        public static float BedHeal(float health, float maxHealth, float rate, float dt)
+        {
+            if (health <= 0f || health >= maxHealth || rate <= 0f || dt <= 0f) return 0f;
+            float add = rate * dt;
+            return add < maxHealth - health ? add : maxHealth - health;
+        }
+
         /// Seconds left after one tick (never below 0).
         public static float CountDown(float remaining, float dt)
         {
