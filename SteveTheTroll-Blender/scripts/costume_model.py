@@ -92,14 +92,18 @@ for s in (1, -1):
     capsule(top, J[side("LeftHandPinky1", s)], J[side("LeftHandPinky3", s)], 0.04 * S)
     capsule(top, J[side("LeftHandThumb1", s)], J[side("LeftHandThumb3", s)], 0.038 * S)
 
-# each trouser leg is its own metaball family (families do not melt together): two legs, not one column (v1 render)
+# v2 (user on v1: "the pants look weird, like a wanna be dress ... no feet?"): trousers = a short seat (no big hip ball that
+# flared into a skirt) and two straight legs, each its own metaball family; the legs END in a cuff above the ankle so the
+# Fluffy Slippers (shown in the render) are the feet
+ANKLE = 0.20                                                           # cuff height above the ground
 leg_objs = []
 for s in (1, -1):
     lg = mball("Costume_Leg" + ("R" if s > 0 else "L"))
-    ball(lg, J["Hips"] + Vector((s * 0.05, 0, -0.02)), 0.20 * S, scale=(1.0, 0.8, 0.7))
     up, knee, foot = J[side("LeftUpLeg", s)], J[side("LeftLeg", s)], J[side("LeftFoot", s)]
-    capsule(lg, up, knee, 0.14 * S)
-    capsule(lg, knee, foot + Vector((0, 0, 0.07)), 0.115 * S)
+    seat = J["Hips"] + Vector((s * 0.06, -0.01, 0.0))
+    capsule(lg, seat, up + Vector((0, 0, -0.04)), 0.13 * S)               # seat / hip of this leg
+    capsule(lg, up, knee, 0.125 * S)
+    capsule(lg, knee, Vector((foot.x, foot.y, ANKLE + 0.04)), 0.105 * S)
     leg_objs.append(lg)
 
 def to_mesh(o, name):
@@ -122,6 +126,10 @@ for o in legs_parts: o.select_set(True)
 bpy.context.view_layer.objects.active = legs_parts[0]
 bpy.ops.object.join()
 legs_m = bpy.context.active_object; legs_m.name = "Costume_Legs_Mesh"
+# flat the bottom of each leg: cut everything below the cuff line, then a plush cuff ring closes it
+bm = bmesh.new(); bm.from_mesh(legs_m.data)
+bmesh.ops.bisect_plane(bm, geom=bm.verts[:] + bm.edges[:] + bm.faces[:], plane_co=(0, 0, ANKLE), plane_no=(0, 0, 1), clear_inner=True)
+bm.to_mesh(legs_m.data); bm.free()
 
 hc = J["Head"] + Vector((0, 0.03, 0.10))
 def prim(kind, name, loc, scale, rot=(0, 0, 0), material="blue", **kw):
@@ -148,8 +156,67 @@ for i, (x, z, tilt) in enumerate(((0, 0.34, 0), (0.08, 0.31, 25), (-0.08, 0.31, 
 
 collar = prim("torus", "collar", J["Neck"] + Vector((0, 0.0, -0.09)), (1.0, 0.8, 0.6), material="straw", major_radius=0.30, minor_radius=0.075)   # on the shoulders (v1: sank in)
 belt = prim("torus", "belt", J["Hips"] + Vector((0, 0, 0.06)), (1.0, 0.8, 0.5), material="straw", major_radius=0.25, minor_radius=0.04)
-loin = [prim("cone", "loincloth_front", J["Hips"] + Vector((0, 0.20, -0.12)), (0.24, 0.09, 0.20), (180, 0, 0), material="straw"),
-        prim("cone", "loincloth_back", J["Hips"] + Vector((0, -0.20, -0.12)), (0.24, 0.09, 0.20), (180, 0, 0), material="straw")]
+loin = [prim("cone", "loincloth_front", J["Hips"] + Vector((0, 0.19, -0.10)), (0.16, 0.05, 0.16), (180, 0, 0), material="straw"),   # smaller flaps (v1: a skirt)
+        prim("cone", "loincloth_back", J["Hips"] + Vector((0, -0.19, -0.10)), (0.16, 0.05, 0.16), (180, 0, 0), material="straw")]
+for s in (1, -1):
+    f = J[side("LeftFoot", s)]
+    prim("torus", f"cuff_{s}", (f.x, f.y, ANKLE + 0.01), (1.0, 1.0, 0.8), material="blue_dark", major_radius=0.105 * S * 0.62, minor_radius=0.035)
+    prim("sphere", f"cuff_cap_{s}", (f.x, f.y, ANKLE), (0.105 * S * 0.62, 0.105 * S * 0.62, 0.02), material="blue_dark")
+
+# the Fluffy Slippers as the feet (our own model, exports/Slipper.fbx; worn fit: 0.097 m ahead of the foot bone, on the ground, x1.1)
+slipper_fbx = os.path.join(HERE, "exports", "Slipper.fbx")
+if os.path.exists(slipper_fbx):
+    for s in (1, -1):
+        before = set(scene.objects)
+        bpy.ops.import_scene.fbx(filepath=slipper_fbx)
+        new = [o for o in scene.objects if o not in before]
+        f = J[side("LeftFoot", s)]; toe = J[side("LeftToeBase", s)]
+        fwd = Vector((toe.x - f.x, toe.y - f.y, 0)).normalized()
+        for o in new:
+            if o.type != "MESH": continue
+            o.parent = None
+            o.location = Vector((f.x, f.y, 0)) + fwd * 0.097
+            o.rotation_euler = (0, 0, math.atan2(-fwd.x, fwd.y))
+            o.scale = (1.1 * 1.05, 1.1, 1.1)
+            o.name = f"slipper_{'R' if s > 0 else 'L'}_{o.name}"
+        for o in new:
+            if o.type != "MESH": bpy.data.objects.remove(o)
+    log.append("slippers: shown from exports/Slipper.fbx")
+else:
+    log.append("slippers: exports/Slipper.fbx missing - no feet in the render")
+
+def bvh(objs):
+    bm = bmesh.new()
+    for o in objs:
+        me = bpy.data.meshes.new("tmp"); t = bmesh.new(); t.from_mesh(o.data); t.transform(o.matrix_world); t.to_mesh(me); t.free()
+        bm.from_mesh(me); bpy.data.meshes.remove(me)
+    tree = BVHTree.FromBMesh(bm); bm.free(); return tree
+
+# v2b (user: "maybe don't hide the feet if no slippers are used?"): the legs piece also carries plush troll FEET below the cuffs
+# (own objects "Costume_Feet_*"); in game they are shown only while the Fluffy Slippers are NOT worn - the slippers replace them
+feet_objs = []; feet_trees = []
+for s in (1, -1):
+    f = J[side("LeftFoot", s)]; toe = J[side("LeftToeBase", s)]
+    fwd = Vector((toe.x - f.x, toe.y - f.y, 0)).normalized(); rgt = Vector((fwd.y, -fwd.x, 0)) * s
+    base = Vector((f.x, f.y, 0))
+    fm = mball("Costume_Foot" + ("R" if s > 0 else "L"))
+    capsule(fm, base + Vector((0, 0, ANKLE + 0.02)), base + fwd * 0.02 + Vector((0, 0, 0.09)), 0.10 * S)      # ankle into the cuff
+    ball(fm, base - fwd * 0.03 + Vector((0, 0, 0.07)), 0.10 * S, scale=(1.0, 1.0, 0.8))                    # heel
+    capsule(fm, base + Vector((0, 0, 0.07)), base + fwd * 0.20 + Vector((0, 0, 0.06)), 0.085 * S)          # long troll foot
+    fo = to_mesh(fm, "Costume_Feet_" + ("R" if s > 0 else "L"))
+    bm = bmesh.new(); bm.from_mesh(fo.data)                                                                # flat sole on the ground
+    bmesh.ops.bisect_plane(bm, geom=bm.verts[:] + bm.edges[:] + bm.faces[:], plane_co=(0, 0, 0.0), plane_no=(0, 0, 1), clear_inner=True)
+    bm.to_mesh(fo.data); bm.free()
+    fo.data.materials.append(M["blue"]); feet_objs.append(fo)
+    for i, k in enumerate((-1, 0, 1)):                                                                     # three toes with claws
+        tp = base + fwd * 0.27 + Vector((fwd.y, -fwd.x, 0)) * (k * 0.06) + Vector((0, 0, 0.045))
+        t = prim("sphere", f"Costume_Feet_toe_{s}_{i}", tp, (0.045, 0.05, 0.04), material="blue_dark")
+        c = prim("cone", f"Costume_Feet_claw_{s}_{i}", tp + fwd * 0.06 + Vector((0, 0, 0.0)), (0.022, 0.022, 0.04), material="fang")
+        c.rotation_euler = (math.radians(-90), 0, math.atan2(-fwd.x, fwd.y))
+        feet_objs += [t, c]
+bpy.context.view_layer.update()
+feet_trees = [bvh([o]) for o in feet_objs if "claw" not in o.name]          # per object (overlaps confuse one tree)
+slippers = [o for o in scene.objects if o.name.startswith("slipper_")]
 
 def colour(o, rules):
     me = o.data
@@ -164,17 +231,11 @@ def top_rules(c, n):
     if abs(c.x) > 0.28 and n.x * c.x > 0.5 * abs(c.x): return 1
     return 0
 def legs_rules(c, n):
-    if n.x * c.x > 0.55 * abs(c.x) and abs(c.x) > 0.12: return 1
-    if c.z < 0.26: return 1
+    if n.x * c.x > 0.55 * abs(c.x) and abs(c.x) > 0.12: return 1                                 # outer legs
+    if n.y < -0.4 and c.z > 0.75: return 1                                                        # seat
     return 0
 colour(top_m, top_rules); colour(legs_m, legs_rules)
 
-def bvh(objs):
-    bm = bmesh.new()
-    for o in objs:
-        me = bpy.data.meshes.new("tmp"); t = bmesh.new(); t.from_mesh(o.data); t.transform(o.matrix_world); t.to_mesh(me); t.free()
-        bm.from_mesh(me); bpy.data.meshes.remove(me)
-    tree = BVHTree.FromBMesh(bm); bm.free(); return tree
 bpy.context.view_layer.update()                  # object scales set after creation must reach matrix_world first
 # a body point is covered when it lies INSIDE any piece (pieces overlap: one surface test over all of them is wrong)
 pieces = [("top", bvh([top_m])), ("legR", leg_trees[0]), ("legL", leg_trees[1]), ("head", bvh([head_parts[0]]))]
@@ -182,10 +243,14 @@ def inside(tree, p):
     loc, nor, idx, dist = tree.find_nearest(p)
     return loc is not None and (p - loc).dot(nor) <= 0.002, dist
 for b in bodies:
-    out = 0; worst = 0.0; worst_at = None; n = 0; bands = {}
+    out = 0; worst = 0.0; worst_at = None; n = 0; bands = {}; fn = 0; fout = 0; fworst = (0.0, None)
     for v in b.data.vertices:
         p = b.matrix_world @ v.co
-        if p.z < J["LeftFoot"].z + 0.08: continue                     # the feet are the slippers
+        if p.z < ANKLE:                                                # below the cuffs: the plush feet (or the slippers)
+            fn += 1
+            rs = [inside(t, p) for t in feet_trees]; r = (any(x[0] for x in rs), min(x[1] for x in rs))
+            if not r[0]: fout += 1; fworst = max(fworst, (r[1], tuple(round(x, 2) for x in p)))
+            continue
         n += 1
         res = [inside(t, p) for _, t in pieces]
         k = round(p.z, 1); t = bands.setdefault(k, [0, 0]); t[1] += 1
@@ -194,6 +259,7 @@ for b in bodies:
         d = min(r[1] for r in res)
         if d > worst: worst, worst_at = d, p
     log.append(f"FIT {b.name}: {out} of {n} body points outside the suit, worst {worst*100:.1f} cm at {tuple(round(x,2) for x in worst_at) if worst_at else '-'}")
+    log.append(f"  feet: {fout} of {fn} foot points outside the plush feet, worst {fworst[0]*100:.1f} cm at {fworst[1]}")
     log.append("  by height: " + ", ".join(f"{k:.1f}m {t[0]}/{t[1]}" for k, t in sorted(bands.items()) if t[0]))
 
 for o in (top_m, legs_m):
@@ -212,9 +278,13 @@ scene.render.resolution_x, scene.render.resolution_y = 800, 1000
 bpy.ops.object.camera_add(); cam = bpy.context.active_object; cam.data.lens = 50; scene.camera = cam
 target = Vector((0, 0, 1.05))
 for b in bodies: b.hide_render = True
-for view, loc in (("front34", (2.6, 4.2, 1.6)), ("side", (5.0, 0.0, 1.3)), ("back34", (-2.8, -4.0, 1.7))):
-    cam.location = loc; cam.rotation_euler = (target - cam.location).to_track_quat("-Z", "Y").to_euler()
-    scene.render.filepath = f"{OUT}_{view}.png"; bpy.ops.render.render(write_still=True); log.append(f"render {view}: {scene.render.filepath}")
+for variant, show_feet in (("", False), ("_feet", True)):
+    for o in feet_objs: o.hide_render = not show_feet
+    for o in slippers: o.hide_render = show_feet
+    for view, loc in (("front34", (2.6, 4.2, 1.6)), ("side", (5.0, 0.0, 1.3)), ("back34", (-2.8, -4.0, 1.7))):
+        cam.location = loc; cam.rotation_euler = (target - cam.location).to_track_quat("-Z", "Y").to_euler()
+        scene.render.filepath = f"{OUT}{variant}_{view}.png"; bpy.ops.render.render(write_still=True); log.append(f"render {view}: {scene.render.filepath}")
+for o in feet_objs: o.hide_render = False
 if OUT_BLEND:
     for b in bodies: bpy.data.objects.remove(b)        # the game's player bodies are reference only: never saved into a tracked .blend (D-014)
     bpy.ops.wm.save_as_mainfile(filepath=OUT_BLEND)
