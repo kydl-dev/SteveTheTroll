@@ -5,7 +5,9 @@
 # round the front, the thumb one shorter band from the other side - a fist, not two columns of balls.
 # v4 (user on v3: the hand "very different from the other hand", fingers too long, need not reach the front of the club): both
 # hands are built by the same make_hand (palm, 4 curled fingers, thumb, claws); fingers curl only ~130 deg round the club; the
-# left hand is the same hand loosely closed round nothing. Primitives only: proportions + colours for
+# left hand is the same hand loosely closed round nothing.
+# v5 (user on v4: the left hand reused the right one - "fingers don't bend that way"): make_hand(mirror=True) builds the MIRROR
+# image (fingers curl the other way round, thumb from the other side); the left hand's axis / palm side mirror the right hand's. Primitives only: proportions + colours for
 # the user's sign-off of the one-sentence look (user "yes" 2026-10-28). Not the final model, not exported.
 # Run: blender -b --factory-startup --python scripts/blockout_costume.py -- <out_prefix> <out_blend>
 # Axes: Blender Z up, the player faces +Y, the player's RIGHT is +X. 1 unit = 1 m. Player ~1.8 m (head top), shoulders ~1.45 m.
@@ -121,20 +123,21 @@ limb("upper_arm_R", (0.40, 0.0, 1.35), tuple(elbow_R), 0.11, "blue_dark")
 limb("fore_arm_R", tuple(elbow_R), tuple(palm + n * 0.05), 0.095)
 FR = 0.032                                                         # finger thickness (plush)
 
-def make_hand(side, grip, axis, n, held_r, finger_end, thumb_from):
+def make_hand(side, grip, axis, n, held_r, finger_end, thumb_from, mirror=False):
     """One plush hand: palm on the n side of `axis` at `grip`, 4 fingers curled finger_end deg round a cylinder of radius held_r
     (the club, or nothing for a loose fist), thumb from the other side, a claw at each finger tip. Same for both hands."""
-    b = axis.cross(n).normalized()
+    curl = -axis if mirror else axis                                  # the ring axis: flipped = the curl turns the other way
+    b = curl.cross(n).normalized()
     palm = grip + n * (held_r + 0.05)
     pq = n.to_track_quat("Z", "X").to_euler()
     add("sphere", f"palm_{side}", tuple(palm), (0.075, 0.09, 0.05), tuple(math.degrees(a) for a in pq), "blue_light")
     for k, t in enumerate((0.075, 0.025, -0.025, -0.075)):
-        arc(f"finger_{side}{k}", tuple(grip + axis * t), axis, n, held_r + FR * 0.85, FR * (1.0 if k < 3 else 0.85), 0, finger_end)
+        arc(f"finger_{side}{k}", tuple(grip + axis * t), curl, n, held_r + FR * 0.85, FR * (1.0 if k < 3 else 0.85), 0, finger_end)
         a = math.radians(finger_end)
         tip = grip + axis * t + (n * math.cos(a) + b * math.sin(a)) * (held_r + FR * 0.85)
         tang = (-n * math.sin(a) + b * math.cos(a)).normalized()
         add("cone", f"claw_{side}{k}", tuple(tip + tang * 0.012), (0.012, 0.012, 0.022), tuple(math.degrees(x) for x in tang.to_track_quat("Z", "Y").to_euler()), "claw")
-    arc(f"thumb_{side}", tuple(grip + axis * 0.11), axis, n, held_r + FR * 0.95, FR * 1.15, thumb_from, 0)
+    arc(f"thumb_{side}", tuple(grip + axis * 0.11), curl, n, held_r + FR * 0.95, FR * 1.15, thumb_from, 0)
     return palm
 
 make_hand("R", grip, up, n, grip_r, 130, -80)                      # round the club: fingers ~130 deg, not to its front
@@ -142,11 +145,11 @@ log.append(f"right hand: grip={tuple(round(v,3) for v in grip)} trunk radius at 
 
 # left arm: the same hand, loosely closed (round nothing), hanging at the side
 elbow_L = Vector((-0.50, 0.02, 1.08))
-grip_L = Vector((-0.52, 0.20, 0.80))
-axis_L = Vector((0.15, 0.35, 1.0)).normalized()
-nL = elbow_L - grip_L; nL = (nL - axis_L * nL.dot(axis_L)).normalized()
+grip_L = Vector((-grip.x, grip.y, grip.z))                          # mirror of the right hand (x -> -x)
+axis_L = Vector((-up.x, up.y, up.z)).normalized()
+nL = Vector((-n.x, n.y, n.z)).normalized()
 loose_r = 0.035
-palm_L = make_hand("L", grip_L, axis_L, nL, loose_r, 150, -80)
+palm_L = make_hand("L", grip_L, axis_L, nL, loose_r, 150, -80, mirror=True)
 limb("upper_arm_L", (-0.40, 0.0, 1.35), tuple(elbow_L), 0.11, "blue_dark")
 limb("fore_arm_L", tuple(elbow_L), tuple(palm_L + nL * 0.05), 0.095)
 
