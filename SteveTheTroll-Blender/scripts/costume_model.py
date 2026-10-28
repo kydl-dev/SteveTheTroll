@@ -79,12 +79,13 @@ def ball(o, c, r, stiff=2.0, scale=(1, 1, 1)):
 S = float(os.environ.get("STT_PLUSH", "1.8"))      # metaball radius factor: 1.7 encloses both bodies (fit check), 1.8 = plush margin
 def side(n, s): return n.replace("Left", "Right") if s > 0 else n       # s = +1 right (+X), -1 left
 
+DROP = Vector((0, 0, -float(os.environ.get("STT_SHDROP", "0.12"))))   # v2e: shoulder bulge sits lower (block-out: collar above the shoulders)
 top = mball("Costume_Top")
-for a, b, r in (("Hips", "Spine", 0.20), ("Spine", "Spine1", 0.21), ("Spine1", "Spine2", 0.215), ("Spine2", "Neck", 0.19)):
+for a, b, r in (("Hips", "Spine", 0.20), ("Spine", "Spine1", 0.21), ("Spine1", "Spine2", 0.215), ("Spine2", "Neck", 0.17)):
     capsule(top, J[a], J[b], r * S)
 ball(top, J["Spine1"] + Vector((0, 0.06, -0.05)), 0.18 * S, scale=(1.0, 0.8, 1.2))                # tummy
 for s in (1, -1):
-    capsule(top, J[side("LeftShoulder", s)], J[side("LeftArm", s)], 0.13 * S)
+    capsule(top, J[side("LeftShoulder", s)] + DROP, J[side("LeftArm", s)] + DROP, 0.13 * S)   # v2e: shoulders lowered under the collar
     capsule(top, J[side("LeftArm", s)], J[side("LeftForeArm", s)], 0.105 * S)
     capsule(top, J[side("LeftForeArm", s)], J[side("LeftHand", s)], 0.09 * S)
     capsule(top, J[side("LeftHand", s)], J[side("LeftHandMiddle3", s)], 0.07 * S)                  # mitt
@@ -131,7 +132,7 @@ bm = bmesh.new(); bm.from_mesh(legs_m.data)
 bmesh.ops.bisect_plane(bm, geom=bm.verts[:] + bm.edges[:] + bm.faces[:], plane_co=(0, 0, ANKLE), plane_no=(0, 0, 1), clear_inner=True)
 bm.to_mesh(legs_m.data); bm.free()
 
-hc = J["Head"] + Vector((0, 0.03, 0.10))
+hc = J["Head"] + Vector((0, 0.03, float(os.environ.get("STT_HEADUP", "0.18"))))   # v2e: mascot head sits higher (v2: 0.10), on top of the collar
 def prim(kind, name, loc, scale, rot=(0, 0, 0), material="blue", **kw):
     ops = {"sphere": bpy.ops.mesh.primitive_uv_sphere_add, "cone": bpy.ops.mesh.primitive_cone_add, "torus": bpy.ops.mesh.primitive_torus_add}
     if kind == "sphere": kw.setdefault("segments", 48); kw.setdefault("ring_count", 24)
@@ -169,7 +170,6 @@ for s in (1, -1):
         c.rotation_euler = Vector((0, 0, 1)).rotation_difference(d).to_euler()
         hand_claws.append(c)
 log.append(f"hand claws: {len(hand_claws)}")
-collar = prim("torus", "collar", J["Neck"] + Vector((0, 0.0, -0.09)), (1.0, 0.8, 0.6), material="straw", major_radius=0.30, minor_radius=0.075)   # on the shoulders (v1: sank in)
 # v2d (user: "make sure the front cloth is visible better, in costume_blockout.blend the waist was so much better"): the belt and
 # the loincloth are FITTED to the suit's outer surface (rays cast inwards from outside, so they never sink into the plush), and the
 # flaps are back to the block-out size (wide straw aprons hanging from the belt, front and back)
@@ -190,6 +190,20 @@ for name, ang, sgn in (("loincloth_front", 0.0, 1), ("loincloth_back", math.pi, 
     y = max(surf(BELT_Z - FLAP * k / 6, ang) for k in range(7)) + 0.035  # in front of the plush along its whole length
     loin.append(prim("cone", name, (0, sgn * y, BELT_Z - FLAP / 2 - 0.01), (0.24, 0.035, FLAP / 2), (180, 0, 0), material="straw"))
 log.append(f"belt rx {rx:.2f} ry {ry:.2f} at z {BELT_Z:.2f}; flaps at y +-{abs(loin[0].location.y):.2f} / {abs(loin[1].location.y):.2f}")
+# v2e (user: the collar "in the blockout was nicer ... the shoulders are higher than it and it seems bigger"): the straw collar rests
+# ON TOP of the plush shoulders, round the neck, fitted like the belt (rays on the suit top), block-out size tube
+top_only = outer[0]
+def top_surf(z, ang):
+    d = Vector((math.sin(ang), math.cos(ang), 0))
+    hit = top_only.ray_cast(Vector((0, 0, z)) + d * 0.45, -d, 0.45)[0]
+    return Vector((hit.x, hit.y, 0)).length if hit is not None else 0.0
+# under the big mascot head (the block-out look): level, just below the muzzle, resting on the plush shoulders
+COL_Z = hc.z - float(os.environ.get("STT_COLDZ", "0.28"))
+for k in range(8): log.append(f"  top surface at z {COL_Z - 0.05 + k * 0.02:.2f}: x {top_surf(COL_Z - 0.05 + k * 0.02, math.pi / 2):.2f} y {top_surf(COL_Z - 0.05 + k * 0.02, 0):.2f}")
+cx, cy = top_surf(COL_Z, math.pi / 2), max(top_surf(COL_Z, 0), top_surf(COL_Z, math.pi))
+RX, RY = max(0.27, cx + 0.01), max(0.24, cy + 0.01)
+collar = prim("torus", "collar", (0, -0.01, COL_Z), (1.0, RY / RX, 0.55), material="straw", major_radius=RX, minor_radius=0.065)   # level, just under the chin (block-out)
+log.append(f"collar: ring at z {COL_Z:.2f}, rx {RX:.2f} ry {RY:.2f} (plush there {cx:.2f} / {cy:.2f})")
 for s in (1, -1):
     f = J[side("LeftFoot", s)]
     prim("torus", f"cuff_{s}", (f.x, f.y, ANKLE + 0.01), (1.0, 1.0, 0.8), material="blue_dark", major_radius=0.105 * S * 0.62, minor_radius=0.035)
