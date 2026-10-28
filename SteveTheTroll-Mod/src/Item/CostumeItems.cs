@@ -327,6 +327,7 @@ namespace SteveTheTroll.Item
             {
                 if (!body.forceRenderingOff) body.forceRenderingOff = true;
                 if (!body.enabled) body.enabled = true;
+                if (__instance.GetComponent<CostumeBareFeet>() == null) __instance.gameObject.AddComponent<CostumeBareFeet>();   // D-089: own feet in the slippers
                 if (!was)
                 {
                     Hidden.Add(__instance, anim != null ? (object)anim.cullingMode : new object());

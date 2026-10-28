@@ -16,6 +16,7 @@ namespace SteveTheTroll.Ui
         {
             var db = ObjectDB.instance;
             if (db == null) { ModLog.Verbose("CostumeMenuData: no ObjectDB yet - no Costume tab"); return null; }
+            if (!Item.RecipeUnlockPatch.CostumeComplete(Player.m_localPlayer, db)) { ModLog.Verbose("CostumeMenuData: not all 4 costume items crafted yet - no Costume tab (D-088)"); return null; }
             var d = new CostumeData
             {
                 SetName = Loc.T("stevethetroll_se_set"),

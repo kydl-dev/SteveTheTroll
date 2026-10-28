@@ -20,6 +20,30 @@ namespace SteveTheTroll.Item
         };
         static readonly HashSet<string> Logged = new HashSet<string>();
 
+        /// D-088 pure rule: every one of `items` is known (an empty / null list counts as not all known). Expected outcome: true only when all are.
+        internal static bool AllKnown(ICollection<string> items, ICollection<string> known)
+        {
+            if (items == null || known == null || items.Count == 0) return false;
+            foreach (var m in items) if (m == null || !known.Contains(m)) return false;
+            return true;
+        }
+
+        /// D-088 (user: "the costume tab should only be visible after all parts of the costume are crafted"): the player has had all four
+        /// costume items (head, suit, trousers, club) in the inventory - crafting puts them there; the game remembers it per character
+        /// (m_knownMaterial, saved with the character). Expected outcome: true when all four are known.
+        internal static bool CostumeComplete(Player p, ObjectDB db)
+        {
+            if (p == null || db == null) return false;
+            var names = new List<string>();
+            foreach (var prefab in new[] { CostumeItems.HelmetName, CostumeItems.ChestName, CostumeItems.LegsName, CostumeItems.ClubName })
+            {
+                var go = db.GetItemPrefab(prefab);
+                var drop = go != null ? go.GetComponent<ItemDrop>() : null;
+                names.Add(drop != null ? drop.m_itemData.m_shared.m_name : null);
+            }
+            return AllKnown(names, Known(p));
+        }
+
         /// Pure rule: a recipe is discovered when any of its materials is known. Expected outcome: true for one known material.
         internal static bool AnyKnown(IEnumerable<string> materials, ICollection<string> known)
         {
