@@ -29,6 +29,16 @@ namespace SteveTheTroll.Backpack
                 if (db.TryGetTerrainOp(n, out found) && found != null && Good(found.gameObject)) { _op = found.gameObject; break; }
             if (_op == null)
                 foreach (var op in db.m_terrainOps) if (op != null && Good(op.gameObject)) { _op = op.gameObject; break; }
+            if (_op == null)
+                foreach (var op in db.m_terrainOps) if (op != null && op.m_settings.m_level && op.m_settings.m_levelRadius > 0.2f) { _op = op.gameObject; break; }   // TEST-042: level + raise is fine too
+            if (_op == null || ModLog.DebugOn)
+            {
+                // TEST-042: none matched - every op with its settings, so the right one can be named
+                var sb = new System.Text.StringBuilder();
+                foreach (var op in db.m_terrainOps)
+                    if (op != null) sb.Append(op.name + " (level " + op.m_settings.m_level + " r" + op.m_settings.m_levelRadius.ToString("F1") + ", raise " + op.m_settings.m_raise + ", smooth " + op.m_settings.m_smooth + ", paint " + op.m_settings.m_paintCleared + "); ");
+                ModLog.Info("DepotGround: the game's terrain ops: " + sb);
+            }
             if (_op == null) ModLog.Warn("DepotGround: no level-ground TerrainOp among the game's " + db.m_terrainOps.Count + " terrain op(s) - depots only on flat ground");
             else
             {
