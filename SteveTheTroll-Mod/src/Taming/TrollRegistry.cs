@@ -32,6 +32,13 @@ namespace SteveTheTroll.Taming
             return Known;
         }
 
+        /// D-081: the list as the last refresh left it (no refresh, no log - for the map pins every 2 s). Expected outcome: never null.
+        internal static List<TrollInfo> Peek()
+        {
+            Load();
+            return Known;
+        }
+
         /// Plugin.Update. Expected outcome: returns whether a refresh ran this frame.
         internal static bool Tick()
         {
@@ -73,6 +80,19 @@ namespace SteveTheTroll.Taming
         }
 
         /// The loaded troll with our id (null when far).
+        /// D-081: a troll moved without being loaded (logout to the bed): its last known position becomes the new one (map pin, F6).
+        internal static void MovedTo(string id, Vector3 pos)
+        {
+            if (string.IsNullOrEmpty(id)) return;
+            Load();
+            var t = Known.Find(k => k.Id == id);
+            if (t == null) return;
+            t.X = pos.x; t.Y = pos.y; t.Z = pos.z;
+            t.BedDistance = BedDistance(pos);
+            t.LastSeenTicks = DateTime.UtcNow.Ticks;
+            Save();
+        }
+
         internal static Character FindLoaded(string id)
         {
             foreach (var c in Character.GetAllCharacters())

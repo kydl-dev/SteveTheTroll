@@ -59,6 +59,38 @@ namespace SteveTheTroll.Taming
             return sent;
         }
 
+        static readonly HashSet<ZDOID> Done = new HashSet<ZDOID>();
+
+        /// D-081 (TEST-034: 2 of 5 trolls, 110 m and 180 m from the bed, stayed where they were): own tamed trolls that are not loaded around the
+        /// player are moved through their saved data (ZDO position, follow cleared, patrol point at the bed) - the next load puts them at the bed.
+        /// Only the trolls this client may write (single player / own). Expected outcome: how many were moved.
+        static int Unloaded(long me, Vector3 bed, int already)
+        {
+            var zm = ZDOMan.instance;
+            if (zm == null) return 0;
+            var list = new List<ZDO>();
+            int index = 0, guard = 0;
+            while (!zm.GetAllZDOsWithPrefabIterative(TrollTaming.TrollPrefab, list, ref index) && guard++ < 10000) { }
+            int moved = 0;
+            foreach (var z in list)
+            {
+                if (z == null || Done.Contains(z.m_uid) || !z.GetBool(ZDOVars.s_tamed, false) || z.GetLong(TrollTaming.OwnerKey, 0L) != me) continue;
+                if (z.HasOwner() && !z.IsOwner()) { ModLog.Info("TrollHome: logout - unloaded troll " + z.GetString(ZDOVars.s_tamedName, "?") + " is run by another client - left"); continue; }
+                if (z.GetFloat(ZDOVars.s_health, 1f) <= 0f) continue;
+                var spot = bed + new Vector3(2f + (already + moved) * 3f, 0.5f, 2f);
+                var was = z.GetPosition();
+                z.SetPosition(spot);
+                z.Set(ZDOVars.s_follow, "");
+                z.Set(ZDOVars.s_patrolPoint, spot);
+                z.Set(ZDOVars.s_patrol, true);
+                TrollRegistry.MovedTo(z.GetString(TrollRegistry.IdKey, ""), spot);
+                moved++;
+                ModLog.Info("TrollHome: logout - unloaded " + z.GetString(ZDOVars.s_tamedName, "?") + " moved from " + was.ToString("F0") + " (" + Vector3.Distance(was, bed).ToString("F0") + " m from the bed) to " + spot.ToString("F1"));
+            }
+            ModLog.Verbose("TrollHome: logout - " + list.Count + " troll ZDO(s) known here, " + moved + " unloaded own one(s) moved");
+            return moved;
+        }
+
         [HarmonyPatch(typeof(Game), nameof(Game.Logout))]
         static class Logout
         {
@@ -84,7 +116,10 @@ namespace SteveTheTroll.Taming
                     if (SetPatrolAt != null) SetPatrolAt(ai, spot);
                     moved++;
                     ModLog.Info("TrollHome: logout - " + c.name + " put at the bed " + spot.ToString("F1"));
+                    var z = view.GetZDO(); if (z != null) Done.Add(z.m_uid);
                 }
+                moved += Unloaded(p.GetPlayerID(), bed, moved);
+                Done.Clear();
             }
         }
     }

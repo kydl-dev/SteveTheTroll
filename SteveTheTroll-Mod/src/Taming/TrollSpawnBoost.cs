@@ -29,14 +29,13 @@ namespace SteveTheTroll.Taming
         }
         static float _nextLog;
 
-        /// A wearer within WearerRange of the zone whose own troll limit is not met. Expected outcome: that wearer, or null.
+        /// A wearer within WearerRange of the zone (D-081: always - also at the troll limit, for troll hide; the game's max spawned = limit + 1). Expected outcome: that wearer, or null.
         static Player BoostingWearer(Vector3 zone)
         {
             foreach (var p in Player.GetAllPlayers())
             {
                 if (p == null || p.IsDead() || !TrollTaming.Wears(p)) continue;
                 if (Vector3.Distance(p.transform.position, zone) > ModSettings.SpawnBoostWearerRange.Value) continue;
-                if (TrollTaming.OwnTrollCount(p, ModSettings.OwnTrollRange.Value) >= TrollTaming.TrollLimit(p)) continue;   // D-076: 5 with the costume set
                 return p;
             }
             return null;
@@ -77,7 +76,7 @@ namespace SteveTheTroll.Taming
                 if (Time.time >= _nextLog)
                 {
                     _nextLog = Time.time + 30f;
-                    ModLog.Verbose("TrollSpawnBoost: zone at " + __instance.transform.position.ToString("F0") + ", wearer " + wearer.GetPlayerName() + " under the troll limit (" + TrollTaming.TrollLimit(wearer) + "): "
+                    ModLog.Verbose("TrollSpawnBoost: zone at " + __instance.transform.position.ToString("F0") + ", wearer " + wearer.GetPlayerName() + " (troll limit " + TrollTaming.TrollLimit(wearer) + "): "
                         + Changed.Count + " troll entr(y/ies) boosted (first: interval " + Changed[0].Interval + " -> " + Changed[0].Data.m_spawnInterval + " s, chance "
                         + Changed[0].Chance + " -> " + Changed[0].Data.m_spawnChance + " %, max spawned " + Changed[0].Max + " -> " + Changed[0].Data.m_maxSpawned + ", day and night)");
                 }

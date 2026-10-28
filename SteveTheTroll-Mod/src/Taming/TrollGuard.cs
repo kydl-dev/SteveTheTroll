@@ -92,6 +92,9 @@ namespace SteveTheTroll.Taming
                 if (t != owner && t != troll) continue;
                 if (t == owner && !TamingRules.DefendsOwner(wears, raid)) continue;            // T-008e: slippers off -> it defends the player only during a raid
                 if (t == owner && !ownerNear) continue;
+                // D-081 (TEST-034: a farming Steve ran 60 m back home to a greydwarf that only aimed at the player): a creature that goes for the
+                // player is taken on only when it is near the troll (a real HIT on the player still calls trolls within DefendRange: TrollDefend)
+                if (t == owner && Vector3.Distance(m.transform.position, troll.transform.position) > ModSettings.GuardOwnerRange.Value) continue;
                 if (Vector3.Distance(m.transform.position, troll.transform.position) > KeepRange) continue;
                 if (Vector3.Distance(m.transform.position, troll.transform.position) > range && Vector3.Distance(m.transform.position, owner.transform.position) > range) continue;
                 Attackers.Add(m);

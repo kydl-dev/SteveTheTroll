@@ -227,12 +227,14 @@ namespace SteveTheTroll.Item
             float knock = s.m_attackForce;
             s.m_attackForce = knock * ClubKnockbackFactor;
             s.m_maxQuality = MaxQuality;
-            s.m_toolTier = Mathf.Max(s.m_toolTier, 2);                                   // mines copper / tin / silver like an iron pickaxe
+            s.m_toolTier = Mathf.Max(s.m_toolTier, 2);
+            float slow = s.m_movementModifier;
+            s.m_movementModifier = 0f;                                                   // D-081 (user: 'no slowing down' - the sledge's -15 %)                                   // mines copper / tin / silver like an iron pickaxe
             bool added = ItemManager.Instance.AddItem(item);
             SlipperUpgradeCostPatch.Track(ClubName, 4);
             ModLog.Verbose("CostumeItems: " + ClubName + " (from SledgeIron) added " + added + ": sledge meshes removed " + hidden + ", damage blunt " + s.m_damages.m_blunt + " chop " + s.m_damages.m_chop
                 + " pickaxe " + s.m_damages.m_pickaxe + " (+" + ClubBluntPerLevel + "/" + ClubChopPerLevel + "/" + ClubPickaxePerLevel + "), vanilla blunt " + v.m_blunt + ", knockback " + knock + " -> " + s.m_attackForce
-                + ", stagger x" + (s.m_attack != null ? s.m_attack.m_staggerMultiplier.ToString("F2") : "?") + ", tool tier " + s.m_toolTier + ", skill " + s.m_skillType + ", two-handed " + (s.m_itemType == ItemDrop.ItemData.ItemType.TwoHandedWeapon));
+                + ", movement " + (slow * 100f).ToString("0") + " % -> 0 %, stagger x" + (s.m_attack != null ? s.m_attack.m_staggerMultiplier.ToString("F2") : "?") + ", tool tier " + s.m_toolTier + ", skill " + s.m_skillType + ", two-handed " + (s.m_itemType == ItemDrop.ItemData.ItemType.TwoHandedWeapon));
             ModLog.Check("CostumeItems: club blunt at quality 4", s.m_damages.m_blunt + s.m_damagesPerLevel.m_blunt * 3, 100f, 0.001, "");
             return added;
         }
