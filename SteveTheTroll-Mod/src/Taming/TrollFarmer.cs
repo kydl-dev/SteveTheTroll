@@ -15,7 +15,7 @@ namespace SteveTheTroll.Taming
     internal sealed class TrollFarmer : MonoBehaviour
     {
         const float SearchSeconds = 3f, LogSeconds = 5f, LookAngle = 25f, MinAttackGap = 0.3f, StuckSeconds = 8f, BadSeconds = 120f;
-        const float StepMetres = 2f, StepSeconds = 2.5f, CloseWaitSeconds = 0.5f, FullCheckSeconds = 2f, AtItSlack = 1f, UnloadMetres = 4f, UnloadWalkSeconds = 60f, StuckHomeSeconds = 8f;
+        const float StepMetres = 2f, StepSeconds = 2.5f, CloseWaitSeconds = 0.5f, FullCheckSeconds = 2f, AtItSlack = 1f, UnloadMetres = 10f, UnloadStopMetres = 8f, UnloadWalkSeconds = 60f, StuckHomeSeconds = 8f;
         float _homeBest = float.MaxValue, _homeBestAt;
         const int SwingsPerTry = 2, Tries = 4;
         readonly Dictionary<GameObject, float> _bad = new Dictionary<GameObject, float>();
@@ -278,7 +278,9 @@ namespace SteveTheTroll.Taming
         {
             var flat = _unloadAt - transform.position; flat.y = 0f;
             bool late = Time.time - _unloadStart > UnloadWalkSeconds;
-            if (flat.magnitude > UnloadMetres && !late) { moveTo(ai, dt, _unloadAt, UnloadMetres * 0.7f, false); return true; }
+            // D-106 (user: "empty their backpacks when they are 5-10m away from the depot, so that they don't all stumble into each other"):
+            // a troll unloads as soon as it is within UnloadMetres (10 m); it walks only until UnloadStopMetres (8 m), never into the depot
+            if (flat.magnitude > UnloadMetres && !late) { moveTo(ai, dt, _unloadAt, UnloadStopMetres, false); return true; }
             ai.StopMoving();
             ai.SetPatrolPoint();
             var me = GetComponent<Character>();

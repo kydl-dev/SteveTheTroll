@@ -10,7 +10,7 @@ namespace SteveTheTroll.Backpack
     /// No depot with room -> a new one is built: on top of the latest stack while it is under 5 high, else a new stack at a spot that is
     /// near the bed (15 .. 50 m, D-097), not inside a house (nothing built above it), free (no pieces / rocks in the footprint), on ground that
     /// is level or that the game's level op flattens first (up to 2.5 m uneven, D-095),
-    /// and that the troll can walk to within 5 m of (the game's pathfinding for the troll). Depot chests are the game's reinforced chests
+    /// and that the troll can walk to within 10 m of (it unloads from 5 - 10 m away, D-106; (the game's pathfinding for the troll). Depot chests are the game's reinforced chests
     /// marked stt_depot: they need no support (stacks never crumble) and cannot be removed for their materials.
     /// </summary>
     internal static class TrollDepot
@@ -23,7 +23,8 @@ namespace SteveTheTroll.Backpack
         static float SearchRadius { get { return MaxFromBed + 15f; } }   // depot chests are found up to here
         // MaxSlope: ground this even is used as is; MaxSlopeLevelled: what the level op (DepotGround) flattens first; MaxSlopeAsIs: the old
         // limit (depot on the highest point) when the game has no level op.
-        const float RingStep = 2f, Reach = 5f, MaxSlope = 0.15f, MaxSlopeLevelled = 2.5f, MaxSlopeAsIs = 1f, ColumnMatch = 0.5f;
+        // Reach: the troll's path must end this close to a new depot (D-106: it unloads from up to 10 m away)
+        const float RingStep = 2f, Reach = 10f, MaxSlope = 0.15f, MaxSlopeLevelled = 2.5f, MaxSlopeAsIs = 1f, ColumnMatch = 0.5f;
         const int Angles = 16, MaxNewDepots = 6;
         const float ChestSlack = 1.5f;
         static readonly AccessTools.FieldRef<ZNetScene, Dictionary<ZDO, ZNetView>> Instances = AccessTools.FieldRefAccess<ZNetScene, Dictionary<ZDO, ZNetView>>("m_instances");
