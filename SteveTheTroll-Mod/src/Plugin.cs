@@ -119,6 +119,7 @@ namespace SteveTheTroll
             Run("BackpackVisual", () => Backpack.BackpackVisual.Tick());
             Run("BackpackPickup", () => Backpack.BackpackPickup.Tick());     // T-008c: wood / ores / scrap within 50 m into the backpack
             Run("TrollOrders", () => Taming.TrollOrders.Tick());             // D-065: attack key (Mouse 4)
+            Run("TrollCommands", () => Ui.TrollCommands.Tick());             // D-119: far trolls sent to die from the My trolls tab
             Run("TrollGuard", () => Taming.TrollGuard.Tick());               // D-065 / D-084: creatures going for the player near a troll
             Run("TrollHome", () => Taming.TrollHome.Tick());                 // T-008e: slippers off -> own trolls wait at the bed
             Run("TrollIdle", () => Taming.TrollIdle.Tick());                 // D-062: no job for 2 min -> farms on its own

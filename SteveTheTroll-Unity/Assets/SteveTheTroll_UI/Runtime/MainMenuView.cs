@@ -7,7 +7,7 @@ namespace SteveTheTroll.Ui
 {
     /// <summary>
     /// WHAT the mod's menu shows (UI Toolkit, shared Kydl.Ui look; D-039 / D-043): tab 1 Slippers = a 3D view of the slippers + their details,
-    /// Costume (D-080) = the mascot set, its pieces and the club, tab 2 Troll work = every tamed troll, what it does and its focus, tab 3 Trolls = one troll's stats and position. Compiled into the mod AND shown by the Unity preview
+    /// Costume (D-080) = the mascot set, its pieces and the club, My trolls (D-119) = follow / kill / distance per troll, Troll work = every tamed troll, what it does and its focus, tab 3 Trolls = one troll's stats and position. Compiled into the mod AND shown by the Unity preview
     /// (Assets/SteveTheTroll_UI/Preview/MenuPreview.cs). Keep game types OUT of this folder; the game side is src/Ui/MainMenu.cs.
     /// </summary>
     internal static class MainMenuView
@@ -19,7 +19,7 @@ namespace SteveTheTroll.Ui
         /// seen), `focusChosen(id, value)` = a troll's new focus; `startTab` 0 Slippers, 1 Troll work, 2 Trolls (the preview can start on any).
         internal static VisualElement Build(Func<string, string> text, Action onClose, SlipperData slippers, Func<IModelScene> makeScene, ViewerSettings viewer,
             IList<TrollInfo> trolls, Action<string, string> focusChosen, Action<string> goFarm, int startTab = 0, long nowTicks = 0,
-            CostumeData costume = null, Func<IModelScene> makeCostumeScene = null)
+            CostumeData costume = null, Func<IModelScene> makeCostumeScene = null, TrollActions actions = null)
         {
             var w = UiKit.Window(text("stevethetroll_menu_title"), text("stevethetroll_menu_footer"), onClose, out UiScroll body);
             // D-046: the two troll tabs only exist while the player has at least one living tamed troll (near or far)
@@ -31,6 +31,7 @@ namespace SteveTheTroll.Ui
             if (costume != null) { tabList.Add(CostumeTab(text, costume, makeCostumeScene, viewer)); nameList.Add(text("stevethetroll_tab_costume")); }
             if (anyTroll)
             {
+                tabList.Add(MyTrollsTab.Build(text, trolls, actions)); nameList.Add(text("stevethetroll_tab_mytrolls"));     // D-119: first troll tab
                 tabList.Add(WorkTab(text, trolls, focusChosen, goFarm)); nameList.Add(text("stevethetroll_tab_troll"));
                 tabList.Add(TrollsTab(text, trolls, nowTicks)); nameList.Add(text("stevethetroll_tab_trolls"));
             }
