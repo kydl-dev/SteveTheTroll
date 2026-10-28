@@ -9,7 +9,7 @@ namespace SteveTheTroll.Taming
     /// D-042 / D-084: within SpawnBedRadius (500 m) of the local slipper wearer's bed (cap 2 with the slippers and 0-1 tamed trolls, 6 with the set
     /// and up to 5; TamingRules.SpawnCap), its
     /// Troll spawn entries try every SpawnBoostSeconds with 100 % chance, day and night (D-059, TamingRules) and the trolls spawned that way get the
-    /// game's "Log" item set (the troll's random sets: 2x Unarmed, 1x Log). Runs where the game spawns: the owner of the zone's SpawnSystem.
+    /// game's "Log" item set (the troll's random sets: 2x Unarmed, 1x Log); D-121: with the set power 50 % of them get "Unarmed" instead. Runs where the game spawns: the owner of the zone's SpawnSystem.
     /// The SpawnData values are changed only for the duration of SpawnSystem.UpdateSpawnList and put back in a finalizer.
     /// </summary>
     internal static class TrollSpawnBoost
@@ -148,7 +148,7 @@ namespace SteveTheTroll.Taming
                 if (!_active || critter == null || critter.m_prefab == null || critter.m_prefab.name != TrollTaming.TrollPrefab) return;
                 Pending.Add(new KeyValuePair<Vector3, float>(spawnPoint, Time.time));
                 TrollCensus.Spawned();                                                         // D-085: counted at once (bursts)
-                ModLog.Info("TrollSpawnBoost: boosted troll spawn at " + spawnPoint.ToString("F0") + " (gets a log)");
+                ModLog.Info("TrollSpawnBoost: boosted troll spawn at " + spawnPoint.ToString("F0") + " in " + (WorldGenerator.instance != null ? WorldGenerator.instance.GetBiome(spawnPoint).ToString() : "?") + " (item set picked when it gets its items)");
             }
         }
 
@@ -183,7 +183,15 @@ namespace SteveTheTroll.Taming
                 {
                     Pending.RemoveAll(p => Time.time - p.Value > PendingSeconds);
                     int hit = Pending.FindIndex(p => Vector3.Distance(p.Key, __instance.transform.position) <= PendingMatchMetres);
-                    if (hit >= 0) { Pending.RemoveAt(hit); want = LogSet; boosted = true; }
+                    if (hit >= 0)
+                    {
+                        Pending.RemoveAt(hit);
+                        // D-121: no set power -> the club (Log); set power -> 50 % Unarmed / 50 % Log
+                        bool setOn = Player.m_localPlayer != null && TrollTaming.TrollLimit(Player.m_localPlayer) > 1;
+                        want = BreakRules.BoostedSet(setOn, Random.value);
+                        boosted = true;
+                        ModLog.Verbose("TrollSpawnBoost: boosted spawn, set power " + setOn + " -> item set " + want);
+                    }
                 }
                 if (want.Length == 0) return;
                 var sets = __instance.m_randomSets;

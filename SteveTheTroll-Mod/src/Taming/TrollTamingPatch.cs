@@ -95,6 +95,12 @@ namespace SteveTheTroll.Taming
             int ownNear = TrollTaming.OwnTrollCount(wearer, ModSettings.OwnTrollRange.Value);
             int limit = TrollTaming.TrollLimit(wearer);
             var step = TamingRules.DecideWildLimit(wearerDist, ModSettings.TameRange.Value, ownNear, limit);
+            // D-123: at most GlobalTameCap (15) living tamed trolls per player in total (known for the local player: TrollRegistry)
+            if (step == TamingRules.Step.CountDown && wearer == Player.m_localPlayer && !BreakRules.MayTameMore(TrollRegistry.LivingCount(), ModSettings.GlobalTameCap.Value))
+            {
+                if (diag) Diag(troll, "wild - " + wearer.GetPlayerName() + " already has " + TrollRegistry.LivingCount() + " living tamed trolls (cap " + ModSettings.GlobalTameCap.Value + ")");
+                return;
+            }
             float before = GetRemaining(t);
             if (diag)
             {
