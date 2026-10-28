@@ -117,7 +117,7 @@ namespace SteveTheTroll.Taming
             var farmer = troll.GetComponent<TrollFarmer>();
             ModLog.Info("TrollGuard: " + troll.name + " attacks " + nearest.name + " (" + best.ToString("F1") + " m) - it targets " + (Target(nearest.GetComponent<MonsterAI>()) == troll ? "the troll" : owner.GetPlayerName())
                 + ", " + Attackers.Count + " attacker(s)" + (farmer != null ? ", farming paused" : ""));
-            if (Attackers.Count > 0) TrollDefend.UnderAttack(owner.GetPlayerName());
+            TrollDefend.UnderAttack(Target(nearest.GetComponent<MonsterAI>()) == troll ? TrollOrders.Shown(troll) : owner.GetPlayerName());     // D-068: the one that is attacked
             return true;
         }
     }

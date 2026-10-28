@@ -69,6 +69,14 @@ namespace SteveTheTroll.Taming
         /// the full damage). Expected outcome: (chop, pickaxe) both = max(chop, pickaxe).
         public static float FarmDamage(float chop, float pickaxe) { return chop > pickaxe ? chop : pickaxe; }
 
+        /// D-068 (user: "25% for 1 star and 2 star (each) and 50% for 0 star"): stars of a boosted troll spawn from a roll 0 ..&lt; 1.
+        /// The game's own roll: 10 % per extra level (about 9 % one star, 1 % two stars).
+        public static int BoostedStars(float roll)
+        {
+            if (roll < 0.5f) return 0;
+            return roll < 0.75f ? 1 : 2;
+        }
+
         /// D-065: a crowd (at least `crowd` attackers) gets the ground slams, at most every `cooldown` seconds (`sinceLast` &lt; 0 = never slammed).
         public static bool Slam(int attackers, int crowd, float sinceLast, float cooldown)
         {

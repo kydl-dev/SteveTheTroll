@@ -90,6 +90,20 @@ namespace SteveTheTroll.Tests.Unit
         }
 
         [Test]
+        public void BoostedStars_HalfNone_QuarterOne_QuarterTwo()
+        {
+            Assert.That((int)ModAssembly.Call(T, "BoostedStars", 0f), Is.EqualTo(0));
+            Assert.That((int)ModAssembly.Call(T, "BoostedStars", 0.4999f), Is.EqualTo(0));
+            Assert.That((int)ModAssembly.Call(T, "BoostedStars", 0.5f), Is.EqualTo(1));
+            Assert.That((int)ModAssembly.Call(T, "BoostedStars", 0.7499f), Is.EqualTo(1));
+            Assert.That((int)ModAssembly.Call(T, "BoostedStars", 0.75f), Is.EqualTo(2));
+            Assert.That((int)ModAssembly.Call(T, "BoostedStars", 0.9999f), Is.EqualTo(2));
+            int[] count = new int[3];
+            for (int i = 0; i < 1000; i++) count[(int)ModAssembly.Call(T, "BoostedStars", i / 1000f)]++;
+            Assert.That(count, Is.EqualTo(new[] { 500, 250, 250 }));
+        }
+
+        [Test]
         public void FarmDamage_HigherOfChopAndPickaxe()
         {
             Assert.That((float)ModAssembly.Call(T, "FarmDamage", 120f, 0f), Is.EqualTo(120f));

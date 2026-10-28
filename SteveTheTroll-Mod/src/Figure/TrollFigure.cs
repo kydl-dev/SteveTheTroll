@@ -131,6 +131,15 @@ namespace SteveTheTroll.Figure
             if (Time.time >= _nextDiag) Diag();
         }
 
+        /// D-068 (F6 viewer): pose, size and place it right away (the viewer measures the model before the first LateUpdate).
+        internal void Settle()
+        {
+            if (_measuredVersion != _tunableVersion) UpdateExtras();
+            TrollFitMath.ApplyPose(_bones, _rest, _delta, _extra);
+            Measure();
+            PlaceLog(false);
+        }
+
         // In-game fine tune on top of the fit (identity at the default 0 values).
         void UpdateExtras()
         {
