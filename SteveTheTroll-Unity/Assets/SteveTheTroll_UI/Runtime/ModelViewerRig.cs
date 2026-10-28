@@ -29,6 +29,7 @@ namespace SteveTheTroll.Ui
         readonly int _layer;
         readonly Vector3 _park;
         readonly string _rigName;
+        readonly bool _upright;
         GameObject _root, _pivot, _model;
         Camera _camera;
         readonly System.Collections.Generic.List<Light> _lights = new System.Collections.Generic.List<Light>();   // switched on only while the viewer camera renders (F-1 / F-2, D-077)
@@ -41,8 +42,11 @@ namespace SteveTheTroll.Ui
         public Texture Texture { get { return _texture; } }
 
         /// `layer` 0..31: the layer only this rig uses (the game's cameras must not draw it, S5). `background` = the clear colour of the view.
-        internal ModelViewerRig(Func<string, GameObject> makeModel, int layer, ViewerSettings settings, Color background, Action<string> log, string rigName = "Kydl_ViewerRig", Vector3? park = null)
+        /// `upright` (D-087, Costume tab): a standing character model stays standing and is turned to face the camera (characters face +Z,
+        /// the camera starts at -Z) instead of having its longest side laid across the view (items such as the slippers).
+        internal ModelViewerRig(Func<string, GameObject> makeModel, int layer, ViewerSettings settings, Color background, Action<string> log, string rigName = "Kydl_ViewerRig", Vector3? park = null, bool upright = false)
         {
+            _upright = upright;
             _makeModel = makeModel;
             _settings = settings ?? new ViewerSettings();
             _log = log;
@@ -117,7 +121,8 @@ namespace SteveTheTroll.Ui
             // the longest side across the view (world X): Y-long models turn -90 deg around Z (top to the right), Z-long ones 90 deg around Y
             Quaternion lay = Quaternion.identity;
             string axis = "X";
-            if (local.y >= local.x && local.y >= local.z) { lay = Quaternion.Euler(0f, 0f, -90f); axis = "Y"; }
+            if (_upright) { lay = Quaternion.Euler(0f, 180f, 0f); axis = "upright, facing the camera"; }
+            else if (local.y >= local.x && local.y >= local.z) { lay = Quaternion.Euler(0f, 0f, -90f); axis = "Y"; }
             else if (local.z >= local.x && local.z >= local.y) { lay = Quaternion.Euler(0f, 90f, 0f); axis = "Z"; }
             _model.transform.localRotation = lay;
             Bounds laid = WorldBounds(_model);
