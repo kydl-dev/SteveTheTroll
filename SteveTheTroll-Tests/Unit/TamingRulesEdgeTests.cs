@@ -25,6 +25,17 @@ namespace SteveTheTroll.Tests.Unit
         [Test] public void Cap_AtBed_Two() { Assert.That((int)Call("SpawnCap", true, false, 0, 0f, 500f), Is.EqualTo(2)); }
         [Test] public void Cap_AtRadiusEdge_Six() { Assert.That((int)Call("SpawnCap", true, true, 0, 500f, 500f), Is.EqualTo(6)); }
 
+        // D-094: boosted trolls spawn 200 .. 500 m from the bed (both edges count), never at the house, never without a bed
+        [TestCase(199.9f, false)]
+        [TestCase(200f, true)]
+        [TestCase(350f, true)]
+        [TestCase(500f, true)]
+        [TestCase(500.1f, false)]
+        [TestCase(0f, false)]
+        [TestCase(-1f, false)]
+        public void SpawnRing(float toBed, bool expected) { Assert.That((bool)Call("InSpawnRing", toBed, 200f, 500f), Is.EqualTo(expected)); }
+        [Test] public void SpawnRing_NoMinimum_BedItselfCounts() { Assert.That((bool)Call("InSpawnRing", 0f, 0f, 500f), Is.True); }
+
         // SpawnAllowed: an empty bed area may spawn
         [Test] public void Spawn_NoneYet_Allowed() { Assert.That((bool)Call("SpawnAllowed", 0, 2), Is.True); }
 

@@ -37,6 +37,13 @@ namespace SteveTheTroll.Taming
             return tamedTotal <= 1 ? 2 : 0;
         }
 
+        /// D-094 (user: "yes, but not closer than 200m"): a boosted troll may spawn at this flat distance from the bed - from minRadius to
+        /// bedRadius, both inclusive. Expected outcome: false nearer the house, beyond the radius or with no bed (negative distance).
+        public static bool InSpawnRing(float toBed, float minRadius, float bedRadius)
+        {
+            return toBed >= 0f && toBed >= minRadius && toBed <= bedRadius;
+        }
+
         /// D-085: one more troll may spawn around the bed while the trolls counted there (wild + tamed) are fewer than the cap.
         /// Expected outcome: false at / over the cap or with no count yet (negative).
         public static bool SpawnAllowed(int trollsAroundBed, int cap)

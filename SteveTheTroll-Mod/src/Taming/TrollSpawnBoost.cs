@@ -27,8 +27,22 @@ namespace SteveTheTroll.Taming
             internal float Interval, Chance;
             internal bool Day, Night;
             internal int Max;
+            internal Heightmap.Biome Biome;
+            internal Heightmap.BiomeArea Area;
         }
         static float _nextLog;
+        static Vector3 _bed;
+        static int _ringRejects, _ringOk;
+
+        /// D-094: every land biome (not the ocean) - boosted trolls spawn wherever the bed is; the ring around the bed decides where.
+        static readonly Heightmap.Biome AnyLand = LandBiomes();
+        static Heightmap.Biome LandBiomes()
+        {
+            int mask = 0;
+            foreach (Heightmap.Biome b in System.Enum.GetValues(typeof(Heightmap.Biome)))
+                if (b != Heightmap.Biome.None && b != Heightmap.Biome.Ocean && (int)b > 0 && ((int)b & ((int)b - 1)) == 0) mask |= (int)b;   // single flags only
+            return (Heightmap.Biome)mask;
+        }
 
         /// D-084 (user: 500 m around the bed - 2 with the slippers and 0 or 1 tamed troll, 6 with the whole set and up to 5 tamed trolls,
         /// outside that the game's own rates): the local wearer when this zone is within SpawnBedRadius of its bed, with the cap for the zone.
@@ -42,6 +56,7 @@ namespace SteveTheTroll.Taming
             var profile = Game.instance != null ? Game.instance.GetPlayerProfile() : null;
             if (profile == null || !profile.HaveCustomSpawnPoint()) { why = "no bed"; return null; }
             var bed = profile.GetCustomSpawnPoint();
+            _bed = bed;
             var flat = zone - bed; flat.y = 0f;
             bool set = TrollTaming.TrollLimit(p) > 1;
             int tamed = TrollRegistry.LivingCount();
@@ -79,13 +94,14 @@ namespace SteveTheTroll.Taming
                             + ", day " + s.m_spawnAtDay + " / night " + s.m_spawnAtNight + ", global key '" + s.m_requiredGlobalKey + "', environments " + (s.m_requiredEnvironments != null ? s.m_requiredEnvironments.Count : 0)
                             + ", spawn distance " + s.m_spawnDistance + " m, radius " + s.m_spawnRadiusMin + " .. " + s.m_spawnRadiusMax + " m, in forest " + s.m_inForest + " / outside " + s.m_outsideForest);
                     }
-                    Changed.Add(new Saved { Data = s, Interval = s.m_spawnInterval, Chance = s.m_spawnChance, Day = s.m_spawnAtDay, Night = s.m_spawnAtNight, Max = s.m_maxSpawned });
+                    Changed.Add(new Saved { Data = s, Interval = s.m_spawnInterval, Chance = s.m_spawnChance, Day = s.m_spawnAtDay, Night = s.m_spawnAtNight, Max = s.m_maxSpawned, Biome = s.m_biome, Area = s.m_biomeArea });
                     // D-077 (TEST-032: no troll spawned with the set): the game counts the wearer's tamed trolls nearby against max spawned (1)
                     if (full) { s.m_spawnChance = 0f; continue; }                            // D-085: cap reached around the bed - no troll spawns here
                     s.m_maxSpawned = cap;                                                     // D-084: 2 / 6 around the bed
                     s.m_spawnInterval = TamingRules.BoostedInterval(s.m_spawnInterval, f);
                     s.m_spawnChance = TamingRules.BoostedChance(s.m_spawnChance, f);
                     s.m_spawnAtDay = true; s.m_spawnAtNight = true;
+                    s.m_biome = AnyLand; s.m_biomeArea = Heightmap.BiomeArea.Everything;       // D-094: any land biome, the ring decides (SpawnRing)
                 }
                 _active = Changed.Count > 0 && !full;
                 if (Time.time >= _nextLog)
@@ -99,9 +115,27 @@ namespace SteveTheTroll.Taming
 
             static void Finalizer()
             {
-                foreach (var c in Changed) { c.Data.m_spawnInterval = c.Interval; c.Data.m_spawnChance = c.Chance; c.Data.m_spawnAtDay = c.Day; c.Data.m_spawnAtNight = c.Night; c.Data.m_maxSpawned = c.Max; }
+                foreach (var c in Changed) { c.Data.m_spawnInterval = c.Interval; c.Data.m_spawnChance = c.Chance; c.Data.m_spawnAtDay = c.Day; c.Data.m_spawnAtNight = c.Night; c.Data.m_maxSpawned = c.Max; c.Data.m_biome = c.Biome; c.Data.m_biomeArea = c.Area; }
                 Changed.Clear();
                 _active = false;
+            }
+        }
+
+        /// D-094 (user: "yes, but not closer than 200m, don't want them to come ruining my house"): while the boost runs, a troll spawn
+        /// point must lie SpawnBedMinRadius .. SpawnBedRadius (200 .. 500 m) from the bed, flat. The game picks points 40 - 80 m from a
+        /// player, so trolls appear while the wearer is out in that ring (or near it), never next to the house.
+        [HarmonyPatch(typeof(SpawnSystem), "IsSpawnPointGood")]
+        static class SpawnRing
+        {
+            static void Postfix(SpawnSystem.SpawnData spawn, ref Vector3 spawnPoint, ref bool __result)
+            {
+                if (!__result || !_active || spawn == null || spawn.m_prefab == null || spawn.m_prefab.name != TrollTaming.TrollPrefab) return;
+                var flat = spawnPoint - _bed; flat.y = 0f;
+                if (TamingRules.InSpawnRing(flat.magnitude, ModSettings.SpawnBedMinRadius.Value, ModSettings.SpawnBedRadius.Value)) { _ringOk++; return; }
+                __result = false;
+                if (++_ringRejects % 50 == 1)
+                    ModLog.Verbose("TrollSpawnBoost: spawn point " + spawnPoint.ToString("F0") + " is " + flat.magnitude.ToString("0") + " m from the bed - outside "
+                        + ModSettings.SpawnBedMinRadius.Value.ToString("0") + " .. " + ModSettings.SpawnBedRadius.Value.ToString("0") + " m (" + _ringRejects + " rejected, " + _ringOk + " good so far)");
             }
         }
 
