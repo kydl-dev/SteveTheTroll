@@ -1,4 +1,6 @@
-# T-009a block-out of the troll MASCOT costume (Claude-Agent-2, 2026-10-28, D-069 .. D-072). Primitives only: proportions + colours for
+# T-009a block-out of the troll MASCOT costume (Claude-Agent-2, 2026-10-28, D-069 .. D-072).
+# v2 (user on v1): body less round, troll-like shading (darker back / shoulders / head top / outer limbs, lighter belly),
+# a real hand that grips the club (palm + curled fingers + thumb around the trunk); the club itself stays. Primitives only: proportions + colours for
 # the user's sign-off of the one-sentence look (user "yes" 2026-10-28). Not the final model, not exported.
 # Run: blender -b --factory-startup --python scripts/blockout_costume.py -- <out_prefix> <out_blend>
 # Axes: Blender Z up, the player faces +Y, the player's RIGHT is +X. 1 unit = 1 m. Player ~1.8 m (head top), shoulders ~1.45 m.
@@ -22,8 +24,9 @@ def mat(name, rgb, rough=0.9):
     return m
 
 M = {
-    "blue": mat("plush_blue", (0.30, 0.55, 0.68)),
-    "blue_dark": mat("plush_blue_dark", (0.20, 0.40, 0.52)),
+    "blue": mat("plush_blue", (0.30, 0.46, 0.56)),          # the game troll's blue-grey, a bit brighter (plush)
+    "blue_dark": mat("plush_blue_dark", (0.17, 0.27, 0.36)),  # back, shoulders, head top, outer arms / legs
+    "blue_light": mat("plush_blue_light", (0.48, 0.62, 0.68)),# belly, muzzle, palm
     "lining": mat("lining_grey", (0.62, 0.60, 0.58)),
     "sole": mat("sole_black", (0.02, 0.02, 0.02), 0.6),
     "straw": mat("straw_yellow", (0.80, 0.66, 0.28)),
@@ -59,7 +62,8 @@ def limb(name, a, b, r, material="blue"):
 add("sphere", "head", (0, 0.02, 1.72), (0.31, 0.29, 0.30))
 add("sphere", "brow", (0, 0.24, 1.80), (0.22, 0.08, 0.06), material="blue_dark")
 add("sphere", "nose", (0, 0.31, 1.68), (0.06, 0.07, 0.07), material="blue_dark")
-add("sphere", "muzzle", (0, 0.22, 1.58), (0.18, 0.12, 0.09))
+add("sphere", "muzzle", (0, 0.22, 1.58), (0.18, 0.12, 0.09), material="blue_light")
+add("sphere", "head_cap", (0, -0.04, 1.80), (0.29, 0.26, 0.21), material="blue_dark")
 for sx, side in ((1, "R"), (-1, "L")):
     add("cone", f"ear_{side}", (sx * 0.33, 0.0, 1.80), (0.06, 0.03, 0.16), (0, sx * 70, 0))
     add("sphere", f"eye_{side}", (sx * 0.10, 0.27, 1.74), (0.055, 0.03, 0.05), material="eye")
@@ -68,21 +72,57 @@ for sx, side in ((1, "R"), (-1, "L")):
 for i, (x, z, tilt) in enumerate(((0, 2.06, 0), (0.08, 2.03, 25), (-0.08, 2.03, -25), (0.04, 2.0, 12), (-0.04, 2.0, -12))):
     add("cone", f"hair_{i}", (x, -0.02, z), (0.05, 0.05, 0.12), (0, tilt, 0), material="straw")
 
-# --- CHEST piece: round fluffy body top + straw collar + plush arms with mitts
-add("sphere", "body", (0, 0.0, 1.13), (0.40, 0.33, 0.42))
-add("sphere", "belly", (0, 0.20, 1.08), (0.28, 0.16, 0.30), material="blue_dark")
+# --- CHEST piece: fluffy body top (v2: less round - a tall barrel with broad shoulders), straw collar, plush arms
+add("sphere", "body", (0, 0.0, 1.10), (0.34, 0.26, 0.40))
+add("sphere", "shoulders", (0, -0.02, 1.33), (0.42, 0.25, 0.17), material="blue_dark")
+add("sphere", "back", (0, -0.12, 1.15), (0.30, 0.17, 0.33), material="blue_dark")
+add("sphere", "belly", (0, 0.13, 1.06), (0.24, 0.14, 0.28), material="blue_light")
 add("torus", "collar", (0, 0.0, 1.43), (1.0, 0.9, 0.55), major_radius=0.27, minor_radius=0.07, material="straw")
-for sx, side in ((1, "R"), (-1, "L")):
-    limb(f"upper_arm_{side}", (sx * 0.40, 0.0, 1.35), (sx * 0.50, 0.05, 1.05), 0.11)
-    limb(f"fore_arm_{side}", (sx * 0.50, 0.05, 1.05), (sx * 0.52, 0.20, 0.85), 0.10)
-    add("sphere", f"mitt_{side}", (sx * 0.53, 0.24, 0.80), (0.12, 0.12, 0.11))
-    for k in range(3):
-        add("cone", f"claw_{side}{k}", (sx * (0.49 + 0.04 * k), 0.34, 0.76), (0.015, 0.015, 0.035), (90, 0, 0), material="claw")
+
+# the club (needed first: the right hand is built around it)
+grip = Vector((0.50, 0.26, 0.80))
+up = Vector((0.15, -0.35, 1.0)).normalized()
+L = 1.5
+GRIP_FROM_END = 0.25
+R_END, R_TOP = 0.07, 0.12
+grip_r = R_END + (R_TOP - R_END) * (GRIP_FROM_END / L)
+
+# right arm ends at the palm, which lies on the trunk's outer side (towards the elbow)
+elbow_R = Vector((0.50, 0.02, 1.08))
+n = elbow_R - grip; n = (n - up * n.dot(up)).normalized()      # from the trunk axis to the palm
+b = up.cross(n).normalized()                                       # around the trunk
+palm = grip + n * (grip_r + 0.05)
+limb("upper_arm_R", (0.40, 0.0, 1.35), tuple(elbow_R), 0.11, "blue_dark")
+limb("fore_arm_R", tuple(elbow_R), tuple(palm + n * 0.05), 0.095)
+pq = n.to_track_quat("Z", "X").to_euler()
+add("sphere", "palm_R", tuple(palm), (0.075, 0.09, 0.05), tuple(math.degrees(a) for a in pq), "blue_light")
+FR = 0.032                                                         # finger thickness (plush)
+for k, t in enumerate((0.06, 0.02, -0.02, -0.06)):                 # 4 fingers along the trunk, curled round it
+    for j, ang in enumerate((35, 95, 155)):
+        a = math.radians(ang)
+        p = grip + up * t + (n * math.cos(a) + b * math.sin(a)) * (grip_r + FR * 0.8)
+        add("sphere", f"finger_R{k}_{j}", tuple(p), (FR, FR, FR), material="blue")
+    tip = grip + up * t + (n * math.cos(math.radians(190)) + b * math.sin(math.radians(190))) * (grip_r + FR * 0.6)
+    add("cone", f"claw_R{k}", tuple(tip), (0.012, 0.012, 0.025), tuple(math.degrees(x) for x in (-n).to_track_quat("Z", "Y").to_euler()), "claw")
+for j, ang in enumerate((-40, -100)):                              # thumb from the other side
+    a = math.radians(ang)
+    p = grip + up * 0.10 + (n * math.cos(a) + b * math.sin(a)) * (grip_r + FR * 0.9)
+    add("sphere", f"thumb_R{j}", tuple(p), (FR * 1.1, FR * 1.1, FR * 1.1), material="blue")
+log.append(f"right hand: grip={tuple(round(v,3) for v in grip)} trunk radius at grip {grip_r:.3f} m, palm {tuple(round(v,3) for v in palm)}")
+
+# left arm: relaxed, open plush hand
+limb("upper_arm_L", (-0.40, 0.0, 1.35), (-0.50, 0.05, 1.05), 0.11, "blue_dark")
+limb("fore_arm_L", (-0.50, 0.05, 1.05), (-0.52, 0.18, 0.86), 0.095)
+add("sphere", "palm_L", (-0.53, 0.22, 0.81), (0.08, 0.09, 0.06), material="blue_light")
+for k in range(4):
+    add("sphere", f"finger_L{k}", (-0.50 - 0.025 * k, 0.29, 0.74 + 0.01 * k), (FR, FR, FR * 1.6), material="blue")
+    add("cone", f"claw_L{k}", (-0.50 - 0.025 * k, 0.30, 0.69 + 0.01 * k), (0.012, 0.012, 0.025), (180, 0, 0), material="claw")
 
 # --- LEGS piece: fluffy trousers + straw loincloth (the Fluffy Slippers are the feet)
 add("sphere", "hips", (0, 0.0, 0.78), (0.36, 0.29, 0.20))
 for sx, side in ((1, "R"), (-1, "L")):
     limb(f"thigh_{side}", (sx * 0.17, 0.0, 0.75), (sx * 0.18, 0.02, 0.42), 0.15)
+    limb(f"thigh_out_{side}", (sx * 0.22, -0.03, 0.72), (sx * 0.23, -0.02, 0.46), 0.11, "blue_dark")
     limb(f"shin_{side}", (sx * 0.18, 0.02, 0.42), (sx * 0.18, 0.0, 0.14), 0.13)
     add("sphere", f"cuff_{side}", (sx * 0.18, 0.0, 0.14), (0.15, 0.15, 0.06), material="blue_dark")
     # slippers (feet) - stand-ins for the real Fluffy Slippers
@@ -92,18 +132,15 @@ add("cone", "loincloth_front", (0, 0.24, 0.62), (0.26, 0.10, 0.20), (180, 0, 0),
 add("cone", "loincloth_back", (0, -0.24, 0.62), (0.26, 0.10, 0.20), (180, 0, 0), material="straw")
 add("torus", "belt", (0, 0.0, 0.84), (1.0, 0.82, 0.5), major_radius=0.35, minor_radius=0.04, material="straw")
 
-# --- CLUB: dark bark tree trunk in the RIGHT mitt, resting on the right shoulder, ~1.5 m
-grip = Vector((0.53, 0.24, 0.80))
-up = Vector((0.15, -0.35, 1.0)).normalized()
-L = 1.5
-c = grip + up * (L / 2 - 0.25)
+# --- CLUB: dark bark tree trunk gripped by the right hand, resting on the right shoulder, ~1.5 m
+c = grip + up * (L / 2 - GRIP_FROM_END)
 rot = up.to_track_quat("Z", "Y").to_euler()
 deg = tuple(math.degrees(a) for a in rot)
-bpy.ops.mesh.primitive_cone_add(vertices=24, radius1=0.07, radius2=0.12, depth=L, location=tuple(c), rotation=rot)
+bpy.ops.mesh.primitive_cone_add(vertices=24, radius1=R_END, radius2=R_TOP, depth=L, location=tuple(c), rotation=rot)
 club = bpy.context.active_object; club.name = "club"; club.data.materials.append(M["bark"]); bpy.ops.object.shade_smooth()
 add("cyl", "club_cut", tuple(c + up * (L / 2 + 0.002)), (0.118, 0.118, 0.004), deg, material="cut")
 for i, (t, side) in enumerate(((0.35, 1), (0.6, -1), (0.8, 1))):
-    p = grip + up * (t * L - 0.25)
+    p = grip + up * (t * L - GRIP_FROM_END)
     out = Vector((side, 0.3, 0.2)).normalized()
     limb(f"club_stub_{i}", tuple(p), tuple(p + out * 0.16), 0.025, "bark")
 log.append(f"club: grip={tuple(round(v,3) for v in grip)} dir={tuple(round(v,3) for v in up)} len={L} m")
@@ -130,9 +167,11 @@ cam = bpy.context.active_object
 cam.data.lens = 50
 scene.camera = cam
 target = Vector((0, 0, 1.05))
-for view, loc in (("front34", (2.6, 4.2, 1.6)), ("side", (5.0, 0.0, 1.3)), ("back34", (-2.8, -4.0, 1.7))):
+views = (("front34", (2.6, 4.2, 1.6), target), ("side", (5.0, 0.0, 1.3), target), ("back34", (-2.8, -4.0, 1.7), target),
+         ("hand", tuple(grip + Vector((0.9, 0.7, 0.25))), grip))
+for view, loc, aim in views:
     cam.location = loc
-    cam.rotation_euler = (target - cam.location).to_track_quat("-Z", "Y").to_euler()
+    cam.rotation_euler = (aim - cam.location).to_track_quat("-Z", "Y").to_euler()
     scene.render.filepath = f"{OUT}_{view}.png"
     bpy.ops.render.render(write_still=True)
     log.append(f"render {view}: {scene.render.filepath}")
