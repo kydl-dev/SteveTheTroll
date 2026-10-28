@@ -25,6 +25,7 @@ namespace SteveTheTroll.Taming
             internal SpawnSystem.SpawnData Data;
             internal float Interval, Chance;
             internal bool Day, Night;
+            internal int Max;
         }
         static float _nextLog;
 
@@ -65,7 +66,9 @@ namespace SteveTheTroll.Taming
                             + ", day " + s.m_spawnAtDay + " / night " + s.m_spawnAtNight + ", global key '" + s.m_requiredGlobalKey + "', environments " + (s.m_requiredEnvironments != null ? s.m_requiredEnvironments.Count : 0)
                             + ", spawn distance " + s.m_spawnDistance + " m, radius " + s.m_spawnRadiusMin + " .. " + s.m_spawnRadiusMax + " m, in forest " + s.m_inForest + " / outside " + s.m_outsideForest);
                     }
-                    Changed.Add(new Saved { Data = s, Interval = s.m_spawnInterval, Chance = s.m_spawnChance, Day = s.m_spawnAtDay, Night = s.m_spawnAtNight });
+                    Changed.Add(new Saved { Data = s, Interval = s.m_spawnInterval, Chance = s.m_spawnChance, Day = s.m_spawnAtDay, Night = s.m_spawnAtNight, Max = s.m_maxSpawned });
+                    // D-077 (TEST-032: no troll spawned with the set): the game counts the wearer's tamed trolls nearby against max spawned (1)
+                    s.m_maxSpawned = Mathf.Max(s.m_maxSpawned, TrollTaming.TrollLimit(wearer) + 1);
                     s.m_spawnInterval = TamingRules.BoostedInterval(s.m_spawnInterval, f);
                     s.m_spawnChance = TamingRules.BoostedChance(s.m_spawnChance, f);
                     s.m_spawnAtDay = true; s.m_spawnAtNight = true;
@@ -74,15 +77,15 @@ namespace SteveTheTroll.Taming
                 if (Time.time >= _nextLog)
                 {
                     _nextLog = Time.time + 30f;
-                    ModLog.Verbose("TrollSpawnBoost: zone at " + __instance.transform.position.ToString("F0") + ", wearer " + wearer.GetPlayerName() + " without a tamed troll near: "
+                    ModLog.Verbose("TrollSpawnBoost: zone at " + __instance.transform.position.ToString("F0") + ", wearer " + wearer.GetPlayerName() + " under the troll limit (" + TrollTaming.TrollLimit(wearer) + "): "
                         + Changed.Count + " troll entr(y/ies) boosted (first: interval " + Changed[0].Interval + " -> " + Changed[0].Data.m_spawnInterval + " s, chance "
-                        + Changed[0].Chance + " -> " + Changed[0].Data.m_spawnChance + " %, day and night)");
+                        + Changed[0].Chance + " -> " + Changed[0].Data.m_spawnChance + " %, max spawned " + Changed[0].Max + " -> " + Changed[0].Data.m_maxSpawned + ", day and night)");
                 }
             }
 
             static void Finalizer()
             {
-                foreach (var c in Changed) { c.Data.m_spawnInterval = c.Interval; c.Data.m_spawnChance = c.Chance; c.Data.m_spawnAtDay = c.Day; c.Data.m_spawnAtNight = c.Night; }
+                foreach (var c in Changed) { c.Data.m_spawnInterval = c.Interval; c.Data.m_spawnChance = c.Chance; c.Data.m_spawnAtDay = c.Day; c.Data.m_spawnAtNight = c.Night; c.Data.m_maxSpawned = c.Max; }
                 Changed.Clear();
                 _active = false;
             }

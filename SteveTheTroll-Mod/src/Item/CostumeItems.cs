@@ -34,6 +34,7 @@ namespace SteveTheTroll.Item
         public const string SetEffectName = "SE_STT_SteveTheTroll";
         public const float SetSpeed = 0.5f, SetCarry = 75f;          // run 50 % faster, carry 25 % more (25 % of the base 300)
         public const int SetTrollLimit = 5;
+        public const float SetStamina = -0.5f;                       // D-077: -50 % stamina use (run, jump, attack, block, dodge, swim, sneak, tools)
         static StatusEffect _set;
 
         /// The set effect's name hash (0 until added); the taming limit reads it (TrollTaming.TrollLimit).
@@ -90,8 +91,12 @@ namespace SteveTheTroll.Item
             se.m_icon = Plugin.Bundle.LoadAsset<Sprite>("SteveTheTrollSetIcon");
             se.m_speedModifier = SetSpeed;
             se.m_addMaxCarryWeight = SetCarry;
+            // D-077 (user: "-50% stamina usage"): every stamina use of the player halves
+            se.m_runStaminaDrainModifier = SetStamina; se.m_jumpStaminaUseModifier = SetStamina; se.m_attackStaminaUseModifier = SetStamina;
+            se.m_blockStaminaUseModifier = SetStamina; se.m_dodgeStaminaUseModifier = SetStamina; se.m_swimStaminaUseModifier = SetStamina;
+            se.m_sneakStaminaUseModifier = SetStamina; se.m_homeItemStaminaUseModifier = SetStamina;
             bool added = ItemManager.Instance.AddStatusEffect(new CustomStatusEffect(se, false));
-            ModLog.Verbose("CostumeItems: set effect " + SetEffectName + " added " + added + " (icon " + (se.m_icon != null) + ", speed +" + (SetSpeed * 100f) + " %, carry +" + SetCarry + ", trolls " + SetTrollLimit + ")");
+            ModLog.Verbose("CostumeItems: set effect " + SetEffectName + " added " + added + " (icon " + (se.m_icon != null) + ", speed +" + (SetSpeed * 100f) + " %, carry +" + SetCarry + ", stamina use " + (SetStamina * 100f) + " %, trolls " + SetTrollLimit + ")");
             ModLog.Check("CostumeItems: set effect registered", added ? 1 : 0, 1, 0, "");
             return se;
         }
@@ -177,6 +182,7 @@ namespace SteveTheTroll.Item
             foreach (var mr in attach.GetComponentsInChildren<MeshRenderer>(true)) { if (mr.GetComponent<ParticleSystem>() != null) continue; Object.DestroyImmediate(mr.GetComponent<MeshFilter>(), true); Object.DestroyImmediate(mr, true); hidden++; }
             var model = Object.Instantiate(part, attach, false);
             model.name = "stt_club_model";
+            model.AddComponent<ClubPose>();
             var s = item.ItemDrop.m_itemData.m_shared;
             var v = s.m_damages;
             s.m_damages = new HitData.DamageTypes { m_blunt = ClubBlunt, m_chop = ClubChop, m_pickaxe = ClubPickaxe };
@@ -217,6 +223,71 @@ namespace SteveTheTroll.Item
             _r.enabled = !slippers;
             int state = slippers ? 1 : 0;
             if (_logged != state) { _logged = state; ModLog.Verbose("CostumeFeet: " + (_vis != null ? _vis.name : "?") + " plush feet " + (slippers ? "hidden (slippers worn)" : "shown")); }
+        }
+    }
+}
+
+namespace SteveTheTroll.Item
+{
+    /// <summary>
+    /// D-077: the Troll Club's pose in the hand from the Club Tunables (F7, live): tilt outward / up, twist, slide. The rest pose is the
+    /// built model's (ClubParts: shaft along +Z of the sledge's attach). Axes: in the player's rest pose the hand's local (-0.77, 0.64, 0)
+    /// points up and (0.64, 0.77, 0) to the player's right (measured on the reference player in Unity).
+    /// </summary>
+    internal sealed class ClubPose : MonoBehaviour
+    {
+        static readonly Vector3 UpAxis = new Vector3(-0.77f, 0.64f, 0f).normalized;       // rotating about it moves the tip to the right
+        static readonly Vector3 SideAxis = -new Vector3(0.64f, 0.77f, 0f).normalized;     // rotating about it lifts the tip
+        Quaternion _rest;
+        Vector3 _restPos;
+        float _o = float.NaN, _u, _t, _s;
+
+        void Awake() { _rest = transform.localRotation; _restPos = transform.localPosition; }
+
+        void LateUpdate()
+        {
+            float o = ModSettings.ClubOutward.Value, u = ModSettings.ClubUp.Value, t = ModSettings.ClubTwist.Value, sl = ModSettings.ClubSlide.Value;
+            if (o == _o && u == _u && t == _t && sl == _s) return;
+            _o = o; _u = u; _t = t; _s = sl;
+            var turn = Quaternion.AngleAxis(o, UpAxis) * Quaternion.AngleAxis(u, SideAxis);
+            transform.localRotation = turn * _rest * Quaternion.AngleAxis(t, Vector3.up);         // the model's own +Y is the trunk
+            transform.localPosition = _restPos + turn * Vector3.forward * sl;
+            ModLog.Verbose("ClubPose: " + name + " outward " + o.ToString("F0") + ", up " + u.ToString("F0") + ", twist " + t.ToString("F0") + " deg, slide " + sl.ToString("F2") + " m");
+        }
+    }
+
+    /// <summary>
+    /// D-077 (TEST-032: the player's body showed through the suit - calves, ribs): while a character wears ALL three costume pieces
+    /// (head, suit, trousers) its own body mesh is hidden - the suit, mitts and plush feet / slippers cover everything. Any piece off -> shown.
+    /// Works for every character with the mod (VisEquipment's current item hashes are synced by the game).
+    /// </summary>
+    [HarmonyLib.HarmonyPatch(typeof(VisEquipment), "UpdateEquipmentVisuals")]
+    internal static class CostumeBodyPatch
+    {
+        static readonly HarmonyLib.AccessTools.FieldRef<VisEquipment, int> Helmet = HarmonyLib.AccessTools.FieldRefAccess<VisEquipment, int>("m_currentHelmetItemHash");
+        static readonly HarmonyLib.AccessTools.FieldRef<VisEquipment, int> Chest = HarmonyLib.AccessTools.FieldRefAccess<VisEquipment, int>("m_currentChestItemHash");
+        static readonly HarmonyLib.AccessTools.FieldRef<VisEquipment, int> Legs = HarmonyLib.AccessTools.FieldRefAccess<VisEquipment, int>("m_currentLegItemHash");
+        static readonly System.Runtime.CompilerServices.ConditionalWeakTable<VisEquipment, object> Hidden = new System.Runtime.CompilerServices.ConditionalWeakTable<VisEquipment, object>();
+        static readonly int H = CostumeItems.HelmetName.GetStableHashCode(), C = CostumeItems.ChestName.GetStableHashCode(), L = CostumeItems.LegsName.GetStableHashCode();
+
+        static void Postfix(VisEquipment __instance)
+        {
+            var body = __instance.m_bodyModel;
+            if (body == null) return;
+            bool full = ModSettings.On && Helmet(__instance) == H && Chest(__instance) == C && Legs(__instance) == L;
+            object o;
+            bool was = Hidden.TryGetValue(__instance, out o);
+            if (full)
+            {
+                if (body.enabled) body.enabled = false;
+                if (!was) { Hidden.Add(__instance, new object()); ModLog.Verbose("CostumeBodyPatch: " + __instance.name + " wears the whole costume - own body hidden"); }
+            }
+            else if (was)
+            {
+                Hidden.Remove(__instance);
+                body.enabled = true;
+                ModLog.Verbose("CostumeBodyPatch: " + __instance.name + " costume incomplete - own body shown again");
+            }
         }
     }
 }

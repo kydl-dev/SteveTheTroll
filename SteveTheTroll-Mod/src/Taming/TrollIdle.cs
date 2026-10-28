@@ -12,13 +12,24 @@ namespace SteveTheTroll.Taming
     internal static class TrollIdle
     {
         static readonly Dictionary<int, float> Since = new Dictionary<int, float>();
-        static float _next;
+        static float _next, _dueUntil;
+        static Player _player;
+        const float ResumeWindowSeconds = 60f;
+
+        /// D-077 (TEST-032: "after I logged back in, Spencer has not gone back to farming"): for the next minute idle trolls start farming at
+        /// once instead of after AutoFarmSeconds. Called when the owner wears the slippers again (TrollHome) and after a login (Tick).
+        internal static void ResumeNow(string why)
+        {
+            _dueUntil = Time.time + ResumeWindowSeconds;
+            ModLog.Info("TrollIdle: " + why + " - idle own trolls start farming at once (next " + ResumeWindowSeconds.ToString("0") + " s)");
+        }
 
         /// Plugin.Update. Expected outcome: how many trolls were sent farming this time.
         internal static int Tick()
         {
             if (Time.time < _next || !ModSettings.On) return 0;
             _next = Time.time + 1f;
+            if (Player.m_localPlayer != _player) { _player = Player.m_localPlayer; if (_player != null) ResumeNow("login of " + _player.GetPlayerName()); }
             int sent = 0;
             foreach (var c in Character.GetAllCharacters())
             {
@@ -29,10 +40,11 @@ namespace SteveTheTroll.Taming
                 if (Busy(c, view.GetZDO())) { Since.Remove(id); continue; }
                 float since;
                 if (!Since.TryGetValue(id, out since)) { Since[id] = Time.time; continue; }
-                if (Time.time - since < ModSettings.AutoFarmSeconds.Value) continue;
+                bool resume = Time.time < _dueUntil;
+                if (!resume && Time.time - since < ModSettings.AutoFarmSeconds.Value) continue;
                 Since.Remove(id);
                 string focus = Ui.TrollFocus.Normalize(view.GetZDO().GetString(TrollRegistry.FocusKey, ""));
-                ModLog.Info("TrollIdle: " + c.name + " had no job for " + ModSettings.AutoFarmSeconds.Value.ToString("0") + " s - farms on its own (focus '" + focus + "')");
+                ModLog.Info("TrollIdle: " + c.name + (resume ? " goes back to work (login / slippers on)" : " had no job for " + ModSettings.AutoFarmSeconds.Value.ToString("0") + " s") + " - farms on its own (focus '" + focus + "')");
                 if (TrollFarming.Begin(c, focus, true)) sent++;
             }
             if (Since.Count > 200) Since.Clear();

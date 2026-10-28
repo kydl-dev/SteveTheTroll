@@ -37,7 +37,7 @@ namespace SteveTheTroll.Taming
             var p = Player.m_localPlayer;
             if (p == null) return 0;
             bool wears = TrollTaming.Wears(p);
-            if (wears != _wore) { _wore = wears; ModLog.Info("TrollHome: " + p.GetPlayerName() + (wears ? " wears the slippers again - trolls work as usual" : " took the slippers off - own trolls go to the bed")); }
+            if (wears != _wore) { _wore = wears; ModLog.Info("TrollHome: " + p.GetPlayerName() + (wears ? " wears the slippers again - trolls work as usual" : " took the slippers off - own trolls go to the bed")); if (wears) TrollIdle.ResumeNow("slippers on again"); }
             if (wears) { Sent.Clear(); return 0; }
             int sent = 0;
             foreach (var c in Character.GetAllCharacters())

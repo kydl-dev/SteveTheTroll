@@ -128,6 +128,13 @@ namespace SteveTheTroll
         public static readonly Tunable<float> SlipperScale = new Tunable<float>("Slipper", "Scale", Fit.TrollFitData.SlipperScale, 0.6f, 1.6f, "Size of the slippers (1 = as modelled, 0.40 m long).");
         public static readonly Tunable<float> SlipperWidth = new Tunable<float>("Slipper", "Width", Fit.TrollFitData.SlipperWidth, 0.6f, 1.3f, "Width of the slippers across the foot (1 = as modelled, 16 cm at the widest; the user's TEST-008 choice 1.05 with Scale 1.1).");
 
+        // --- D-077 Troll Club in the hand (TEST-032: "the club goes into the head mesh"): turns / slides the club around the grip, live (F7).
+        // Axes in the hand: Outward = the tip towards the player's right in the rest pose, Up = the tip upwards, Twist = round the club.
+        public static readonly Tunable<float> ClubOutward = new Tunable<float>("Club", "TiltOutward", 20f, -60f, 60f, "Tilts the Troll Club's tip away from the head (degrees, + = outward).");
+        public static readonly Tunable<float> ClubUp = new Tunable<float>("Club", "TiltUp", 0f, -60f, 60f, "Tilts the Troll Club's tip up (+) / down (-), in degrees.");
+        public static readonly Tunable<float> ClubTwist = new Tunable<float>("Club", "Twist", 0f, -180f, 180f, "Turns the Troll Club round its own length, in degrees.");
+        public static readonly Tunable<float> ClubSlide = new Tunable<float>("Club", "Slide", 0f, -0.4f, 0.4f, "Slides the Troll Club through the hand (metres, + = the hand holds it further down).");
+
         /// Expected outcome: every player entry is bound (returns that check).
         public static bool Bind(ConfigFile c)
         {
