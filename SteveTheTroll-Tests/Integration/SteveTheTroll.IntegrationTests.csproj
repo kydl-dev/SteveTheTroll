@@ -6,5 +6,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="UnityEngine.CoreModule"><HintPath>$(ValheimRefs)\UnityEngine.CoreModule.dll</HintPath><Private>true</Private></Reference>
+    <!-- PatchTargetsTests: reads the mod and the game DLLs with Mono.Cecil (metadata only) -->
+    <Reference Include="Mono.Cecil"><HintPath>$(ValheimRefs)\Mono.Cecil.dll</HintPath><Private>true</Private></Reference>
   </ItemGroup>
 </Project>
