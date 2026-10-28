@@ -13,7 +13,14 @@ namespace SteveTheTroll.Item
     [HarmonyPatch(typeof(Player), "HaveRequirementItems")]
     internal static class RecipeUnlockPatch
     {
-        static readonly AccessTools.FieldRef<Player, HashSet<string>> Known = AccessTools.FieldRefAccess<Player, HashSet<string>>("m_knownMaterial");
+        // made on first use, not in the type initializer: the pure rules below must work without the game (G14 coverage run: the field
+        // accessor failed to build under the coverage tool and took the whole class down with a TypeInitializationException)
+        static AccessTools.FieldRef<Player, HashSet<string>> _known;
+        static HashSet<string> Known(Player p)
+        {
+            if (_known == null) _known = AccessTools.FieldRefAccess<Player, HashSet<string>>("m_knownMaterial");
+            return _known(p);
+        }
         static readonly HashSet<string> Ours = new HashSet<string>
         {
             SlipperItem.PrefabName, CostumeItems.HelmetName, CostumeItems.ChestName, CostumeItems.LegsName, CostumeItems.ClubName,

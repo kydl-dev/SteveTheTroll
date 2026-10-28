@@ -21,7 +21,7 @@ namespace SteveTheTroll
         // ModGuid never changes after the first release. ModVersion = manifest.json version_number = newest CHANGELOG heading (tests check it).
         public const string ModGuid = "com.kydldev.SteveTheTroll";
         public const string ModName = "SteveTheTroll";
-        public const string ModVersion = "0.1.0";
+        public const string ModVersion = "1.0.0";
         public const string BundleName = "stevethetroll";
 
         internal static Plugin Instance;
