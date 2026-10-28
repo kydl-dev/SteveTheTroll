@@ -92,13 +92,15 @@ namespace SteveTheTroll.Taming
             var wearer = TrollTaming.NearestWearer(troll.transform.position, out wearerDist);
             float ownDist;
             var own = TrollTaming.OwnTroll(wearer, out ownDist);
-            var step = TamingRules.DecideWild(wearerDist, ModSettings.TameRange.Value, ownDist, ModSettings.OwnTrollRange.Value);
+            int ownNear = TrollTaming.OwnTrollCount(wearer, ModSettings.OwnTrollRange.Value);
+            int limit = TrollTaming.TrollLimit(wearer);
+            var step = TamingRules.DecideWildLimit(wearerDist, ModSettings.TameRange.Value, ownNear, limit);
             float before = GetRemaining(t);
             if (diag)
             {
                 Diag(troll, "wild, nearest wearer " + (wearer != null ? wearer.GetPlayerName() : "none") + " at " + wearerDist.ToString("F1") + " m (range "
                     + ModSettings.TameRange.Value + "), own tamed troll " + (own != null ? own.name : "none") + " at " + ownDist.ToString("F1") + " m (limit "
-                    + ModSettings.OwnTrollRange.Value + "), left " + before.ToString("F1") + " s (" + TamingRules.Percent(before, t.m_tamingTime) + " %), step " + step);
+                    + ModSettings.OwnTrollRange.Value + " m: " + ownNear + " of " + limit + " allowed), left " + before.ToString("F1") + " s (" + TamingRules.Percent(before, t.m_tamingTime) + " %), step " + step);
             }
             if (step == TamingRules.Step.CallOwnTroll) { CallTroll(own, wearer); return; }
             if (step != TamingRules.Step.CountDown) return;

@@ -22,6 +22,15 @@ namespace SteveTheTroll.Tests.Unit
         [Test] public void OwnTrollBeyond300_CountsDown() { Assert.That(Decide(10f, 300.5f), Is.EqualTo("CountDown")); }
         [Test] public void OwnTrollNear_ButWearerOutOfRange_Nothing() { Assert.That(Decide(200f, 5f), Is.EqualTo("Nothing")); }
 
+        // D-076: troll limit (1 without the costume set, 5 with it)
+        static string Limit(float wearer, int ownNear, int limit) { return ModAssembly.Call(T, "DecideWildLimit", wearer, 150f, ownNear, limit).ToString(); }
+        [Test] public void Limit_NoWearer_Nothing() { Assert.That(Limit(-1f, 0, 5), Is.EqualTo("Nothing")); }
+        [Test] public void Limit_OneAllowed_NoneNear_CountsDown() { Assert.That(Limit(10f, 0, 1), Is.EqualTo("CountDown")); }
+        [Test] public void Limit_OneAllowed_OneNear_Calls() { Assert.That(Limit(10f, 1, 1), Is.EqualTo("CallOwnTroll")); }
+        [Test] public void Limit_FiveAllowed_FourNear_CountsDown() { Assert.That(Limit(10f, 4, 5), Is.EqualTo("CountDown")); }
+        [Test] public void Limit_FiveAllowed_FiveNear_Calls() { Assert.That(Limit(10f, 5, 5), Is.EqualTo("CallOwnTroll")); }
+        [Test] public void Limit_ZeroMeansOne() { Assert.That(Limit(10f, 1, 0), Is.EqualTo("CallOwnTroll")); }
+
         [Test]
         public void CountDown_SubtractsAndStopsAtZero()
         {

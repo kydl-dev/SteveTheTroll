@@ -30,6 +30,9 @@ namespace SteveTheTroll.Item
         public const int UpgradeCostPerItem = 2;
         static int _hash;
 
+        /// The slippers' shared item data once added (the costume set bonus adds the slippers to its set, D-076).
+        internal static ItemDrop.ItemData.SharedData Shared;
+
         /// The utility hash VisEquipment uses for this item (prefab name hash; 0 until the item is added).
         public static int Hash { get { return _hash; } }
 
@@ -76,6 +79,7 @@ namespace SteveTheTroll.Item
             {
                 new HitData.DamageModPair { m_type = HitData.DamageType.Frost, m_modifier = HitData.DamageModifier.Resistant },
             };
+            Shared = shared;
             bool added = ItemManager.Instance.AddItem(item);
             _hash = PrefabName.GetStableHashCode();
             ModLog.Info("SlipperItem: " + PrefabName + " added " + added + " (armor " + shared.m_armor + " +" + shared.m_armorPerLevel + "/quality, max quality " + shared.m_maxQuality + ", worn belt parts removed " + removed + ", ground look slippers " + dropLook + ", hash " + _hash + ")");

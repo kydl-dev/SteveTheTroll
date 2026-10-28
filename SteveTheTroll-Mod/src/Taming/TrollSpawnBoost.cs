@@ -35,9 +35,7 @@ namespace SteveTheTroll.Taming
             {
                 if (p == null || p.IsDead() || !TrollTaming.Wears(p)) continue;
                 if (Vector3.Distance(p.transform.position, zone) > ModSettings.SpawnBoostWearerRange.Value) continue;
-                float own;
-                TrollTaming.OwnTroll(p, out own);
-                if (own >= 0f && own <= ModSettings.OwnTrollRange.Value) continue;
+                if (TrollTaming.OwnTrollCount(p, ModSettings.OwnTrollRange.Value) >= TrollTaming.TrollLimit(p)) continue;   // D-076: 5 with the costume set
                 return p;
             }
             return null;

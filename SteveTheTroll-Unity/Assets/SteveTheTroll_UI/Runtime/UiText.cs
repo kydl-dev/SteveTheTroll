@@ -21,6 +21,8 @@ namespace SteveTheTroll.Ui
             { "stevethetroll_costume_chest_desc", "The fluffy top of a troll mascot suit, with clawed mitts and a straw collar." },
             { "stevethetroll_costume_legs", "Troll Mascot Trousers" },
             { "stevethetroll_costume_legs_desc", "Plush troll trousers with a straw loincloth and big clawed feet (the Fluffy Slippers fit right in)." },
+            { "stevethetroll_se_set", "Steve The Troll" },
+            { "stevethetroll_se_set_tooltip", "The troll rush runs through your whole body: your strides grow long, your back grows strong enough to haul a forest, and the trolls of the land smell a friend. Up to 5 tamed trolls follow your lead." },
             { "stevethetroll_club", "Troll Club" },
             { "stevethetroll_club_desc", "A whole tree trunk with a rope grip. Swing it with both hands, like a troll." },
             { "stevethetroll_se_frost_tooltip", "Warm, fluffy slippers: resistant to frost." },

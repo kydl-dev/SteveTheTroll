@@ -15,10 +15,10 @@ namespace SteveTheTroll.Item
     ///  - chest   <- ArmorTrollLeatherChest: child "attach_skin" = CostumeChestParts/attach_skin (skinned, the game swaps in the wearer's bones)
     ///  - legs    <- ArmorTrollLeatherLegs: child "attach_skin" = CostumeLegsParts/attach_skin (+ plush feet, hidden while the slippers are worn)
     ///  - club    <- SledgeIron (two-handed slam, knockback, stagger): the meshes under "attach" swapped for ClubParts/attach/model
-    /// Ground look: the helmet shows our head, chest / legs / club keep the vanilla ground model (club: our trunk); icons stay vanilla for now. Armor pieces: 20 armor +5 per quality, max quality 4, recipe as the slippers
+    /// Ground look: the helmet shows our head, chest / legs / club keep the vanilla ground model (club: our trunk); our icons (scripts/costume_icon.py). Armor pieces: 20 armor +5 per quality, max quality 4, recipe as the slippers
     /// (5 TrollHide, 4 DeerHide, 6 Blueberries, workbench 1, every upgrade 2 TrollHide + 2 Blueberries). Club: 70 blunt + 30 chop + 30 pickaxe,
     /// +10 / +5 / +5 per quality, max quality 4, knockback x1.5, workbench 1, 15 RoundLog + 15 FineWood + 10 Thistle + 2 TrollHide, every
-    /// upgrade 5 RoundLog + 5 FineWood. The vanilla troll-leather set bonus and effects are removed (our set bonus is T-009e).
+    /// upgrade 5 RoundLog + 5 FineWood. The vanilla troll-leather set bonus is replaced by ours (D-076, set 'Steve The Troll' with the slippers).
     /// </summary>
     internal static class CostumeItems
     {
@@ -28,6 +28,16 @@ namespace SteveTheTroll.Item
         public const float ClubBlunt = 70f, ClubChop = 30f, ClubPickaxe = 30f, ClubBluntPerLevel = 10f, ClubChopPerLevel = 5f, ClubPickaxePerLevel = 5f;
         public const float ClubKnockbackFactor = 1.5f;
         static int _helmetHash, _chestHash, _legsHash, _clubHash;
+        /// D-076: the set "Steve The Troll" = helmet + chest + legs + Fluffy Slippers (the game counts the utility slot in a set).
+        public const string SetName = "stevethetroll_set";
+        public const int SetSize = 4;
+        public const string SetEffectName = "SE_STT_SteveTheTroll";
+        public const float SetSpeed = 0.5f, SetCarry = 75f;          // run 50 % faster, carry 25 % more (25 % of the base 300)
+        public const int SetTrollLimit = 5;
+        static StatusEffect _set;
+
+        /// The set effect's name hash (0 until added); the taming limit reads it (TrollTaming.TrollLimit).
+        public static int SetEffectHash { get { return _set != null ? _set.NameHash() : 0; } }
 
         public static int LegsHash { get { return _legsHash; } }
 
@@ -43,14 +53,47 @@ namespace SteveTheTroll.Item
         {
             PrefabManager.OnVanillaPrefabsAvailable -= Add;
             if (Plugin.Bundle == null) { ModLog.Error("CostumeItems: no asset bundle - no costume items"); return; }
+            _set = SetEffect();
             int ok = 0;
             if (AddArmor(HelmetName, "HelmetTrollLeather", "stevethetroll_costume_helmet", "CostumeHelmetParts", "attach", ItemDrop.ItemData.ItemType.Helmet)) ok++;
             if (AddArmor(ChestName, "ArmorTrollLeatherChest", "stevethetroll_costume_chest", "CostumeChestParts", "attach_skin", ItemDrop.ItemData.ItemType.Chest)) ok++;
             if (AddArmor(LegsName, "ArmorTrollLeatherLegs", "stevethetroll_costume_legs", "CostumeLegsParts", "attach_skin", ItemDrop.ItemData.ItemType.Legs)) ok++;
             if (AddClub()) ok++;
             _helmetHash = HelmetName.GetStableHashCode(); _chestHash = ChestName.GetStableHashCode(); _legsHash = LegsName.GetStableHashCode(); _clubHash = ClubName.GetStableHashCode();
-            ModLog.Info("CostumeItems: " + ok + "/4 items added (helmet, chest, legs, club)");
+            if (SlipperItem.Shared != null) { SlipperItem.Shared.m_setName = SetName; SlipperItem.Shared.m_setSize = SetSize; SlipperItem.Shared.m_setStatusEffect = _set; }
+            else ModLog.Warn("CostumeItems: slippers not added yet - they are not part of the set");
+            ModLog.Info("CostumeItems: " + ok + "/4 items added (helmet, chest, legs, club), set '" + SetName + "' of " + SetSize + " with " + SetEffectName + " (slippers in the set " + (SlipperItem.Shared != null) + ")");
             ModLog.Check("CostumeItems: items added", ok, 4, 0, "");
+        }
+
+        static string IconOf(ItemDrop.ItemData.ItemType type)
+        {
+            return type == ItemDrop.ItemData.ItemType.Helmet ? "CostumeHelmetIcon" : type == ItemDrop.ItemData.ItemType.Chest ? "CostumeChestIcon" : "CostumeLegsIcon";
+        }
+
+        /// Our icon from the bundle (rendered by scripts/costume_icon.py); the vanilla icon stays when it is missing.
+        static void Icon(ItemConfig cfg, string name)
+        {
+            var icon = Plugin.Bundle.LoadAsset<Sprite>(name);
+            if (icon != null) cfg.Icons = new[] { icon };
+            else ModLog.Warn("CostumeItems: icon '" + name + "' not in the bundle - the vanilla icon stays");
+        }
+
+        /// D-076: "Steve The Troll" - the set effect (all 3 costume pieces + the Fluffy Slippers): run 50 % faster, carry 75 more,
+        /// up to SetTrollLimit tamed trolls (TrollTaming.TrollLimit). Registered with Jotunn; shown with its own icon.
+        static StatusEffect SetEffect()
+        {
+            var se = ScriptableObject.CreateInstance<SE_Stats>();
+            se.name = SetEffectName;
+            se.m_name = "$stevethetroll_se_set";
+            se.m_tooltip = "$stevethetroll_se_set_tooltip";
+            se.m_icon = Plugin.Bundle.LoadAsset<Sprite>("SteveTheTrollSetIcon");
+            se.m_speedModifier = SetSpeed;
+            se.m_addMaxCarryWeight = SetCarry;
+            bool added = ItemManager.Instance.AddStatusEffect(new CustomStatusEffect(se, false));
+            ModLog.Verbose("CostumeItems: set effect " + SetEffectName + " added " + added + " (icon " + (se.m_icon != null) + ", speed +" + (SetSpeed * 100f) + " %, carry +" + SetCarry + ", trolls " + SetTrollLimit + ")");
+            ModLog.Check("CostumeItems: set effect registered", added ? 1 : 0, 1, 0, "");
+            return se;
         }
 
         static GameObject Part(string prefab, string child)
@@ -70,6 +113,7 @@ namespace SteveTheTroll.Item
             cfg.AddRequirement(new RequirementConfig("TrollHide", SlipperItem.TrollHideCost, SlipperItem.UpgradeCostPerItem, true));
             cfg.AddRequirement(new RequirementConfig("DeerHide", 4, 0, true));
             cfg.AddRequirement(new RequirementConfig("Blueberries", 6, SlipperItem.UpgradeCostPerItem, false));
+            Icon(cfg, IconOf(type));
             var item = new CustomItem(name, basePrefab, cfg);
             if (item.ItemPrefab == null || item.ItemDrop == null) { ModLog.Error("CostumeItems: could not clone " + basePrefab + " for " + name); return false; }
             int removed = StripWorn(item.ItemPrefab);
@@ -91,7 +135,7 @@ namespace SteveTheTroll.Item
             var s = item.ItemDrop.m_itemData.m_shared;
             s.m_itemType = type;
             s.m_armor = Armor; s.m_armorPerLevel = ArmorPerLevel; s.m_maxQuality = MaxQuality;
-            s.m_setName = ""; s.m_setSize = 0; s.m_setStatusEffect = null; s.m_equipStatusEffect = null;
+            s.m_setName = SetName; s.m_setSize = SetSize; s.m_setStatusEffect = _set; s.m_equipStatusEffect = null;
             s.m_movementModifier = 0f;
             s.m_damageModifiers = new List<HitData.DamageModPair>();
             if (type == ItemDrop.ItemData.ItemType.Helmet) { s.m_helmetHideHair = ItemDrop.ItemData.HelmetHairType.Hidden; s.m_helmetHideBeard = ItemDrop.ItemData.HelmetHairType.Hidden; }
@@ -123,6 +167,7 @@ namespace SteveTheTroll.Item
             cfg.AddRequirement(new RequirementConfig("FineWood", 15, 5, true));
             cfg.AddRequirement(new RequirementConfig("Thistle", 10, 0, true));
             cfg.AddRequirement(new RequirementConfig("TrollHide", 2, 0, true));
+            Icon(cfg, "TrollClubIcon");
             var item = new CustomItem(ClubName, "SledgeIron", cfg);
             if (item.ItemPrefab == null || item.ItemDrop == null) { ModLog.Error("CostumeItems: could not clone SledgeIron for the club"); return false; }
             var attach = item.ItemPrefab.transform.Find("attach");

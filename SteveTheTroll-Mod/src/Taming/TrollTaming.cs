@@ -151,6 +151,24 @@ namespace SteveTheTroll.Taming
             return best;
         }
 
+        /// D-076: how many of the player's own tamed trolls are loaded within range metres of the player.
+        public static int OwnTrollCount(Player p, float range)
+        {
+            if (p == null) return 0;
+            long id = p.GetPlayerID();
+            int n = 0;
+            foreach (var c in Character.GetAllCharacters())
+                if (c != null && !c.IsDead() && c.IsTamed() && IsTroll(c) && Owner(c) == id && Vector3.Distance(p.transform.position, c.transform.position) <= range) n++;
+            return n;
+        }
+
+        /// D-076: own tamed trolls a wearer may have: 1, or Item.CostumeItems.SetTrollLimit (5) while the set effect "Steve The Troll" is on.
+        public static int TrollLimit(Player p)
+        {
+            int h = Item.CostumeItems.SetEffectHash;
+            return p != null && h != 0 && p.GetSEMan() != null && p.GetSEMan().HaveStatusEffect(h) ? Item.CostumeItems.SetTrollLimit : 1;
+        }
+
         /// The player's own tamed troll among the loaded characters, nearest to the player (null if none loaded); distance in metres (-1).
         public static Character OwnTroll(Player p, out float distance)
         {

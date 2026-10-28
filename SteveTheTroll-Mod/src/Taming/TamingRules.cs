@@ -19,6 +19,14 @@ namespace SteveTheTroll.Taming
             return blocked ? Step.CallOwnTroll : Step.CountDown;
         }
 
+        /// D-076: as DecideWild, with a troll limit: ownNear = the wearer's own tamed trolls within OwnTrollRange, limit = how many it may have
+        /// (1, or 5 with the full costume set). Expected outcome: CountDown while ownNear is below the limit, else CallOwnTroll.
+        public static Step DecideWildLimit(float wearerDistance, float tameRange, int ownNear, int limit)
+        {
+            if (wearerDistance < 0f || wearerDistance > tameRange) return Step.Nothing;
+            return ownNear >= (limit < 1 ? 1 : limit) ? Step.CallOwnTroll : Step.CountDown;
+        }
+
         /// Seconds left after one tick (never below 0).
         public static float CountDown(float remaining, float dt)
         {
