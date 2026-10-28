@@ -182,14 +182,13 @@ namespace SteveTheTroll.Taming
             return (int)p;
         }
     
-        /// TEST-048 (Steve 3 twice): adds the items of `found` that are not in `into` yet (nor twice in `found`). `seen` is filled with `into`
-        /// first. The game's ZNetScene.CreateObjectsSorted creates every listed ZDO that is not created yet WITHOUT checking again inside the
-        /// loop, so a ZDO listed twice became two GameObjects. Expected outcome: how many were added (= into grew by exactly that much).
-        internal static int AddMissing<T>(System.Collections.Generic.List<T> into, System.Collections.Generic.List<T> found, System.Collections.Generic.HashSet<T> seen)
+        /// TEST-048 / TEST-049: adds the items of `found` to `into`, each once (`seen` is a scratch set, cleared here). Only `found` is
+        /// checked - the caller keeps `found` disjoint from `into` (TrollZones: kept zones outside the game's near list). Expected outcome:
+        /// how many were added (= into grew by exactly that much).
+        internal static int AddDistinct<T>(System.Collections.Generic.List<T> into, System.Collections.Generic.List<T> found, System.Collections.Generic.HashSet<T> seen)
         {
             if (into == null || found == null || seen == null) return 0;
             seen.Clear();
-            foreach (var x in into) seen.Add(x);
             int before = into.Count;
             foreach (var x in found) if (seen.Add(x)) into.Add(x);
             return into.Count - before;

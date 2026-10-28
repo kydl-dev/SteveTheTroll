@@ -58,27 +58,27 @@ namespace SteveTheTroll.Tests.Unit
         // Tier: exactly minHeight counts
         [Test] public void Tier_AtMinHeight_Other() { Assert.That((int)Call("Tier", false, false, false, 1.2f, 1.2f), Is.EqualTo(2)); }
 
-        // TEST-048 (Steve 3 twice): kept-zone ZDOs already in the game's near list must not be added again
-        static int AddMissing(System.Collections.Generic.List<int> into, System.Collections.Generic.List<int> found)
+        // TEST-048 / TEST-049: the found ZDOs (already disjoint from the game's list) are added once each
+        static int AddDistinct(System.Collections.Generic.List<int> into, System.Collections.Generic.List<int> found)
         {
-            var m = ModAssembly.Type(T).GetMethod("AddMissing", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static).MakeGenericMethod(typeof(int));
+            var m = ModAssembly.Type(T).GetMethod("AddDistinct", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static).MakeGenericMethod(typeof(int));
             return (int)m.Invoke(null, new object[] { into, found, new System.Collections.Generic.HashSet<int>() });
         }
 
         [Test]
-        public void AddMissing_SkipsWhatIsListed_AndDuplicatesInFound()
+        public void AddDistinct_AddsEachFoundOnce()
         {
-            var into = new System.Collections.Generic.List<int> { 1, 2, 3 };
-            int added = AddMissing(into, new System.Collections.Generic.List<int> { 3, 4, 4, 2, 5 });
+            var into = new System.Collections.Generic.List<int> { 1, 2 };
+            int added = AddDistinct(into, new System.Collections.Generic.List<int> { 4, 4, 5, 4 });
             Assert.That(added, Is.EqualTo(2));
-            Assert.That(into, Is.EqualTo(new[] { 1, 2, 3, 4, 5 }));
+            Assert.That(into, Is.EqualTo(new[] { 1, 2, 4, 5 }));
         }
 
         [Test]
-        public void AddMissing_NothingNew_AddsNothing()
+        public void AddDistinct_NothingFound_AddsNothing()
         {
             var into = new System.Collections.Generic.List<int> { 7, 8 };
-            Assert.That(AddMissing(into, new System.Collections.Generic.List<int> { 8, 7 }), Is.EqualTo(0));
+            Assert.That(AddDistinct(into, new System.Collections.Generic.List<int>()), Is.EqualTo(0));
             Assert.That(into.Count, Is.EqualTo(2));
         }
     }

@@ -119,6 +119,14 @@ namespace SteveTheTroll.Taming
             return Log(Kept.Count);
         }
 
+        /// Is `zone` inside the game's own ring of `radius` zones around `centre`? Classic distance = a square (the game's IsClassic rule),
+        /// else the game's ZonesWithinRadius. Expected outcome: the game's answer for this zone.
+        static bool Within(Vector2s centre, Vector2s zone, int radius, bool classic, bool ghost)
+        {
+            if (classic) return System.Math.Max(System.Math.Abs(zone.x - centre.x), System.Math.Abs(zone.y - centre.y)) <= radius;
+            return ZoneSystem.instance.ZonesWithinRadius(centre, zone, radius, ghost);
+        }
+
         static int Log(int n)
         {
             if (n != _lastKept) { _lastKept = n; ModLog.Verbose("TrollZones: " + n + " zone(s) kept alive around " + Trolls.Count + " own troll(s) outside the player's area"); }
@@ -150,30 +158,47 @@ namespace SteveTheTroll.Taming
         [HarmonyPatch(typeof(ZNetScene), "CreateObjects")]
         static class Create
         {
-            // TEST-048: a kept zone can also be in the game's own near list (1.0.21 simulation distance, or the player moved since the last Tick).
-            // Its ZDOs were then listed twice and the game created the troll twice (two GameObjects, one ZDO). Only ZDOs not listed yet are added.
+            // TEST-048 / TEST-049: 1.0.21 builds the near list from the player's SIMULATION distance (Settings > graphics; 18 000+ ZDOs in
+            // TEST-049), which is larger than the active area the kept zones are chosen against. A kept zone inside that near distance is
+            // already listed (adding it again made the game create the troll twice); in the far band the game lists its Distant ZDOs in the
+            // distant list. So per call: near-band zones add nothing, far-band zones add only non-Distant ZDOs, zones beyond add all - the
+            // lists stay disjoint without a per-frame set of the whole near list (TEST-049: that set cost ~19 000 inserts 30 times a second).
             static readonly List<ZDO> Found = new List<ZDO>();
             static readonly HashSet<ZDO> Seen = new HashSet<ZDO>();
             static float _nextLog;
 
             static void Prefix(List<ZDO> currentNearObjects)
             {
-                if (_broken || Kept.Count == 0 || currentNearObjects == null || FindObjects == null || ZDOMan.instance == null) return;
+                if (_broken || Kept.Count == 0 || currentNearObjects == null || FindObjects == null || ZDOMan.instance == null || ZNet.instance == null || ZoneSystem.instance == null) return;
                 try
                 {
+                    var sim = ZNet.instance.GetSyncedSimulationDistance();
+                    var centre = ZoneSystem.GetZone(ZNet.instance.GetReferencePosition());
                     Found.Clear();
-                    var visited = NewVisited();
-                    foreach (var zone in Kept) FindObjects.Invoke(ZDOMan.instance, new object[] { zone, Found, visited });
+                    int nearZones = 0, farZones = 0, outZones = 0, distantSkipped = 0;
+                    foreach (var zone in Kept)
+                    {
+                        if (Within(centre, zone, sim.NearSimulationDistance, sim.IsClassic, false)) { nearZones++; continue; }
+                        bool far = Within(centre, zone, sim.TotalSimulationDistance, sim.IsClassic, true);
+                        int start = Found.Count;
+                        FindObjects.Invoke(ZDOMan.instance, new object[] { zone, Found, NewVisited() });
+                        if (far)
+                        {
+                            farZones++;
+                            for (int k = Found.Count - 1; k >= start; k--) if (Found[k] != null && Found[k].Distant) { Found.RemoveAt(k); distantSkipped++; }
+                        }
+                        else outZones++;
+                    }
                     int before = currentNearObjects.Count;
-                    int added = TamingRules.AddMissing(currentNearObjects, Found, Seen);
-                    int skipped = Found.Count - added;
+                    int added = TamingRules.AddDistinct(currentNearObjects, Found, Seen);     // portal objects can come once per sector call
                     if (Time.time >= _nextLog)
                     {
                         _nextLog = Time.time + 5f;
-                        ModLog.Verbose("TrollZones: CreateObjects - game listed " + before + " ZDO(s), kept zones " + Kept.Count + " found " + Found.Count
-                            + ", added " + added + ", already listed (not added twice) " + skipped);
+                        ModLog.Verbose("TrollZones: CreateObjects - simulation near " + sim.NearSimulationDistance + " / total " + sim.TotalSimulationDistance + (sim.IsClassic ? " classic" : "")
+                            + ", game listed " + before + " ZDO(s); kept zones " + Kept.Count + ": " + nearZones + " already in the game's near list, " + farZones + " in its far band ("
+                            + distantSkipped + " Distant ZDO(s) left to the game), " + outZones + " beyond; added " + added);
                     }
-                    ModLog.Check("TrollZones: near list grew by the new ZDOs only", currentNearObjects.Count - before, added, 0f, "ZDO(s)");
+                    ModLog.Check("TrollZones: near list grew by the added ZDOs only", currentNearObjects.Count - before, added, 0f, "ZDO(s)");
                 }
                 catch (System.Exception e) { Break("CreateObjects", e); }
             }
