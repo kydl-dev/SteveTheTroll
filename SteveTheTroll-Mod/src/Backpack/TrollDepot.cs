@@ -10,7 +10,7 @@ namespace SteveTheTroll.Backpack
     /// No depot with room -> a new one is built: on top of the latest stack while it is under 5 high, else a new stack at a spot that is
     /// near the bed (15 .. 50 m, D-097), not inside a house (nothing built above it), free (no pieces / rocks in the footprint), on ground that
     /// is level or that the game's level op flattens first (up to 2.5 m uneven, D-095),
-    /// and that the troll can walk to within 10 m of (it unloads from 5 - 10 m away, D-106; (the game's pathfinding for the troll). Depot chests are the game's reinforced chests
+    /// and that the troll can walk to within 10 m of (the game's pathfinding for the troll; it unloads from 5 - 10 m away, D-106). Depot chests are the game's reinforced chests
     /// marked stt_depot: they need no support (stacks never crumble) and cannot be removed for their materials.
     /// </summary>
     internal static class TrollDepot
@@ -64,15 +64,31 @@ namespace SteveTheTroll.Backpack
         {
             target = bed;
             float best = float.MaxValue;
+            int busy = 0;
             foreach (var c in Chests(bed, owner))
             {
                 if (!c.GetInventory().HaveEmptySlot()) continue;
+                // D-107 (user: "if another troll is close to a depot, have them reroute to another depot, or start a new one")
+                if (Busy(c.transform.position, troll)) { busy++; continue; }
                 float d = Vector3.Distance(c.transform.position, troll.transform.position);
                 if (d < best) { best = d; target = c.transform.position; }
             }
-            if (best < float.MaxValue) { ModLog.Info("TrollDepot: " + troll.name + " unloads at the depot chest " + best.ToString("F1") + " m away"); return true; }
-            return Build(troll, bed, owner, out target);
+            if (best < float.MaxValue) { ModLog.Info("TrollDepot: " + troll.name + " unloads at the depot chest " + best.ToString("F1") + " m away" + (busy > 0 ? " (" + busy + " chest(s) skipped: another troll there)" : "")); return true; }
+            if (busy > 0) ModLog.Info("TrollDepot: " + troll.name + " - every depot with room has another troll at it (" + busy + " chest(s)) - a new stack");
+            return Build(troll, bed, owner, out target, busy > 0);
         }
+
+        /// D-107: another tamed troll stands within BusyRadius of the point (flat). Expected outcome: false when only `me` is there.
+        internal static bool Busy(Vector3 at, Character me)
+        {
+            foreach (var c in Character.GetAllCharacters())
+            {
+                if (c == null || c == me || c.IsDead() || !c.IsTamed() || !Taming.TrollTaming.IsTroll(c)) continue;
+                if (DepotRules.Crowded(Flat(c.transform.position - at), BusyRadius)) return true;
+            }
+            return false;
+        }
+        const float BusyRadius = 10f;
 
         /// Moves everything from the troll's backpack into the owner's depot chests near the bed, building more depots when needed.
         /// Expected outcome: the number of stacks moved; `left` = stacks that found no room.
@@ -87,13 +103,13 @@ namespace SteveTheTroll.Backpack
                 var inv = BackpackStore.Read(zdo, i);
                 foreach (var item in new List<ItemDrop.ItemData>(inv.GetAllItems()))
                 {
-                    var into = Room(bed, owner, item);
+                    var into = Room(bed, owner, item, troll.transform.position);
                     while (into == null && built < MaxNewDepots)
                     {
                         Vector3 at;
                         if (!Build(troll, bed, owner, out at)) break;
                         built++;
-                        into = Room(bed, owner, item);
+                        into = Room(bed, owner, item, troll.transform.position);
                     }
                     if (into == null) { left++; continue; }
                     into.GetInventory().AddItem(item.Clone());
@@ -106,10 +122,13 @@ namespace SteveTheTroll.Backpack
             return moved;
         }
 
-        // A depot chest that takes the whole stack (this client takes ownership of it when nobody has it open).
-        static Container Room(Vector3 bed, long owner, ItemDrop.ItemData item)
+        // A depot chest that takes the whole stack, nearest to the troll first (D-107: the stack it walked to), this client takes ownership
+        // of it when nobody has it open.
+        static Container Room(Vector3 bed, long owner, ItemDrop.ItemData item, Vector3 from)
         {
-            foreach (var c in Chests(bed, owner))
+            var list = Chests(bed, owner);
+            list.Sort((a, b) => (a.transform.position - from).sqrMagnitude.CompareTo((b.transform.position - from).sqrMagnitude));
+            foreach (var c in list)
             {
                 if (c.IsInUse() || !c.GetInventory().CanAddItem(item)) continue;
                 var v = c.GetComponent<ZNetView>();
@@ -120,12 +139,12 @@ namespace SteveTheTroll.Backpack
         }
 
         // A new depot: on the latest stack while it is under MaxStack high, else at a new spot. Expected outcome: true + its position.
-        static bool Build(Character troll, Vector3 bed, long owner, out Vector3 at)
+        static bool Build(Character troll, Vector3 bed, long owner, out Vector3 at, bool avoidBusy = false)
         {
             at = bed;
             Quaternion rot;
             bool level = false;
-            if (!OnStack(bed, owner, out at, out rot) && !FindSpot(troll, bed, out at, out rot, out level))
+            if (!OnStack(bed, owner, out at, out rot, avoidBusy ? troll : null) && !FindSpot(troll, bed, out at, out rot, out level))
             {
                 ModLog.Warn("TrollDepot: no spot for a troll depot near the bed at " + bed.ToString("F0"));
                 return false;
@@ -163,7 +182,8 @@ namespace SteveTheTroll.Backpack
         }
 
         // The highest depot of the stack nearest the bed, when that stack is under MaxStack high.
-        static bool OnStack(Vector3 bed, long owner, out Vector3 at, out Quaternion rot)
+        // avoidFor != null (D-107): stacks with another troll at them are left out
+        static bool OnStack(Vector3 bed, long owner, out Vector3 at, out Quaternion rot, Character avoidFor = null)
         {
             at = bed; rot = Quaternion.identity;
             var frames = new List<ZNetView>();
@@ -175,6 +195,7 @@ namespace SteveTheTroll.Backpack
                 // TEST-043: stacks from before the 15 .. 50 m ring (5 - 7 m from the bed) kept growing next to the house - only stacks inside
                 // the ring get more levels (the old ones stay as they are and are still used for unloading)
                 if (!DepotRules.InRing(Flat(bottom.transform.position - bed), MinFromBed, MaxFromBed)) continue;
+                if (avoidFor != null && Busy(bottom.transform.position, avoidFor)) continue;
                 int levels = 0; Transform top = null;
                 foreach (var f in frames)
                 {

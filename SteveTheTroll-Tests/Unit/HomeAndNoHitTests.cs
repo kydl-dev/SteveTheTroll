@@ -40,9 +40,23 @@ namespace SteveTheTroll.Tests.Unit
         [TestCase(-1f, false)]
         public void DepotRing(float toBed, bool expected) { Assert.That((bool)ModAssembly.Call("SteveTheTroll.Backpack.DepotRules", "InRing", toBed, 15f, 50f), Is.EqualTo(expected)); }
 
-        [TestCase(7.9f, false)]
-        [TestCase(8f, true)]
-        public void DepotSpacing(float d, bool expected) { Assert.That((bool)ModAssembly.Call("SteveTheTroll.Backpack.DepotRules", "FarEnough", d, 8f), Is.EqualTo(expected)); }
+        [TestCase(11.9f, false)]
+        [TestCase(12f, true)]
+        public void DepotSpacing(float d, bool expected) { Assert.That((bool)ModAssembly.Call("SteveTheTroll.Backpack.DepotRules", "FarEnough", d, 12f), Is.EqualTo(expected)); }
+
+        // D-107: another troll within 10 m makes a depot busy
+        [TestCase(10f, true)]
+        [TestCase(3f, true)]
+        [TestCase(10.1f, false)]
+        [TestCase(-1f, false)]
+        public void DepotBusy(float d, bool expected) { Assert.That((bool)ModAssembly.Call("SteveTheTroll.Backpack.DepotRules", "Crowded", d, 10f), Is.EqualTo(expected)); }
+
+        [Test]
+        public void DepotSpacing_MoreThanTheBusyRing()
+        {
+            float spacing = (float)ModAssembly.GetStatic("SteveTheTroll.Backpack.DepotRules", "StackSpacing");
+            Assert.That(spacing, Is.GreaterThan(10f), "a troll unloading at one stack does not block the next one");
+        }
 
         [Test]
         public void DepotSpacing_FitsTheFootprintAndTheGap()
