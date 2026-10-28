@@ -167,6 +167,9 @@ namespace SteveTheTroll.Backpack
             frames.Sort((a, b) => Flat(a.transform.position - bed).CompareTo(Flat(b.transform.position - bed)));
             foreach (var bottom in frames)
             {
+                // TEST-043: stacks from before the 15 .. 50 m ring (5 - 7 m from the bed) kept growing next to the house - only stacks inside
+                // the ring get more levels (the old ones stay as they are and are still used for unloading)
+                if (!DepotRules.InRing(Flat(bottom.transform.position - bed), MinFromBed, MaxFromBed)) continue;
                 int levels = 0; Transform top = null;
                 foreach (var f in frames)
                 {
@@ -204,7 +207,7 @@ namespace SteveTheTroll.Backpack
                     tried++;
                     Vector3 ground; float slope;
                     bool flatten;
-                    if (!Level(p, q, maxSlope, canLevel, out ground, out slope, out flatten) || !Free(ground, q) || Covered(ground, q) || !Reachable(troll, agent, ground)) continue;
+                    if (!Level(p, q, maxSlope, canLevel, out ground, out slope, out flatten) || !Free(ground, q) || !AwayFromStacks(ground) || Covered(ground, q) || !Reachable(troll, agent, ground)) continue;
                     at = ground; rot = q; level = flatten;
                     ModLog.Info("TrollDepot: new stack at " + at.ToString("F1") + ", " + r.ToString("0") + " m from the bed, ground uneven by " + slope.ToString("F2") + " m" + (level ? " -> levelled" : "") + " (" + tried + " spot(s) checked)");
                     return true;
@@ -240,8 +243,20 @@ namespace SteveTheTroll.Backpack
         static bool Free(Vector3 ground, Quaternion q)
         {
             if (_blockMask == 0) _blockMask = LayerMask.GetMask("piece", "piece_nonsolid", "static_solid", "Default", "Default_small", "vehicle");
+            if (_pieceMask == 0) _pieceMask = LayerMask.GetMask("piece", "piece_nonsolid");
             float h = DepotPrefab.Height * 0.5f + 0.15f;
-            return !Physics.CheckBox(ground + Vector3.up * (h + 0.1f), new Vector3(DepotData.HalfX, h, DepotData.HalfZ), q, _blockMask);
+            if (Physics.CheckBox(ground + Vector3.up * (h + 0.1f), new Vector3(DepotData.HalfX, h, DepotData.HalfZ), q, _blockMask)) return false;
+            // TEST-043 (user: "why are they that close"): buildings and other depots keep a walking gap of DepotRules.Gap all round
+            return !Physics.CheckBox(ground + Vector3.up * (h + 0.1f), new Vector3(DepotData.HalfX + DepotRules.Gap, h, DepotData.HalfZ + DepotRules.Gap), q, _pieceMask);
+        }
+        static int _pieceMask;
+
+        // TEST-043: a new stack keeps DepotRules.StackSpacing (flat, centre to centre) from every depot stack of any owner
+        static bool AwayFromStacks(Vector3 ground)
+        {
+            foreach (var v in Near(ground, DepotPrefab.Name))
+                if (!DepotRules.FarEnough(Flat(v.transform.position - ground), DepotRules.StackSpacing)) return false;
+            return true;
         }
 
         // "Not inside the house": nothing built above the middle or the ends of the footprint.

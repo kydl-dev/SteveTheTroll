@@ -51,6 +51,7 @@ namespace SteveTheTroll
             Item.SlipperItem.Install();             // T-007: needs the bundle (icon) and the vanilla prefabs (added later by Jotunn)
             Item.CostumeItems.Install();            // T-009d: costume helmet / chest / legs + Troll Club (bundle parts, vanilla prefabs)
             Backpack.DepotPrefab.Install();         // D-064: troll depot frame prefab (vanilla prefabs)
+            Backpack.DepotGround.Install();         // D-103: own level-ground terrain op for the depot spots
             Taming.TrollTaming.Install();           // T-008a: the game's Troll becomes tameable (vanilla prefabs, added later by Jotunn)
             UiInputLock.Install(ModGuid);           // the character does not move while one of the mod's menus is open
             new Harmony(ModGuid).PatchAll(Assembly.GetExecutingAssembly());

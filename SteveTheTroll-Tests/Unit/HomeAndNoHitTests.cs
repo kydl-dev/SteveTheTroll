@@ -32,6 +32,27 @@ namespace SteveTheTroll.Tests.Unit
             Assert.That(Candidate(-5, 15f), Is.EqualTo(Candidate(0, 15f)), "negative index = first spot");
         }
 
+        // TEST-043: depots only grow inside the 15 .. 50 m ring and keep 8 m between stacks
+        [TestCase(7f, false)]
+        [TestCase(15f, true)]
+        [TestCase(50f, true)]
+        [TestCase(50.5f, false)]
+        [TestCase(-1f, false)]
+        public void DepotRing(float toBed, bool expected) { Assert.That((bool)ModAssembly.Call("SteveTheTroll.Backpack.DepotRules", "InRing", toBed, 15f, 50f), Is.EqualTo(expected)); }
+
+        [TestCase(7.9f, false)]
+        [TestCase(8f, true)]
+        public void DepotSpacing(float d, bool expected) { Assert.That((bool)ModAssembly.Call("SteveTheTroll.Backpack.DepotRules", "FarEnough", d, 8f), Is.EqualTo(expected)); }
+
+        [Test]
+        public void DepotSpacing_FitsTheFootprintAndTheGap()
+        {
+            float halfX = (float)ModAssembly.GetStatic("SteveTheTroll.Backpack.DepotData", "HalfX");
+            float gap = (float)ModAssembly.GetStatic("SteveTheTroll.Backpack.DepotRules", "Gap");
+            float spacing = (float)ModAssembly.GetStatic("SteveTheTroll.Backpack.DepotRules", "StackSpacing");
+            Assert.That(spacing, Is.GreaterThanOrEqualTo(2f * halfX + gap), "two stacks side by side keep the walking gap");
+        }
+
         static bool Inside(Vector3 bed, Vector3 pos, float r) { return (bool)ModAssembly.Call(NoHit, "Inside", bed, pos, r); }
 
         [Test]

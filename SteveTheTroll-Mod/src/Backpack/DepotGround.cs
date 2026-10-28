@@ -12,11 +12,52 @@ namespace SteveTheTroll.Backpack
     internal static class DepotGround
     {
         internal const float Margin = 0.8f;
-        static readonly string[] Preferred = { "mud_road_v2", "mud_road" };
-        static GameObject _op;
+        /// TEST-043: in 1.0.21 none of the game's 28 terrain ops levels (the hoe's "level ground" mud_road_v2 only smooths and paints), so the
+        /// mod brings its own: a copy of mud_road_v2 with level on (square, radius OwnRadius, no smoothing), registered in ObjectDB's terrain op
+        /// list on every client (all players have the mod), so TerrainComp's RPC finds its settings by name like the game's own ops.
+        internal const string OwnOp = "STT_DepotLevel";
+        const string OwnBase = "mud_road_v2";
+        const float OwnRadius = 1.5f;
+        static readonly string[] Preferred = { OwnOp };
+        static GameObject _op, _own;
         static bool _looked;
 
-        /// The game's level-ground op (level on, no raise). Expected outcome: the prefab, or null (logged once) - the depot then needs flat ground.
+        internal static void Install()
+        {
+            Jotunn.Managers.PrefabManager.OnVanillaPrefabsAvailable += MakeOwn;
+            Jotunn.Managers.ItemManager.OnItemsRegistered += RegisterOwn;
+        }
+
+        static void MakeOwn()
+        {
+            Jotunn.Managers.PrefabManager.OnVanillaPrefabsAvailable -= MakeOwn;
+            if (_own != null) return;
+            var clone = Jotunn.Managers.PrefabManager.Instance.CreateClonedPrefab(OwnOp, OwnBase);
+            var op = clone != null ? clone.GetComponent<TerrainOp>() : null;
+            if (op == null) { ModLog.Warn("DepotGround: could not copy '" + OwnBase + "' (" + (clone != null ? "no TerrainOp" : "not found") + ") - depots only on flat ground"); return; }
+            foreach (var v in clone.GetComponents<ZNetView>()) Object.DestroyImmediate(v);     // local only: TerrainOp applies itself and is gone
+            foreach (var p in clone.GetComponents<Piece>()) Object.DestroyImmediate(p);
+            var s = op.m_settings;
+            s.m_level = true; s.m_levelRadius = OwnRadius; s.m_square = true; s.m_levelOffset = 0f;
+            s.m_raise = false; s.m_smooth = false;
+            op.m_spawnOnPlaced = null;
+            _own = clone;
+            ModLog.Info("DepotGround: own level op '" + OwnOp + "' made from " + OwnBase + " (level, square, radius " + OwnRadius + " m, paint " + s.m_paintCleared + ")");
+        }
+
+        // ObjectDB is made anew for the main menu and for every world: our op goes into its terrain op list each time.
+        static void RegisterOwn()
+        {
+            var db = ObjectDB.instance;
+            if (db == null || _own == null) return;
+            var op = _own.GetComponent<TerrainOp>();
+            if (!db.m_terrainOps.Contains(op)) db.m_terrainOps.Add(op);
+            db.m_terrainOpsByHash[OwnOp.GetStableHashCode()] = op;
+            _looked = false; _op = null;
+            ModLog.Verbose("DepotGround: own level op registered in ObjectDB (" + db.m_terrainOps.Count + " terrain ops)");
+        }
+
+        /// The level-ground op (level on). Expected outcome: the prefab, or null (logged once) - the depot then needs flat ground.
         static GameObject LevelOp()
         {
             if (_looked) return _op;
