@@ -154,6 +154,21 @@ for s in (1, -1):
 for i, (x, z, tilt) in enumerate(((0, 0.34, 0), (0.08, 0.31, 25), (-0.08, 0.31, -25), (0.04, 0.28, 12), (-0.04, 0.28, -12))):
     head_parts.append(prim("cone", f"hair_{i}", hc + Vector((x, -0.04, z)), (0.05, 0.05, 0.12), (0, tilt, 0), material="straw"))
 
+# v2c (user: "give the hands similar nails, spiky like that" - as the plush feet, copying the in-game troll): a claw on each
+# fingertip of the mitts (thumb, index, middle, pinky), set ON the mitt surface by casting from the finger bone outwards
+bpy.context.view_layer.update()
+top_tree = bvh_one(top_m)
+hand_claws = []
+for s in (1, -1):
+    for fg in ("Thumb", "Index", "Middle", "Pinky"):
+        a, b = J[side(f"LeftHand{fg}2", s)], J[side(f"LeftHand{fg}3", s)]
+        d = (b - a).normalized()
+        hit, nor, idx, dist = top_tree.ray_cast(b, d, 0.5)
+        if hit is None: log.append(f"claw {fg} {s}: no mitt surface hit"); continue
+        c = prim("cone", f"Costume_Top_claw_{s}_{fg}", hit + d * 0.012, (0.02, 0.02, 0.035) if fg != "Thumb" else (0.018, 0.018, 0.03), material="fang")
+        c.rotation_euler = Vector((0, 0, 1)).rotation_difference(d).to_euler()
+        hand_claws.append(c)
+log.append(f"hand claws: {len(hand_claws)}")
 collar = prim("torus", "collar", J["Neck"] + Vector((0, 0.0, -0.09)), (1.0, 0.8, 0.6), material="straw", major_radius=0.30, minor_radius=0.075)   # on the shoulders (v1: sank in)
 belt = prim("torus", "belt", J["Hips"] + Vector((0, 0, 0.06)), (1.0, 0.8, 0.5), material="straw", major_radius=0.25, minor_radius=0.04)
 loin = [prim("cone", "loincloth_front", J["Hips"] + Vector((0, 0.19, -0.10)), (0.16, 0.05, 0.16), (180, 0, 0), material="straw"),   # smaller flaps (v1: a skirt)
