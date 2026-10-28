@@ -170,9 +170,26 @@ for s in (1, -1):
         hand_claws.append(c)
 log.append(f"hand claws: {len(hand_claws)}")
 collar = prim("torus", "collar", J["Neck"] + Vector((0, 0.0, -0.09)), (1.0, 0.8, 0.6), material="straw", major_radius=0.30, minor_radius=0.075)   # on the shoulders (v1: sank in)
-belt = prim("torus", "belt", J["Hips"] + Vector((0, 0, 0.06)), (1.0, 0.8, 0.5), material="straw", major_radius=0.25, minor_radius=0.04)
-loin = [prim("cone", "loincloth_front", J["Hips"] + Vector((0, 0.19, -0.10)), (0.16, 0.05, 0.16), (180, 0, 0), material="straw"),   # smaller flaps (v1: a skirt)
-        prim("cone", "loincloth_back", J["Hips"] + Vector((0, -0.19, -0.10)), (0.16, 0.05, 0.16), (180, 0, 0), material="straw")]
+# v2d (user: "make sure the front cloth is visible better, in costume_blockout.blend the waist was so much better"): the belt and
+# the loincloth are FITTED to the suit's outer surface (rays cast inwards from outside, so they never sink into the plush), and the
+# flaps are back to the block-out size (wide straw aprons hanging from the belt, front and back)
+bpy.context.view_layer.update()
+outer = [bvh_one(top_m), bvh_one(legs_m)]
+def surf(z, ang):                                                       # outermost suit surface at height z, direction ang (0 = front)
+    d = Vector((math.sin(ang), math.cos(ang), 0)); best = 0.0
+    for t in outer:
+        hit = t.ray_cast(Vector((0, 0, z)) + d * 0.45, -d, 0.45)[0]      # from 0.45 m: inside the hanging arms
+        if hit is not None: best = max(best, Vector((hit.x, hit.y, 0)).length)
+    return best
+BELT_Z = J["Hips"].z - 0.02
+rx = surf(BELT_Z, math.pi / 2); ry = max(surf(BELT_Z, 0), surf(BELT_Z, math.pi))
+belt = prim("torus", "belt", (0, 0, BELT_Z), (1.0, (ry + 0.01) / (rx + 0.01), 0.7), material="straw", major_radius=rx + 0.01, minor_radius=0.045)
+FLAP = 0.32                                                             # flap length below the belt
+loin = []
+for name, ang, sgn in (("loincloth_front", 0.0, 1), ("loincloth_back", math.pi, -1)):
+    y = max(surf(BELT_Z - FLAP * k / 6, ang) for k in range(7)) + 0.035  # in front of the plush along its whole length
+    loin.append(prim("cone", name, (0, sgn * y, BELT_Z - FLAP / 2 - 0.01), (0.24, 0.035, FLAP / 2), (180, 0, 0), material="straw"))
+log.append(f"belt rx {rx:.2f} ry {ry:.2f} at z {BELT_Z:.2f}; flaps at y +-{abs(loin[0].location.y):.2f} / {abs(loin[1].location.y):.2f}")
 for s in (1, -1):
     f = J[side("LeftFoot", s)]
     prim("torus", f"cuff_{s}", (f.x, f.y, ANKLE + 0.01), (1.0, 1.0, 0.8), material="blue_dark", major_radius=0.105 * S * 0.62, minor_radius=0.035)
