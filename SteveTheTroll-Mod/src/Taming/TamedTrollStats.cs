@@ -54,6 +54,26 @@ namespace SteveTheTroll.Taming
             }
         }
 
+        static float _nextLavaLog;
+
+        // D-128 (TEST-052, user: "2 trolls took lava damage in ashlands, one actually died. They should be immune to fire"): the game's lava
+        // damage is untyped true damage (HitType.AshlandsLava) that no fire immunity reduces. Tamed trolls skip it (and the burning status
+        // it adds); wild trolls and players keep the game's heat damage.
+        [HarmonyPatch(typeof(Character), "UpdateHeatDamage")]
+        static class NoLava
+        {
+            static bool Prefix(Character __instance)
+            {
+                if (!IsTamedTroll(__instance)) return true;
+                if (__instance.InLava() && Time.time >= _nextLavaLog)
+                {
+                    _nextLavaLog = Time.time + 5f;
+                    ModLog.Verbose("TamedTrollStats: " + __instance.name + " in lava at " + __instance.transform.position.ToString("F0") + " - no heat damage (tamed, D-128)");
+                }
+                return false;
+            }
+        }
+
         // TEST-017 / TEST-018: two tamed trolls died 5-7 s after the world loaded with nothing in the log. Every hit on a tamed troll is logged
         // (type, damage, attacker, health after) so the next death shows its cause.
         [HarmonyPatch(typeof(Character), nameof(Character.ApplyDamage))]
