@@ -25,6 +25,7 @@ namespace SteveTheTroll.Backpack
         // limit (depot on the highest point) when the game has no level op.
         const float RingStep = 2f, Reach = 5f, MaxSlope = 0.15f, MaxSlopeLevelled = 2.5f, MaxSlopeAsIs = 1f, ColumnMatch = 0.5f;
         const int Angles = 16, MaxNewDepots = 6;
+        const float ChestSlack = 1.5f;
         static readonly AccessTools.FieldRef<ZNetScene, Dictionary<ZDO, ZNetView>> Instances = AccessTools.FieldRefAccess<ZNetScene, Dictionary<ZDO, ZNetView>>("m_instances");
         static readonly List<Vector3> Path = new List<Vector3>();
 
@@ -48,6 +49,9 @@ namespace SteveTheTroll.Backpack
             {
                 var z = v.GetZDO();
                 if (!z.GetBool(FlagKey) || z.GetLong(OwnerKey) != owner) continue;
+                // D-104 (user: "sure"): depots outside the 15 .. 50 m ring (older ones next to the house) are not used any more
+                // (a chest sits up to ~1.2 m from its frame's centre: a little slack on both edges)
+                if (!DepotRules.InRing(Flat(v.transform.position - bed), MinFromBed - ChestSlack, MaxFromBed + ChestSlack)) continue;
                 var c = v.GetComponent<Container>();
                 if (c != null) list.Add(c);
             }
