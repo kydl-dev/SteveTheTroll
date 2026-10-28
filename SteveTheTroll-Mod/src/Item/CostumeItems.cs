@@ -28,6 +28,10 @@ namespace SteveTheTroll.Item
         // D-113 (user 2026-10-28): 150 blunt + 50 chop + 50 pickaxe, +35 / +20 / +20 per upgrade -> 255 / 110 / 110 at quality 4
         public const float ClubBlunt = 150f, ClubChop = 50f, ClubPickaxe = 50f, ClubBluntPerLevel = 35f, ClubChopPerLevel = 20f, ClubPickaxePerLevel = 20f;
         public const float ClubKnockbackFactor = 1.5f;
+        /// D-114 (user 2026-10-28: "2nd attack ... similar to the swipe attack of the troll, does 2x dmg"; chose: reuse the battleaxe swing):
+        /// the secondary attack is the iron Battleaxe's wide horizontal swing (one swing, first clip of its chain) at ClubSecondaryDamage x damage.
+        public const string ClubSecondaryFrom = "Battleaxe", ClubSecondaryAnimation = "battleaxe_attack0";
+        public const float ClubSecondaryDamage = 2f;
         public const float ClubDurability = 500f;
         static int _helmetHash, _chestHash, _legsHash, _clubHash;
         /// D-076: the set "Steve The Troll" = helmet + chest + legs + Fluffy Slippers (the game counts the utility slot in a set).
@@ -235,15 +239,41 @@ namespace SteveTheTroll.Item
             s.m_movementModifier = 0f;                                                   // D-081 (user: 'no slowing down' - the sledge's -15 %)
             float dur = s.m_maxDurability;
             s.m_maxDurability = ClubDurability;                                          // D-082 (user: 'club durability, set that to 500')
+            string secondary = ClubSecondary(s);
             bool added = ItemManager.Instance.AddItem(item);
             SlipperUpgradeCostPatch.Track(ClubName, 4);
             ModLog.Verbose("CostumeItems: " + ClubName + " (from SledgeIron) added " + added + ": sledge meshes removed " + hidden + ", damage blunt " + s.m_damages.m_blunt + " chop " + s.m_damages.m_chop
                 + " pickaxe " + s.m_damages.m_pickaxe + " (+" + ClubBluntPerLevel + "/" + ClubChopPerLevel + "/" + ClubPickaxePerLevel + "), vanilla blunt " + v.m_blunt + ", knockback " + knock + " -> " + s.m_attackForce
-                + ", durability " + dur + " -> " + s.m_maxDurability + ", movement " + (slow * 100f).ToString("0") + " % -> 0 %, stagger x" + (s.m_attack != null ? s.m_attack.m_staggerMultiplier.ToString("F2") : "?") + ", tool tier " + s.m_toolTier + ", skill " + s.m_skillType + ", two-handed " + (s.m_itemType == ItemDrop.ItemData.ItemType.TwoHandedWeapon));
+                + ", secondary " + secondary + ", durability " + dur + " -> " + s.m_maxDurability + ", movement " + (slow * 100f).ToString("0") + " % -> 0 %, stagger x" + (s.m_attack != null ? s.m_attack.m_staggerMultiplier.ToString("F2") : "?") + ", tool tier " + s.m_toolTier + ", skill " + s.m_skillType + ", two-handed " + (s.m_itemType == ItemDrop.ItemData.ItemType.TwoHandedWeapon));
             ModLog.Check("CostumeItems: club blunt at quality 4", s.m_damages.m_blunt + s.m_damagesPerLevel.m_blunt * 3, 255f, 0.001, "");
             ModLog.Check("CostumeItems: club chop at quality 4", s.m_damages.m_chop + s.m_damagesPerLevel.m_chop * 3, 110f, 0.001, "");
             ModLog.Check("CostumeItems: club pickaxe at quality 4", s.m_damages.m_pickaxe + s.m_damagesPerLevel.m_pickaxe * 3, 110f, 0.001, "");
             return added;
+        }
+        /// D-114: the club's secondary attack = a clone of the Battleaxe's primary (horizontal, wide arc), one swing (no chain), damage x
+        /// ClubSecondaryDamage; the club's own hit / trail effects stay (blunt sounds, not the axe's). Expected outcome: a short description
+        /// ("none" when the Battleaxe is missing - the club then keeps no secondary attack).
+        static string ClubSecondary(ItemDrop.ItemData.SharedData club)
+        {
+            var axe = PrefabManager.Instance.GetPrefab(ClubSecondaryFrom);
+            var drop = axe != null ? axe.GetComponent<ItemDrop>() : null;
+            var from = drop != null ? drop.m_itemData.m_shared.m_attack : null;
+            if (from == null) { ModLog.Warn("CostumeItems: " + ClubSecondaryFrom + " not found - the Troll Club has no secondary attack"); return "none"; }
+            var a = from.Clone();
+            var own = club.m_attack;
+            a.m_attackAnimation = ClubSecondaryAnimation;
+            a.m_attackChainLevels = 1;
+            a.m_damageMultiplier = ClubSecondaryDamage;
+            if (own != null)
+            {
+                a.m_hitEffect = own.m_hitEffect; a.m_hitTerrainEffect = own.m_hitTerrainEffect; a.m_startEffect = own.m_startEffect;
+                a.m_triggerEffect = own.m_triggerEffect; a.m_trailStartEffect = own.m_trailStartEffect;
+            }
+            club.m_secondaryAttack = a;
+            string d = a.m_attackAnimation + " (" + a.m_attackType + ", range " + a.m_attackRange.ToString("F1") + " m, angle " + a.m_attackAngle.ToString("F0") + " deg, damage x" + a.m_damageMultiplier
+                + ", stamina " + a.m_attackStamina.ToString("F0") + ", from " + ClubSecondaryFrom + "'s " + from.m_attackAnimation + " x" + from.m_attackChainLevels + ")";
+            ModLog.Check("CostumeItems: club secondary damage multiplier", a.m_damageMultiplier, ClubSecondaryDamage, 0.001, "x");
+            return d;
         }
     }
 

@@ -24,7 +24,7 @@ namespace SteveTheTroll.Testing
             float height = centre.y;
             string where = "where you stand";
             float best = DepotSearch;
-            foreach (var v in Object.FindObjectsOfType<ZNetView>())
+            foreach (var v in Object.FindObjectsByType<ZNetView>(FindObjectsSortMode.None))
             {
                 if (v == null || !v.IsValid() || Utils.GetPrefabName(v.gameObject) != Backpack.DepotPrefab.Name) continue;
                 float d = Vector3.Distance(v.transform.position, p.transform.position);
@@ -32,7 +32,7 @@ namespace SteveTheTroll.Testing
                 // the lowest frame of that stack is the one standing on the ground
                 best = d; centre = v.transform.position; height = v.transform.position.y; where = "at the troll depot " + d.ToString("0") + " m away";
             }
-            foreach (var v in Object.FindObjectsOfType<ZNetView>())
+            foreach (var v in Object.FindObjectsByType<ZNetView>(FindObjectsSortMode.None))
                 if (v != null && v.IsValid() && Utils.GetPrefabName(v.gameObject) == Backpack.DepotPrefab.Name && new Vector2(v.transform.position.x - centre.x, v.transform.position.z - centre.z).magnitude < 0.5f)
                     height = Mathf.Min(height, v.transform.position.y);
             bool ok = Backpack.DepotGround.Repair(centre, height);

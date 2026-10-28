@@ -77,7 +77,9 @@ namespace SteveTheTroll.Testing
             bool slippersInSet = Item.SlipperItem.Shared != null && Item.SlipperItem.Shared.m_setName == Item.CostumeItems.SetName;
             var club = db.GetItemPrefab(Item.CostumeItems.ClubName) != null ? db.GetItemPrefab(Item.CostumeItems.ClubName).GetComponent<ItemDrop>() : null;
             bool clubOk = club != null && Mathf.Approximately(club.m_itemData.m_shared.m_damages.m_blunt, Item.CostumeItems.ClubBlunt) && Mathf.Approximately(club.m_itemData.m_shared.m_damages.m_pickaxe, Item.CostumeItems.ClubPickaxe)
-                && club.m_itemData.m_shared.m_itemType == ItemDrop.ItemData.ItemType.TwoHandedWeapon && club.transform.Find("attach/stt_club_model") != null && db.GetRecipe(club.m_itemData) != null;
+                && club.m_itemData.m_shared.m_itemType == ItemDrop.ItemData.ItemType.TwoHandedWeapon
+                && club.m_itemData.m_shared.m_secondaryAttack != null && club.m_itemData.m_shared.m_secondaryAttack.m_attackAnimation == Item.CostumeItems.ClubSecondaryAnimation
+                && Mathf.Approximately(club.m_itemData.m_shared.m_secondaryAttack.m_damageMultiplier, Item.CostumeItems.ClubSecondaryDamage) && club.transform.Find("attach/stt_club_model") != null && db.GetRecipe(club.m_itemData) != null;
             var se = db.GetStatusEffect(Item.CostumeItems.SetEffectName.GetStableHashCode()) as SE_Stats;
             bool seOk = se != null && se.m_icon != null && Mathf.Approximately(se.m_speedModifier, Item.CostumeItems.SetSpeed) && se.m_addMaxCarryWeight == 0f && Mathf.Approximately(se.m_runStaminaDrainModifier, Item.CostumeItems.SetStamina);
             sb.Append("slippers in the set " + slippersInSet + ", club " + clubOk + ", set effect " + seOk);
