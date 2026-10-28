@@ -22,6 +22,7 @@ namespace SteveTheTroll.Ui
             g.Add(text("stevethetroll_troll_damage"), "x" + t.DamageFactor.ToString("0.##", c));
             g.Add(text("stevethetroll_focus_label"), text(TrollFocus.KeyOf(t.Focus)));
             g.Add(text("stevethetroll_troll_farming"), TrollFocus.Shown(t.Farming, text));
+            g.Add(text("stevethetroll_troll_backpack"), Backpack(t, text));
             groups.Add(g);
             var dmg = new DetailGroup(text("stevethetroll_troll_attacks"));
             foreach (var row in Attacks(t.Attacks, text)) dmg.Add(row.Key, row.Value);
@@ -63,6 +64,15 @@ namespace SteveTheTroll.Ui
                 rows.Add(new KeyValuePair<string, string>(f[0], sb.Length > 0 ? sb.ToString() : "-"));
             }
             return rows;
+        }
+
+        /// D-096: "12 / 96 stacks" (stacks used / all slots of the 4 backpack chests), "-" while not known. Expected outcome: never null.
+        internal static string Backpack(TrollInfo t, Func<string, string> text)
+        {
+            if (t == null || t.BackpackSlots <= 0) return "-";
+            string f = text != null ? text("stevethetroll_troll_stacks") : "{0} / {1} stacks";
+            try { return string.Format(CultureInfo.InvariantCulture, f, t.BackpackUsed, t.BackpackSlots); }
+            catch (FormatException) { return t.BackpackUsed + " / " + t.BackpackSlots; }
         }
 
         /// "N s / min / h" for a tick span (negative = 0 s).

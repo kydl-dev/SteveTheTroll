@@ -20,21 +20,20 @@ namespace SteveTheTroll.Backpack
         static GameObject LevelOp()
         {
             if (_looked) return _op;
+            var db = ObjectDB.instance;
+            if (db == null || db.m_terrainOps == null || db.m_terrainOps.Count == 0) return null;      // not ready yet: asked again later
             _looked = true;
-            var scene = ZNetScene.instance;
-            if (scene == null) return null;
+            // TEST-041: the game keeps its terrain ops in ObjectDB.m_terrainOps (not in ZNetScene's prefab list)
+            TerrainOp found;
             foreach (var n in Preferred)
-            {
-                var p = scene.GetPrefab(n);
-                if (Good(p)) { _op = p; break; }
-            }
+                if (db.TryGetTerrainOp(n, out found) && found != null && Good(found.gameObject)) { _op = found.gameObject; break; }
             if (_op == null)
-                foreach (var p in scene.m_prefabs) if (Good(p)) { _op = p; break; }
-            if (_op == null) ModLog.Warn("DepotGround: no level-ground TerrainOp prefab in the game - depots only on flat ground");
+                foreach (var op in db.m_terrainOps) if (op != null && Good(op.gameObject)) { _op = op.gameObject; break; }
+            if (_op == null) ModLog.Warn("DepotGround: no level-ground TerrainOp among the game's " + db.m_terrainOps.Count + " terrain op(s) - depots only on flat ground");
             else
             {
                 var s = _op.GetComponent<TerrainOp>().m_settings;
-                ModLog.Info("DepotGround: level op '" + _op.name + "', radius " + s.m_levelRadius.ToString("F1") + " m, square " + s.m_square + ", offset " + s.m_levelOffset.ToString("F2"));
+                ModLog.Info("DepotGround: level op '" + _op.name + "' (of " + db.m_terrainOps.Count + " terrain ops), radius " + s.m_levelRadius.ToString("F1") + " m, square " + s.m_square + ", offset " + s.m_levelOffset.ToString("F2"));
             }
             return _op;
         }

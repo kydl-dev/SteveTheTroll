@@ -70,7 +70,7 @@ namespace SteveTheTroll.Ui
             return tab;
         }
 
-        const float NameWidth = 140f, StatusWidth = 150f, FocusWidth = 160f, GoWidth = 110f;    // px at the 1080p reference
+        const float NameWidth = 140f, StatusWidth = 150f, FocusWidth = 160f, GoWidth = 110f, PackWidth = 130f;    // px at the 1080p reference
 
         // Tab 2 (D-043): one row per tamed troll - name | what it does | focus drop-down | what it farms now.
         static VisualElement WorkTab(Func<string, string> text, IList<TrollInfo> trolls, Action<string, string> chosen, Action<string> goFarm)
@@ -81,7 +81,8 @@ namespace SteveTheTroll.Ui
             tab.Add(UiControls.Note(text("stevethetroll_focus_note")));
             if (trolls == null || trolls.Count == 0) { tab.Add(UiControls.Note(text("stevethetroll_troll_none"))); return tab; }
             tab.Add(Row(Cell(text("stevethetroll_troll_name"), NameWidth, true), Cell(text("stevethetroll_troll_doing"), StatusWidth, true),
-                Cell(text("stevethetroll_focus_label"), FocusWidth, true), Cell("", GoWidth, true), Cell(text("stevethetroll_troll_farming"), -1f, true)));
+                Cell(text("stevethetroll_focus_label"), FocusWidth, true), Cell("", GoWidth, true), Cell(text("stevethetroll_troll_backpack"), PackWidth, true),
+                Cell(text("stevethetroll_troll_farming"), -1f, true)));
             var values = new List<string>();
             foreach (var c in TrollFocus.Choices) values.Add(c.Key);
             foreach (var t in trolls)
@@ -104,7 +105,8 @@ namespace SteveTheTroll.Ui
                 go.style.width = GoWidth; go.style.flexShrink = 0;
                 var doingCell = Cell(doing, StatusWidth, false);
                 var farmCell = Cell(TrollFocus.Shown(t.Farming, text), -1f, false);
-                tab.Add(Row(Cell(t.Shown(text), NameWidth, false), doingCell, drop, go, farmCell));
+                var packCell = Cell(TrollDetailsBuilder.Backpack(t, text), PackWidth, false);     // D-096
+                tab.Add(Row(Cell(t.Shown(text), NameWidth, false), doingCell, drop, go, packCell, farmCell));
                 // TEST-019: "Go farm" looked like it only worked after closing the menu - the row now follows the live values every second
                 doingCell.schedule.Execute(() =>
                 {
@@ -112,6 +114,8 @@ namespace SteveTheTroll.Ui
                     string farm = TrollFocus.Shown(troll.Farming, text);
                     if (doingCell.text != now) { UiLog.Verbose("MainMenuView: " + troll.Shown(null) + " now '" + now + "'"); doingCell.text = now; }
                     if (farmCell.text != farm) farmCell.text = farm;
+                    string pack = TrollDetailsBuilder.Backpack(troll, text);
+                    if (packCell.text != pack) packCell.text = pack;
                 }).Every(1000);
             }
             tab.Add(UiControls.Note(text("stevethetroll_troll_lastseen_note")));
@@ -128,14 +132,23 @@ namespace SteveTheTroll.Ui
             foreach (var t in trolls) ids.Add(t.Id);
             var details = new VisualElement { name = "stevethetroll-troll-details" };
             details.style.flexShrink = 0;
-            Action<string> show = id =>
+            string current = ids[0], shownState = null;
+            long opened = DateTime.UtcNow.Ticks;
+            Action<string, bool> build = (id, quiet) =>
             {
-                details.Clear();
                 TrollInfo pick = null;
                 foreach (var t in trolls) if (t.Id == id) pick = t;
-                details.Add(DetailsView.Build(TrollDetailsBuilder.Build(pick, text, nowTicks), "", ""));
-                UiLog.Verbose("MainMenuView: troll details " + (pick != null ? pick.ToString() : "none for " + id));
+                // D-096: the page follows the live values (backpack, health, doing ...) - rebuilt only when something shown changed
+                string state = pick != null ? pick.Encode() + pick.Loaded : "";
+                if (quiet && state == shownState) return;
+                shownState = state;
+                current = id;
+                details.Clear();
+                details.Add(DetailsView.Build(TrollDetailsBuilder.Build(pick, text, nowTicks + (DateTime.UtcNow.Ticks - opened)), "", ""));
+                if (!quiet) UiLog.Verbose("MainMenuView: troll details " + (pick != null ? pick.ToString() : "none for " + id));
             };
+            Action<string> show = id => build(id, false);
+            details.schedule.Execute(() => build(current, true)).Every(2000);
             tab.Add(UiControls.Row(text("stevethetroll_troll_pick"), UiControls.Dropdown(ids, ids[0], id =>
             {
                 foreach (var t in trolls) if (t.Id == id) return t.Shown(text);

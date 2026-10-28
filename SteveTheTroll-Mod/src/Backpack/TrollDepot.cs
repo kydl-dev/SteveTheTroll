@@ -8,7 +8,7 @@ namespace SteveTheTroll.Backpack
     /// <summary>
     /// D-064 (user spec): a troll with a FULL backpack that reaches its owner's bed empties it into the owner's troll depots near the bed.
     /// No depot with room -> a new one is built: on top of the latest stack while it is under 5 high, else a new stack at a spot that is
-    /// near the bed (5 .. 25 m, D-095), not inside a house (nothing built above it), free (no pieces / rocks in the footprint), on ground that
+    /// near the bed (15 .. 50 m, D-097), not inside a house (nothing built above it), free (no pieces / rocks in the footprint), on ground that
     /// is level or that the game's level op flattens first (up to 2.5 m uneven, D-095),
     /// and that the troll can walk to within 5 m of (the game's pathfinding for the troll). Depot chests are the game's reinforced chests
     /// marked stt_depot: they need no support (stacks never crumble) and cannot be removed for their materials.
@@ -16,11 +16,14 @@ namespace SteveTheTroll.Backpack
     internal static class TrollDepot
     {
         internal const string FlagKey = "stt_depot", OwnerKey = "stt_depot_owner";
-        /// D-095 (user: "5-25m from the bed"): new depot stacks stand this far from the bed, and a full troll unloads once within MaxFromBed.
-        internal const float MinFromBed = 5f, MaxFromBed = 25f;
+        /// D-095 / D-097 (user: "15(minimum) - 50m(maximum) from the bed"): new depot stacks stand this far from the bed, and a full troll
+        /// unloads once within MaxFromBed (Tunables TrollBackpack DepotMinFromBed / DepotMaxFromBed).
+        internal static float MinFromBed { get { return ModSettings.DepotMinFromBed.Value; } }
+        internal static float MaxFromBed { get { return Mathf.Max(ModSettings.DepotMaxFromBed.Value, MinFromBed + RingStep); } }
+        static float SearchRadius { get { return MaxFromBed + 15f; } }   // depot chests are found up to here
         // MaxSlope: ground this even is used as is; MaxSlopeLevelled: what the level op (DepotGround) flattens first; MaxSlopeAsIs: the old
         // limit (depot on the highest point) when the game has no level op.
-        const float SearchRadius = 40f, RingStep = 2f, Reach = 5f, MaxSlope = 0.15f, MaxSlopeLevelled = 2.5f, MaxSlopeAsIs = 1f, ColumnMatch = 0.5f;
+        const float RingStep = 2f, Reach = 5f, MaxSlope = 0.15f, MaxSlopeLevelled = 2.5f, MaxSlopeAsIs = 1f, ColumnMatch = 0.5f;
         const int Angles = 16, MaxNewDepots = 6;
         static readonly AccessTools.FieldRef<ZNetScene, Dictionary<ZDO, ZNetView>> Instances = AccessTools.FieldRefAccess<ZNetScene, Dictionary<ZDO, ZNetView>>("m_instances");
         static readonly List<Vector3> Path = new List<Vector3>();

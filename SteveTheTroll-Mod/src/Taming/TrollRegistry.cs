@@ -172,6 +172,7 @@ namespace SteveTheTroll.Taming
             var pos = c.transform.position;
             t.X = pos.x; t.Y = pos.y; t.Z = pos.z;
             t.BedDistance = BedDistance(pos);
+            Backpack.BackpackStore.Fill(zdo, out t.BackpackUsed, out t.BackpackSlots);     // D-096
             t.LastSeenTicks = DateTime.UtcNow.Ticks;
         }
 

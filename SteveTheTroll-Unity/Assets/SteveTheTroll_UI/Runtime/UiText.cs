@@ -85,6 +85,8 @@ namespace SteveTheTroll.Ui
             { "stevethetroll_troll_name", "Troll" },
             { "stevethetroll_troll_doing", "Doing" },
             { "stevethetroll_troll_farming", "Farming now" },
+            { "stevethetroll_troll_backpack", "Backpack" },
+            { "stevethetroll_troll_stacks", "{0} / {1} stacks" },
             { "stevethetroll_troll_lastseen_note", "* = far away: last seen values; a new focus is used when the troll is near you again." },
             { "stevethetroll_troll_pick", "Troll" },
             { "stevethetroll_troll_general", "Troll" },

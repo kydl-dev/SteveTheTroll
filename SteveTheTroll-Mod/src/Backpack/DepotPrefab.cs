@@ -15,6 +15,8 @@ namespace SteveTheTroll.Backpack
         internal const string Name = "STT_TrollDepot";
         /// Level height (m): the next depot of a stack stands here (top of the wood floors); measured when the prefab is built.
         internal static float Height = 1.05f;
+        /// D-090 / D-095: how far the floors were lifted above the chest lids at build (-1 = not built yet; World_DepotGround checks it).
+        internal static float Lift = -1f;
 
         const string FloorPrefab = "wood_floor";
         const float Clearance = 0.02f, MaxLift = 0.15f;
@@ -85,6 +87,7 @@ namespace SteveTheTroll.Backpack
             // D-090 (user: "the top of the chest structure is flickering"): the reinforced chests' lids reached the floors' top face (z-fighting).
             // The floors are lifted until their underside clears the chest lids by Clearance.
             float lift = FloorLift();
+            Lift = lift;
             foreach (var p in DepotData.Frame)
             {
                 var prefab = PrefabManager.Instance.GetPrefab(p.Prefab);

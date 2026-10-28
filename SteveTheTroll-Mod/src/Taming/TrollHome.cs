@@ -77,7 +77,7 @@ namespace SteveTheTroll.Taming
                 if (z == null || Done.Contains(z.m_uid) || !z.GetBool(ZDOVars.s_tamed, false) || z.GetLong(TrollTaming.OwnerKey, 0L) != me) continue;
                 if (z.HasOwner() && !z.IsOwner()) { ModLog.Info("TrollHome: logout - unloaded troll " + z.GetString(ZDOVars.s_tamedName, "?") + " is run by another client - left"); continue; }
                 if (z.GetFloat(ZDOVars.s_health, 1f) <= 0f) continue;
-                var spot = bed + new Vector3(2f + (already + moved) * 3f, 0.5f, 2f);
+                var spot = TrollHomeSpot.Spot(bed, already + moved);          // D-097: 15 m out, not in the house
                 var was = z.GetPosition();
                 z.SetPosition(spot);
                 z.Set(ZDOVars.s_follow, "");
@@ -108,14 +108,14 @@ namespace SteveTheTroll.Taming
                     var ai = c.GetComponent<MonsterAI>();
                     if (ai == null || view == null || !view.IsValid() || !view.IsOwner()) continue;
                     var f = c.GetComponent<TrollFarmer>(); if (f != null) Object.Destroy(f);
-                    var spot = bed + new Vector3(2f + moved * 3f, 0.5f, 2f);
+                    var spot = TrollHomeSpot.Spot(bed, moved);                 // D-097: 15 m out, not in the house
                     TrollTaming.StopFollow(ai);
                     c.transform.position = spot;
                     var body = c.GetComponent<Rigidbody>(); if (body != null) body.position = spot;
                     view.GetZDO().SetPosition(spot);
                     if (SetPatrolAt != null) SetPatrolAt(ai, spot);
                     moved++;
-                    ModLog.Info("TrollHome: logout - " + c.name + " put at the bed " + spot.ToString("F1"));
+                    ModLog.Info("TrollHome: logout - " + c.name + " put near the bed at " + spot.ToString("F1") + " (" + Vector3.Distance(spot, bed).ToString("F0") + " m)");
                     var z = view.GetZDO(); if (z != null) Done.Add(z.m_uid);
                 }
                 moved += Unloaded(p.GetPlayerID(), bed, moved);

@@ -11,13 +11,13 @@ namespace SteveTheTroll.Tests.Unit
     [TestFixture]
     public class TrollDetailsGoldenTests
     {
-        static string K(string key) { return key; }
+        static string K(string key) { return key == "stevethetroll_troll_stacks" ? "{0} / {1} stacks" : key; }
 
         static TrollInfo Live()
         {
             return new TrollInfo { Id = "a1", Name = "Steve", Number = 1, Status = "stevethetroll_status_farming", Focus = "CopperOre", Farming = "Wood",
                 Health = 1234.4f, MaxHealth = 1800f, Stars = 2, DamageFactor = 3.25f, X = 412.4f, Y = 77f, Z = -268.6f, BedDistance = 35.5f, Loaded = true,
-                Attacks = "Punch~Blunt=180,Chop=300~4", Resists = "Fire=Resistant,Frost=Weak" };
+                Attacks = "Punch~Blunt=180,Chop=300~4", Resists = "Fire=Resistant,Frost=Weak", BackpackUsed = 12, BackpackSlots = 96 };
         }
 
         static string[] Flat(List<DetailGroup> groups)
@@ -39,6 +39,7 @@ namespace SteveTheTroll.Tests.Unit
                 "stevethetroll_troll_damage = x3.25",
                 "stevethetroll_focus_label = stevethetroll_focus_copper",
                 "stevethetroll_troll_farming = stevethetroll_focus_wood",
+                "stevethetroll_troll_backpack = 12 / 96 stacks",
                 "# stevethetroll_troll_attacks",
                 attack.Key + " = " + attack.Value,
                 "# stevethetroll_troll_resists",
@@ -83,6 +84,34 @@ namespace SteveTheTroll.Tests.Unit
             var status = TrollDetailsBuilder.Build(t, K, System.TimeSpan.FromMinutes(5).Ticks)[0].Rows[0].Value;
             Assert.That(status, Is.EqualTo("stevethetroll_status_farming (stevethetroll_troll_lastseen " + TrollDetailsBuilder.Ago(System.TimeSpan.FromMinutes(5).Ticks, K) + ")"));
         }
+
+        // D-096 backpack fill
+        [Test] public void Backpack_Unknown_Dash() { Assert.That(TrollDetailsBuilder.Backpack(new TrollInfo(), K), Is.EqualTo("-")); Assert.That(TrollDetailsBuilder.Backpack(null, K), Is.EqualTo("-")); }
+        [Test] public void Backpack_Empty() { Assert.That(TrollDetailsBuilder.Backpack(new TrollInfo { BackpackSlots = 96 }, K), Is.EqualTo("0 / 96 stacks")); }
+        [Test] public void Backpack_BrokenText_StillNumbers() { Assert.That(TrollDetailsBuilder.Backpack(new TrollInfo { BackpackUsed = 3, BackpackSlots = 96 }, k => "{5}"), Is.EqualTo("3 / 96")); }
+
+        [Test]
+        public void Backpack_SavedAndRead()
+        {
+            var back = TrollInfo.Decode(Live().Encode());
+            Assert.That(back, Is.Not.Null);
+            Assert.That(back.BackpackUsed, Is.EqualTo(12));
+            Assert.That(back.BackpackSlots, Is.EqualTo(96));
+            Assert.That(back.Attacks, Is.EqualTo("Punch~Blunt=180,Chop=300~4"), "the 16-field part still read");
+        }
+
+        [Test]
+        public void Backpack_OldLine16Fields_ReadWithoutFill()
+        {
+            var line = Live().Encode();
+            line = line.Substring(0, line.LastIndexOf('|'));
+            line = line.Substring(0, line.LastIndexOf('|'));
+            var back = TrollInfo.Decode(line);
+            Assert.That(back, Is.Not.Null);
+            Assert.That(back.BackpackSlots, Is.EqualTo(0));
+        }
+
+        [Test] public void Backpack_BadNumbers_Rejected() { Assert.That(TrollInfo.Decode(Live().Encode().Replace("|12|96", "|x|96")), Is.Null); Assert.That(TrollInfo.Decode(Live().Encode().Replace("|12|96", "|-1|96")), Is.Null); }
 
         [Test]
         public void NoText_NoGroups() { Assert.That(TrollDetailsBuilder.Build(Live(), null, 0L), Is.Empty); }

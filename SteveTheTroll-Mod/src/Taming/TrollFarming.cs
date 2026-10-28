@@ -134,11 +134,16 @@ namespace SteveTheTroll.Taming
             var all = scene != null ? Instances(scene) : null;
             if (all == null) return into;
             float r2 = range * range;
+            Vector3 bed;
+            bool hasBed = TrollNoHit.Bed(out bed);
+            float noHitR = ModSettings.NoHitRadius.Value;
+            bool noHit = ModSettings.On && hasBed && noHitR > 0f;
             foreach (var v in all.Values)
             {
                 if (v == null) continue;
                 var pos = v.transform.position;
                 if ((pos - center).sqrMagnitude > r2) continue;
+                if (noHit && TrollNoHit.Inside(bed, pos, noHitR)) continue;            // D-097: nothing near the house is farmed
                 var src = Source(v);
                 if (src == null || src.Collider == null) continue;
                 into.Add(new Candidate { G = v.gameObject, Src = src, Pos = pos });

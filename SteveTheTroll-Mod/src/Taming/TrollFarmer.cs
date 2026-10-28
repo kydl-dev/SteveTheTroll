@@ -15,7 +15,7 @@ namespace SteveTheTroll.Taming
     internal sealed class TrollFarmer : MonoBehaviour
     {
         const float SearchSeconds = 3f, LogSeconds = 5f, LookAngle = 25f, MinAttackGap = 0.3f, StuckSeconds = 8f, BadSeconds = 120f;
-        const float StepMetres = 2f, StepSeconds = 2.5f, HomeMetres = 4f, CloseWaitSeconds = 0.5f, FullCheckSeconds = 2f, AtItSlack = 1f, UnloadMetres = 4f, UnloadWalkSeconds = 60f, StuckHomeSeconds = 8f;
+        const float StepMetres = 2f, StepSeconds = 2.5f, CloseWaitSeconds = 0.5f, FullCheckSeconds = 2f, AtItSlack = 1f, UnloadMetres = 4f, UnloadWalkSeconds = 60f, StuckHomeSeconds = 8f;
         float _homeBest = float.MaxValue, _homeBestAt;
         const int SwingsPerTry = 2, Tries = 4;
         readonly Dictionary<GameObject, float> _bad = new Dictionary<GameObject, float>();
@@ -253,9 +253,11 @@ namespace SteveTheTroll.Taming
             // (bed inside a house it cannot enter) for StuckHomeSeconds.
             if (d < _homeBest - 0.5f) { _homeBest = d; _homeBestAt = Time.time; }
             bool stuck = d <= Backpack.TrollDepot.MaxFromBed && Time.time - _homeBestAt > StuckHomeSeconds;
-            bool there = d <= HomeMetres || (_full && d <= Backpack.TrollDepot.MaxFromBed) || stuck;
-            if (!there) { moveTo(ai, dt, bed, HomeMetres * 0.7f, false); return true; }
-            if (stuck && d > HomeMetres && !_full) ModLog.Info("TrollFarmer: " + name + " gets no closer to the bed than " + d.ToString("F1") + " m - counts as home");
+            // D-097 (user: "as close as 15m from the bed, not right on top of the bed"): home = within HomeRadius, it waits there
+            float home = ModSettings.HomeRadius.Value;
+            bool there = d <= home + 1f || (_full && d <= Backpack.TrollDepot.MaxFromBed) || stuck;
+            if (!there) { moveTo(ai, dt, bed, home, false); return true; }
+            if (stuck && d > home + 1f && !_full) ModLog.Info("TrollFarmer: " + name + " gets no closer to the bed than " + d.ToString("F1") + " m - counts as home");
             if (_full)
             {
                 // D-064: at the bed with a full backpack -> to a troll depot with room (built now when there is none)

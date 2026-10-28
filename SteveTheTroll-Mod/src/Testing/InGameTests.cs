@@ -122,6 +122,20 @@ namespace SteveTheTroll.Testing
             return (ok ? "PASS: " : "FAIL: ") + sb;
         }
 
+        // D-095 / D-097 (TEST-041: the level op was looked for in the wrong list and never found; TEST-040: the floor lift was measured as
+        // 0.77 m): the game's level-ground op is found, the depot floors are lifted a few cm at most, the depot ring is 15 .. 50 m.
+        static string World_DepotGround()
+        {
+            bool level = Backpack.DepotGround.CanLevel;
+            float lift = Backpack.DepotPrefab.Lift;
+            float min = Backpack.TrollDepot.MinFromBed, max = Backpack.TrollDepot.MaxFromBed;
+            bool ok = level && lift >= 0f && lift <= 0.15f && min < max;
+            string detail = "level op found " + level + ", floor lift " + lift.ToString("F3") + " m (max 0.15), depot ring " + min.ToString("0") + " .. " + max.ToString("0") + " m, home radius "
+                + ModSettings.HomeRadius.Value.ToString("0") + " m, no-hit radius " + ModSettings.NoHitRadius.Value.ToString("0") + " m";
+            ModLog.Verbose("InGameTests: World_DepotGround " + detail);
+            return (ok ? "PASS: " : "FAIL: ") + detail;
+        }
+
         // D-085 (TEST-037: TrollZones passed a HashSet<int> where the game wants HashSet<SectorIndex> - an exception every frame): every method
         // the mod calls through reflection is called once here with the real argument types.
         static string World_ReflectionCalls()

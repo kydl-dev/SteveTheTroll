@@ -61,6 +61,20 @@ namespace SteveTheTroll.Backpack
             zdo.Set(Keys[i], pkg.GetArray());
         }
 
+        /// D-096 (user: "show how full is their backpack x stacks / y total stacks"): used slots (stacks) and all slots of the 4 chests.
+        /// Expected outcome: used 0 .. slots; slots = 4 x the reinforced chest's size (0 / 0 without a ZDO).
+        internal static void Fill(ZDO zdo, out int used, out int slots)
+        {
+            used = 0; slots = 0;
+            if (zdo == null) return;
+            for (int i = 0; i < ChestCount; i++)
+            {
+                var inv = Read(zdo, i);
+                used += inv.NrOfItems();
+                slots += inv.GetWidth() * inv.GetHeight();
+            }
+        }
+
         /// No chest has an empty slot. Expected outcome: true = full.
         internal static bool IsFull(ZDO zdo)
         {
