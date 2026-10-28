@@ -3,7 +3,7 @@ using SteveTheTroll.Ui;
 
 namespace SteveTheTroll.Tests.Unit
 {
-    /// <summary>F6 Costume tab details (D-080): set block, one block per piece (armor 20 -> 35), club damage 70/30/30 -> 100/45/45, recipes.</summary>
+    /// <summary>F6 Costume tab details (D-080): set block, one block per piece (armor 20 -> 35), club damage 150/50/50 -> 255/110/110, recipes.</summary>
     [TestFixture]
     public class CostumeDetailsBuilderTests
     {
@@ -44,9 +44,9 @@ namespace SteveTheTroll.Tests.Unit
         public void Club_DamageAtQualityFour()
         {
             var g = CostumeDetailsBuilder.Build(CostumeData.Sample(), K);
-            Assert.That(Row(g, 4, "stevethetroll_details_blunt").MaxValue, Is.EqualTo("100"));
-            Assert.That(Row(g, 4, "stevethetroll_details_chop").MaxValue, Is.EqualTo("45"));
-            Assert.That(Row(g, 4, "stevethetroll_details_pickaxe").MaxValue, Is.EqualTo("45"));
+            Assert.That(Row(g, 4, "stevethetroll_details_blunt").MaxValue, Is.EqualTo("255"));
+            Assert.That(Row(g, 4, "stevethetroll_details_chop").MaxValue, Is.EqualTo("110"));
+            Assert.That(Row(g, 4, "stevethetroll_details_pickaxe").MaxValue, Is.EqualTo("110"));
             Assert.That(Row(g, 4, "stevethetroll_details_upgrade").Value, Is.EqualTo("5 Core wood, 5 Fine wood"));
         }
 

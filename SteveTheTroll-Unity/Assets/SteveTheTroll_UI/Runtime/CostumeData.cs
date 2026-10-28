@@ -41,7 +41,7 @@ namespace SteveTheTroll.Ui
         internal int StationLevel = 1;
         internal readonly List<SlipperData.Ingredient> ClubRecipe = new List<SlipperData.Ingredient>();
 
-        /// The numbers of the real items (D-070 .. D-077), for the Unity preview.
+        /// The numbers of the real items (D-070 .. D-077, club D-113, carry D-112), for the Unity preview; a unit test keeps them equal to the game's.
         internal static CostumeData Sample()
         {
             var d = new CostumeData
@@ -50,7 +50,7 @@ namespace SteveTheTroll.Ui
                 SetDescription = "The troll rush runs through your whole body.",
                 SetWorn = 3,
                 ClubName = "Troll Club", ClubDescription = "A whole tree trunk with a rope grip.",
-                ClubBlunt = 70, ClubChop = 30, ClubPickaxe = 30, ClubBluntPerLevel = 10, ClubChopPerLevel = 5, ClubPickaxePerLevel = 5, ClubMaxQuality = 4,
+                ClubBlunt = 150, ClubChop = 50, ClubPickaxe = 50, ClubBluntPerLevel = 35, ClubChopPerLevel = 20, ClubPickaxePerLevel = 20, ClubMaxQuality = 4,
                 Station = "Workbench", StationLevel = 1,
             };
             foreach (var p in new[] { new[] { "Troll Mascot Head", "stevethetroll_details_slot_helmet" }, new[] { "Troll Mascot Suit", "stevethetroll_details_slot_chest" }, new[] { "Troll Mascot Trousers", "stevethetroll_details_slot_legs" } })
@@ -62,7 +62,7 @@ namespace SteveTheTroll.Ui
                 d.Pieces.Add(piece);
             }
             d.SetEffects.Add("+50 % movement speed");
-            d.SetEffects.Add("+75 carry weight");
+            d.SetEffects.Add("+25 % carry weight");
             d.SetEffects.Add("-50 % stamina use");
             d.SetEffects.Add("Up to 5 tamed trolls");
             d.ClubRecipe.Add(new SlipperData.Ingredient("Core wood", 15, 5));
