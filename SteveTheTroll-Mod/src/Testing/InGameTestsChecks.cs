@@ -117,5 +117,22 @@ namespace SteveTheTroll.Testing
             ModLog.Verbose("InGameTests: World_NoHitZone " + detail);
             return (inside && outside && patched ? "PASS: " : "FAIL: ") + detail;
         }
+
+        // D-118: a loaded tamed troll takes no elemental damage (fire, frost, lightning, poison, spirit Immune), pierce / slash at least Resistant.
+        static string World_TrollElementalImmune()
+        {
+            foreach (var c in Character.GetAllCharacters())
+            {
+                if (!Taming.TamedTrollStats.IsTamedTroll(c)) continue;
+                var m = c.GetDamageModifiers();
+                int immune = Taming.TamedTrollStats.Immune(m);
+                bool tough = m.m_pierce != HitData.DamageModifier.Normal && m.m_slash != HitData.DamageModifier.Normal;
+                string detail = c.name + ": immune " + immune + "/5 (fire " + m.m_fire + ", frost " + m.m_frost + ", lightning " + m.m_lightning + ", poison " + m.m_poison
+                    + ", spirit " + m.m_spirit + "), pierce " + m.m_pierce + ", slash " + m.m_slash;
+                ModLog.Verbose("InGameTests: World_TrollElementalImmune " + detail);
+                return (immune == 5 && tough ? "PASS: " : "FAIL: ") + detail;
+            }
+            return "SKIP: no tamed troll loaded";
+        }
     }
 }

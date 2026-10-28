@@ -6,7 +6,7 @@ namespace SteveTheTroll.Taming
 {
     /// <summary>
     /// D-042 (user 2026-10-27, "always when tamed"): a tamed Troll has TamedHealthFactor x its base health, TamedDamageFactor x its damage,
-    /// is at least Resistant to pierce / slash / fire / frost / lightning / poison and never staggers. Wild trolls and every other creature stay
+    /// is at least Resistant to pierce / slash, Immune to fire / frost / lightning / poison / spirit (D-118) and never staggers. Wild trolls and every other creature stay
     /// vanilla. Hooks (1.0.20, Cecil): Character.GetMaxHealthBase (SetupMaxHealth multiplies it by the level), Attack.GetLevelDamageFactor,
     /// Character.GetDamageModifiers, Character.AddStaggerDamage.
     /// </summary>
@@ -91,6 +91,8 @@ namespace SteveTheTroll.Taming
             }
         }
 
+        // D-118 (user 2026-10-28: "immune to fire / lightning and any other elemental type of dmg, poison included"): fire, frost, lightning,
+        // poison and spirit (the game's elemental types) are Immune; pierce and slash stay at least Resistant (D-042).
         [HarmonyPatch(typeof(Character), nameof(Character.GetDamageModifiers))]
         static class Resistances
         {
@@ -100,20 +102,29 @@ namespace SteveTheTroll.Taming
                 var r = __result;
                 __result.m_pierce = Up(r.m_pierce);
                 __result.m_slash = Up(r.m_slash);
-                __result.m_fire = Up(r.m_fire);
-                __result.m_frost = Up(r.m_frost);
-                __result.m_lightning = Up(r.m_lightning);
-                __result.m_poison = Up(r.m_poison);
+                __result.m_fire = HitData.DamageModifier.Immune;
+                __result.m_frost = HitData.DamageModifier.Immune;
+                __result.m_lightning = HitData.DamageModifier.Immune;
+                __result.m_poison = HitData.DamageModifier.Immune;
+                __result.m_spirit = HitData.DamageModifier.Immune;
                 if (_modLogs < 3)
                 {
                     _modLogs++;
                     ModLog.Verbose("TamedTrollStats: " + __instance.name + " resistances pierce " + r.m_pierce + "->" + __result.m_pierce + ", slash " + r.m_slash + "->" + __result.m_slash
-                        + ", fire " + r.m_fire + "->" + __result.m_fire + ", frost " + r.m_frost + "->" + __result.m_frost + ", lightning " + r.m_lightning + "->" + __result.m_lightning
-                        + ", poison " + r.m_poison + "->" + __result.m_poison);
+                        + ", fire " + r.m_fire + ", frost " + r.m_frost + ", lightning " + r.m_lightning + ", poison " + r.m_poison + ", spirit " + r.m_spirit + " -> all Immune");
+                    ModLog.Check("TamedTrollStats: " + __instance.name + " elemental types immune", Immune(__result), 5, 0, "type(s)");
                 }
             }
 
             static HitData.DamageModifier Up(HitData.DamageModifier m) { return (HitData.DamageModifier)TamingRules.AtLeastResistant((int)m); }
+        }
+
+        /// How many of the five elemental types (fire, frost, lightning, poison, spirit) are Immune. Expected outcome: 5 for a tamed troll.
+        internal static int Immune(HitData.DamageModifiers m)
+        {
+            int n = 0;
+            foreach (var x in new[] { m.m_fire, m.m_frost, m.m_lightning, m.m_poison, m.m_spirit }) if (x == HitData.DamageModifier.Immune) n++;
+            return n;
         }
 
         [HarmonyPatch(typeof(Character), "AddStaggerDamage")]
