@@ -44,23 +44,25 @@ namespace SteveTheTroll.Tests.Unit
             Assert.That((float)ModAssembly.Call(Depot, "FloorLift", chestTop, floorTop, clearance), Is.EqualTo(expected).Within(1e-4));
         }
 
-        // D-095: level ops cover the whole depot footprint (+ margin): spacing never above the op's radius, corners included
-        [TestCase(3.1f, 2.1f, 2f)]
-        [TestCase(3.1f, 2.1f, 1f)]
-        [TestCase(0.5f, 0.5f, 4f)]
-        public void LevelGrid_CoversTheFootprint(float halfX, float halfZ, float radius)
+        // D-105 (TEST-044: overlapping ops levelled vertices several times - spikes / pits): ONE axis-aligned square op holds the footprint
+        // turned any way: every corner of the turned rectangle lies inside the square of half side LevelRadius
+        [TestCase(3.1f, 2.1f)]
+        [TestCase(0.5f, 0.5f)]
+        [TestCase(4f, 0.1f)]
+        public void LevelSquare_HoldsTheFootprintAtAnyTurn(float halfX, float halfZ)
         {
-            var pts = (System.Collections.Generic.List<Vector3>)ModAssembly.Call("SteveTheTroll.Backpack.DepotGround", "Grid", halfX, halfZ, radius);
-            // every point of the rectangle is within `radius` (square ops: per axis) of some op centre
-            for (float x = -halfX; x <= halfX + 1e-3f; x += 0.1f)
-                for (float z = -halfZ; z <= halfZ + 1e-3f; z += 0.1f)
-                {
-                    bool covered = false;
-                    foreach (var p in pts) if (System.Math.Abs(p.x - x) <= radius + 1e-3f && System.Math.Abs(p.z - z) <= radius + 1e-3f) { covered = true; break; }
-                    Assert.That(covered, Is.True, "(" + x + ", " + z + ") not levelled");
-                }
-            Assert.That(pts, Has.Some.Matches<Vector3>(p => System.Math.Abs(p.x + halfX) < 1e-3 && System.Math.Abs(p.z + halfZ) < 1e-3), "corner");
-            Assert.That(pts.Count, Is.LessThanOrEqualTo(60), "not hundreds of terrain ops");
+            float r = (float)ModAssembly.Call("SteveTheTroll.Backpack.DepotGround", "LevelRadius", halfX, halfZ);
+            for (int deg = 0; deg < 360; deg += 5)
+            {
+                double a = deg * System.Math.PI / 180.0, cos = System.Math.Cos(a), sin = System.Math.Sin(a);     // Quaternion.Euler needs the engine
+                foreach (var sx in new[] { -1, 1 })
+                    foreach (var sz in new[] { -1, 1 })
+                    {
+                        double x = sx * halfX * cos + sz * halfZ * sin, z = -sx * halfX * sin + sz * halfZ * cos;
+                        Assert.That(System.Math.Max(System.Math.Abs(x), System.Math.Abs(z)), Is.LessThanOrEqualTo(r + 1e-4), deg + " deg");
+                    }
+            }
+            Assert.That(r, Is.LessThanOrEqualTo(halfX + halfZ), "not much bigger than needed");
         }
 
         [Test]
