@@ -92,9 +92,23 @@ namespace SteveTheTroll.Tests.Unit
         [TestCase(true, 5f, 5f)]
         [TestCase(true, 18f, 18f)]
         [TestCase(true, 30f, 18f)]
-        public void SwimSpeed(bool following, float player, float expected) { Assert.That((float)Call("SwimSpeed", 1.5f, 6f, 3f, following, player), Is.EqualTo(expected).Within(0.0001f)); }
+        public void SwimSpeed(bool following, float player, float expected) { Assert.That((float)Call("SwimSpeed", 1.5f, 6f, 3f, following, player, 0f, 0f), Is.EqualTo(expected).Within(0.0001f)); }
 
-        [Test] public void SwimSpeed_MaxBelowSwim_KeepsSwim() { Assert.That((float)Call("SwimSpeed", 2f, 1f, 1f, false, 0f), Is.EqualTo(2f)); }
+        // D-130: following = the player's pace + advantage, rising to the full speed 3 - 8 m behind
+        [TestCase(5f, 0f, 1.5f, 6.5f)]
+        [TestCase(5f, 3f, 1.5f, 6.5f)]
+        [TestCase(5f, 5.5f, 1.5f, 12.25f)]
+        [TestCase(5f, 8f, 1.5f, 18f)]
+        [TestCase(5f, 20f, 1.5f, 18f)]
+        [TestCase(0f, 0f, 1.5f, 3f)]
+        [TestCase(17f, 0f, 1.5f, 18f)]
+        [TestCase(5f, 0f, -1f, 5f)]
+        public void SwimSpeed_FollowAdvantage(float player, float distance, float advantage, float expected)
+        {
+            Assert.That((float)Call("SwimSpeed", 1.5f, 6f, 3f, true, player, distance, advantage), Is.EqualTo(expected).Within(0.0001f));
+        }
+
+        [Test] public void SwimSpeed_MaxBelowSwim_KeepsSwim() { Assert.That((float)Call("SwimSpeed", 2f, 1f, 1f, false, 0f, 0f, 0f), Is.EqualTo(2f)); }
 
         // D-129: wading from 1.5 m, leaving below 1.2 m, never while swimming
         [TestCase(false, 1.49f, false, false)]

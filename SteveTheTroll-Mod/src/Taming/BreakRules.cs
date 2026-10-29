@@ -96,15 +96,20 @@ namespace SteveTheTroll.Taming
         /// factor (D-111). Expected outcome: wadeFactor or tamedFactor.
         public static float MoveFactor(bool wading, float tamedFactor, float wadeFactor) { return wading ? wadeFactor : tamedFactor; }
 
-        /// D-122 (user: "up to 300% of base run speed while swimming; when following a slower player keep up with the player's speed"):
-        /// the swim speed of a tamed troll. Not following: baseRun x maxFactor. Following: the player's speed, at least the vanilla swim speed,
-        /// at most baseRun x maxFactor. Expected outcome: a speed in m/s.
-        public static float SwimSpeed(float baseSwim, float baseRun, float maxFactor, bool following, float playerSpeed)
+        /// D-122 (user: "up to 300% of base run speed while swimming; when following a slower player keep up with the player's speed") + D-130
+        /// (user 2026-10-29: "a minimum speed advantage" over the followed player): the swim speed of a tamed troll. Not following: baseRun x
+        /// maxFactor. Following: the player's speed (at least the vanilla swim speed) + `advantage`, rising towards the full speed when the
+        /// troll is 3 - 8 m behind (`distance`); never above baseRun x maxFactor. With distance 0 and advantage 0 this is the D-122 rule.
+        /// Expected outcome: a speed in m/s.
+        public static float SwimSpeed(float baseSwim, float baseRun, float maxFactor, bool following, float playerSpeed, float distance = 0f, float advantage = 0f)
         {
             float max = baseRun * maxFactor;
             if (max < baseSwim) max = baseSwim;
             if (!following) return max;
-            float s = playerSpeed > baseSwim ? playerSpeed : baseSwim;
+            float pace = (playerSpeed > baseSwim ? playerSpeed : baseSwim) + (advantage > 0f ? advantage : 0f);
+            float t = (distance - 3f) / 5f;
+            t = t < 0f ? 0f : (t > 1f ? 1f : t);
+            float s = pace + (max - pace) * t;
             return s < max ? s : max;
         }
     }

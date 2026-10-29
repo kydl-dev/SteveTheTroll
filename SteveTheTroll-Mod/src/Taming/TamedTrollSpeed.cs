@@ -12,7 +12,8 @@ namespace SteveTheTroll.Taming
     ///  - CharacterAnimEvent.CustomFixedUpdate: the game puts the animator speed back to 1 there whenever the character is free (no attack,
     ///    no minor action, no emote); the postfix makes that 1 the factor and keeps the movement speeds scaled;
     ///  - CharacterAnimEvent.Speed: an attack clip's own speed event (scale) becomes scale x factor.
-    /// A freeze frame (animator speed ~0, the hit pause) is never touched. The owner's animator speed reaches other clients through
+    /// D-130 (user 2026-10-29): swimming has its own update (Character.UpdateSwimming prefix, every physics tick the game swims the troll),
+    /// separate from the animation callback, and the troll keeps the fast factor while swimming. A freeze frame (animator speed ~0, the hit pause) is never touched. The owner's animator speed reaches other clients through
     /// ZSyncAnimation (s_animationSpeed). Wild trolls and every other creature stay vanilla.
     /// </summary>
     internal static class TamedTrollSpeed
@@ -20,7 +21,7 @@ namespace SteveTheTroll.Taming
         static readonly AccessTools.FieldRef<CharacterAnimEvent, Character> EventCharacter = AccessTools.FieldRefAccess<CharacterAnimEvent, Character>("m_character");
         static readonly AccessTools.FieldRef<CharacterAnimEvent, Animator> EventAnimator = AccessTools.FieldRefAccess<CharacterAnimEvent, Animator>("m_animator");
 
-        sealed class Base { public float Speed, Walk, Run, Factor, Swim, SwimDepth; public bool Wading; }
+        sealed class Base { public float Speed, Walk, Run, Factor, Swim, SwimDepth, SwimAccel, SwimTurn; public bool Wading; }
         static readonly Dictionary<int, Base> Bases = new Dictionary<int, Base>();     // by GameObject instance id: the instance's own vanilla speeds (a few per session)
         static float _nextLog;
 
@@ -29,19 +30,26 @@ namespace SteveTheTroll.Taming
 
         static float Factor { get { return ModSettings.TamedSpeedFactor.Value; } }
 
+        /// The instance's own vanilla speeds, taken the first time the troll is seen (by the animation callback or the swim update, whichever
+        /// comes first - both run before this mod changes anything on it). Expected outcome: the Base of this troll.
+        static Base BaseOf(Character c)
+        {
+            int id = c.gameObject.GetInstanceID();
+            Base b;
+            if (Bases.TryGetValue(id, out b)) return b;
+            b = new Base { Speed = c.m_speed, Walk = c.m_walkSpeed, Run = c.m_runSpeed, Factor = 1f, Swim = c.m_swimSpeed, SwimDepth = c.m_swimDepth, SwimAccel = c.m_swimAcceleration, SwimTurn = c.m_swimTurnSpeed };
+            Bases[id] = b;
+            ModLog.Verbose("TamedTrollSpeed: " + c.name + " vanilla speeds jog " + b.Speed + ", walk " + b.Walk + ", run " + b.Run + " m/s, swim " + b.Swim + " m/s, swim acceleration "
+                + b.SwimAccel + ", swim turn " + b.SwimTurn);
+            return b;
+        }
+
         /// Keeps the instance's movement speeds at vanilla x factor (factor 1 = vanilla; also puts them back when the troll is no longer tamed).
         /// Expected outcome: the run speed now in use equals the vanilla run speed x the factor.
         internal static bool Movement(Character c, float factor)
         {
             if (c == null) return false;
-            int id = c.gameObject.GetInstanceID();
-            Base b;
-            if (!Bases.TryGetValue(id, out b))
-            {
-                b = new Base { Speed = c.m_speed, Walk = c.m_walkSpeed, Run = c.m_runSpeed, Factor = 1f, Swim = c.m_swimSpeed, SwimDepth = c.m_swimDepth };
-                Bases[id] = b;
-                ModLog.Verbose("TamedTrollSpeed: " + c.name + " vanilla speeds jog " + b.Speed + ", walk " + b.Walk + ", run " + b.Run + " m/s");
-            }
+            Base b = BaseOf(c);
             if (!Mathf.Approximately(b.Factor, factor))
             {
                 c.m_speed = b.Speed * factor; c.m_walkSpeed = b.Walk * factor; c.m_runSpeed = b.Run * factor;
@@ -66,35 +74,62 @@ namespace SteveTheTroll.Taming
             {
                 b.Wading = now;
                 ModLog.Info("TamedTrollSpeed: " + c.name + (now ? " wades" : " out of deep water") + " (water " + depth.ToString("F1") + " m, wade from " + ModSettings.WadeDepth.Value.ToString("F1")
-                    + " m, swimming " + c.IsSwimming() + ") -> speed x" + BreakRules.MoveFactor(now, tamedFactor, ModSettings.WadeFactor.Value).ToString("0.00"));
+                    + " m, swimming " + c.IsSwimming() + ") -> speed x" + BreakRules.MoveFactor(now || c.IsSwimming(), tamedFactor, ModSettings.WadeFactor.Value).ToString("0.00"));
             }
-            return BreakRules.MoveFactor(now, tamedFactor, ModSettings.WadeFactor.Value);
+            // D-130: keep the wade factor while the game has the troll swimming too (no drop to the tamed factor at the swim edge: the legs and
+            // the ground speed stay fast, the troll leaves the water already at speed).
+            return BreakRules.MoveFactor(now || c.IsSwimming(), tamedFactor, ModSettings.WadeFactor.Value);
         }
 
         /// D-122 (user: "swim animation for trolls; up to 300% of base run speed while swimming; when following a slower player, keep up with
-        /// the player's speed"): a tamed troll swims where the game lets it (its own swim depth, 5 m - D-129: changing it did not work) and swims at
-        /// BreakRules.SwimSpeed (vanilla run x SwimRunFactor; following the player: the player's speed). `tamed` false puts the vanilla values
-        /// back. The troll has no swim animation of its own (user 2026-10-29; real swimming later, T-013 n). Expected outcome: the swim speed in use.
+        /// the player's speed") + D-130 (user 2026-10-29: faster ramp-up, a minimum speed advantage over the followed player): a tamed troll
+        /// swims where the game lets it (its own swim depth, 5 m - D-129: changing it did not work) at BreakRules.SwimSpeed: vanilla run x
+        /// SwimRunFactor when nobody is followed; following a player: the player's speed + SwimFollowAdvantage, rising to the full speed when
+        /// the troll is 3 - 8 m behind. Swim acceleration and turn speed are raised so it reaches that speed quickly. `tamed` false puts the
+        /// vanilla values back. Called every physics tick by the UpdateSwimming prefix (not by the animation callback). The troll has no swim
+        /// animation of its own (user 2026-10-29). Expected outcome: the swim speed in use.
         internal static float Swim(Character c, bool tamed)
         {
             if (c == null) return 0f;
             Base b;
-            if (!Bases.TryGetValue(c.gameObject.GetInstanceID(), out b)) return c.m_swimSpeed;
-            if (!tamed) { c.m_swimSpeed = b.Swim; c.m_swimDepth = b.SwimDepth; return c.m_swimSpeed; }
+            if (!tamed)
+            {
+                if (!Bases.TryGetValue(c.gameObject.GetInstanceID(), out b)) return c.m_swimSpeed;
+                c.m_swimSpeed = b.Swim; c.m_swimDepth = b.SwimDepth; c.m_swimAcceleration = b.SwimAccel; c.m_swimTurnSpeed = b.SwimTurn;
+                return c.m_swimSpeed;
+            }
+            b = BaseOf(c);
             c.m_swimDepth = b.SwimDepth;                      // D-129: the game's own swim depth (changing it only sank / lifted the body)
             var ai = c.GetComponent<MonsterAI>();
             var target = ai != null ? ai.GetFollowTarget() : null;
             var player = target != null ? target.GetComponent<Player>() : null;
             float playerSpeed = player != null ? player.GetVelocity().magnitude : 0f;
-            float want = BreakRules.SwimSpeed(b.Swim, b.Run, ModSettings.SwimRunFactor.Value, player != null, playerSpeed);
+            float distance = player != null ? Vector3.Distance(c.transform.position, player.transform.position) : 0f;
+            float want = BreakRules.SwimSpeed(b.Swim, b.Run, ModSettings.SwimRunFactor.Value, player != null, playerSpeed, distance, ModSettings.SwimFollowAdvantage.Value);
             if (!Mathf.Approximately(c.m_swimSpeed, want)) c.m_swimSpeed = want;
-            if (c.IsSwimming() && Time.time >= _nextSwimLog)
+            float accel = Mathf.Max(b.SwimAccel, ModSettings.SwimAcceleration.Value);
+            if (!Mathf.Approximately(c.m_swimAcceleration, accel)) c.m_swimAcceleration = accel;
+            float turn = b.SwimTurn * ModSettings.SwimTurnFactor.Value;
+            if (!Mathf.Approximately(c.m_swimTurnSpeed, turn)) c.m_swimTurnSpeed = turn;
+            if (Time.time >= _nextSwimLog)
             {
                 _nextSwimLog = Time.time + 5f;
-                ModLog.Verbose("TamedTrollSpeed: " + c.name + " swims at " + want.ToString("F1") + " m/s (vanilla swim " + b.Swim.ToString("F1") + ", run " + b.Run.ToString("F1")
-                    + ", following " + (player != null ? player.GetPlayerName() + " at " + playerSpeed.ToString("F1") + " m/s" : "nobody") + "), swim depth " + c.m_swimDepth.ToString("F1") + " m");
+                ModLog.Verbose("TamedTrollSpeed: " + c.name + " swims at " + want.ToString("F1") + " m/s, real " + c.GetVelocity().magnitude.ToString("F1") + " m/s (vanilla swim " + b.Swim.ToString("F1")
+                    + ", run " + b.Run.ToString("F1") + ", following " + (player != null ? player.GetPlayerName() + " at " + playerSpeed.ToString("F1") + " m/s, " + distance.ToString("F1") + " m away" : "nobody")
+                    + "), acceleration " + c.m_swimAcceleration.ToString("F2") + ", turn " + c.m_swimTurnSpeed.ToString("F0") + ", swim depth " + c.m_swimDepth.ToString("F1") + " m");
             }
             return c.m_swimSpeed;
+        }
+
+        /// D-130: the dedicated swimming update. The game calls UpdateSwimming every physics tick while a character swims; the prefix sets the
+        /// tamed troll's swim speed, acceleration and turn speed just before the game uses them (the animation callback no longer does this).
+        [HarmonyPatch(typeof(Character), "UpdateSwimming")]
+        static class SwimUpdate
+        {
+            static void Prefix(Character __instance)
+            {
+                if (TamedTrollStats.IsTamedTroll(__instance)) Swim(__instance, true);
+            }
         }
 
         [HarmonyPatch(typeof(CharacterAnimEvent), nameof(CharacterAnimEvent.CustomFixedUpdate))]
@@ -111,8 +146,7 @@ namespace SteveTheTroll.Taming
                     return;
                 }
                 float f = Wade(c, Factor);                       // D-129: WadeFactor x in water from WadeDepth, else the tamed factor
-                Movement(c, f);
-                Swim(c, true);
+                Movement(c, f);                                  // D-130: swimming is handled by SwimUpdate, not here
                 var anim = EventAnimator(__instance);
                 if (anim == null) return;
                 float was = anim.speed;
@@ -121,7 +155,7 @@ namespace SteveTheTroll.Taming
                 if (Time.time >= _nextLog)
                 {
                     _nextLog = Time.time + 5f;
-                    ModLog.Verbose("TamedTrollSpeed: " + c.name + " animator speed " + was.ToString("F3") + " -> " + now.ToString("F3") + " (factor " + f.ToString("F2") + ", attack " + c.InAttack() + ")");
+                    ModLog.Verbose("TamedTrollSpeed: " + c.name + " animator speed " + was.ToString("F3") + " -> " + now.ToString("F3") + " (factor " + f.ToString("F2") + ", real speed " + c.GetVelocity().magnitude.ToString("F1") + " m/s, attack " + c.InAttack() + ")");
                 }
             }
         }

@@ -7,7 +7,7 @@
   without). One tamed troll near you with the slippers, 5 with the whole costume, at most 15 living tamed trolls per player in total.
 - **Tamed trolls:** 3x health and damage, move and swing 25 % faster, immune to fire, frost, lightning, poison and spirit, resistant to
   pierce and slash. They wade 3x as fast from 1.5 m deep water and swim in very deep water up to three times their running speed
-  (keeping to your speed when following you).
+  (always a little faster than you when following, and catching up when far behind; faster acceleration and turning in water).
 - **More trolls near home:** with the slippers, trolls spawn 200 - 500 m from your bed in every land biome (Ashlands and Deep North
   included), 2 at a time, 6 with the costume. Without the set power all of them carry a club; with it half come unarmed.
 - **Farming:** trees, logs, rocks, ore veins and other breakables, Yggdrasil shoots, scorched and Timberwood trees, giant remains and
