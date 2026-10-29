@@ -84,6 +84,19 @@ namespace SteveTheTroll.Taming
 
         public const float WadeDepth = 1.5f, WadeFactor = 3f, WadeLeaveMargin = 0.3f;
 
+        public const float WaterKeepDistance = 15f, WaterKeepBand = 1.5f, InWaterDepth = 0.4f;
+
+        /// D-131 (user: "when they enter water, they are to keep 15m away from the player at all times"): the troll counts as in water while the
+        /// game has it swimming or the water at its feet is deeper than InWaterDepth (knee deep). Expected outcome: true in water.
+        public static bool InWater(float depth, bool swimming) { return swimming || depth > InWaterDepth; }
+
+        /// D-131: the troll stands still on the ring when it is within WaterKeepBand of the keep distance (no back-and-forth); otherwise it
+        /// moves to the ring point (away when closer, after the player when farther). Expected outcome: true = hold.
+        public static bool HoldsRing(float distance, float keep) { return distance >= keep - WaterKeepBand && distance <= keep + WaterKeepBand; }
+
+        /// D-131: how far the troll is behind the ring (for the D-130 swim catch-up). Expected outcome: distance - keep, never below 0.
+        public static float BehindRing(float distance, float keep) { float d = distance - (keep > 0f ? keep : 0f); return d > 0f ? d : 0f; }
+
         /// D-129 (user: "make them walk at 3x speed when they are in 1.5m into the water"): the troll wades now. Starts at `wadeDepth` of water,
         /// stops below wadeDepth - WadeLeaveMargin (no flapping at the edge); never while the game has it swimming. Expected outcome: wading or not.
         public static bool Wading(bool wasWading, float depth, float wadeDepth, bool swimming)

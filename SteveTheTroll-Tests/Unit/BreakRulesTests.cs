@@ -126,12 +126,34 @@ namespace SteveTheTroll.Tests.Unit
         [TestCase(false, 1.25f)]
         public void MoveFactor(bool wading, float expected) { Assert.That((float)Call("MoveFactor", wading, 1.25f, 3f), Is.EqualTo(expected)); }
 
+        // D-131: in water = swimming or deeper than knee deep (0.4 m); ring 15 m +- 1.5 m; catch-up counts the distance behind the ring
+        [TestCase(0.41f, false, true)]
+        [TestCase(0.4f, false, false)]
+        [TestCase(0f, true, true)]
+        [TestCase(-1f, false, false)]
+        public void InWater(float depth, bool swimming, bool expected) { Assert.That((bool)Call("InWater", depth, swimming), Is.EqualTo(expected)); }
+
+        [TestCase(13.49f, false)]
+        [TestCase(13.5f, true)]
+        [TestCase(15f, true)]
+        [TestCase(16.5f, true)]
+        [TestCase(16.51f, false)]
+        [TestCase(3f, false)]
+        public void HoldsRing(float distance, bool expected) { Assert.That((bool)Call("HoldsRing", distance, 15f), Is.EqualTo(expected)); }
+
+        [TestCase(20f, 15f, 5f)]
+        [TestCase(15f, 15f, 0f)]
+        [TestCase(5f, 15f, 0f)]
+        [TestCase(5f, -1f, 5f)]
+        public void BehindRing(float distance, float keep, float expected) { Assert.That((float)Call("BehindRing", distance, keep), Is.EqualTo(expected)); }
+
         [Test] public void Constants()
         {
             Assert.That(ModAssembly.GetStatic(T, "GlobalTameCap"), Is.EqualTo(15));
             Assert.That(ModAssembly.GetStatic(T, "SetStaggerResistance"), Is.EqualTo(0.75f));
             Assert.That(ModAssembly.GetStatic(T, "WadeDepth"), Is.EqualTo(1.5f));
             Assert.That(ModAssembly.GetStatic(T, "WadeFactor"), Is.EqualTo(3f));
+            Assert.That(ModAssembly.GetStatic(T, "WaterKeepDistance"), Is.EqualTo(15f));
         }
     }
 }

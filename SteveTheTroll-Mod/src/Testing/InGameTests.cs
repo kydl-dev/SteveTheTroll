@@ -154,8 +154,9 @@ namespace SteveTheTroll.Testing
             {
                 string r = Taming.TrollTamingPatch.SelfCheck();
                 bool speed = Taming.TamedTrollSpeed.SelfCheck(), stats = Taming.TamedTrollStats.SelfCheck(), defend = Taming.TrollDefend.SelfCheck(), farm = Taming.TrollFarming.SelfCheck(), store = Backpack.BackpackStore.SelfCheck();
-                string more = ", TamedTrollSpeed " + speed + ", TamedTrollStats " + stats + ", TrollDefend " + defend + ", TrollFarming " + farm + ", BackpackStore " + store;
-                return r.StartsWith("PASS") && speed && stats && defend && farm && store ? r + more : "FAIL: " + r + more;
+                bool keep = Taming.TrollWaterKeep.SelfCheck();      // D-131
+                string more = ", TamedTrollSpeed " + speed + ", TamedTrollStats " + stats + ", TrollDefend " + defend + ", TrollFarming " + farm + ", BackpackStore " + store + ", TrollWaterKeep " + keep;
+                return r.StartsWith("PASS") && speed && stats && defend && farm && store && keep ? r + more : "FAIL: " + r + more;
             }
             catch (System.TypeInitializationException e) { return "FAIL: " + (e.InnerException != null ? e.InnerException.Message : e.Message); }
         }

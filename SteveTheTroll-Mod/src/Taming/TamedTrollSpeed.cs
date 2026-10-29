@@ -105,6 +105,7 @@ namespace SteveTheTroll.Taming
             var player = target != null ? target.GetComponent<Player>() : null;
             float playerSpeed = player != null ? player.GetVelocity().magnitude : 0f;
             float distance = player != null ? Vector3.Distance(c.transform.position, player.transform.position) : 0f;
+            if (player != null && TrollWaterKeep.Keeps(c)) distance = BreakRules.BehindRing(distance, ModSettings.WaterKeepDistance.Value);   // D-131: catch up to the ring, not to the player
             float want = BreakRules.SwimSpeed(b.Swim, b.Run, ModSettings.SwimRunFactor.Value, player != null, playerSpeed, distance, ModSettings.SwimFollowAdvantage.Value);
             if (!Mathf.Approximately(c.m_swimSpeed, want)) c.m_swimSpeed = want;
             float accel = Mathf.Max(b.SwimAccel, ModSettings.SwimAcceleration.Value);
