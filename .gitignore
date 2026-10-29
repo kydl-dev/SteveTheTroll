@@ -90,3 +90,10 @@ SteveTheTroll-Unity/Assets/RipReference.meta
 
 # SonarScanner work folder (_agent\tools\sonar.ps1, D-086)
 .sonarqube/
+
+# --- not published to GitHub (user, 2026-10-29) ---
+/_testruns/
+/_agent/
+/.claude/
+/CLAUDE.md
+/*-Mod/build/*.dll
