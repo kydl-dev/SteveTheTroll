@@ -16,13 +16,20 @@ namespace SteveTheTroll
     {
         // [General]
         public static ConfigEntry<bool> EnableAll;
-        public static ConfigEntry<KeyCode> MenuKey;
+        // [Slippers] / [Costume] / [Trolls]: one Enable per functionality (PROJECT_RULES 11); [Trolls] also holds the attack key
+        public static ConfigEntry<bool> SlippersEnable, CostumeEnable, TrollsEnable;
         public static ConfigEntry<KeyCode> AttackKey;
         // [DebugLog]
         public static ConfigEntry<bool> DebugLog;
 
         /// Is the mod switched on ([General] EnableAll)? Off = inert: no effects, no menus; nothing built is removed.
         public static bool On { get { return EnableAll == null || EnableAll.Value; } }
+
+        /// A functionality is on only when EnableAll AND its own Enable are on (the rule itself is Functions.IsOn). They are read at start: the
+        /// switched-off parts are not set up at all (Plugin.Awake), so changing a switch needs a game restart.
+        public static bool SlippersOn { get { return Functions.IsOn(On, SlippersEnable == null || SlippersEnable.Value); } }
+        public static bool CostumeOn { get { return Functions.IsOn(On, CostumeEnable == null || CostumeEnable.Value); } }
+        public static bool TrollsOn { get { return Functions.IsOn(On, TrollsEnable == null || TrollsEnable.Value); } }
 
         // --- dev-only fixed values (Tunables): not in the config file, KydlTools changes them for testing -----------------------------------
         // --- T-008a troll taming (D-037 / D-038): the user's numbers. ---
@@ -182,9 +189,13 @@ namespace SteveTheTroll
 
             EnableAll = c.Bind("General", "EnableAll", true,
                 "Switches the whole mod on / off while playing. Off: no effects and no menus from this mod; things already built stay in the world.");
-            MenuKey = c.Bind("General", "MenuKey", KeyCode.F6,
-                "Opens / closes the SteveTheTroll menu. None = no menu.");
-            AttackKey = c.Bind("Controls", "AttackKey", KeyCode.Mouse3,
+            SlippersEnable = c.Bind("Slippers", "Enable", true,
+                "The Fluffy Slippers with the little plush trolls on your feet. Off: the slippers are not added to the game. Needs a game restart.");
+            CostumeEnable = c.Bind("Costume", "Enable", true,
+                "The troll costume (head, suit, trousers), the Troll Club and the set effects. Off: they are not added to the game. Needs a game restart.");
+            TrollsEnable = c.Bind("Trolls", "Enable", true,
+                "Taming and farming of real trolls with the slippers, their backpack and depots, map pins and extra trolls near your bed. Off: none of it is set up. Needs a game restart.");
+            AttackKey = c.Bind("Trolls", "AttackKey", KeyCode.Mouse3,
                 "Look at a creature, tree, log or rock and press this: your nearest tamed troll attacks / breaks it (Mouse3 = the mouse's back button, Mouse 4). Looking at nothing: it goes farming. None = off.");
             DebugLog = c.Bind("DebugLog", "Enable", false,
                 "Writes detailed lines about everything the mod does to the BepInEx log (for bug reports). Leave off while playing normally.");
@@ -193,8 +204,8 @@ namespace SteveTheTroll
             ConfigTools.DropRemoved(c);
 
             EnableAll.SettingChanged += (s, e) => ModLog.Info("Config: EnableAll = " + EnableAll.Value + (EnableAll.Value ? ", the mod is on" : ", the mod is inert (no effects or menus)"));
-            ModLog.Verbose("Config: bound (EnableAll " + EnableAll.Value + ", menu key " + MenuKey.Value + ", debug log " + DebugLog.Value + ")");
-            return EnableAll != null && MenuKey != null && DebugLog != null;
+            ModLog.Verbose("Config: bound (EnableAll " + EnableAll.Value + ", slippers " + SlippersOn + ", costume " + CostumeOn + ", trolls " + TrollsOn + ", attack key " + AttackKey.Value + ", debug log " + DebugLog.Value + ")");
+            return EnableAll != null && SlippersEnable != null && CostumeEnable != null && TrollsEnable != null && AttackKey != null && DebugLog != null;
         }
     }
 }

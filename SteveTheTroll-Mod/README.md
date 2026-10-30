@@ -6,11 +6,12 @@ Fluffy Slippers: soft plush slippers for the utility slot, with armor and frost 
 - **Fluffy Slippers** (workbench 1): 5 Troll hide, 4 Deer hide, 6 Blueberries. Utility slot: armor 5 (+1 per quality, up to quality 4),
   resistant to frost. Every upgrade costs 2 Troll hide + 2 Blueberries.
 - The recipes show up as soon as you pick up one of their materials.
-- Press **F6** for the SteveTheTroll menu: the slippers in 3D with their stats, and more tabs once you find out what the slippers do.
+- Press **F6** for the KY hub, the one menu of all KydlDev mods. SteveTheTroll adds tabs: the slippers in 3D with their stats, and more
+  tabs once you find out what the slippers do. Needs the **KydlCore** mod (installed automatically by the mod manager).
 
 ## How to use
 - Craft the slippers at the workbench and put them on.
-- **F6** (config `[General] MenuKey`) opens / closes the menu, Esc closes it.
+- **F6** opens / closes the KY hub (KydlCore), Esc closes it.
 
 ## Configuration
 `BepInEx/config/com.kydldev.SteveTheTroll.cfg` (or the in-game config manager):
@@ -18,7 +19,10 @@ Fluffy Slippers: soft plush slippers for the utility slot, with armor and frost 
 | Section | Setting | Default | What it does |
 |---------|---------|---------|--------------|
 | General | EnableAll | true | Switches the whole mod on / off while playing |
-| General | MenuKey | F6 | Opens / closes the menu |
+| Slippers | Enable | true | The Fluffy Slippers and the mini trolls on the feet (off = not in the game, needs a restart) |
+| Costume | Enable | true | The Troll Mascot costume, club and set power (off = not in the game, needs a restart) |
+| Trolls | Enable | true | Taming and farming of real trolls, backpack, depots, map pins, extra trolls (off = not in the game, needs a restart) |
+| Trolls | AttackKey | Mouse 4 | Orders your nearest troll |
 | DebugLog | Enable | false | Detailed lines in the BepInEx log for bug reports |
 
 Edits to the file are picked up while the game runs.
@@ -43,7 +47,7 @@ Stop reading here if you want the surprise.
   break what a normal pickaxe or axe cannot: Yggdrasil shoots, ancient trees, scorched trees, Timberwood trees, giant remains and
   petrified Gammeltrolls. While a troll is in the Ashlands, Mistlands or Deep North, the Troll work list also offers Blackwood,
   Black marble, Timberwood and Gold ore.
-- **Orders:** press **Mouse 4** (config `[Controls] AttackKey`) while looking at a creature and your nearest troll attacks it; at a tree,
+- **Orders:** press **Mouse 4** (config `[Trolls] AttackKey`) while looking at a creature and your nearest troll attacks it; at a tree,
   rock or ore vein and it breaks it; at nothing and it starts farming. The My trolls tab lists your trolls with their distance and
   buttons to call them (a far troll is brought next to you) or to kill one (asks first; its backpack drops).
 - **Depots:** a troll with a full backpack walks home and empties it into troll depots it builds 15 - 50 m from your bed (stacks of chests,

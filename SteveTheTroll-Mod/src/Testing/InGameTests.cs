@@ -16,7 +16,7 @@ namespace SteveTheTroll.Testing
         static string Startup_ConfigBound()
         {
             if (ModSettings.EnableAll == null) return "FAIL: ModSettings.Bind did not run (EnableAll is null)";
-            return ModSettings.On ? "PASS: EnableAll on, menu key " + ModSettings.MenuKey.Value : "SKIP: EnableAll is off in the config";
+            return ModSettings.On ? "PASS: EnableAll on, slippers " + ModSettings.SlippersOn + ", costume " + ModSettings.CostumeOn + ", trolls " + ModSettings.TrollsOn : "SKIP: EnableAll is off in the config";
         }
 
         /// T-004b: everything the runtime troll figure reads from the game exists (Troll/Visual, the troll's log, the player's feet).

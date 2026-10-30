@@ -1,10 +1,11 @@
 {
   "name": "SteveTheTroll",
-  "version_number": "1.0.0",
+  "version_number": "2.0.0",
   "website_url": "",
   "description": "Fluffy Slippers: soft plush slippers with a little troll on each foot (armor, frost resistance). Wear them and see what happens.",
   "dependencies": [
     "denikson-BepInExPack_Valheim-5.4.2202",
-    "ValheimModding-Jotunn-2.30.2"
+    "ValheimModding-Jotunn-2.30.2",
+    "KydlDev-KydlCore-0.1.0"
   ]
 }

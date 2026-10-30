@@ -77,6 +77,36 @@ namespace SteveTheTroll.Tests.Integration
             Assert.That(deps.Any(d => d.IndexOf("Jotunn", StringComparison.OrdinalIgnoreCase) >= 0), Is.True);
         }
 
+        /// The KydlCore version asked for by the plugin attribute: [BepInDependency(KydlCore.Plugin.ModGuid, "x.y.z")] (or the GUID text).
+        static string PluginCoreDependencyVersion()
+        {
+            var m = Regex.Match(File.ReadAllText(Path.Combine(TestPaths.ModDir, "src", "Plugin.cs")), @"\[BepInDependency\(\s*(KydlCore\.Plugin\.ModGuid|""com\.kydldev\.KydlCore"")\s*,\s*""(\d+\.\d+\.\d+)""");
+            return m.Success ? m.Groups[2].Value : null;
+        }
+
+        [Test]
+        public void KydlCore_IsAHardDependency_InPluginAndManifest_WithTheSameVersion()
+        {
+            var attribute = PluginCoreDependencyVersion();
+            Assert.That(attribute, Is.Not.Null, "Plugin.cs needs [BepInDependency(KydlCore.Plugin.ModGuid, \"x.y.z\")] (hard dependency with a minimum version, every KydlDev mod requires KydlCore)");
+            var dep = Dependencies().FirstOrDefault(d => d.StartsWith("KydlDev-KydlCore-", StringComparison.Ordinal));
+            Assert.That(dep, Is.Not.Null, "manifest.json dependencies need KydlDev-KydlCore-x.y.z");
+            Assert.That(dep.Substring("KydlDev-KydlCore-".Length), Is.EqualTo(attribute), "the KydlCore version in manifest.json and in the [BepInDependency] attribute must agree");
+        }
+
+        [Test]
+        public void KydlCore_Dependency_IsNotNewerThanTheKydlCoreTheModIsBuiltAgainst()
+        {
+            // the KydlCore project next to this one (E:\Projects\Valheim\KydlCore): its manifest.json version is the newest KydlCore there is (KydlCore.dll carries no file version)
+            var manifest = Environment.GetEnvironmentVariable("KYDL_CORE_MANIFEST") ?? Path.GetFullPath(Path.Combine(TestPaths.ProjectRoot, "..", "KydlCore", "KydlCore-Mod", "manifest.json"));
+            Assume.That(File.Exists(manifest), "KydlCore manifest.json not found (set KYDL_CORE_MANIFEST)");
+            var core = (Dictionary<string, object>)new JavaScriptSerializer().DeserializeObject(File.ReadAllText(manifest));
+            var newest = Version.Parse((string)core["version_number"]);
+            var declared = Version.Parse(PluginCoreDependencyVersion());
+
+            Assert.That(declared, Is.LessThanOrEqualTo(newest), "the mod asks for a newer KydlCore than the newest one (" + newest + ")");
+        }
+
         [Test]
         public void Manifest_JotunnDependency_IsNotNewerThanTheJotunnTheModIsBuiltAgainst()
         {

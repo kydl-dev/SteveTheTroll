@@ -15,13 +15,14 @@ namespace SteveTheTroll
     /// </summary>
     [BepInPlugin(ModGuid, ModName, ModVersion)]
     [BepInDependency(Jotunn.Main.ModGuid)]
+    [BepInDependency(KydlCore.Plugin.ModGuid, "0.1.0")]
     [NetworkCompatibility(CompatibilityLevel.EveryoneMustHaveMod, VersionStrictness.Minor)]
     public class Plugin : BaseUnityPlugin
     {
         // ModGuid never changes after the first release. ModVersion = manifest.json version_number = newest CHANGELOG heading (tests check it).
         public const string ModGuid = "com.kydldev.SteveTheTroll";
         public const string ModName = "SteveTheTroll";
-        public const string ModVersion = "1.0.0";
+        public const string ModVersion = "2.0.0";
         public const string BundleName = "stevethetroll";
 
         internal static Plugin Instance;
@@ -35,11 +36,7 @@ namespace SteveTheTroll
             ModLog.Init(Logger, ModName, () => ModSettings.DebugLog != null && ModSettings.DebugLog.Value);
             ModLog.Info(ModName + " " + ModVersion + " loaded (dll built " + File.GetLastWriteTime(Assembly.GetExecutingAssembly().Location).ToString("yyyy-MM-dd HH:mm:ss") + ")");
 
-            // the shared UI kit (Kydl.Ui) logs through the mod's log: debug lines only with the debug switch on
-            Kydl.Ui.UiLog.VerboseSink = s => ModLog.Verbose(s);
-            Kydl.Ui.UiLog.WarnSink = s => ModLog.Warn(s);
-            Kydl.Ui.UiLog.ErrorSink = s => ModLog.Error(s);
-            Kydl.Ui.UiKit.Owner = ModName;
+            // the UI kit, the input lock and the hub come from KydlCore (it logs through its own log); only the fit math logs through this mod
             Fit.TrollFitMath.Log = s => ModLog.Verbose(s);     // shared with the Unity fit scene: it logs through the mod's log here
             Fit.TrollFitMath.Warn = s => ModLog.Warn(s);
 
@@ -47,13 +44,19 @@ namespace SteveTheTroll
             _cfgWatcher = new ConfigReloader(Config);
             Loc.Register(UiText.En);
 
+            HubTabs.Register(Config);               // the menu = tabs in the KY hub (F6) of KydlCore
+
+            // PROJECT_RULES 11: a switched-off part is not set up at all (restart the game after changing a switch)
             Bundle = LoadBundle();
-            Item.SlipperItem.Install();             // T-007: needs the bundle (icon) and the vanilla prefabs (added later by Jotunn)
-            Item.CostumeItems.Install();            // T-009d: costume helmet / chest / legs + Troll Club (bundle parts, vanilla prefabs)
-            Backpack.DepotPrefab.Install();         // D-064: troll depot frame prefab (vanilla prefabs)
-            Backpack.DepotGround.Install();         // D-103: own level-ground terrain op for the depot spots
-            Taming.TrollTaming.Install();           // T-008a: the game's Troll becomes tameable (vanilla prefabs, added later by Jotunn)
-            UiInputLock.Install(ModGuid);           // the character does not move while one of the mod's menus is open
+            if (ModSettings.SlippersOn) Item.SlipperItem.Install();             // T-007: needs the bundle (icon) and the vanilla prefabs (added later by Jotunn)
+            if (ModSettings.CostumeOn) Item.CostumeItems.Install();            // T-009d: costume helmet / chest / legs + Troll Club (bundle parts, vanilla prefabs)
+            if (ModSettings.TrollsOn)
+            {
+                Backpack.DepotPrefab.Install();     // D-064: troll depot frame prefab (vanilla prefabs)
+                Backpack.DepotGround.Install();     // D-103: own level-ground terrain op for the depot spots
+                Taming.TrollTaming.Install();       // T-008a: the game's Troll becomes tameable (vanilla prefabs, added later by Jotunn)
+            }
+            ModLog.Verbose("Plugin: set up slippers " + ModSettings.SlippersOn + ", costume " + ModSettings.CostumeOn + ", trolls " + ModSettings.TrollsOn);
             new Harmony(ModGuid).PatchAll(Assembly.GetExecutingAssembly());
             Jotunn.Managers.CommandManager.Instance.AddConsoleCommand(new Figure.FigurePreviewCommand());   // T-004b look test: stt_preview
             Jotunn.Managers.CommandManager.Instance.AddConsoleCommand(new Backpack.BuildDumpCommand());   // T-008b: stt_dumpbuild (backpack model)
@@ -63,7 +66,7 @@ namespace SteveTheTroll
             Jotunn.Managers.CommandManager.Instance.AddConsoleCommand(new Ui.ComingPreviewCommand());     // D-058 preview: stt_coming [name]
             Jotunn.Managers.CommandManager.Instance.AddConsoleCommand(new Backpack.FillBackpackCommand());  // D-064 test: stt_fillbackpack [item]
             ModLog.Verbose("Plugin: console commands stt_preview, stt_dumpbuild, stt_clear, stt_cleardepots, stt_levelground, stt_coming, stt_fillbackpack registered");
-            ModLog.Verbose("Plugin: Awake finished (Harmony patches applied, menu key " + ModSettings.MenuKey.Value + ")");
+            ModLog.Verbose("Plugin: Awake finished (Harmony patches applied)");
         }
 
         // 1) embedded in the DLL (Kydl.Mod.targets embeds Assets\<bundle>; read fully into memory: LoadFromStream breaks once the stream
@@ -110,7 +113,7 @@ namespace SteveTheTroll
         {
             if (_cfgWatcher != null) _cfgWatcher.Tick();
             if (!ModSettings.On) return;
-            Run("MainMenu", () => MainMenu.Tick());
+            if (!ModSettings.TrollsOn) return;       // every tick below belongs to the trolls (taming, farming, backpack, orders, map pins)
             Run("TrollRegistry", () => Taming.TrollRegistry.Tick());
             Run("TrollZones", () => Taming.TrollZones.Tick());               // D-084: zones around far own trolls stay loaded (they keep farming)
             Run("TrollCensus", () => Taming.TrollCensus.Tick());             // D-085: trolls within 500 m of the bed (spawn cap)

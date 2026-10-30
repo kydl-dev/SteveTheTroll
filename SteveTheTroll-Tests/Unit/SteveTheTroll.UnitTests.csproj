@@ -25,6 +25,10 @@
     <Compile Include="..\..\SteveTheTroll-Unity\Assets\SteveTheTroll_UI\Runtime\TrollInfo.cs" Link="Ui\TrollInfo.cs" />
     <Compile Include="..\..\SteveTheTroll-Unity\Assets\SteveTheTroll_UI\Runtime\TrollDetailsBuilder.cs" Link="Ui\TrollDetailsBuilder.cs" />
   </ItemGroup>
+  <ItemGroup Condition="'$(KydlQuality)' != 'true'">
+    <!-- which functionalities are on (PROJECT_RULES 11) -->
+    <Compile Include="..\..\SteveTheTroll-Mod\src\Functions.cs" Link="Mod\Functions.cs" />
+  </ItemGroup>
   <ItemGroup>
     <Reference Include="UnityEngine.CoreModule"><HintPath>$(ValheimRefs)\UnityEngine.CoreModule.dll</HintPath><Private>true</Private></Reference>
   </ItemGroup>

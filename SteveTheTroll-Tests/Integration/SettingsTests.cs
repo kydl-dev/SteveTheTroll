@@ -50,6 +50,50 @@ namespace SteveTheTroll.Tests.Integration
         }
 
         [Test]
+        public void PlayerConfig_HasEnableAll()
+        {
+            var src = File.ReadAllText(Path.Combine(TestPaths.ModDir, "src", "ModSettings.cs"));
+
+            Assert.That(Regex.IsMatch(src, @"Bind\(\s*""General""\s*,\s*""EnableAll""\s*,\s*true"), Is.True, "[General] EnableAll (on by default) is the global switch of every mod");
+        }
+
+        [Test]
+        public void PlayerConfig_EverySectionHasEnable()
+        {
+            // PROJECT_RULES 11 (user, 2026-10-30): every functionality has its own [Section] Enable; General holds EnableAll, DebugLog holds its Enable
+            var src = File.ReadAllText(Path.Combine(TestPaths.ModDir, "src", "ModSettings.cs"));
+            var sections = new HashSet<string>();
+            var withEnable = new HashSet<string>();
+            foreach (Match m in Regex.Matches(src, @"\.Bind\(\s*""(?<s>[^""]+)""\s*,\s*""(?<k>[^""]+)"""))
+            {
+                sections.Add(m.Groups["s"].Value);
+                if (m.Groups["k"].Value == "Enable") withEnable.Add(m.Groups["s"].Value);
+            }
+            sections.Remove("General");
+
+            foreach (var s in sections)
+                Assert.That(withEnable.Contains(s), Is.True, "config section [" + s + "] has no 'Enable' entry: every functionality gets its own switch (PROJECT_RULES 11); a setting that is not a functionality belongs in [General]");
+        }
+
+        [Test]
+        public void PlayerConfig_HasTheThreeFunctionalitySwitches()
+        {
+            var src = File.ReadAllText(Path.Combine(TestPaths.ModDir, "src", "ModSettings.cs"));
+
+            foreach (var section in new[] { "Slippers", "Costume", "Trolls" })
+                Assert.That(Regex.IsMatch(src, @"Bind\(\s*""" + section + @"""\s*,\s*""Enable""\s*,\s*true"), Is.True, "[" + section + "] Enable (on by default) is the switch of that functionality");
+        }
+
+        [Test]
+        public void PlayerConfig_HasNoMenuKey()
+        {
+            var src = File.ReadAllText(Path.Combine(TestPaths.ModDir, "src", "ModSettings.cs"));
+
+            Assert.That(Regex.IsMatch(src, @"Bind\(\s*""[^""]*""\s*,\s*""MenuKey"""), Is.False, "no mod has its own menu key: the menu is tabs in the KY hub (F6, KydlCore)");
+            Assert.That(Regex.IsMatch(src, @"ConfigEntry<KeyCode>\s+MenuKey"), Is.False, "no MenuKey entry (KydlCore owns the hub key)");
+        }
+
+        [Test]
         public void ConfigDescriptions_DoNotTalkAboutOldVersions()
         {
             var src = File.ReadAllText(Path.Combine(TestPaths.ModDir, "src", "ModSettings.cs"));

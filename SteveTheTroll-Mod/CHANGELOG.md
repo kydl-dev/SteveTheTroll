@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.0.0
+- Breaking: SteveTheTroll now needs the KydlCore mod (hard dependency). Install KydlCore as well.
+- The menu is now tabs (Slippers, Costume, My trolls, Troll work, Trolls, Settings) in the KY hub window of KydlCore (F6); the own menu window and
+  the `[General] MenuKey` setting are gone. The troll tabs show a note until you have a living tamed troll.
+- New config switches: `[General] EnableAll`, `[Slippers] Enable`, `[Costume] Enable`, `[Trolls] Enable` (taming, farming, backpack, depots, map pins).
+  A switched-off part is not set up at all: restart the game after changing it.
+- The attack key moved from `[Controls] AttackKey` to `[Trolls] AttackKey` (set it again if you changed it).
+- `[DebugLog] Enable` writes detailed lines to the BepInEx log.
+
 ## 1.0.0
 - First release.
 - **Fluffy Slippers** (utility slot, workbench 1): armor 5 (+1 per quality, up to 4), frost resistance, a little plush troll on each foot.

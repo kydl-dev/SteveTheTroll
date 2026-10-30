@@ -20,7 +20,7 @@ namespace SteveTheTroll.Taming
             var key = ModSettings.AttackKey != null ? ModSettings.AttackKey.Value : KeyCode.None;
             if (key == KeyCode.None || !Pressed(key)) return false;
             var p = Player.m_localPlayer;
-            if (p == null || p.IsDead() || Ui.MainMenu.IsOpen || InventoryGui.IsVisible() || Menu.IsVisible() || global::Console.IsVisible()
+            if (p == null || p.IsDead() || KydlCore.KyHub.IsOpen || InventoryGui.IsVisible() || Menu.IsVisible() || global::Console.IsVisible()
                 || (Chat.instance != null && Chat.instance.HasFocus()) || TextInput.IsVisible()) return false;
             var troll = Nearest(p);
             if (troll == null) { ModLog.Info("TrollOrders: attack key - no own tamed troll within " + OrderRange + " m"); return false; }

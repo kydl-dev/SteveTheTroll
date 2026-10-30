@@ -46,7 +46,7 @@ namespace SteveTheTroll.Ui
             return w;
         }
 
-        static VisualElement SlippersTab(Func<string, string> text, SlipperData d, Func<IModelScene> makeScene, ViewerSettings viewer)
+        internal static VisualElement SlippersTab(Func<string, string> text, SlipperData d, Func<IModelScene> makeScene, ViewerSettings viewer)
         {
             var tab = new VisualElement { name = "stevethetroll-slippers-tab" };
             tab.style.flexShrink = 0;
@@ -60,7 +60,7 @@ namespace SteveTheTroll.Ui
         }
 
         // D-080 Costume tab: a 3D view of the whole mascot + the set / pieces / club details.
-        static VisualElement CostumeTab(Func<string, string> text, CostumeData d, Func<IModelScene> makeScene, ViewerSettings viewer)
+        internal static VisualElement CostumeTab(Func<string, string> text, CostumeData d, Func<IModelScene> makeScene, ViewerSettings viewer)
         {
             var tab = new VisualElement { name = "stevethetroll-costume-tab" };
             tab.style.flexShrink = 0;
@@ -74,7 +74,7 @@ namespace SteveTheTroll.Ui
         const float NameWidth = 140f, StatusWidth = 150f, FocusWidth = 160f, GoWidth = 110f;    // px at the 1080p reference
 
         // Tab 2 (D-043): one row per tamed troll - name | what it does | focus drop-down | what it farms now.
-        static VisualElement WorkTab(Func<string, string> text, IList<TrollInfo> trolls, Action<string, string> chosen, Action<string> goFarm)
+        internal static VisualElement WorkTab(Func<string, string> text, IList<TrollInfo> trolls, Action<string, string> chosen, Action<string> goFarm)
         {
             var tab = new VisualElement { name = "stevethetroll-work-tab" };
             tab.style.flexShrink = 0;
@@ -119,7 +119,7 @@ namespace SteveTheTroll.Ui
         }
 
         // Tab 3 (D-043): pick a troll, see its stats, stars, position and distance from your bed.
-        static VisualElement TrollsTab(Func<string, string> text, IList<TrollInfo> trolls, long nowTicks)
+        internal static VisualElement TrollsTab(Func<string, string> text, IList<TrollInfo> trolls, long nowTicks)
         {
             var tab = new VisualElement { name = "stevethetroll-trolls-tab" };
             tab.style.flexShrink = 0;

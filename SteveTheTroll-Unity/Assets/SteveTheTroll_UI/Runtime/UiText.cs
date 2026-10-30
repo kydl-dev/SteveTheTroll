@@ -11,6 +11,7 @@ namespace SteveTheTroll.Ui
         internal static readonly Dictionary<string, string> En = new Dictionary<string, string>
         {
             { "stevethetroll_menu_title", "SteveTheTroll" },
+        { "stevethetroll_tab_settings", "Settings" },
             { "stevethetroll_menu_footer", "Esc to close" },
             { "stevethetroll_slippers", "Fluffy Slippers" },
             { "stevethetroll_slippers_desc", "Soft, fluffy plush slippers with a fur-lined rim. Warm toes, brave heart." },
