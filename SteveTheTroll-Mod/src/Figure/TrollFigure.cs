@@ -279,6 +279,24 @@ namespace SteveTheTroll.Figure
             ModLog.Verbose("TrollFigure: " + name + " " + (_glueA != null ? "glued to the slipper, tilt " + Vector3.Angle(transform.up, Vector3.up).ToString("F0") + " deg" : "placed on the foot (not glued)"));
             ModLog.Check("TrollFigure: " + name + " frame-to-frame turns against the foot over 45 deg in the last " + DiagEverySeconds + " s (largest " + _maxStep.ToString("F0") + " deg)", _jumps, 0, 0, "");
             _jumps = 0; _maxStep = 0f;
+            WatchSole();
+        }
+
+        // Known bug (user, 2026-10-30): now and then the troll hangs UNDER the slipper, its head at the sole. Nothing checked it before, so the logs
+        // could not show it. Checks: the troll's up axis points the way the player's does; while upright its lowest vertex is near the sole
+        // (normal 0.115 m below the foot bone, hanging under it ~0.40 m) and its head is just below the foot bone (normal 0.025 m, bug ~0.115 m).
+        void WatchSole()
+        {
+            float tilt = Vector3.Angle(transform.up, _player.up);
+            ModLog.CheckRange("TrollFigure: " + name + " up axis against the player's up", tilt, 0f, 90f, "deg");
+            if (_bake == null || _body == null) return;
+            float min, max;
+            if (!TrollFitMath.MeasureY(_body, _bake, out min, out max)) return;
+            float feet = _foot.position.y - min, head = _foot.position.y - max;
+            ModLog.Verbose("TrollFigure: " + name + " lowest vertex " + feet.ToString("F3") + " m and head " + head.ToString("F3") + " m below the foot bone, tilt " + tilt.ToString("F0") + " deg");
+            if (tilt >= 30f) return;
+            ModLog.CheckRange("TrollFigure: " + name + " upright troll: lowest vertex below the foot bone (sole)", feet, 0f, 0.2f, "m");
+            ModLog.CheckRange("TrollFigure: " + name + " upright troll: head below the foot bone (more = hangs under the slipper)", head, -0.05f, 0.075f, "m");
         }
 
         void OnDestroy()
