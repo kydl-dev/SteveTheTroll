@@ -1,0 +1,17 @@
+{
+  "name": "backpack-full-cache",
+  "description": "Full backpack: the cached answer follows a change at once (no stale 'full' after items are removed)",
+  "timeout": 90,
+  "steps": [
+    { "do": "hook", "name": "stt.reset" },
+    { "do": "hook", "name": "stt.spawnTroll", "args": { "dz": 4 }, "as": "troll" },
+    { "do": "hook", "name": "stt.backpackFullCached", "args": { "troll": "troll" }, "expect": false },
+    { "do": "hook", "name": "stt.fillBackpack", "args": { "troll": "troll" } },
+    { "do": "hook", "name": "stt.backpackFull", "args": { "troll": "troll" }, "expect": true },
+    { "do": "hook", "name": "stt.backpackFullCached", "args": { "troll": "troll" }, "expect": true },
+    { "do": "hook", "name": "stt.backpackAllUsed", "args": { "troll": "troll" }, "expect": true, "label": "every slot used" },
+    { "do": "hook", "name": "stt.unpackChest0", "args": { "troll": "troll" } },
+    { "do": "hook", "name": "stt.backpackFullCached", "args": { "troll": "troll" }, "expect": false, "label": "cache dropped by the write" }
+  ],
+  "asserts": [ { "check": "noErrors", "source": "SteveTheTroll" } ]
+}

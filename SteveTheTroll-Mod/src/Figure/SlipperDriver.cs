@@ -94,6 +94,7 @@ namespace SteveTheTroll.Figure
             ModLog.Verbose("SlipperDriver: " + name + " built " + parts.Count + " part(s), " + _own.Count + " material copy(ies), forward " + ModSettings.SlipperForward.Value.ToString("F3")
                 + " m, up " + ModSettings.SlipperUp.Value.ToString("F3") + " m, side " + ModSettings.SlipperSide.Value.ToString("F3") + " m, yaw " + ModSettings.SlipperYaw.Value.ToString("F0") + ", scale " + ModSettings.SlipperScale.Value.ToString("F2") + ", width " + ModSettings.SlipperWidth.Value.ToString("F2"));
             ModLog.Check("SlipperDriver: " + name + " parts", parts.Count, 3, 0, "");
+            if (!HasSocket) ModLog.Warn("SlipperDriver: " + name + " has no TrollSocket - the troll cannot be anchored (bundle built before D-147?)");
             foreach (var p in parts) ModLog.Verbose("SlipperDriver: " + name + " " + p.Name + " skinned to " + p.Renderer.bones.Length + " bone(s): " + string.Join(", ", System.Array.ConvertAll(p.Renderer.bones, b => b != null ? b.name : "null")));
             Colour();
         }
@@ -130,6 +131,34 @@ namespace SteveTheTroll.Figure
 
         /// Changes every time the slipper is rebuilt (the troll on it re-binds then).
         public int BuildVersion { get { return _buildVersion; } }
+
+        /// D-147: the socket on the built slipper. False = prefab/bundle has no TrollSocket.
+        public bool HasSocket { get { return _root != null && _root.Find(SlipperFit.SocketName) != null; } }
+
+        /// The socket's skin anchor (bound in the CURRENT pose) and the socket's forward expressed in the foot bone's space (so it turns with the foot). False without a socket.
+        public bool TrySocket(out SkinPoint anchor, out Vector3 forwardInFoot)
+        {
+            anchor = null; forwardInFoot = Vector3.forward;
+            var s = _root != null ? _root.Find(SlipperFit.SocketName) : null;
+            if (s == null || _foot == null) return false;
+            anchor = PointAt(s.position);
+            forwardInFoot = Quaternion.Inverse(_foot.rotation) * s.forward;
+            SocketUpInFoot = Quaternion.Inverse(_foot.rotation) * s.up;
+            return anchor != null;
+        }
+
+        /// D-159: the socket's up in the foot bone's space (set by TrySocket).
+        public Vector3 SocketUpInFoot = Vector3.up;
+
+        /// D-160: the slipper's own vertical extent in the world (its skinned renderer's bounds), not the foot bone. False when there is no renderer.
+        public bool TryExtent(out float bottomY, out float topY)
+        {
+            bottomY = topY = 0f;
+            var r = _root != null ? _root.GetComponentInChildren<SkinnedMeshRenderer>() : null;
+            if (r == null) return false;
+            bottomY = r.bounds.min.y; topY = r.bounds.max.y;
+            return true;
+        }
 
         /// A point that follows the slipper / foot skin like a slipper vertex at `world` would, bound in the CURRENT pose (the troll's anchor).
         /// Null when the foot is gone.

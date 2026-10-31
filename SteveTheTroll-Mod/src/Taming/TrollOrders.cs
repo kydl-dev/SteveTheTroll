@@ -28,10 +28,10 @@ namespace SteveTheTroll.Taming
             if (view != null && view.IsValid() && !view.IsOwner())
             {
                 // D-066 (TEST-029: "steered by another client" twice): the owner of the troll gives an order -> takes over its steering
-                ModLog.Info("TrollOrders: " + troll.name + " was steered by client " + view.GetZDO().GetOwner() + " - " + p.GetPlayerName() + " takes it over");
+                ModLog.Info("TrollOrders: " + TrollTaming.Tag(troll) + " was steered by client " + view.GetZDO().GetOwner() + " - " + p.GetPlayerName() + " takes it over");
                 view.ClaimOwnership();
             }
-            if (view == null || !view.IsValid() || !view.IsOwner()) { ModLog.Warn("TrollOrders: " + troll.name + " cannot be steered here (valid " + (view != null && view.IsValid()) + ")"); return false; }
+            if (view == null || !view.IsValid() || !view.IsOwner()) { ModLog.Warn("TrollOrders: " + TrollTaming.Tag(troll) + " cannot be steered here (valid " + (view != null && view.IsValid()) + ")"); return false; }
             GameObject source;
             var creature = Look(p, out source);
             string shown = Shown(troll);
@@ -50,7 +50,7 @@ namespace SteveTheTroll.Taming
             }
             bool started = TrollFarming.Begin(troll, focus);
             if (started) Ui.Notify.Show(Loc.T("stevethetroll_gofarm_started", shown, Loc.T(Ui.TrollFocus.KeyOf(focus))), Ui.Notify.Kind.Farm);
-            ModLog.Info("TrollOrders: attack key on nothing - " + troll.name + " farms (focus '" + focus + "') " + started);
+            ModLog.Info("TrollOrders: attack key on nothing - " + TrollTaming.Tag(troll) + " farms (focus '" + focus + "') " + started);
             return started;
         }
 
@@ -116,12 +116,7 @@ namespace SteveTheTroll.Taming
             return Utils.GetPrefabName(g);
         }
 
-        internal static string Shown(Character troll)
-        {
-            var t = troll.GetComponent<Tameable>();
-            string n = t != null ? t.GetText() : "";
-            return string.IsNullOrEmpty(n) ? troll.name : n;
-        }
+        internal static string Shown(Character troll) { return TrollTaming.ShownName(troll); }
 
         sealed class Comparer : System.Collections.Generic.IComparer<RaycastHit>
         {

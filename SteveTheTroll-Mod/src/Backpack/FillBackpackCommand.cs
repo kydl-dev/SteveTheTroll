@@ -46,7 +46,7 @@ namespace SteveTheTroll.Backpack
                 BackpackStore.Write(zdo, i, inv);
             }
             bool sent = troll.GetComponent<Taming.TrollFarmer>() != null || Taming.TrollFarming.Begin(troll, "", true);
-            ModLog.Info("FillBackpackCommand: " + troll.name + " got " + stacks + " stack(s) of " + item + ", farming " + sent);
+            ModLog.Info("FillBackpackCommand: " + Taming.TrollTaming.Tag(troll) + " got " + stacks + " stack(s) of " + item + ", farming " + sent);
             Console.instance.Print("stt_fillbackpack: " + stacks + " stack(s) of " + item + " added; the troll heads home");
         }
     }

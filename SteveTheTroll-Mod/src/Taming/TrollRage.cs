@@ -66,7 +66,7 @@ namespace SteveTheTroll.Taming
             if (Time.time >= _nextLog)
             {
                 _nextLog = Time.time + LogSeconds;
-                ModLog.Verbose("TrollRage: " + name + " -> " + (target != null ? target.name + " " + d.ToString("F1") + " m" : "no creature near - stays by the player, swinging") + ", " + _swings + " swing(s)");
+                ModLog.Verbose("TrollRage: " + TrollTaming.Tag(this) + " -> " + (target != null ? target.name + " " + d.ToString("F1") + " m" : "no creature near - stays by the player, swinging") + ", " + _swings + " swing(s)");
             }
             // D-084 (TEST-036: 0 swings - a wild troll's centre stays 5-9 m away, the old 3.5 m reach was never met): reach = both body radii + the weapon
             float reach = target != null ? ReachTo(me, target) : 2.5f;

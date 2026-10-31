@@ -12,7 +12,7 @@ namespace SteveTheTroll.Ui
     internal sealed class TrollInfo
     {
         internal const char Sep = '|';
-        const int OldFields = 14, MidFields = 16, PackFields = 18, Fields = 19;     // 14 = before attacks / resistances, 16 = before the backpack fill, 18 = before the biome (all still read)
+        const int OldFields = 14, MidFields = 16, PackFields = 18, Fields = 19, DestFields = 20;     // 14 = before attacks / resistances, 16 = before the backpack fill, 18 = before the biome (all still read)
 
         internal string Id = "";            // ZDOID as "user:id"
         internal string Name = "";          // renamed name, "" = not renamed (the view shows "Troll N")
@@ -37,6 +37,8 @@ namespace SteveTheTroll.Ui
         internal int BackpackUsed, BackpackSlots;
         /// D-126: the game's biome name where the troll is / was last seen ("" = not known); the focus drop-down offers its biome items.
         internal string Biome = "";
+        /// D-162: the hub the troll works for (its name); "" = the bed. BedDistance is the distance to THAT place.
+        internal string Dest = "";
 
         /// "Troll N" when not renamed.
         internal string Shown(Func<string, string> text)
@@ -44,7 +46,7 @@ namespace SteveTheTroll.Ui
             return Name.Length > 0 ? Name : (text != null ? text("stevethetroll_troll_default") : "Troll") + " " + Number;
         }
 
-        /// One line for the player's profile. Separator and line breaks in the name are replaced so Decode always gets 19 fields.
+        /// One line for the player's profile. Separator and line breaks in the name are replaced so Decode always gets 20 fields.
         internal string Encode()
         {
             var c = CultureInfo.InvariantCulture;
@@ -53,7 +55,7 @@ namespace SteveTheTroll.Ui
               .Append(Health.ToString("0.#", c)).Append(Sep).Append(MaxHealth.ToString("0.#", c)).Append(Sep).Append(Stars.ToString(c)).Append(Sep)
               .Append(DamageFactor.ToString("0.###", c)).Append(Sep).Append(X.ToString("0.#", c)).Append(Sep).Append(Y.ToString("0.#", c)).Append(Sep)
               .Append(Z.ToString("0.#", c)).Append(Sep).Append(BedDistance.ToString("0.#", c)).Append(Sep).Append(LastSeenTicks.ToString(c)).Append(Sep).Append(Clean(Attacks)).Append(Sep).Append(Clean(Resists))
-              .Append(Sep).Append(BackpackUsed.ToString(c)).Append(Sep).Append(BackpackSlots.ToString(c)).Append(Sep).Append(Clean(Biome));
+              .Append(Sep).Append(BackpackUsed.ToString(c)).Append(Sep).Append(BackpackSlots.ToString(c)).Append(Sep).Append(Clean(Biome)).Append(Sep).Append(Clean(Dest));
             return sb.ToString();
         }
 
@@ -62,7 +64,7 @@ namespace SteveTheTroll.Ui
         {
             if (string.IsNullOrEmpty(line)) return null;
             var f = line.Split(Sep);
-            if ((f.Length != Fields && f.Length != PackFields && f.Length != MidFields && f.Length != OldFields) || f[0].Length == 0) return null;
+            if ((f.Length != DestFields && f.Length != Fields && f.Length != PackFields && f.Length != MidFields && f.Length != OldFields) || f[0].Length == 0) return null;
             var c = CultureInfo.InvariantCulture;
             var t = new TrollInfo { Id = f[0], Name = f[1], Status = f[2], Focus = f[3], Farming = f[4] };
             bool ok = float.TryParse(f[5], NumberStyles.Float, c, out t.Health) & float.TryParse(f[6], NumberStyles.Float, c, out t.MaxHealth)
@@ -76,7 +78,8 @@ namespace SteveTheTroll.Ui
                 ok &= int.TryParse(f[16], NumberStyles.Integer, c, out t.BackpackUsed) & int.TryParse(f[17], NumberStyles.Integer, c, out t.BackpackSlots);
                 if (t.BackpackUsed < 0 || t.BackpackSlots < 0) ok = false;
             }
-            if (f.Length == Fields) t.Biome = f[18];
+            if (f.Length >= Fields) t.Biome = f[18];
+            if (f.Length == DestFields) t.Dest = f[19];
             return ok ? t : null;
         }
 

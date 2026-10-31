@@ -1,0 +1,22 @@
+{
+  "name": "full-backpack-unloads",
+  "description": "A full backpack sends the troll to its hub, it unloads into a depot there and is free again",
+  "timeout": 240,
+  "steps": [
+    { "do": "hook", "name": "stt.reset" },
+    { "do": "give", "prefab": "STT_TrollSlippers", "count": 1, "equip": true },
+    { "do": "hook", "name": "stt.addHub", "args": { "number": 1, "dx": 0, "dz": 25 } },
+    { "do": "hook", "name": "stt.spawnTroll", "args": { "dz": -15 }, "as": "troll" },
+    { "do": "hook", "name": "stt.fillBackpack", "args": { "troll": "troll" } },
+    { "do": "wait", "until": { "check": "hook", "name": "stt.unloading", "args": { "troll": "troll" }, "expect": true }, "timeout": 30 },
+    { "do": "hook", "name": "stt.state", "args": { "troll": "troll" } },
+    { "do": "wait", "until": { "check": "hook", "name": "stt.backpackStacks", "args": { "troll": "troll" }, "expect": 0 }, "timeout": 150 },
+    { "do": "wait", "seconds": 3 }
+  ],
+  "asserts": [
+    { "check": "hook", "name": "stt.backpackStacks", "args": { "troll": "troll" }, "expect": 0 },
+    { "check": "hook", "name": "stt.depotCount", "min": 1, "label": "a depot received the items" },
+    { "check": "hook", "name": "stt.health", "expect": 0 },
+    { "check": "noErrors", "source": "SteveTheTroll" }
+  ]
+}

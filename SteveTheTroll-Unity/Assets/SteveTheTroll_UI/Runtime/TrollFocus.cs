@@ -32,6 +32,7 @@ namespace SteveTheTroll.Ui
         internal static readonly IList<string[]> BiomeChoices = new List<string[]>
         {
             new[] { "Blackwood", "stevethetroll_focus_blackwood", "AshLands" },      // scorched trees
+            new[] { "FlametalOreNew", "stevethetroll_focus_flametal", "AshLands" },  // D-153: Flametal (item prefab FlametalOreNew; the old FlametalOre can no longer be obtained) from the Ashlands veins
             new[] { "BlackMarble", "stevethetroll_focus_blackmarble", "Mistlands" },  // giant remains (skull / ribs -> frac)
             new[] { "Frostwood", "stevethetroll_focus_timberwood", "DeepNorth" },    // Timberwood (item prefab Frostwood) from Deep North trees
             new[] { "GoldOre", "stevethetroll_focus_goldore", "DeepNorth" },         // petrified Gammeltroll (DN_gammeltrollFrac*)

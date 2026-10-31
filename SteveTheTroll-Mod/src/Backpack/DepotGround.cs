@@ -21,7 +21,9 @@ namespace SteveTheTroll.Backpack
         internal const string RepairOp = "STT_GroundLevel";
         internal const float RepairRadius = 7f;
         const string OwnBase = "mud_road_v2";
-        static GameObject _depot, _repair;
+        /// D-135: the Troll Hub's ground (one square op over the whole building).
+        internal const string HubOp = "STT_HubLevel";
+        static GameObject _depot, _repair, _hub;
 
         /// Pure: half side of an axis-aligned square that holds a rectangle of half sizes halfX / halfZ turned any way (= its half diagonal).
         internal static float LevelRadius(float halfX, float halfZ) { return Mathf.Sqrt(halfX * halfX + halfZ * halfZ); }
@@ -37,8 +39,8 @@ namespace SteveTheTroll.Backpack
             Jotunn.Managers.PrefabManager.OnVanillaPrefabsAvailable -= MakeOwn;
             if (_depot == null) _depot = Make(DepotOp, LevelRadius(DepotData.HalfX + Margin, DepotData.HalfZ + Margin) + 0.2f);
             if (_repair == null) _repair = Make(RepairOp, RepairRadius);
+            if (_hub == null) _hub = Make(HubOp, Hub.HubData.Radius + 1.5f);
         }
-
         static GameObject Make(string name, float radius)
         {
             var clone = Jotunn.Managers.PrefabManager.Instance.CreateClonedPrefab(name, OwnBase);
@@ -59,7 +61,7 @@ namespace SteveTheTroll.Backpack
         {
             var db = ObjectDB.instance;
             if (db == null) return;
-            foreach (var go in new[] { _depot, _repair })
+            foreach (var go in new[] { _depot, _repair, _hub })
             {
                 if (go == null) continue;
                 var op = go.GetComponent<TerrainOp>();
@@ -84,6 +86,15 @@ namespace SteveTheTroll.Backpack
             if (!CanLevel) return false;
             Object.Instantiate(_depot, ground, Quaternion.identity);      // TerrainOp.Awake applies itself to the terrain and destroys the object
             ModLog.Info("DepotGround: levelled a " + (2f * _depot.GetComponent<TerrainOp>().m_settings.m_levelRadius).ToString("F1") + " m square at " + ground.ToString("F1"));
+            return true;
+        }
+
+        /// D-135: levels the Troll Hub's square (half side Radius + 1.5 m) to ground.y with ONE op. Expected outcome: true when it was levelled.
+        internal static bool FlattenHub(Vector3 ground)
+        {
+            if (!Registered(_hub)) return false;
+            Object.Instantiate(_hub, ground, Quaternion.identity);
+            ModLog.Info("DepotGround: levelled the Troll Hub square at " + ground.ToString("F1"));
             return true;
         }
 

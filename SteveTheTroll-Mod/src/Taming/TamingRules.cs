@@ -172,6 +172,18 @@ namespace SteveTheTroll.Taming
             return height >= minHeight ? TierOther : TierNone;
         }
 
+        /// D-153 (user 2026-10-31: "make them not attack young trees / bushes in meadows / black forest"): saplings and bushes by prefab name - Bush01, Bush02_en, shrub_2, Beech_small1,
+        /// FirTree_small, ...sapling... A yggdrasil shoot ("YggaShoot_small1") is NOT young growth: it is the top of the default priority. Expected outcome: false for blank names.
+        public static bool IsYoungGrowth(string prefabName)
+        {
+            if (string.IsNullOrEmpty(prefabName)) return false;
+            if (prefabName.StartsWith("YggaShoot", System.StringComparison.OrdinalIgnoreCase)) return false;
+            return prefabName.StartsWith("Bush", System.StringComparison.OrdinalIgnoreCase)
+                || prefabName.StartsWith("shrub", System.StringComparison.OrdinalIgnoreCase)
+                || prefabName.IndexOf("_small", System.StringComparison.OrdinalIgnoreCase) >= 0
+                || prefabName.IndexOf("sapling", System.StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+
         /// Progress 0..100 % for logs (total &lt;= 0 counts as done).
         public static int Percent(float remaining, float total)
         {

@@ -43,6 +43,7 @@ namespace SteveTheTroll
             ModSettings.Bind(Config);
             _cfgWatcher = new ConfigReloader(Config);
             Loc.Register(UiText.En);
+            Loc.Register(HubText.En);               // D-135: Troll Hub + its sign menu
 
             HubTabs.Register(Config);               // the menu = tabs in the KY hub (F6) of KydlCore
 
@@ -55,6 +56,7 @@ namespace SteveTheTroll
                 Backpack.DepotPrefab.Install();     // D-064: troll depot frame prefab (vanilla prefabs)
                 Backpack.DepotGround.Install();     // D-103: own level-ground terrain op for the depot spots
                 Taming.TrollTaming.Install();       // T-008a: the game's Troll becomes tameable (vanilla prefabs, added later by Jotunn)
+                if (ModSettings.HubsOn) Hub.HubPrefab.Install();   // D-135: the Troll Hub piece (needs the level op above)
             }
             ModLog.Verbose("Plugin: set up slippers " + ModSettings.SlippersOn + ", costume " + ModSettings.CostumeOn + ", trolls " + ModSettings.TrollsOn);
             new Harmony(ModGuid).PatchAll(Assembly.GetExecutingAssembly());
@@ -97,11 +99,37 @@ namespace SteveTheTroll
         // D-085 (TEST-037: one exception in TrollZones.Tick, every second, also stopped every tick after it): each tick runs on its own; a
         // failing tick is logged (once per name, then every 60 s) and the others still run.
         static readonly System.Collections.Generic.Dictionary<string, float> TickErrorAt = new System.Collections.Generic.Dictionary<string, float>();
+        // D-139 (user 23:39: "we need to fix the performance hits"): what each per-frame tick of this mod costs, so a hitch can be pinned on it or cleared of it.
+        // Every 5 s (debug log): the total ms the ticks took, the most expensive tick and its worst single call; a single call over SlowTickMs is logged at once.
+        const double SlowTickMs = 15.0;
+        static readonly System.Collections.Generic.Dictionary<string, double> TickTotal = new System.Collections.Generic.Dictionary<string, double>();
+        static readonly System.Collections.Generic.Dictionary<string, double> TickWorst = new System.Collections.Generic.Dictionary<string, double>();
+        static readonly System.Diagnostics.Stopwatch TickClock = new System.Diagnostics.Stopwatch();
+        static float _nextTickStats;
+
+        static void Meter(string name, double ms)
+        {
+            double t, w;
+            TickTotal.TryGetValue(name, out t); TickWorst.TryGetValue(name, out w);
+            TickTotal[name] = t + ms; if (ms > w) TickWorst[name] = ms;
+            if (ms > SlowTickMs) ModLog.Warn("Plugin: tick " + name + " took " + ms.ToString("F1") + " ms in one frame");
+            if (Time.time < _nextTickStats || !ModLog.DebugOn) return;
+            _nextTickStats = Time.time + 5f;
+            var sb = new System.Text.StringBuilder();
+            double all = 0;
+            foreach (var kv in TickTotal) all += kv.Value;
+            foreach (var kv in TickTotal) if (kv.Value >= all * 0.1 || TickWorst[kv.Key] > 5.0) sb.Append(' ').Append(kv.Key).Append(' ').Append(kv.Value.ToString("F1")).Append(" ms (worst ").Append(TickWorst[kv.Key].ToString("F1")).Append(')');
+            ModLog.Verbose("Plugin: ticks of the last 5 s took " + all.ToString("F1") + " ms in total;" + sb);
+            TickTotal.Clear(); TickWorst.Clear();
+        }
+
         static void Run(string name, System.Action tick)
         {
-            try { tick(); }
+            TickClock.Reset(); TickClock.Start();
+            try { tick(); TickClock.Stop(); Meter(name, TickClock.Elapsed.TotalMilliseconds); }
             catch (System.Exception e)
             {
+                TickClock.Stop();
                 float last;
                 if (TickErrorAt.TryGetValue(name, out last) && Time.time - last < 60f) return;
                 TickErrorAt[name] = Time.time;
@@ -119,12 +147,17 @@ namespace SteveTheTroll
             Run("TrollCensus", () => Taming.TrollCensus.Tick());             // D-085: trolls within 500 m of the bed (spawn cap)
             Run("TrollMapPins", () => Ui.TrollMapPins.Tick());               // D-081: a map pin (costume head icon) per own tamed troll
             Run("TrollBedHeal", () => Taming.TrollBedHeal.Tick());           // D-085: +50 HP/s within 50 m of the bed
+            Run("TrollDepot", () => Backpack.TrollDepot.Tick());              // D-159: retry removing empty depots
+            Run("RuntimeHealth", () => Testing.RuntimeHealth.Tick());          // D-160: read-only health report (full backpacks, hub leash, stale hubs, stuck depots)
             Run("BackpackVisual", () => Backpack.BackpackVisual.Tick());
             Run("BackpackPickup", () => Backpack.BackpackPickup.Tick());     // T-008c: wood / ores / scrap within 50 m into the backpack
             Run("TrollOrders", () => Taming.TrollOrders.Tick());             // D-065: attack key (Mouse 4)
             Run("TrollCommands", () => Ui.TrollCommands.Tick());             // D-119: far trolls sent to die from the My trolls tab
             Run("TrollGuard", () => Taming.TrollGuard.Tick());               // D-065 / D-084: creatures going for the player near a troll
             Run("TrollHome", () => Taming.TrollHome.Tick());                 // T-008e: slippers off -> own trolls wait at the bed
+            Run("HubPlacement", () => Hub.HubPlacement.Tick());               // D-135: set bonus active once -> Troll Hub unlocked
+            Run("HubSpeed", () => Hub.HubSpeed.Tick());                       // D-135: half-speed notice
+            Run("HubSignMenu", () => Hub.HubSignMenu.Tick());                 // D-135: Escape closes the sign editor
             Run("TrollIdle", () => Taming.TrollIdle.Tick());                 // D-062: no job for 2 min -> farms on its own
         }
 

@@ -30,7 +30,7 @@ namespace SteveTheTroll.Taming
             bool club = TrollWeapons.HasClub(troll as Humanoid);
             s._towards = club && towards != null && Vector3.Distance(towards.transform.position, troll.transform.position) <= PlayerAimRange ? towards : null;
             s._aim = crowd;
-            ModLog.Info("TrollSlam: " + troll.name + " - " + mobs + " mobs on " + (towards != null ? towards.GetPlayerName() : "?") + " / the troll: " + count + " ground slams " + (club ? "towards the player" : "into the crowd"));
+            ModLog.Info("TrollSlam: " + TrollTaming.Tag(troll) + " - " + mobs + " mobs on " + (towards != null ? towards.GetPlayerName() : "?") + " / the troll: " + count + " ground slams " + (club ? "towards the player" : "into the crowd"));
             return s;
         }
 
@@ -42,7 +42,7 @@ namespace SteveTheTroll.Taming
             bool late = Time.time - _start > MaxSeconds;
             if ((_left <= 0 && !me.InAttack()) || late)
             {
-                ModLog.Info("TrollSlam: " + name + " done (" + (_count - _left) + " slam(s)" + (late ? ", time up" : "") + ")");
+                ModLog.Info("TrollSlam: " + TrollTaming.Tag(this) + " done (" + (_count - _left) + " slam(s)" + (late ? ", time up" : "") + ")");
                 if (_counter) TrollCounter.Done(me);
                 Destroy(this);
                 return false;
@@ -52,9 +52,9 @@ namespace SteveTheTroll.Taming
             lookAt(ai, point);
             if (_left <= 0 || me.InAttack() || Time.time < _next || !ai.IsLookingAt(point, LookAngle, false)) return true;
             var weapon = TrollWeapons.Pick(me, Attack.AttackType.Vertical, false);
-            if (weapon == null) { ModLog.Warn("TrollSlam: " + name + " has no melee attack"); Destroy(this); return false; }
+            if (weapon == null) { ModLog.Warn("TrollSlam: " + TrollTaming.Tag(this) + " has no melee attack"); Destroy(this); return false; }
             if (!me.IsItemEquiped(weapon)) me.EquipItem(weapon, false);
-            if (me.StartAttack(null, false)) { _left--; _next = Time.time + Gap; ModLog.Verbose("TrollSlam: " + name + " slam " + (_count - _left) + " / " + _count + " (" + weapon.m_shared.m_name + ")"); }
+            if (me.StartAttack(null, false)) { _left--; _next = Time.time + Gap; ModLog.Verbose("TrollSlam: " + TrollTaming.Tag(this) + " slam " + (_count - _left) + " / " + _count + " (" + weapon.m_shared.m_name + ")"); }
             return true;
         }
     }

@@ -101,8 +101,11 @@ leg_objs = []
 for s in (1, -1):
     lg = mball("Costume_Leg" + ("R" if s > 0 else "L"))
     up, knee, foot = J[side("LeftUpLeg", s)], J[side("LeftLeg", s)], J[side("LeftFoot", s)]
-    seat = J["Hips"] + Vector((s * 0.06, -0.01, 0.0))
-    capsule(lg, seat, up + Vector((0, 0, -0.04)), 0.13 * S)               # seat / hip of this leg
+    # D-159 (user: "pants had fabric between the legs"): the two seats overlapped across the crotch (centres 0.12 m apart, radius 0.13) and the cloth bridged the legs.
+    # Each leg's seat now sits straight above ITS hip joint with a smaller radius, so the legs stay separate down to the crotch.
+    seat = Vector((up.x, J["Hips"].y - 0.01, J["Hips"].z))
+    capsule(lg, seat, up + Vector((0, 0, -0.04)), 0.115 * S)              # seat / hip of this leg
+    log.append(f"leg {s}: seat x {seat.x:.3f}, gap between the two seats' surfaces = {2 * abs(seat.x) - 2 * 0.115 * S:.3f} m")
     capsule(lg, up, knee, 0.125 * S)
     capsule(lg, knee, Vector((foot.x, foot.y, ANKLE + 0.04)), 0.105 * S)
     leg_objs.append(lg)
@@ -117,6 +120,16 @@ def to_mesh(o, name):
 
 top_m = to_mesh(top, "Costume_Top_Mesh")
 legs_parts = [to_mesh(lg, lg.name + "_Mesh") for lg in leg_objs]
+# D-159 (user: "fabric between the legs"): the two plush legs overlap across the middle (hip joints only 0.2 m apart, leg radius ~0.2 m), so the cloth fused into one sheet between the
+# thighs. Each leg is cut at the body's middle plane (a 2 cm gap) and the cut is closed, so there are two separate trouser legs.
+for lo, sgn in zip(legs_parts, (1, -1)):
+    bm = bmesh.new(); bm.from_mesh(lo.data)
+    geom = bm.verts[:] + bm.edges[:] + bm.faces[:]
+    r = bmesh.ops.bisect_plane(bm, geom=geom, plane_co=(sgn * 0.01, 0, 0), plane_no=(sgn, 0, 0), clear_inner=True)
+    cut = [e for e in r["geom_cut"] if isinstance(e, bmesh.types.BMEdge)]
+    if cut: bmesh.ops.triangle_fill(bm, edges=cut, use_beauty=True)
+    bm.to_mesh(lo.data); bm.free()
+    log.append(f"leg {sgn} cut at the middle plane: {len(lo.data.vertices)} verts, {len(cut)} cut edges, origin {tuple(round(v, 3) for v in lo.matrix_world.translation)}")
 bpy.context.view_layer.update()
 def bvh_one(o):
     me = bpy.data.meshes.new("tmp"); t = bmesh.new(); t.from_mesh(o.data); t.transform(o.matrix_world); t.to_mesh(me); t.free()

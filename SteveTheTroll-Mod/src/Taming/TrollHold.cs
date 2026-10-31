@@ -34,7 +34,7 @@ namespace SteveTheTroll.Taming
             if (Time.time >= _nextLog)
             {
                 _nextLog = Time.time + 10f;
-                ModLog.Verbose("TrollHold: " + c.name + " stands still - " + near.GetPlayerName() + " looks at it, " + Vector3.Distance(near.transform.position, c.transform.position).ToString("F1") + " m away");
+                ModLog.Verbose("TrollHold: " + TrollTaming.Tag(c) + " stands still - " + near.GetPlayerName() + " looks at it, " + Vector3.Distance(near.transform.position, c.transform.position).ToString("F1") + " m away");
             }
             return true;
         }

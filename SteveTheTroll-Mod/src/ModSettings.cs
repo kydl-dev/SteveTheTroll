@@ -18,6 +18,8 @@ namespace SteveTheTroll
         public static ConfigEntry<bool> EnableAll;
         // [Slippers] / [Costume] / [Trolls]: one Enable per functionality (PROJECT_RULES 11); [Trolls] also holds the attack key
         public static ConfigEntry<bool> SlippersEnable, CostumeEnable, TrollsEnable;
+        // [TrollHub]: the Troll Hub building (D-135) - its own functionality switch, needs [Trolls] Enable too
+        public static ConfigEntry<bool> HubEnable, HubAutoAssign;
         public static ConfigEntry<KeyCode> AttackKey;
         // [DebugLog]
         public static ConfigEntry<bool> DebugLog;
@@ -30,6 +32,11 @@ namespace SteveTheTroll
         public static bool SlippersOn { get { return Functions.IsOn(On, SlippersEnable == null || SlippersEnable.Value); } }
         public static bool CostumeOn { get { return Functions.IsOn(On, CostumeEnable == null || CostumeEnable.Value); } }
         public static bool TrollsOn { get { return Functions.IsOn(On, TrollsEnable == null || TrollsEnable.Value); } }
+
+        /// The Troll Hubs (D-135): [General] EnableAll AND [Trolls] Enable AND [TrollHub] Enable. Read at start like the others.
+        public static bool HubsOn { get { return Functions.IsOn(TrollsOn, HubEnable == null || HubEnable.Value); } }
+        /// Trolls with no hub chosen go to the nearest one ([TrollHub] AutoAssign).
+        public static bool HubAuto { get { return HubAutoAssign == null || HubAutoAssign.Value; } }
 
         // --- dev-only fixed values (Tunables): not in the config file, KydlTools changes them for testing -----------------------------------
         // --- T-008a troll taming (D-037 / D-038): the user's numbers. ---
@@ -45,6 +52,8 @@ namespace SteveTheTroll
         public static readonly Tunable<float> FarmQuickRange = new Tunable<float>("TrollTamed", "FarmQuickRange", 20f, 5f, 60f, "Metres: first, fast search around the troll (focus item, then the other allowed items) (user: 20 m).");
         public static readonly Tunable<float> FarmMaxRange = new Tunable<float>("TrollTamed", "FarmMaxRange", 150f, 50f, 200f, "Metres: last search around the troll; nothing here -> it walks to the owner's bed (user: 150 m).");
         public static readonly Tunable<float> FarmReach = new Tunable<float>("TrollTamed", "FarmReach", 2f, 1f, 6f, "Metres (flat) from a tree trunk / log / rock at which a farming troll stops walking and swings (user: 2 m, TEST-021).");
+        public static readonly Tunable<bool> FarmSkipYoung = new Tunable<bool>("TrollTamed", "SkipYoungGrowth", true, "D-153: farming trolls leave saplings and bushes (Bush01, Beech_small, FirTree_small, shrub ...) alone - only full trees, logs, rocks and other tall sources are farmed.");
+        public static readonly Tunable<bool> DepotRemoveEmpty = new Tunable<bool>("TrollBackpack", "RemoveEmptyDepots", true, "D-155: a depot structure built by trolls (frame + its 4 chests) disappears as soon as all its chests are empty. Chests built by players are never touched.");
         public static readonly Tunable<float> AutoFarmSeconds = new Tunable<float>("TrollTamed", "AutoFarmSeconds", 120f, 10f, 600f, "Seconds a newly tamed troll waits at the player for an order; no order -> it farms the default priority on its own (user: 2 minutes).");
         public static readonly Tunable<float> HoldNearPlayerRange = new Tunable<float>("TrollTamed", "HoldNearPlayerRange", 4f, 0f, 15f, "Metres: a tamed troll that is not following stands still while a player is this close (D-063, to open the backpack; 0 = off).");
         public static readonly Tunable<bool> TrollMapPins = new Tunable<bool>("TrollTamed", "MapPins", true, "Shows each own tamed troll on the map (costume head icon) at its live / last known place (D-081).");
@@ -61,7 +70,7 @@ namespace SteveTheTroll
         public static readonly Tunable<float> RageCalmSeconds = new Tunable<float>("TrollTamed", "RageCalmSeconds", 3f, 1f, 15f, "Seconds without a hit on the player before an enraged troll calms down (D-082).");
         public static readonly Tunable<float> CounterIgnoreSeconds = new Tunable<float>("TrollTamed", "CounterIgnoreSeconds", 15f, 0f, 120f, "Seconds a troll ignores hits on itself and keeps farming after it answered a hit (D-084: 3 slams / going for the enemy).");
         public static readonly Tunable<float> CounterChaseSeconds = new Tunable<float>("TrollTamed", "CounterChaseSeconds", 30f, 5f, 120f, "Longest a troll goes after a creature that hit it again after the quiet time (D-084), in seconds.");
-        public static readonly Tunable<float> TrollZoneRadius = new Tunable<float>("TrollTamed", "ZoneRadius", 50f, 0f, 120f, "Metres around each own troll outside your area that stay loaded so it keeps farming (D-084; 0 = off, the game's areas only).");
+        public static readonly Tunable<float> TrollZoneRadius = new Tunable<float>("TrollTamed", "ZoneRadius", 35f, 0f, 120f, "Metres around each own troll outside your area that stay loaded so it keeps farming (D-084; 35 since the user test of 2026-10-31: the furthest troll still farmed; 0 = off, the game's areas only).");
         public static readonly Tunable<float> BedHealPerSecond = new Tunable<float>("TrollTamed", "BedHealPerSecond", 50f, 0f, 500f, "HP per second own tamed trolls regain near the bed (D-085; 0 = off).");
         public static readonly Tunable<float> BedHealRange = new Tunable<float>("TrollTamed", "BedHealRange", 50f, 5f, 200f, "Metres around the bed where own tamed trolls regain BedHealPerSecond (D-085).");
         public static readonly Tunable<float> GuardOwnerRange = new Tunable<float>("TrollTamed", "GuardOwnerRange", 20f, 5f, 60f, "Metres: a troll only runs at a creature that goes for the PLAYER when that creature is this close to the troll (D-081; creatures that attack the troll itself or hit the player: DefendRange).");
@@ -89,6 +98,9 @@ namespace SteveTheTroll
         public static readonly Tunable<float> BackpackPitch = new Tunable<float>("TrollBackpack", "Pitch", 0f, -90f, 90f, "Tilt forward / back, degrees.");
         public static readonly Tunable<float> BackpackYaw = new Tunable<float>("TrollBackpack", "Yaw", 0f, -180f, 180f, "Turn around the up axis, degrees.");
         public static readonly Tunable<float> BackpackRoll = new Tunable<float>("TrollBackpack", "Roll", 0f, -90f, 90f, "Lean left / right, degrees.");
+
+        public static readonly Tunable<bool> ZoneClaimNearBand = new Tunable<bool>("TrollZones", "ClaimNearBand", false, "D-142: claim unowned objects also in kept zones the game already lists as near. OFF since the user tests of 2026-10-31 (the furthest troll still farmed, also with a 35 m radius); switch ON if a troll near the player stops harvesting.");
+        public static readonly Tunable<float> HubSignFontSize = new Tunable<float>("TrollHub", "SignFontSize", 20f, 5f, 100f, "D-135: font size of the Troll Hub sign (user: 20 after the second test; F7 changes it live); the letters stay on one horizontal line, the board grows with the name.");
 
         public static readonly Tunable<float> ExampleSpeed = new Tunable<float>("Example", "ExampleSpeed", 1f, 0f, 10f,
             "Example dev-only value: replace or remove. Read it with ModSettings.ExampleSpeed.Value.");
@@ -197,6 +209,10 @@ namespace SteveTheTroll
                 "Taming and farming of real trolls with the slippers, their backpack and depots, map pins and extra trolls near your bed. Off: none of it is set up. Needs a game restart.");
             AttackKey = c.Bind("Trolls", "AttackKey", KeyCode.Mouse3,
                 "Look at a creature, tree, log or rock and press this: your nearest tamed troll attacks / breaks it (Mouse3 = the mouse's back button, Mouse 4). Looking at nothing: it goes farming. None = off.");
+            HubEnable = c.Bind("TrollHub", "Enable", true,
+                "The Troll Hub building: where your trolls go when you log out and unload, with a sign you can name. Off: it is not added to the game and trolls use the bed. Needs a game restart.");
+            HubAutoAssign = c.Bind("TrollHub", "AutoAssign", true,
+                "On: a troll you did not send to a hub yourself uses the hub nearest to it. Off: only trolls you assigned in the Troll Hub tab use a hub, the others use the bed.");
             DebugLog = c.Bind("DebugLog", "Enable", false,
                 "Writes detailed lines about everything the mod does to the BepInEx log (for bug reports). Leave off while playing normally.");
 
@@ -205,7 +221,7 @@ namespace SteveTheTroll
 
             EnableAll.SettingChanged += (s, e) => ModLog.Info("Config: EnableAll = " + EnableAll.Value + (EnableAll.Value ? ", the mod is on" : ", the mod is inert (no effects or menus)"));
             ModLog.Verbose("Config: bound (EnableAll " + EnableAll.Value + ", slippers " + SlippersOn + ", costume " + CostumeOn + ", trolls " + TrollsOn + ", attack key " + AttackKey.Value + ", debug log " + DebugLog.Value + ")");
-            return EnableAll != null && SlippersEnable != null && CostumeEnable != null && TrollsEnable != null && AttackKey != null && DebugLog != null;
+            return EnableAll != null && SlippersEnable != null && CostumeEnable != null && TrollsEnable != null && HubEnable != null && HubAutoAssign != null && AttackKey != null && DebugLog != null;
         }
     }
 }

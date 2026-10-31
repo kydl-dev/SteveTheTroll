@@ -104,6 +104,7 @@ namespace SteveTheTroll.Tests.Unit
         public void Backpack_OldLine16Fields_ReadWithoutFill()
         {
             var line = Live().Encode();
+            line = line.Substring(0, line.LastIndexOf('|'));     // D-162: the destination
             line = line.Substring(0, line.LastIndexOf('|'));     // D-126: the biome
             line = line.Substring(0, line.LastIndexOf('|'));
             line = line.Substring(0, line.LastIndexOf('|'));

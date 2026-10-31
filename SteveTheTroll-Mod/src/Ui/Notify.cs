@@ -1,4 +1,5 @@
 using Kydl.Common;
+using UnityEngine;
 
 namespace SteveTheTroll.Ui
 {
@@ -51,5 +52,44 @@ namespace SteveTheTroll.Ui
             finally { TrollMessages.Passing = false; }
             return p != null;
         }
-    }
+    
+        static TMPro.TMP_Text _timed;
+        static float _timedUntil;
+
+        /// D-159: a message in `kind`'s colour at the top of the screen that stays exactly `seconds` (a clone of the MessageHud's centre text, hidden by Tick).
+        /// Expected outcome: returns whether it was shown.
+        internal static bool Timed(string text, Kind kind, float seconds)
+        {
+            var hud = MessageHud.instance;
+            ModLog.Verbose("Notify: TIMED " + seconds.ToString("0.#") + " s [" + kind + "] " + text);
+            if (hud == null || hud.m_messageText == null || Player.m_localPlayer == null) return false;
+            if (_timed == null)
+            {
+                // The centre text lives in the full-screen hud root (the left text sits in the TopLeft area and was clipped there).
+                var src = hud.m_messageCenterText != null ? hud.m_messageCenterText : hud.m_messageText;
+                var go = Object.Instantiate(src.gameObject, hud.transform);
+                go.name = "STT_TimedMessage";
+                _timed = go.GetComponent<TMPro.TMP_Text>();
+                var rt = _timed.rectTransform;
+                rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 1f);
+                rt.pivot = new Vector2(0.5f, 1f);
+                rt.sizeDelta = new Vector2(1600f, 60f);
+                rt.anchoredPosition = new Vector2(0f, -170f);
+                _timed.alignment = TMPro.TextAlignmentOptions.Top;
+                _timed.enableWordWrapping = false;
+                _timed.overflowMode = TMPro.TextOverflowModes.Overflow;
+                _timed.richText = true;
+            }
+            _timed.text = Paint(text, kind);
+            _timed.gameObject.SetActive(true);
+            _timedUntil = Time.time + seconds;
+            return true;
+        }
+
+        /// Hides the timed message when its time is up (called every frame by HubSpeed.Tick).
+        internal static void TickTimed()
+        {
+            if (_timed != null && _timed.gameObject.activeSelf && Time.time >= _timedUntil) _timed.gameObject.SetActive(false);
+        }
+}
 }

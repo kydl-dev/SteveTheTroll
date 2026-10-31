@@ -78,5 +78,19 @@ namespace SteveTheTroll.Tests.Unit
             Assert.That(Inside(bed, bed, 15f), Is.True);
             Assert.That(Inside(bed, bed, 0f), Is.False, "radius 0 = off");
         }
+
+        [TestCase(0, 0f, 5, 10f, false)]       // nobody
+        [TestCase(7, 0f, 5, 10f, true)]        // another troll, fresh
+        [TestCase(5, 0f, 5, 10f, false)]       // my own reservation
+        [TestCase(7, 0f, 5, 200f, false)]      // expired
+        public void DepotReserved(int holder, float at, int me, float now, bool expected) { Assert.That((bool)ModAssembly.Call("SteveTheTroll.Backpack.DepotRules", "ReservedByOther", holder, at, me, now, 90f), Is.EqualTo(expected)); }
+
+        [TestCase(4, 4, false, false, false, true)]     // all empty
+        [TestCase(4, 3, false, false, false, false)]    // one chest still has items
+        [TestCase(4, 4, true, false, false, false)]     // a player has one open
+        [TestCase(4, 4, false, true, false, false)]     // a troll is on its way
+        [TestCase(4, 4, false, false, true, false)]     // another structure stands on it
+        [TestCase(0, 0, false, false, false, false)]    // no chest found
+        public void DepotDismantle(int chests, int empty, bool inUse, bool reserved, bool above, bool expected) { Assert.That((bool)ModAssembly.Call("SteveTheTroll.Backpack.DepotRules", "Dismantle", chests, empty, inUse, reserved, above), Is.EqualTo(expected)); }
     }
 }

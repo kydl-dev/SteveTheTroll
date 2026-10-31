@@ -1,0 +1,18 @@
+{
+  "name": "depot-not-empty-stays",
+  "description": "One chest still holds an item: nothing is removed, however long we wait",
+  "timeout": 60,
+  "steps": [
+    { "do": "hook", "name": "stt.reset" },
+    { "do": "hook", "name": "stt.spawnDepot", "args": { "dz": 8 }, "as": "depot" },
+    { "do": "hook", "name": "stt.depotPut", "args": { "frame": "depot", "index": 0, "prefab": "Stone", "count": 5 }, "expect": true },
+    { "do": "hook", "name": "stt.depotPut", "args": { "frame": "depot", "index": 3, "prefab": "Wood", "count": 5 }, "expect": true },
+    { "do": "hook", "name": "stt.depotTake", "args": { "frame": "depot", "index": 0 } },
+    { "do": "wait", "seconds": 12 }
+  ],
+  "asserts": [
+    { "check": "hook", "name": "stt.depotCount", "expect": 1 },
+    { "check": "hook", "name": "stt.depotItems", "args": { "frame": "depot" }, "expect": 1 },
+    { "check": "noErrors", "source": "SteveTheTroll" }
+  ]
+}

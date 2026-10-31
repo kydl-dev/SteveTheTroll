@@ -8,6 +8,14 @@
   A switched-off part is not set up at all: restart the game after changing it.
 - The attack key moved from `[Controls] AttackKey` to `[Trolls] AttackKey` (set it again if you changed it).
 - `[DebugLog] Enable` writes detailed lines to the BepInEx log.
+- **Troll Hub**: a big building you make with the hammer (KY-Items; 50 wood, 20 copper ore, 20 tin ore, 20 resin, 50 stone) once the Steve The Troll set bonus has been active.
+  Up to 10 per player, at least 1000 m apart, each serves a 500 m circle. Trolls go there when you log out, unload there and heal there like at the bed;
+  a troll uses the hub you assigned in the new **Troll Hub** tab (F6) or the nearest one (`[TrollHub] AutoAssign`). Each hub has a sign (HUB 1, 2, 3 ...)
+  you can rename and style with the pen in the tab or with E on the sign. With hubs on and the set bonus active, trolls with no hub within 750 m work at half speed
+  and trolls inside a hub circle are 50 % faster than vanilla (instead of 25 %). Removing a hub with the hammer gives back what it cost. `[TrollHub] Enable` switches it off.
+- Hub window 15 % wider; the Slippers / Costume / My trolls / Troll work / Trolls tabs use the Settings tab's text size.
+- Far-troll farming costs much less: the zones around far trolls are searched once a second instead of on every game object update (fewer stutters with many trolls).
+- Safer little trolls on the slippers: when the skin reading goes wrong they follow the foot instead of ending up under the sole.
 
 ## 1.0.0
 - First release.

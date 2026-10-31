@@ -9,17 +9,24 @@ namespace Kydl.Ui
     /// squeezed into the window (the empty lines) and no bar was drawn. Here the content is an absolute child that is never squeezed, moved by
     /// the mouse wheel or the bar on the right (drag the handle or click the track).
     /// </summary>
+#if KYDL_CORE_PUBLIC
+    public sealed class UiScroll
+#else
     internal sealed class UiScroll
+#endif
     {
         const float BarWidth = 8f, WheelStep = 60f, MinThumb = 28f;
 
-        internal readonly VisualElement Root;          // add this to the parent
-        internal readonly VisualElement Content;       // add the scrolled items here
+        /// <summary>The scroll area's root: add this to the parent element.</summary>
+        public readonly VisualElement Root;
+        /// <summary>The scrolled content: add the items that should scroll here.</summary>
+        public readonly VisualElement Content;
         readonly VisualElement _viewport, _bar, _thumb;
         readonly string _name;
         float _offset;
 
-        internal UiScroll(string name)
+        /// <summary>Makes a scroll area; `name` only labels its log lines.</summary>
+        public UiScroll(string name)
         {
             _name = name;
             Root = new VisualElement { name = "kydl-scroll", userData = this };
@@ -60,8 +67,10 @@ namespace Kydl.Ui
         float ViewH { get { return _viewport.layout.height; } }
         float Max { get { float m = ContentH - ViewH; return m > 0f && !float.IsNaN(m) ? m : 0f; } }
 
-        internal void ScrollBy(float d) { _offset += d; Clamp(); }
-        internal void ScrollTo(float y) { _offset = y; Clamp(); }
+        /// <summary>Scrolls by d px (positive = down); the offset stays inside the content.</summary>
+        public void ScrollBy(float d) { _offset += d; Clamp(); }
+        /// <summary>Scrolls to y px from the top; the offset stays inside the content.</summary>
+        public void ScrollTo(float y) { _offset = y; Clamp(); }
 
         /// Keeps the offset in range, moves the content, sizes and places the handle; the bar hides when everything fits.
         void Clamp()

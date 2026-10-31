@@ -60,7 +60,7 @@ namespace SteveTheTroll.Backpack
             foreach (var col in troll.GetComponentsInChildren<Collider>(true)) if (col != box && col.GetComponentInParent<BackpackChest>() == null) { Physics.IgnoreCollision(box, col); ignored++; }
             var c = copy.AddComponent<BackpackChest>();
             c.Index = index; c.Troll = troll;
-            ModLog.Verbose("BackpackChest: " + troll.name + " chest " + (index + 1) + " collider " + b.size.ToString("F2") + " m (local), layer " + layer + ", ignores " + ignored + " troll collider(s)");
+            ModLog.Verbose("BackpackChest: " + Taming.TrollTaming.Tag(troll) + " chest " + (index + 1) + " collider " + b.size.ToString("F2") + " m (local), layer " + layer + ", ignores " + ignored + " troll collider(s)");
             return c;
         }
     }

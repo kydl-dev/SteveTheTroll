@@ -23,28 +23,23 @@ namespace SteveTheTroll.Taming
             var a = troll.gameObject.AddComponent<TrollArrival>();
             a._player = player; a._ai = ai; a._start = Time.time;
             ai.SetFollowTarget(player.gameObject);
-            ModLog.Info("TrollArrival: " + troll.name + " walks to " + player.GetPlayerName() + " (" + Vector3.Distance(troll.transform.position, player.transform.position).ToString("F1") + " m)");
+            ModLog.Info("TrollArrival: " + TrollTaming.Tag(troll) + " walks to " + player.GetPlayerName() + " (" + Vector3.Distance(troll.transform.position, player.transform.position).ToString("F1") + " m)");
             return a;
         }
 
-        string Shown()
-        {
-            var t = GetComponent<Tameable>();
-            string n = t != null ? t.GetText() : "";
-            return string.IsNullOrEmpty(n) ? name : n;
-        }
+        string Shown() { return TrollTaming.ShownName(this); }
 
         void Update()
         {
             if (Time.time < _next) return;
             _next = Time.time + CheckSeconds;
-            if (_player == null || _ai == null) { ModLog.Verbose("TrollArrival: " + name + " lost its player / AI - done"); Destroy(this); return; }
+            if (_player == null || _ai == null) { ModLog.Verbose("TrollArrival: " + TrollTaming.Tag(this) + " lost its player / AI - done"); Destroy(this); return; }
             float d = Vector3.Distance(transform.position, _player.transform.position);
             bool late = Time.time - _start > GiveUpSeconds;
             if (d > ArriveMetres && !late) return;
             TrollTaming.StopFollow(_ai);
             _ai.SetPatrolPoint();
-            ModLog.Info("TrollArrival: " + name + (late ? " gave up walking after " + GiveUpSeconds + " s" : " arrived (" + d.ToString("F1") + " m)") + " - stays and waits for orders");
+            ModLog.Info("TrollArrival: " + TrollTaming.Tag(this) + (late ? " gave up walking after " + GiveUpSeconds + " s" : " arrived (" + d.ToString("F1") + " m)") + " - stays and waits for orders");
             if (!late && _player == Player.m_localPlayer) Ui.Notify.Show(Loc.T("stevethetroll_troll_waits", Shown()), Ui.Notify.Kind.Good);
             Destroy(this);
         }

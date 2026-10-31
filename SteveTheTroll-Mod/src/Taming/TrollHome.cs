@@ -49,7 +49,7 @@ namespace SteveTheTroll.Taming
                 int id = c.GetInstanceID();
                 if (Sent.Contains(id))
                 {
-                    if (ai.GetFollowTarget() != null) { TrollTaming.StopFollow(ai); ModLog.Info("TrollHome: " + c.name + " was told to follow without slippers - goes back to the bed"); Sent.Remove(id); }
+                    if (ai.GetFollowTarget() != null) { TrollTaming.StopFollow(ai); ModLog.Info("TrollHome: " + TrollTaming.Tag(c) + " was told to follow without slippers - goes back to the bed"); Sent.Remove(id); }
                     else continue;
                 }
                 Sent.Add(id);
@@ -64,7 +64,7 @@ namespace SteveTheTroll.Taming
         /// D-081 (TEST-034: 2 of 5 trolls, 110 m and 180 m from the bed, stayed where they were): own tamed trolls that are not loaded around the
         /// player are moved through their saved data (ZDO position, follow cleared, patrol point at the bed) - the next load puts them at the bed.
         /// Only the trolls this client may write (single player / own). Expected outcome: how many were moved.
-        static int Unloaded(long me, Vector3 bed, int already)
+        static int Unloaded(long me, Vector3 bed, bool hasBed, int already)
         {
             var zm = ZDOMan.instance;
             if (zm == null) return 0;
@@ -77,15 +77,18 @@ namespace SteveTheTroll.Taming
                 if (z == null || Done.Contains(z.m_uid) || !z.GetBool(ZDOVars.s_tamed, false) || z.GetLong(TrollTaming.OwnerKey, 0L) != me) continue;
                 if (z.HasOwner() && !z.IsOwner()) { ModLog.Info("TrollHome: logout - unloaded troll " + z.GetString(ZDOVars.s_tamedName, "?") + " is run by another client - left"); continue; }
                 if (z.GetFloat(ZDOVars.s_health, 1f) <= 0f) continue;
-                var spot = TrollHomeSpot.Spot(bed, already + moved);          // D-097: 15 m out, not in the house
                 var was = z.GetPosition();
+                var hub = Hub.HubRegistry.For(me, was, z.GetInt(Hub.HubRegistry.AssignKey, 0));       // D-135: its Troll Hub, else the bed
+                if (hub == null && !hasBed) continue;
+                var anchor = hub != null ? hub.Pos : bed;
+                var spot = TrollHomeSpot.Spot(anchor, already + moved);       // D-097: 15 m out, not in the house
                 z.SetPosition(spot);
                 z.Set(ZDOVars.s_follow, "");
                 z.Set(ZDOVars.s_patrolPoint, spot);
-                z.Set(ZDOVars.s_patrol, true);
+                z.Set(ZDOVars.s_patrol, false);        // D-144: no patrol order - an unloaded troll stands at its spot (user saw Steve 1 run around the hub for 9 min); a full backpack goes to the depot by TrollIdle
                 TrollRegistry.MovedTo(z.GetString(TrollRegistry.IdKey, ""), spot);
                 moved++;
-                ModLog.Info("TrollHome: logout - unloaded " + z.GetString(ZDOVars.s_tamedName, "?") + " moved from " + was.ToString("F0") + " (" + Vector3.Distance(was, bed).ToString("F0") + " m from the bed) to " + spot.ToString("F1"));
+                ModLog.Info("TrollHome: logout - unloaded " + z.GetString(ZDOVars.s_tamedName, "?") + " moved from " + was.ToString("F0") + " (" + Vector3.Distance(was, anchor).ToString("F0") + " m from the " + (hub != null ? hub.Name : "bed") + ") to " + spot.ToString("F1"));
             }
             ModLog.Verbose("TrollHome: logout - " + list.Count + " troll ZDO(s) known here, " + moved + " unloaded own one(s) moved");
             return moved;
@@ -98,8 +101,9 @@ namespace SteveTheTroll.Taming
             {
                 var p = Player.m_localPlayer;
                 var profile = Game.instance != null ? Game.instance.GetPlayerProfile() : null;
-                if (p == null || profile == null || !profile.HaveCustomSpawnPoint()) return;
-                var bed = profile.GetCustomSpawnPoint();
+                bool hasBed = profile != null && profile.HaveCustomSpawnPoint();
+                if (p == null || (!hasBed && !ModSettings.HubsOn)) return;
+                var bed = hasBed ? profile.GetCustomSpawnPoint() : Vector3.zero;
                 int moved = 0;
                 foreach (var c in Character.GetAllCharacters())
                 {
@@ -108,17 +112,19 @@ namespace SteveTheTroll.Taming
                     var ai = c.GetComponent<MonsterAI>();
                     if (ai == null || view == null || !view.IsValid() || !view.IsOwner()) continue;
                     var f = c.GetComponent<TrollFarmer>(); if (f != null) Object.Destroy(f);
-                    var spot = TrollHomeSpot.Spot(bed, moved);                 // D-097: 15 m out, not in the house
+                    Vector3 anchor;
+                    if (!Hub.HubRegistry.Anchor(c, bed, out anchor) && !hasBed) continue;     // D-135: Troll Hub first, else the bed
+                    var spot = TrollHomeSpot.Spot(anchor, moved);              // D-097: 15 m out, not in the house
                     TrollTaming.StopFollow(ai);
                     c.transform.position = spot;
                     var body = c.GetComponent<Rigidbody>(); if (body != null) body.position = spot;
                     view.GetZDO().SetPosition(spot);
                     if (SetPatrolAt != null) SetPatrolAt(ai, spot);
                     moved++;
-                    ModLog.Info("TrollHome: logout - " + c.name + " put near the bed at " + spot.ToString("F1") + " (" + Vector3.Distance(spot, bed).ToString("F0") + " m)");
+                    ModLog.Info("TrollHome: logout - " + TrollTaming.Tag(c) + " put near the bed at " + spot.ToString("F1") + " (" + Vector3.Distance(spot, bed).ToString("F0") + " m)");
                     var z = view.GetZDO(); if (z != null) Done.Add(z.m_uid);
                 }
-                moved += Unloaded(p.GetPlayerID(), bed, moved);
+                moved += Unloaded(p.GetPlayerID(), bed, hasBed, moved);
                 Done.Clear();
             }
         }

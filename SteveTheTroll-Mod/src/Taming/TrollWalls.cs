@@ -34,9 +34,9 @@ namespace SteveTheTroll.Taming
         /// Mouse4 on a wall: the troll walks to it and swings until it breaks. Expected outcome: whether the troll took the order.
         internal static bool Order(Character troll, GameObject wall, string focus)
         {
-            if (!Breaks(troll) || !IsWall(wall)) { ModLog.Info("TrollWalls: " + (troll != null ? troll.name : "?") + " (level " + (troll != null ? troll.GetLevel() : 0) + ") cannot break " + (wall != null ? wall.name : "?") + " - only 2-star trolls break fortress walls"); return false; }
+            if (!Breaks(troll) || !IsWall(wall)) { ModLog.Info("TrollWalls: " + (troll != null ? TrollTaming.Tag(troll) : "?") + " (level " + (troll != null ? troll.GetLevel() : 0) + ") cannot break " + (wall != null ? wall.name : "?") + " - only 2-star trolls break fortress walls"); return false; }
             bool ok = TrollFarming.BeginOn(troll, wall, focus);
-            ModLog.Info("TrollWalls: " + troll.name + " sent at fortress wall " + wall.name + " " + ok);
+            ModLog.Info("TrollWalls: " + TrollTaming.Tag(troll) + " sent at fortress wall " + wall.name + " " + ok);
             return ok;
         }
 

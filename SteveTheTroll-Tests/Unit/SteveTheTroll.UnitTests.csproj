@@ -28,6 +28,12 @@
   <ItemGroup Condition="'$(KydlQuality)' != 'true'">
     <!-- which functionalities are on (PROJECT_RULES 11) -->
     <Compile Include="..\..\SteveTheTroll-Mod\src\Functions.cs" Link="Mod\Functions.cs" />
+    <!-- D-135 Troll Hub: pure rules + the building's data -->
+    <Compile Include="..\..\SteveTheTroll-Mod\src\Hub\HubRules.cs" Link="Mod\HubRules.cs" />
+    <Compile Include="..\..\SteveTheTroll-Mod\src\Taming\IdleRules.cs" Link="Mod\IdleRules.cs" />
+    <Compile Include="..\..\SteveTheTroll-Mod\src\Backpack\DepotRules.cs" Link="Mod\DepotRules.cs" />
+    <Compile Include="..\..\SteveTheTroll-Mod\src\Taming\HealthRules.cs" Link="Mod\HealthRules.cs" />
+    <Compile Include="..\..\SteveTheTroll-Mod\src\Hub\HubData.cs" Link="Mod\HubData.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="UnityEngine.CoreModule"><HintPath>$(ValheimRefs)\UnityEngine.CoreModule.dll</HintPath><Private>true</Private></Reference>

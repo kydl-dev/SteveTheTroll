@@ -67,7 +67,7 @@ namespace SteveTheTroll.Taming
             {
                 id = Guid.NewGuid().ToString("N").Substring(0, 12);
                 zdo.Set(IdKey, id);
-                ModLog.Verbose("TrollRegistry: " + troll.name + " got id " + id);
+                ModLog.Verbose("TrollRegistry: " + TrollTaming.Tag(troll) + " got id " + id);
             }
             return id;
         }
@@ -103,7 +103,7 @@ namespace SteveTheTroll.Taming
             var t = Known.Find(k => k.Id == id);
             if (t == null) return;
             t.X = pos.x; t.Y = pos.y; t.Z = pos.z;
-            t.BedDistance = BedDistance(pos);
+            SetDestination(t, pos, Hub.HubRegistry.For(Player.m_localPlayer != null ? Player.m_localPlayer.GetPlayerID() : 0L, pos, 0));
             t.Biome = BiomeAt(pos);
             t.LastSeenTicks = DateTime.UtcNow.Ticks;
             Save();
@@ -121,6 +121,7 @@ namespace SteveTheTroll.Taming
             var p = Player.m_localPlayer;
             if (p == null) return false;
             Load();
+            _forceRead = force;
             long me = p.GetPlayerID();
             int live = 0;
             bool changed = false;
@@ -153,6 +154,14 @@ namespace SteveTheTroll.Taming
             return true;
         }
 
+        // D-142 (test run 235053: the refresh took 20 - 38 ms every 2 s with six trolls): the cheap values (health, position, status, focus, name) are read every refresh, the
+        // costly ones only now and then - attack / resistance texts (localised strings) every SlowSeconds, the backpack fill every BackpackSeconds, the biome when the troll moved
+        // BiomeMoveMeters. Opening a tab (force) reads everything.
+        const float SlowSeconds = 30f, BackpackSeconds = 6f, BiomeMoveMeters = 48f;
+        static readonly Dictionary<string, float> SlowAt = new Dictionary<string, float>(), PackAt = new Dictionary<string, float>();
+        static readonly Dictionary<string, Vector3> BiomeFrom = new Dictionary<string, Vector3>();
+        static bool _forceRead;
+
         static void Read(Character c, TrollInfo t)
         {
             var zdo = TrollTaming.Zdo(c);
@@ -162,7 +171,7 @@ namespace SteveTheTroll.Taming
             {
                 zdo.Set(FocusKey, pending);
                 PendingFocus.Remove(t.Id);
-                ModLog.Info("TrollRegistry: pending focus '" + pending + "' written to " + c.name + " [" + t.Id + "]");
+                ModLog.Info("TrollRegistry: pending focus '" + pending + "' written to " + TrollTaming.Tag(c));
             }
             var tame = c.GetComponent<Tameable>();
             t.Loaded = true;
@@ -170,17 +179,31 @@ namespace SteveTheTroll.Taming
             t.Status = StatusOf(c);
             t.Focus = zdo != null ? zdo.GetString(FocusKey, t.Focus) : t.Focus;
             t.Farming = TrollFarming.Farming(c);
-            t.Attacks = AttacksOf(c);
-            t.Resists = ResistsOf(c);
+            float now = Time.time, last;
+            if (_forceRead || !SlowAt.TryGetValue(t.Id, out last) || now - last >= SlowSeconds)
+            {
+                SlowAt[t.Id] = now;
+                t.Attacks = AttacksOf(c);
+                t.Resists = ResistsOf(c);
+            }
             t.Health = c.GetHealth();
             t.MaxHealth = c.GetMaxHealth();
             t.Stars = Math.Max(0, c.GetLevel() - 1);
             t.DamageFactor = ModSettings.TamedDamageFactor.Value;
             var pos = c.transform.position;
             t.X = pos.x; t.Y = pos.y; t.Z = pos.z;
-            t.BedDistance = BedDistance(pos);
-            t.Biome = BiomeAt(pos);                                                         // D-126: the focus drop-down's biome items
-            Backpack.BackpackStore.Fill(zdo, out t.BackpackUsed, out t.BackpackSlots);     // D-096
+            SetDestination(t, pos, Hub.HubRegistry.For(c));
+            Vector3 from;
+            if (_forceRead || t.Biome.Length == 0 || !BiomeFrom.TryGetValue(t.Id, out from) || (pos - from).sqrMagnitude > BiomeMoveMeters * BiomeMoveMeters)
+            {
+                t.Biome = BiomeAt(pos);                                                     // D-126: the focus drop-down's biome items
+                BiomeFrom[t.Id] = pos;
+            }
+            if (_forceRead || !PackAt.TryGetValue(t.Id, out last) || now - last >= BackpackSeconds)
+            {
+                PackAt[t.Id] = now;
+                Backpack.BackpackStore.Fill(zdo, out t.BackpackUsed, out t.BackpackSlots);     // D-096
+            }
             t.LastSeenTicks = DateTime.UtcNow.Ticks;
         }
 
@@ -193,6 +216,13 @@ namespace SteveTheTroll.Taming
             if (c.GetComponent<TrollArrival>() != null) return "stevethetroll_status_coming";
             if (c.GetComponent<TrollFarmer>() != null) return "stevethetroll_status_farming";
             return ai.GetFollowTarget() != null ? "stevethetroll_status_following" : "stevethetroll_status_staying";
+        }
+
+        /// D-162 (user: "in the page where it says troll distance to bed, say hub when there are hubs"): the distance is to the troll's hub (named) when it has one, else to the bed.
+        static void SetDestination(TrollInfo t, Vector3 pos, Hub.HubInfo hub)
+        {
+            if (hub != null) { t.Dest = hub.Name; t.BedDistance = Hub.HubRules.Flat(hub.Pos - pos); }
+            else { t.Dest = ""; t.BedDistance = BedDistance(pos); }
         }
 
         /// Metres from the local player's bed (spawn point), -1 without one.
@@ -243,7 +273,7 @@ namespace SteveTheTroll.Taming
             bool club = false;
             if (h != null) foreach (var it in h.GetInventory().GetAllItems()) if (it.m_dropPrefab != null && it.m_dropPrefab.name.StartsWith("troll_log")) club = true;
             string name = TamingRules.NextName(club ? "Steve" : "Spencer", names);
-            ModLog.Verbose("TrollRegistry: name for " + troll.name + ": club " + club + ", taken [" + string.Join(", ", names.ToArray()) + "] -> " + name);
+            ModLog.Verbose("TrollRegistry: name for " + TrollTaming.Tag(troll) + ": club " + club + ", taken [" + string.Join(", ", names.ToArray()) + "] -> " + name);
             return name;
         }
 

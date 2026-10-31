@@ -16,6 +16,7 @@ namespace SteveTheTroll.Fit
         public static readonly Quaternion MeshToFoot = Quaternion.Euler(0f, 180f, 0f);     // mesh toe -Z -> foot forward +Z
         public const float BlendWidth = FitGeometry.ToeBlendWidth;                          // m, foot -> toe weight blend around the toe joint
         public const string RootName = "SteveTheTroll_Slipper";
+        public const string SocketName = "TrollSocket";                                    // D-147: the prefab child that says where and which way the mini troll stands
 
         public sealed class Part
         {
@@ -54,10 +55,30 @@ namespace SteveTheTroll.Fit
                 if (mf.sharedMesh == null || mr == null) continue;
                 parts.Add(BuildPart(root, mf, mr, foot, toe, fwd, fromSkin ? skin : null));
             }
+            AddSocket(partsPrefab, root);
             TrollFitMath.Log("SlipperFit: " + root.name + " at " + pos.ToString("F3") + ", foot forward " + fwd.ToString("F2") + ", scale " + scale.ToString("F2") + " x width " + width.ToString("F2")
                 + ", weights from " + (fromSkin ? "the player's skin (" + skin.Count + " source verts)" : "foot + toe") + ", " + parts.Count + " part(s): "
                 + string.Join(", ", parts.ConvertAll(p => p.Name + " (" + p.ToeWeighted + " toe verts, " + p.Renderer.bones.Length + " bones)").ToArray()));
             return parts;
+        }
+
+        /// D-147: copies the prefab's TrollSocket (position + rotation relative to the prefab root) under the slipper root, so it carries the slipper scale / width.
+        /// Its +Z is the way the troll faces. Missing socket = Warn (the caller then has no anchor).
+        static void AddSocket(GameObject partsPrefab, Transform root)
+        {
+            var src = FindSocket(partsPrefab.transform);
+            if (src == null) { TrollFitMath.Warn("SlipperFit: prefab '" + partsPrefab.name + "' has no '" + SocketName + "' child - the troll has no anchor (rebuild the bundle)"); return; }
+            var s = new GameObject(SocketName).transform;
+            s.SetParent(root, false);
+            s.localPosition = src.localPosition;
+            s.localRotation = src.localRotation;
+            TrollFitMath.Log("SlipperFit: " + root.name + " socket at " + s.position.ToString("F3") + ", faces " + s.forward.ToString("F2"));
+        }
+
+        static Transform FindSocket(Transform t)
+        {
+            foreach (var c in t.GetComponentsInChildren<Transform>(true)) if (c.name == SocketName) return c;
+            return null;
         }
 
         static Part BuildPart(Transform root, MeshFilter mf, MeshRenderer mr, Transform foot, Transform toe, Vector3 fwd, SkinTransfer skin)

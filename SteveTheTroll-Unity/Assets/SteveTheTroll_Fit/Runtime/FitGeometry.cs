@@ -219,6 +219,73 @@ namespace SteveTheTroll.Fit
             return true;
         }
 
+        /// The glue frame to use (bug 2026-10-30: the frame of three skin points 4 cm apart can go wrong and hang the troll under the slipper):
+        /// the skin frame while it stays within maxDegrees of the frame the foot bone predicts, otherwise the foot's.
+        public static Quaternion SafeFrame(Quaternion skinFrame, Quaternion footFrame, float maxDegrees, out bool usedFoot)
+        {
+            usedFoot = Quaternion.Angle(skinFrame, footFrame) > maxDegrees;
+            return usedFoot ? footFrame : skinFrame;
+        }
+
+        /// D-146: whether a troll that stays tilted should be placed and glued again. Only when it stayed tilted long enough, the player stands still on the ground
+        /// and is NOT settling in (spawn / teleport / bed / emote / sitting): then the foot itself is tilted, so a new glue cannot help (test run 235053: tilted
+        /// 72 deg twice right after login, the second glue changed nothing, 4 s later the tilt was 4 - 7 deg).
+        public static bool ShouldRebind(float tiltedSeconds, float afterSeconds, bool grounded, float speed, float stillSpeed, bool settling)
+        {
+            if (settling || !grounded) return false;
+            if (tiltedSeconds < afterSeconds) return false;
+            return speed <= stillSpeed;
+        }
+
+        /// D-147: the troll's facing for a socket: the socket's forward flattened onto the plane perpendicular to the player's up (so the troll stands upright whatever the foot does);
+        /// `fallback` (also flattened) when the socket points straight along up. Returns a unit horizontal forward (the caller builds the rotation: LookRotation is an engine call).
+        public static Vector3 UprightForward(Vector3 socketForward, Vector3 up, Vector3 fallback)
+        {
+            up.Normalize();
+            var f = Vector3.ProjectOnPlane(socketForward, up);
+            if (f.sqrMagnitude < 1e-6f) f = Vector3.ProjectOnPlane(fallback, up);
+            if (f.sqrMagnitude < 1e-6f) f = Vector3.ProjectOnPlane(Vector3.forward, up);
+            if (f.sqrMagnitude < 1e-6f) f = Vector3.ProjectOnPlane(Vector3.right, up);
+            return f.normalized;
+        }
+
+        /// D-157: turns the heading `prev` towards `target` (both unit, flat against `up`) by at most `maxDegrees`. A foot that pitches steeply (toe up / down in a stride) makes the flattened
+        /// socket direction swing fast near the vertical (test 095924: 61 deg in one frame); the troll follows it with a turn-rate limit instead. Expected outcome: `target` when it is
+        /// within maxDegrees of `prev`, else `prev` turned maxDegrees the short way; `target` for a zero `prev` (first frame).
+        public static Vector3 StepHeading(Vector3 prev, Vector3 target, float maxDegrees, Vector3 up)
+        {
+            if (prev.sqrMagnitude < 1e-6f) return target;
+            float angle = Vector3.SignedAngle(prev, target, up);
+            if (Mathf.Abs(angle) <= maxDegrees) return target;
+            // Rodrigues' rotation about `up` (no engine call, so it is unit-testable)
+            float r = Mathf.Sign(angle) * maxDegrees * Mathf.Deg2Rad, c = Mathf.Cos(r), sn = Mathf.Sin(r);
+            var axis = up.normalized;
+            return prev * c + Vector3.Cross(axis, prev) * sn + axis * (Vector3.Dot(axis, prev) * (1f - c));
+        }
+
+        /// D-159 (user: slipper trolls went under the slipper while running): the troll's up axis = the socket's up (it turns with the foot, so the troll leans with the slipper instead of
+        /// staying upright at a moving anchor), but never more than `maxDegrees` away from the player's up. Expected outcome: a unit vector; `playerUp` when socketUp is zero.
+        public static Vector3 LeanUp(Vector3 playerUp, Vector3 socketUp, float maxDegrees)
+        {
+            playerUp.Normalize();
+            if (socketUp.sqrMagnitude < 1e-6f) return playerUp;
+            socketUp.Normalize();
+            float cos = Mathf.Clamp(Vector3.Dot(playerUp, socketUp), -1f, 1f);
+            float angle = Mathf.Acos(cos) * Mathf.Rad2Deg;
+            if (angle <= maxDegrees) return socketUp;
+            var axis = Vector3.Cross(playerUp, socketUp);
+            if (axis.sqrMagnitude < 1e-8f) return playerUp;
+            axis.Normalize();
+            float r = maxDegrees * Mathf.Deg2Rad, c = Mathf.Cos(r), sn = Mathf.Sin(r);
+            return (playerUp * c + Vector3.Cross(axis, playerUp) * sn + axis * (Vector3.Dot(axis, playerUp) * (1f - c))).normalized;
+        }
+
+        /// Whether two points are at most maxMeters apart (D-137: the glued troll against where the foot bone puts it).
+        public static bool WithinMeters(Vector3 a, Vector3 b, float maxMeters)
+        {
+            return (a - b).sqrMagnitude <= maxMeters * maxMeters;
+        }
+
         /// Corner i (0..7) of a box: bit 0 = x max, bit 1 = y max, bit 2 = z max.
         public static Vector3 BoxCorner(Bounds b, int i)
         {

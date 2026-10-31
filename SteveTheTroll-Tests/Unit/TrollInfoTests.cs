@@ -100,6 +100,29 @@ namespace SteveTheTroll.Tests.Unit
             Assert.That(g[3].Rows[1].Value, Is.EqualTo("stevethetroll_troll_nobed"));
         }
 
+        [Test]
+        public void Destination_RoundTrip_And_OldLineWithoutIt_ReadsAsBed()
+        {
+            var t = Sample(); t.Dest = "Hub 2";
+            var back = TrollInfo.Decode(t.Encode());
+            Assert.That(back.Dest, Is.EqualTo("Hub 2"));
+            string old = t.Encode(); old = old.Substring(0, old.LastIndexOf(TrollInfo.Sep));       // the 19-field line of before D-162
+            var older = TrollInfo.Decode(old);
+            Assert.That(older, Is.Not.Null);
+            Assert.That(older.Dest, Is.EqualTo(""));
+        }
+
+        [Test]
+        public void Position_Row_SaysHub_WhenTheTrollHasOne_AndBed_Otherwise()
+        {
+            var t = Sample(); t.Loaded = true; t.Dest = "Hub 2";
+            var g = TrollDetailsBuilder.Build(t, k => k == "stevethetroll_troll_hubdist" ? "Distance from {0}" : k, DateTime.UtcNow.Ticks);
+            Assert.That(g[3].Rows[1].Label, Is.EqualTo("Distance from Hub 2"));
+            t.Dest = "";
+            g = TrollDetailsBuilder.Build(t, K, DateTime.UtcNow.Ticks);
+            Assert.That(g[3].Rows[1].Label, Is.EqualTo("stevethetroll_troll_bed"));
+        }
+
         [TestCase(30L, "30 s")]
         [TestCase(600L, "10 min")]
         [TestCase(5400L, "1.5 h")]

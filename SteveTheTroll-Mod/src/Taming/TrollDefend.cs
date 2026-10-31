@@ -56,15 +56,15 @@ namespace SteveTheTroll.Taming
             foreach (var troll in Near)
             {
                 float d = Vector3.Distance(troll.transform.position, owner.transform.position);
-                if (!TamingRules.Defends(d, ModSettings.DefendRange.Value)) { ModLog.Verbose("TrollDefend: " + troll.name + " is " + d.ToString("F1") + " m from " + owner.GetPlayerName() + " (range " + ModSettings.DefendRange.Value + ") - stays"); continue; }
+                if (!TamingRules.Defends(d, ModSettings.DefendRange.Value)) { ModLog.Verbose("TrollDefend: " + TrollTaming.Tag(troll) + " is " + d.ToString("F1") + " m from " + owner.GetPlayerName() + " (range " + ModSettings.DefendRange.Value + ") - stays"); continue; }
                 var view = troll.GetComponent<ZNetView>();
                 var ai = troll.GetComponent<MonsterAI>();
-                if (ai == null || view == null || !view.IsValid() || !view.IsOwner()) { ModLog.Verbose("TrollDefend: " + troll.name + " is owned by another client - not steered here"); continue; }
+                if (ai == null || view == null || !view.IsValid() || !view.IsOwner()) { ModLog.Verbose("TrollDefend: " + TrollTaming.Tag(troll) + " is owned by another client - not steered here"); continue; }
                 // D-082 (TEST-035: Steve 1 stood 2.5 m from two wild trolls hitting the player and did nothing - the game's AI dropped / ignored the
                 // target): the attacker becomes the troll's FORCED target (TrollGuard.Keep puts it back before every AI step)
                 if (!TrollGuard.Order(troll, attacker)) { SetTarget(ai, attacker); ai.Alert(); }
                 set++;
-                ModLog.Info("TrollDefend: " + owner.GetPlayerName() + " hit by " + attacker.name + " - " + troll.name + " (" + d.ToString("F1") + " m) attacks it");
+                ModLog.Info("TrollDefend: " + owner.GetPlayerName() + " hit by " + attacker.name + " - " + TrollTaming.Tag(troll) + " (" + d.ToString("F1") + " m) attacks it");
             }
             ModLog.Verbose("TrollDefend: " + Near.Count + " own tamed troll(s) loaded, " + set + " defending");
             if (set > 0 && owner == Player.m_localPlayer) UnderAttack(owner.GetPlayerName());

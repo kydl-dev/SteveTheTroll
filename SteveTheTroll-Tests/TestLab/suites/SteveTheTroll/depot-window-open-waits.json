@@ -1,0 +1,20 @@
+{
+  "name": "depot-window-open-waits",
+  "description": "Emptied while a chest window is open: it stays, and goes after the window closes",
+  "timeout": 90,
+  "steps": [
+    { "do": "hook", "name": "stt.reset" },
+    { "do": "hook", "name": "stt.spawnDepot", "args": { "dz": 8 }, "as": "depot" },
+    { "do": "hook", "name": "stt.depotPut", "args": { "frame": "depot", "index": 1, "prefab": "Stone", "count": 5 }, "expect": true },
+    { "do": "hook", "name": "stt.depotWindow", "args": { "frame": "depot", "open": true } },
+    { "do": "hook", "name": "stt.depotTake", "args": { "frame": "depot" } },
+    { "do": "wait", "seconds": 8 },
+    { "do": "hook", "name": "stt.depotCount", "expect": 1, "label": "waits while the window is open" },
+    { "do": "hook", "name": "stt.depotWindow", "args": { "frame": "depot", "open": false } },
+    { "do": "wait", "until": { "check": "hook", "name": "stt.depotCount", "expect": 0 }, "timeout": 15 }
+  ],
+  "asserts": [
+    { "check": "hook", "name": "stt.depotCount", "expect": 0 },
+    { "check": "noErrors", "source": "SteveTheTroll" }
+  ]
+}

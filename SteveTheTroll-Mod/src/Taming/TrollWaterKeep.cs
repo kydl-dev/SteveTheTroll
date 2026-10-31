@@ -61,7 +61,7 @@ namespace SteveTheTroll.Taming
                 if (state != _lastState || Time.time >= _nextLog)
                 {
                     _lastState = state; _nextLog = Time.time + 5f;
-                    ModLog.Verbose("TrollWaterKeep: " + c.name + " in water (swimming " + c.IsSwimming() + ") " + state + " the " + keep.ToString("0") + " m ring around "
+                    ModLog.Verbose("TrollWaterKeep: " + TrollTaming.Tag(c) + " in water (swimming " + c.IsSwimming() + ") " + state + " the " + keep.ToString("0") + " m ring around "
                         + go.GetComponent<Player>().GetPlayerName() + " (now " + d.ToString("F1") + " m)");
                 }
                 return false;

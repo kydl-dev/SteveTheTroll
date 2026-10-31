@@ -36,9 +36,9 @@ namespace SteveTheTroll.Taming
             troll.SetHealth(max * pct);
             // at least prefab health x level x factor (world-level scaling in GetMaxHealthBase can only add to it)
             float least = troll.m_health * troll.GetLevel() * ModSettings.TamedHealthFactor.Value * 0.99f;
-            ModLog.Verbose("TamedTrollStats: " + troll.name + " max health " + max.ToString("F0") + " (prefab " + troll.m_health + ", level " + troll.GetLevel() + ", x"
+            ModLog.Verbose("TamedTrollStats: " + TrollTaming.Tag(troll) + " max health " + max.ToString("F0") + " (prefab " + troll.m_health + ", level " + troll.GetLevel() + ", x"
                 + ModSettings.TamedHealthFactor.Value + "), health kept at " + (pct * 100f).ToString("F0") + " %");
-            ModLog.CheckRange("TamedTrollStats: " + troll.name + " max health", max, least, 1e9, "hp");
+            ModLog.CheckRange("TamedTrollStats: " + TrollTaming.Tag(troll) + " max health", max, least, 1e9, "hp");
             return max;
         }
 
@@ -50,7 +50,7 @@ namespace SteveTheTroll.Taming
                 if (!IsTamedTroll(__instance)) return;
                 float before = __result;
                 __result *= ModSettings.TamedHealthFactor.Value;
-                if (_healthLogs < 6) { _healthLogs++; ModLog.Verbose("TamedTrollStats: " + __instance.name + " base health " + before + " -> " + __result + " (x" + ModSettings.TamedHealthFactor.Value + ")"); }
+                if (_healthLogs < 6) { _healthLogs++; ModLog.Verbose("TamedTrollStats: " + TrollTaming.Tag(__instance) + " base health " + before + " -> " + __result + " (x" + ModSettings.TamedHealthFactor.Value + ")"); }
             }
         }
 
@@ -68,7 +68,7 @@ namespace SteveTheTroll.Taming
                 if (__instance.InLava() && Time.time >= _nextLavaLog)
                 {
                     _nextLavaLog = Time.time + 5f;
-                    ModLog.Verbose("TamedTrollStats: " + __instance.name + " in lava at " + __instance.transform.position.ToString("F0") + " - no heat damage (tamed, D-128)");
+                    ModLog.Verbose("TamedTrollStats: " + TrollTaming.Tag(__instance) + " in lava at " + __instance.transform.position.ToString("F0") + " - no heat damage (tamed, D-128)");
                 }
                 return false;
             }
@@ -107,7 +107,7 @@ namespace SteveTheTroll.Taming
                 if (!IsTamedTroll(owner)) return;
                 float before = __result;
                 __result *= ModSettings.TamedDamageFactor.Value;
-                if (_damageLogs < 6) { _damageLogs++; ModLog.Verbose("TamedTrollStats: " + owner.name + " attack damage factor " + before + " -> " + __result); }
+                if (_damageLogs < 6) { _damageLogs++; ModLog.Verbose("TamedTrollStats: " + TrollTaming.Tag(owner) + " attack damage factor " + before + " -> " + __result); }
             }
         }
 
@@ -130,9 +130,9 @@ namespace SteveTheTroll.Taming
                 if (_modLogs < 3)
                 {
                     _modLogs++;
-                    ModLog.Verbose("TamedTrollStats: " + __instance.name + " resistances pierce " + r.m_pierce + "->" + __result.m_pierce + ", slash " + r.m_slash + "->" + __result.m_slash
+                    ModLog.Verbose("TamedTrollStats: " + TrollTaming.Tag(__instance) + " resistances pierce " + r.m_pierce + "->" + __result.m_pierce + ", slash " + r.m_slash + "->" + __result.m_slash
                         + ", fire " + r.m_fire + ", frost " + r.m_frost + ", lightning " + r.m_lightning + ", poison " + r.m_poison + ", spirit " + r.m_spirit + " -> all Immune");
-                    ModLog.Check("TamedTrollStats: " + __instance.name + " elemental types immune", Immune(__result), 5, 0, "type(s)");
+                    ModLog.Check("TamedTrollStats: " + TrollTaming.Tag(__instance) + " elemental types immune", Immune(__result), 5, 0, "type(s)");
                 }
             }
 
@@ -156,7 +156,7 @@ namespace SteveTheTroll.Taming
                 bool tamed = IsTamedTroll(__instance);
                 if (!tamed) return !tamed;
                 __result = !tamed;
-                if (_staggerLogs < 6) { _staggerLogs++; ModLog.Verbose("TamedTrollStats: " + __instance.name + " ignored " + damage.ToString("F1") + " stagger damage (immune)"); }
+                if (_staggerLogs < 6) { _staggerLogs++; ModLog.Verbose("TamedTrollStats: " + TrollTaming.Tag(__instance) + " ignored " + damage.ToString("F1") + " stagger damage (immune)"); }
                 return !tamed;
             }
         }

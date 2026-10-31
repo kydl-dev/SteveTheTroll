@@ -31,7 +31,7 @@ namespace SteveTheTroll.Taming
         {
             var view = troll != null ? troll.GetComponent<ZNetView>() : null;
             var ai = troll != null ? troll.GetComponent<MonsterAI>() : null;
-            if (ai == null || view == null || !view.IsValid() || !view.IsOwner()) { ModLog.Warn("TrollFarming: cannot send " + (troll != null ? troll.name : "?") + " (ai " + (ai != null) + ", owner " + (view != null && view.IsOwner()) + ")"); return false; }
+            if (ai == null || view == null || !view.IsValid() || !view.IsOwner()) { ModLog.Warn("TrollFarming: cannot send " + (troll != null ? TrollTaming.Tag(troll) : "?") + " (ai " + (ai != null) + ", owner " + (view != null && view.IsOwner()) + ")"); return false; }
             TrollTaming.StopFollow(ai);
             ai.SetPatrolPoint();
             var arrival = troll.GetComponent<TrollArrival>();
@@ -39,7 +39,7 @@ namespace SteveTheTroll.Taming
             var f = troll.GetComponent<TrollFarmer>();
             if (f == null) f = troll.gameObject.AddComponent<TrollFarmer>();
             f.Setup(focus, troll.transform.position, announce);
-            ModLog.Info("TrollFarming: " + troll.name + " farms '" + (focus.Length > 0 ? focus : "default priority") + (announce ? " (no orders for a while)" : "") + "' around " + troll.transform.position.ToString("F0"));
+            ModLog.Info("TrollFarming: " + TrollTaming.Tag(troll) + " farms '" + (focus.Length > 0 ? focus : "default priority") + (announce ? " (no orders for a while)" : "") + "' around " + troll.transform.position.ToString("F0"));
             return troll.GetComponent<TrollFarmer>() != null;
         }
 
@@ -62,7 +62,21 @@ namespace SteveTheTroll.Taming
             var f = troll.GetComponent<TrollFarmer>();
             if (f == null) f = troll.gameObject.AddComponent<TrollFarmer>();
             f.SetupHome();
-            ModLog.Info("TrollFarming: " + troll.name + " walks to the owner's bed and waits");
+            ModLog.Info("TrollFarming: " + TrollTaming.Tag(troll) + " walks to the owner's bed and waits");
+            return true;
+        }
+
+        /// D-143: walk to the hub / bed and empty the backpack into the depot. Expected outcome: whether the troll now goes.
+        internal static bool BeginUnload(Character troll)
+        {
+            var view = troll != null ? troll.GetComponent<ZNetView>() : null;
+            if (view == null || !view.IsValid() || !view.IsOwner()) return false;
+            var arrival = troll.GetComponent<TrollArrival>();
+            if (arrival != null) Object.Destroy(arrival);
+            var f = troll.GetComponent<TrollFarmer>();
+            if (f == null) f = troll.gameObject.AddComponent<TrollFarmer>();
+            f.SetupUnload();
+            ModLog.Info("TrollFarming: " + TrollTaming.Tag(troll) + " goes to empty its backpack at the depot");
             return true;
         }
 
@@ -128,6 +142,10 @@ namespace SteveTheTroll.Taming
         /// D-084 performance: one farm-source candidate near a troll (gathered once per search, then filtered per goal / range).
         internal struct Candidate { internal GameObject G; internal FarmSourceCache Src; internal Vector3 Pos; }
 
+        static long _gatherTicks, _gatherWorst;
+        static int _gatherCalls, _gatherScene, _gatherCands;
+        static float _nextGatherLog;
+
         /// D-084 performance: every farm source within range of center in ONE pass over the scene (a search used to walk all networked
         /// objects once per goal and range - up to 30 passes over ~5000 objects). Expected outcome: the list filled (cleared first).
         internal static List<Candidate> Gather(Vector3 center, float range, List<Candidate> into)
@@ -136,6 +154,7 @@ namespace SteveTheTroll.Taming
             var scene = ZNetScene.instance;
             var all = scene != null ? Instances(scene) : null;
             if (all == null) return into;
+            long t0 = System.Diagnostics.Stopwatch.GetTimestamp();
             float r2 = range * range;
             Vector3 bed;
             bool hasBed = TrollNoHit.Bed(out bed);
@@ -150,6 +169,18 @@ namespace SteveTheTroll.Taming
                 var src = Source(v);
                 if (src == null || src.Collider == null) continue;
                 into.Add(new Candidate { G = v.gameObject, Src = src, Pos = pos });
+            }
+            // D-141 (review: Gather was never timed): every 5 s, how often it ran, how long it took and how big the scene dictionary was
+            long took = System.Diagnostics.Stopwatch.GetTimestamp() - t0;
+            _gatherTicks += took; _gatherCalls++; _gatherScene += all.Count; _gatherCands += into.Count;
+            if (took > _gatherWorst) _gatherWorst = took;
+            if (ModLog.DebugOn && Time.time >= _nextGatherLog)
+            {
+                _nextGatherLog = Time.time + 5f;
+                double perMs = 1000.0 / System.Diagnostics.Stopwatch.Frequency;
+                ModLog.Verbose("TrollFarming: last 5 s - Gather " + _gatherCalls + "x, total " + (_gatherTicks * perMs).ToString("F2") + " ms, avg " + (_gatherTicks * perMs / _gatherCalls).ToString("F3") + " ms, worst " + (_gatherWorst * perMs).ToString("F2")
+                    + " ms; scene " + (_gatherScene / _gatherCalls) + " object(s), " + (_gatherCands / _gatherCalls) + " candidate(s) per call");
+                _gatherTicks = _gatherWorst = 0; _gatherCalls = _gatherScene = _gatherCands = 0;
             }
             return into;
         }
@@ -174,7 +205,7 @@ namespace SteveTheTroll.Taming
                 seen++;
                 var src = c.Src;
                 if ((skip != null && skip(c.G)) || src.MinTier > tier || !src.Yields(item) || !Ui.TrollFocus.SourceMatches(goal, src.PrefabName)) continue;
-                if (src.Tier == TamingRules.TierNone) { skipped++; continue; }
+                if (src.Tier == TamingRules.TierNone || (src.Young && ModSettings.FarmSkipYoung.Value)) { skipped++; continue; }
                 counts[src.Tier]++;
                 var at = src.IsTree ? c.Pos : src.Collider.bounds.ClosestPoint(from);     // trees: the trunk (TEST-020)
                 float d = TamingRules.SourceScore(src.Tier, Vector3.Distance(from, at));
@@ -185,7 +216,7 @@ namespace SteveTheTroll.Taming
             {
                 LastScan = "sources " + seen + ", logs/rocks " + counts[0] + ", trees " + counts[1] + ", other " + counts[2] + ", too small " + skipped
                     + ", best " + (best != null ? best.name + " (" + KindOf(best) + ")" : "none");
-                ModLog.Verbose("TrollFarming: search '" + item + "'" + (goal.Sources.Length > 0 ? " from " + string.Join(" / ", goal.Sources) : "") + " within " + range + " m of " + center.ToString("F0") + ": " + LastScan + (best != null ? " score " + bestD.ToString("F1") : ""));
+                if (best != null) ModLog.Verbose("TrollFarming: search '" + item + "'" + (goal.Sources.Length > 0 ? " from " + string.Join(" / ", goal.Sources) : "") + " within " + range + " m of " + center.ToString("F0") + ": " + LastScan + (best != null ? " score " + bestD.ToString("F1") : ""));
             }
             else LastScan = "best " + (best != null ? best.name : "none");
             return best;
@@ -209,6 +240,7 @@ namespace SteveTheTroll.Taming
             c.IsTree = tree;
             c.PrefabName = Utils.GetPrefabName(g);
             c.MinTier = MinTier(g);
+            c.Young = !log && !rock && TamingRules.IsYoungGrowth(c.PrefabName);
             c.Tier = TamingRules.Tier(log, rock, tree, c.Collider != null ? c.Collider.bounds.size.y : 0f, MinOtherHeight);
             Known[id] = c;
             return c;
@@ -272,6 +304,8 @@ namespace SteveTheTroll.Taming
                 if (TrollCounter.Ignoring(self) && !TrollGuard.HasForced(self) && __instance.GetComponent<TrollFarmer>() != null) TrollGuard.ClearTarget(__instance);   // D-084: hits ignored, keeps farming
                 TrollGuard.Keep(__instance);                                                                     // D-066: the forced target stays
                 if (TrollHold.Holds(__instance)) { __instance.StopMoving(); __result = true; return false; }     // D-063
+                var back = __instance.GetComponent<TrollReturn>();
+                if (back != null && back.Step(__instance, dt, MoveTo)) { __result = true; return false; }          // D-162: past the hub's reach, no follow order - walks back
                 var f = __instance.GetComponent<TrollFarmer>();
                 if (f == null) return true;
                 var view = __instance.GetComponent<ZNetView>();
@@ -290,6 +324,7 @@ namespace SteveTheTroll.Taming
         internal bool IsTree;
         internal string PrefabName = "";
         internal int MinTier, Tier = TamingRules.TierNone;
+        internal bool Young;         // D-153: sapling / bush by name
         readonly Dictionary<string, bool> _yields = new Dictionary<string, bool>();
 
         internal bool Yields(string item)

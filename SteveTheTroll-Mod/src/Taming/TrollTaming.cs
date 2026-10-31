@@ -13,6 +13,38 @@ namespace SteveTheTroll.Taming
     /// </summary>
     internal static class TrollTaming
     {
+        static readonly Dictionary<int, KeyValuePair<float, string>> Tags = new Dictionary<int, KeyValuePair<float, string>>();
+
+        /// The ONE place for "what is this troll called": its Tameable text (Steve 1), else the object name. Used by messages, orders and Tag.
+        internal static string ShownName(Component any)
+        {
+            var t = any != null ? any.GetComponent<Tameable>() : null;
+            string n = "";
+            // D-148: Tameable.GetText throws a NullReferenceException while the troll is still in Character.Awake (the log lines of the max-health patch run there); that
+            // exception aborted the troll's Awake - Steve 1 loaded without his club and stood still (test run 011447). Never throw out of a name lookup.
+            try { n = t != null ? t.GetText() : ""; } catch (System.NullReferenceException) { n = ""; }
+            return string.IsNullOrEmpty(n) ? (any != null ? any.gameObject.name : "?") : n;
+        }
+
+        /// D-145: how a troll is named in every log line: "Steve 1 [00c789c2d10d]" - its shown name and its permanent id (given at taming, TrollRegistry.IdOf), so two trolls
+        /// with the same name stay apart and one id can be followed through the whole log. Read-only (never writes the id); cached for 5 s.
+        internal static string Tag(Component any)
+        {
+            if (any == null) return "?";
+            int key = any.gameObject.GetInstanceID();
+            KeyValuePair<float, string> e;
+            if (Tags.TryGetValue(key, out e) && Time.time - e.Key < 5f) return e.Value;
+            string tag = any.gameObject.name;
+            ZDO z = null;
+            try { z = Zdo(any.GetComponent<Character>()); } catch (System.NullReferenceException) { }      // D-148: not ready yet (Awake)
+            string shown = ShownName(any);
+            string id = z != null ? z.GetString(TrollRegistry.IdKey, "") : "";
+            if (shown.Length > 0 || id.Length > 0) tag = (shown.Length > 0 ? shown : tag) + (id.Length > 0 ? " [" + id + "]" : "");
+            if (Tags.Count > 300) Tags.Clear();
+            if (id.Length > 0) Tags[key] = new KeyValuePair<float, string>(Time.time, tag);      // D-148: an unready troll (no id yet) is not cached
+            return tag;
+        }
+
         public const string TrollPrefab = "Troll";
         const string DonorPrefab = "Wolf";
         public const string OwnerKey = "stt_owner";
@@ -124,7 +156,7 @@ namespace SteveTheTroll.Taming
             if (zdo == null || player == null) { ModLog.Warn("TrollTaming: cannot set the owner (zdo " + (zdo != null) + ", player " + (player != null) + ")"); return zdo != null && player != null; }
             zdo.Set(OwnerKey, player.GetPlayerID());
             zdo.Set(OwnerNameKey, player.GetPlayerName());
-            ModLog.Verbose("TrollTaming: " + troll.name + " owner = " + player.GetPlayerName() + " (" + player.GetPlayerID() + ")");
+            ModLog.Verbose("TrollTaming: " + TrollTaming.Tag(troll) + " owner = " + player.GetPlayerName() + " (" + player.GetPlayerID() + ")");
             return zdo.GetLong(OwnerKey, 0L) == player.GetPlayerID();
         }
 

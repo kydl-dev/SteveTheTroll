@@ -28,9 +28,9 @@ namespace SteveTheTroll.Backpack
                 items.AddRange(inv.GetAllItems());
                 BackpackStore.Write(zdo, i, new Inventory("", null, 1, 1));
             }
-            if (items.Count == 0) { ModLog.Verbose("BackpackDeath: " + troll.name + " died with an empty backpack"); return; }
+            if (items.Count == 0) { ModLog.Verbose("BackpackDeath: " + Taming.TrollTaming.Tag(troll) + " died with an empty backpack"); return; }
             int crates = Drop(items, troll.transform.position + Vector3.up);
-            ModLog.Info("BackpackDeath: " + troll.name + " died - " + items.Count + " stack(s) dropped in " + crates + " cargo crate(s)");
+            ModLog.Info("BackpackDeath: " + Taming.TrollTaming.Tag(troll) + " died - " + items.Count + " stack(s) dropped in " + crates + " cargo crate(s)");
             if (Taming.TrollTaming.Owner(troll) == (Player.m_localPlayer != null ? Player.m_localPlayer.GetPlayerID() : -1L))
                 Ui.Notify.Show(Loc.T("stevethetroll_backpack_dropped", __instance.GetHoverName(), crates.ToString()), Ui.Notify.Kind.Death);
         }

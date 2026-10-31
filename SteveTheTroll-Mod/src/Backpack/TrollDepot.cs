@@ -65,16 +65,19 @@ namespace SteveTheTroll.Backpack
             target = bed;
             float best = float.MaxValue;
             int busy = 0;
+            Container chosen = null;
             foreach (var c in Chests(bed, owner))
             {
                 if (!c.GetInventory().HaveEmptySlot()) continue;
                 // D-107 (user: "if another troll is close to a depot, have them reroute to another depot, or start a new one")
                 if (Busy(c.transform.position, troll)) { busy++; continue; }
+                if (ReservedByOther(c, troll)) { busy++; continue; }      // D-149: another troll already walks to this chest
                 float d = Vector3.Distance(c.transform.position, troll.transform.position);
-                if (d < best) { best = d; target = c.transform.position; }
+                if (d < best) { best = d; target = c.transform.position; chosen = c; }
             }
-            if (best < float.MaxValue) { ModLog.Info("TrollDepot: " + troll.name + " unloads at the depot chest " + best.ToString("F1") + " m away" + (busy > 0 ? " (" + busy + " chest(s) skipped: another troll there)" : "")); return true; }
-            if (busy > 0) ModLog.Info("TrollDepot: " + troll.name + " - every depot with room has another troll at it (" + busy + " chest(s)) - a new stack");
+            if (chosen != null) Reserve(chosen, troll);
+            if (best < float.MaxValue) { ModLog.Info("TrollDepot: " + Taming.TrollTaming.Tag(troll) + " unloads at the depot chest " + best.ToString("F1") + " m away" + (busy > 0 ? " (" + busy + " chest(s) skipped: another troll there)" : "")); return true; }
+            if (busy > 0) ModLog.Info("TrollDepot: " + Taming.TrollTaming.Tag(troll) + " - every depot with room has another troll at it (" + busy + " chest(s)) - a new stack");
             return Build(troll, bed, owner, out target, busy > 0);
         }
 
@@ -89,6 +92,31 @@ namespace SteveTheTroll.Backpack
             return false;
         }
         const float BusyRadius = 10f;
+
+        // D-149 (review: two trolls could pick the same chest before either is within BusyRadius): a troll that gets a chest from Plan reserves it for ReserveSeconds
+        // (a stuck / dead / given-up troll frees it by time); Unload frees the troll's reservations.
+        const float ReserveSeconds = 90f;
+        static readonly Dictionary<int, KeyValuePair<int, float>> Reserved = new Dictionary<int, KeyValuePair<int, float>>();
+        static bool ReservedByOther(Container c, Character me)
+        {
+            KeyValuePair<int, float> r;
+            return Reserved.TryGetValue(c.GetInstanceID(), out r) && DepotRules.ReservedByOther(r.Key, r.Value, me.GetInstanceID(), Time.time, ReserveSeconds);
+        }
+        static void Reserve(Container c, Character me)
+        {
+            if (Reserved.Count > 100) Reserved.Clear();
+            Reserved[c.GetInstanceID()] = new KeyValuePair<int, float>(me.GetInstanceID(), Time.time);
+        }
+        /// D-160 (test hooks): reserves a chest for a troll that does not exist, as a troll on its way would.
+        internal static void ReserveForTest(Container c) { Reserved[c.GetInstanceID()] = new KeyValuePair<int, float>(-424242, Time.time); }
+
+        static void Release(Character me)
+        {
+            int id = me.GetInstanceID();
+            var mine = new List<int>();
+            foreach (var kv in Reserved) if (kv.Value.Key == id) mine.Add(kv.Key);
+            foreach (var k in mine) Reserved.Remove(k);
+        }
 
         /// Moves everything from the troll's backpack into the owner's depot chests near the bed, building more depots when needed.
         /// Expected outcome: the number of stacks moved; `left` = stacks that found no room.
@@ -118,7 +146,8 @@ namespace SteveTheTroll.Backpack
                 }
                 BackpackStore.Write(zdo, i, inv);
             }
-            ModLog.Info("TrollDepot: " + troll.name + " moved " + moved + " stack(s) into the depot, " + left + " left, " + built + " depot(s) built");
+            Release(troll);
+            ModLog.Info("TrollDepot: " + Taming.TrollTaming.Tag(troll) + " moved " + moved + " stack(s) into the depot, " + left + " left, " + built + " depot(s) built");
             return moved;
         }
 
@@ -149,10 +178,18 @@ namespace SteveTheTroll.Backpack
                 ModLog.Warn("TrollDepot: no spot for a troll depot near the bed at " + bed.ToString("F0"));
                 return false;
             }
+            if (level) DepotGround.Flatten(at, rot);                // D-095: uneven spot -> the ground is levelled first
+            if (Place(at, rot, owner) == null) return false;
+            ModLog.Info("TrollDepot: depot built at " + at.ToString("F1") + " (" + DepotData.Chests.Length + " chests) for " + Taming.TrollTaming.Tag(troll));
+            return true;
+        }
+
+        /// D-160: instantiates the frame and its 4 flagged chests at the spot (the real build code; the test hooks use it too). Expected outcome: the frame, or null when a prefab is missing.
+        internal static GameObject Place(Vector3 at, Quaternion rot, long owner)
+        {
             var framePrefab = ZNetScene.instance.GetPrefab(DepotPrefab.Name);
             var chestPrefab = ZNetScene.instance.GetPrefab(DepotData.ChestPrefab);
-            if (framePrefab == null || chestPrefab == null) { ModLog.Warn("TrollDepot: prefab missing (frame " + (framePrefab != null) + ", chest " + (chestPrefab != null) + ")"); return false; }
-            if (level) DepotGround.Flatten(at, rot);                // D-095: uneven spot -> the ground is levelled first
+            if (framePrefab == null || chestPrefab == null) { ModLog.Warn("TrollDepot: prefab missing (frame " + (framePrefab != null) + ", chest " + (chestPrefab != null) + ")"); return null; }
             var frame = Object.Instantiate(framePrefab, at, rot);
             var fz = frame.GetComponent<ZNetView>().GetZDO();
             fz.Set(OwnerKey, owner);
@@ -161,8 +198,25 @@ namespace SteveTheTroll.Backpack
                 var chest = Object.Instantiate(chestPrefab, at + rot * new Vector3(p.X, p.Y, p.Z), rot * Quaternion.Euler(0f, p.Yaw, 0f));
                 Mark(chest, owner);
             }
-            ModLog.Info("TrollDepot: depot built at " + at.ToString("F1") + " (" + DepotData.Chests.Length + " chests) for " + troll.name);
-            return true;
+            return frame;
+        }
+
+        /// D-160: the 4 flagged chests of a frame (test hooks).
+        internal static System.Collections.Generic.List<Container> ChestsOf(GameObject frame)
+        {
+            var list = new System.Collections.Generic.List<Container>();
+            if (frame == null) return list;
+            foreach (var p in DepotData.Chests)
+            {
+                var expected = frame.transform.position + frame.transform.rotation * new Vector3(p.X, p.Y, p.Z);
+                foreach (var v in Near(frame.transform.position, DepotData.ChestPrefab))
+                {
+                    if ((v.transform.position - expected).sqrMagnitude > 0.6f * 0.6f || !v.GetZDO().GetBool(FlagKey)) continue;
+                    var c = v.GetComponent<Container>();
+                    if (c != null && !list.Contains(c)) { list.Add(c); break; }
+                }
+            }
+            return list;
         }
 
         static void Mark(GameObject chest, long owner)
@@ -221,7 +275,7 @@ namespace SteveTheTroll.Backpack
             float maxSlope = canLevel ? MaxSlopeLevelled : MaxSlopeAsIs;
             var ai = troll.GetComponent<BaseAI>();
             var agent = ai != null ? ai.m_pathAgentType : Pathfinding.AgentType.TrollSize;
-            int tried = 0;
+            int tried = 0, badGround = 0, blocked = 0, nearStack = 0, covered = 0, unreachable = 0;
             for (float r = MinFromBed; r <= MaxFromBed; r += RingStep)
             {
                 for (int k = 0; k < Angles; k++)
@@ -233,13 +287,17 @@ namespace SteveTheTroll.Backpack
                     tried++;
                     Vector3 ground; float slope;
                     bool flatten;
-                    if (!Level(p, q, maxSlope, canLevel, out ground, out slope, out flatten) || !Free(ground, q) || !AwayFromStacks(ground) || Covered(ground, q) || !Reachable(troll, agent, ground)) continue;
+                    if (!Level(p, q, maxSlope, canLevel, out ground, out slope, out flatten)) { badGround++; continue; }
+                    if (!Free(ground, q)) { blocked++; continue; }
+                    if (!AwayFromStacks(ground)) { nearStack++; continue; }
+                    if (Covered(ground, q)) { covered++; continue; }
+                    if (!Reachable(troll, agent, ground)) { unreachable++; continue; }
                     at = ground; rot = q; level = flatten;
                     ModLog.Info("TrollDepot: new stack at " + at.ToString("F1") + ", " + r.ToString("0") + " m from the bed, ground uneven by " + slope.ToString("F2") + " m" + (level ? " -> levelled" : "") + " (" + tried + " spot(s) checked)");
                     return true;
                 }
             }
-            ModLog.Info("TrollDepot: none of " + tried + " spot(s) near the bed fits");
+            ModLog.Info("TrollDepot: none of " + tried + " spot(s) near the bed fits (ground too uneven " + badGround + ", blocked " + blocked + ", too near another depot " + nearStack + ", under a roof " + covered + ", unreachable " + unreachable + ")");
             return false;
         }
 
@@ -300,6 +358,123 @@ namespace SteveTheTroll.Backpack
             Path.Clear();
             if (!Pathfinding.instance.GetPath(troll.transform.position, ground, Path, agent, false)) return false;
             return Path.Count > 0 && Flat(Path[Path.Count - 1] - ground) <= Reach;
+        }
+
+        // D-155: a troll-built structure (frame + its 4 flagged chests) is removed as soon as the last item leaves it. Checked whenever a flagged chest saves its contents
+        // (a fresh structure is never checked before something changed in it, so it is not removed before the troll fills it).
+        internal static void RemoveIfEmpty(Container saved)
+        {
+            if (!ModSettings.DepotRemoveEmpty.Value || saved == null) return;
+            var sv = saved.GetComponent<ZNetView>();
+            if (sv == null || !sv.IsValid() || !sv.GetZDO().GetBool(FlagKey) || !sv.IsOwner()) return;
+            long owner = sv.GetZDO().GetLong(OwnerKey);
+            var chestViews = new List<ZNetView>(Near(saved.transform.position, DepotData.ChestPrefab));
+            var frames = new List<ZNetView>(Near(saved.transform.position, DepotPrefab.Name));
+            foreach (var f in frames)
+            {
+                if (f.GetZDO().GetLong(OwnerKey) != owner) continue;
+                var mine = new List<Container>();
+                bool hasSaved = false;
+                foreach (var p in DepotData.Chests)
+                {
+                    var expected = f.transform.position + f.transform.rotation * new Vector3(p.X, p.Y, p.Z);
+                    foreach (var cv in chestViews)
+                    {
+                        if ((cv.transform.position - expected).sqrMagnitude > 0.6f * 0.6f || !cv.GetZDO().GetBool(FlagKey)) continue;
+                        var c = cv.GetComponent<Container>();
+                        if (c == null) continue;
+                        mine.Add(c);
+                        if (c == saved) hasSaved = true;
+                        break;
+                    }
+                }
+                if (!hasSaved) continue;
+                int empty = 0; bool inUse = false, reserved = false;
+                foreach (var c in mine)
+                {
+                    if (c.GetInventory().NrOfItems() == 0) empty++;
+                    if (c.IsInUse()) inUse = true;
+                    KeyValuePair<int, float> r;
+                    if (Reserved.TryGetValue(c.GetInstanceID(), out r) && Time.time - r.Value < ReserveSeconds) reserved = true;
+                }
+                bool above = false;
+                foreach (var o in frames)
+                    if (o != f && Flat(o.transform.position - f.transform.position) <= ColumnMatch && o.transform.position.y > f.transform.position.y + 0.1f) above = true;
+                if (!DepotRules.Dismantle(mine.Count, empty, inUse, reserved, above))
+                {
+                    if (DepotRules.Lifecycle(mine.Count, empty, inUse, reserved, above) == DepotRules.Verdict.Wait) { Retry[saved.GetInstanceID()] = saved; if (!WaitingSince.ContainsKey(saved.GetInstanceID())) WaitingSince[saved.GetInstanceID()] = new KeyValuePair<Container, float>(saved, Time.time); }      // D-159: empty but blocked (open / reserved / column) - looked at again by Tick
+                    ModLog.Verbose("TrollDepot: structure at " + f.transform.position.ToString("F1") + " kept (chests " + mine.Count + ", empty " + empty + ", inUse " + inUse + ", reserved " + reserved + ", frameAbove " + above + ")");
+                    return;
+                }
+                ModLog.Info("TrollDepot: structure at " + f.transform.position.ToString("F1") + " is empty - removed (" + mine.Count + " chests + frame)");
+                foreach (var c in mine) Remove(c.gameObject);
+                Remove(f.gameObject);
+                return;
+            }
+        }
+
+        static readonly Dictionary<int, Container> Retry = new Dictionary<int, Container>();
+        static float _nextRetry;
+        static readonly Dictionary<int, KeyValuePair<Container, float>> WaitingSince = new Dictionary<int, KeyValuePair<Container, float>>();
+
+        /// D-160 (RuntimeHealth): how long the longest-waiting empty structure has been blocked (0 = none).
+        internal static float LongestWait()
+        {
+            float worst = 0f;
+            var gone = new List<int>();
+            foreach (var kv in WaitingSince)
+            {
+                if (kv.Value.Key == null) { gone.Add(kv.Key); continue; }
+                worst = Mathf.Max(worst, Time.time - kv.Value.Value);
+            }
+            foreach (var k in gone) WaitingSince.Remove(k);
+            return worst;
+        }
+
+        /// D-159: an empty structure that could not be removed yet (window open, troll reservation, another frame above) is checked again every 5 s until it can go.
+        internal static void Tick()
+        {
+            if (Retry.Count == 0 || Time.time < _nextRetry) return;
+            _nextRetry = Time.time + 5f;
+            var list = new List<Container>(Retry.Values);
+            Retry.Clear();
+            foreach (var c in list)
+            {
+                if (c == null) continue;
+                try { RemoveIfEmpty(c); }       // puts itself back into Retry when still blocked
+                catch (System.Exception e) { ModLog.Warn("TrollDepot: retry failed: " + e.GetType().Name + ": " + e.Message); }
+                if (!Retry.ContainsKey(c.GetInstanceID())) WaitingSince.Remove(c.GetInstanceID());
+            }
+        }
+
+        static void Remove(GameObject go)
+        {
+            var v = go.GetComponent<ZNetView>();
+            if (v == null || !v.IsValid()) return;
+            v.ClaimOwnership();
+            ZNetScene.instance.Destroy(go);
+        }
+
+        [HarmonyPatch(typeof(Container), "Save")]
+        static class EmptyCheck
+        {
+            static void Postfix(Container __instance)
+            {
+                try { RemoveIfEmpty(__instance); }
+                catch (System.Exception e) { ModLog.Warn("TrollDepot: empty check failed: " + e.GetType().Name + ": " + e.Message); }
+            }
+        }
+
+        // D-159: Save runs while the chest window is still open (IsInUse), so the check is repeated when the window closes
+        [HarmonyPatch(typeof(Container), "SetInUse")]
+        static class CloseCheck
+        {
+            static void Postfix(Container __instance, bool inUse)
+            {
+                if (inUse) return;
+                try { RemoveIfEmpty(__instance); }
+                catch (System.Exception e) { ModLog.Warn("TrollDepot: close check failed: " + e.GetType().Name + ": " + e.Message); }
+            }
         }
 
         [HarmonyPatch(typeof(WearNTear), "Awake")]

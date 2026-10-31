@@ -196,7 +196,7 @@ namespace SteveTheTroll.Taming
                 if (want.Length == 0) return;
                 var sets = __instance.m_randomSets;
                 var keep = sets != null ? System.Array.FindAll(sets, s => s != null && s.m_name == want) : new Humanoid.ItemSet[0];
-                if (keep.Length == 0) { ModLog.Warn("TrollSpawnBoost: " + __instance.name + " has no '" + want + "' item set (" + (sets != null ? sets.Length : 0) + " set(s)) - spawns as usual"); return; }
+                if (keep.Length == 0) { ModLog.Warn("TrollSpawnBoost: " + TrollTaming.Tag(__instance) + " has no '" + want + "' item set (" + (sets != null ? sets.Length : 0) + " set(s)) - spawns as usual"); return; }
                 __instance.m_randomSets = keep;     // this instance only (the prefab keeps its array)
                 if (zdo != null && zdo.GetString(SetKey, "") != want && (boosted || __instance.GetComponent<ZNetView>().IsOwner())) zdo.Set(SetKey, want);
                 if (boosted)
@@ -204,9 +204,9 @@ namespace SteveTheTroll.Taming
                     int stars = TamingRules.BoostedStars(Random.value);     // D-068: 50 % none, 25 % one, 25 % two stars
                     int before = __instance.GetLevel();
                     __instance.SetLevel(stars + 1);
-                    ModLog.Info("TrollSpawnBoost: " + __instance.name + " boosted spawn level " + before + " -> " + (stars + 1) + " (" + stars + " star(s))");
+                    ModLog.Info("TrollSpawnBoost: " + TrollTaming.Tag(__instance) + " boosted spawn level " + before + " -> " + (stars + 1) + " (" + stars + " star(s))");
                 }
-                ModLog.Info("TrollSpawnBoost: " + __instance.name + " at " + __instance.transform.position.ToString("F0") + " gets the " + want + " set (" + (boosted ? "boosted spawn" : "kept from its ZDO") + ")");
+                ModLog.Info("TrollSpawnBoost: " + TrollTaming.Tag(__instance) + " at " + __instance.transform.position.ToString("F0") + " gets the " + want + " set (" + (boosted ? "boosted spawn" : "kept from its ZDO") + ")");
             }
         }
     }

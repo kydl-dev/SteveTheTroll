@@ -59,6 +59,7 @@ namespace SteveTheTroll.Backpack
             var pkg = new ZPackage();
             inv.Save(pkg);
             zdo.Set(Keys[i], pkg.GetArray());
+            ForgetFull(zdo);
         }
 
         /// D-096 (user: "show how full is their backpack x stacks / y total stacks"): used slots (stacks) and all slots of the 4 chests.
@@ -76,6 +77,23 @@ namespace SteveTheTroll.Backpack
         }
 
         /// No chest has an empty slot. Expected outcome: true = full.
+        static readonly System.Collections.Generic.Dictionary<ZDOID, KeyValuePair<float, bool>> FullCache = new System.Collections.Generic.Dictionary<ZDOID, KeyValuePair<float, bool>>();
+
+        /// D-144: IsFull reads and deserializes all chests; idle check and pickup ask every second, so the answer is reused for CacheSeconds.
+        /// A pickup that fills the last slot (TryAdd) and a depot unload drop the entry, so the answer is never stale after a change of ours.
+        internal static bool IsFullCached(ZDO zdo, float cacheSeconds = 5f)
+        {
+            if (zdo == null) return false;
+            KeyValuePair<float, bool> e;
+            if (FullCache.TryGetValue(zdo.m_uid, out e) && Time.time - e.Key < cacheSeconds) return e.Value;
+            bool full = IsFull(zdo);
+            if (FullCache.Count > 200) FullCache.Clear();
+            FullCache[zdo.m_uid] = new KeyValuePair<float, bool>(Time.time, full);
+            return full;
+        }
+
+        internal static void ForgetFull(ZDO zdo) { if (zdo != null) FullCache.Remove(zdo.m_uid); }
+
         internal static bool IsFull(ZDO zdo)
         {
             if (zdo == null) return false;
@@ -120,7 +138,7 @@ namespace SteveTheTroll.Backpack
             if (_source != null) { c.m_openEffects = _source.m_openEffects; c.m_closeEffects = _source.m_closeEffects; }
             Active[c] = 0;
             go.SetActive(true);
-            ModLog.Info("BackpackStore: " + troll.name + " store ready (" + ChestCount + " chests of " + _w + " x " + _h + ")");
+            ModLog.Info("BackpackStore: " + Taming.TrollTaming.Tag(troll) + " store ready (" + ChestCount + " chests of " + _w + " x " + _h + ")");
             return c;
         }
 
@@ -128,7 +146,7 @@ namespace SteveTheTroll.Backpack
         internal static bool Open(Character troll, int i, Humanoid user)
         {
             var c = Store(troll);
-            if (c == null) { ModLog.Warn("BackpackStore: no store on " + (troll != null ? troll.name : "?")); return false; }
+            if (c == null) { ModLog.Warn("BackpackStore: no store on " + (troll != null ? Taming.TrollTaming.Tag(troll) : "?")); return false; }
             if (InUse(c)) { if (user != null) user.Message(MessageHud.MessageType.Center, "$msg_inuse"); return false; }
             Active[c] = i;
             // D-063 (TEST-027: the window said "Backpack chest 1" for every chest - the game shows the INVENTORY's name, set once in Awake)
@@ -138,7 +156,7 @@ namespace SteveTheTroll.Backpack
             InvName(Inv(c)) = title;
             LastRevision(c) = uint.MaxValue;
             LoadNow(c);
-            ModLog.Info("BackpackStore: " + troll.name + " chest " + (i + 1) + " opened by " + (user != null ? user.GetHoverName() : "?") + " (" + Inv(c).NrOfItems() + " stack(s))");
+            ModLog.Info("BackpackStore: " + Taming.TrollTaming.Tag(troll) + " chest " + (i + 1) + " opened by " + (user != null ? user.GetHoverName() : "?") + " (" + Inv(c).NrOfItems() + " stack(s))");
             return c.Interact(user, false, false);
         }
 

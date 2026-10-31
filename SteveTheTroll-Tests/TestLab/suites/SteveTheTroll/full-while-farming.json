@@ -1,0 +1,21 @@
+{
+  "name": "full-while-farming",
+  "description": "A troll with an active farm job whose backpack fills up drops the job and unloads (D-159 regression)",
+  "timeout": 240,
+  "steps": [
+    { "do": "hook", "name": "stt.reset" },
+    { "do": "give", "prefab": "STT_TrollSlippers", "count": 1, "equip": true },
+    { "do": "hook", "name": "stt.addHub", "args": { "number": 1, "dx": 0, "dz": 25 } },
+    { "do": "hook", "name": "stt.spawnTroll", "args": { "dz": -15 }, "as": "troll" },
+    { "do": "hook", "name": "stt.startFarm", "args": { "troll": "troll" } },
+    { "do": "wait", "seconds": 3 },
+    { "do": "hook", "name": "stt.state", "args": { "troll": "troll" }, "contains": "farming", "label": "has a farm job" },
+    { "do": "hook", "name": "stt.fillBackpack", "args": { "troll": "troll" } },
+    { "do": "wait", "until": { "check": "hook", "name": "stt.unloading", "args": { "troll": "troll" }, "expect": true }, "timeout": 30 },
+    { "do": "wait", "until": { "check": "hook", "name": "stt.backpackStacks", "args": { "troll": "troll" }, "expect": 0 }, "timeout": 150 }
+  ],
+  "asserts": [
+    { "check": "hook", "name": "stt.backpackStacks", "args": { "troll": "troll" }, "expect": 0 },
+    { "check": "noErrors", "source": "SteveTheTroll" }
+  ]
+}

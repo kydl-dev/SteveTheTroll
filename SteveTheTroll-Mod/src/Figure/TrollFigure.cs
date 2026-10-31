@@ -15,15 +15,19 @@ namespace SteveTheTroll.Figure
     {
         const float DiagEverySeconds = 5f;
         const float SizeTolerance = 0.02f;                 // 2 cm
-        const float AnchorSpan = 0.04f;                    // m between the three glue points under the troll
         static int _tunableVersion = 1;
         static bool _subscribed;
 
         Transform _foot, _toe, _player;
         SlipperDriver _slipper;
-        SkinPoint _glueA, _glueB, _glueC;
-        Vector3 _gluePos;
-        Quaternion _glueRot = Quaternion.identity;
+        SkinPoint _glueA;                                  // the socket anchor (D-147)
+        Vector3 _socketFwdInFoot = Vector3.forward, _socketUpInFoot = Vector3.up;
+        const float MaxLeanDeg = 50f;      // D-159
+        Vector3 _heading = Vector3.zero;                  // D-157: the troll's flat facing last frame (zero = none yet)
+        const float HeadingRateDegPerSecond = 540f;
+        // D-137 (user 22:55, the troll was under the slipper AGAIN): the safe fallback is the troll's own PLACED pose (Place(): upright, on the foot
+        // bone's position and forward) as seen from the foot bone at bind time - NOT the skin frame, which was wrong itself when the bug hit and so
+        // could never be compared against anything. Follow checks the final pose (turn AND position) against it every frame.
         int _boundSlipper = -1;
         bool _left;
         SkinnedMeshRenderer _body;
@@ -185,38 +189,74 @@ namespace SteveTheTroll.Figure
             transform.SetPositionAndRotation(pos, rot);
         }
 
-        // Glues the troll (placed flat this frame) to three points under it that move with the slipper skin.
+        // D-147: anchors the troll to the slipper's TrollSocket - ONE skin point (moves with the slipper and toe bend) - and stands it upright: the socket's forward flattened
+        // onto the player's up plane gives the facing, so what the foot does (tilts at login, toe bend) cannot tilt the troll. No socket = Warn, the troll stays placed on the foot.
         void Bind()
         {
             _boundSlipper = _slipper.BuildVersion;
-            var bottom = transform.position - transform.up * _bottomBelowPivot;
-            _glueA = _slipper.PointAt(bottom);
-            _glueB = _slipper.PointAt(bottom + transform.forward * AnchorSpan);
-            _glueC = _slipper.PointAt(bottom + transform.right * AnchorSpan);
-            Vector3 f, u;
-            if (_glueA == null || _glueB == null || _glueC == null || !FitGeometry.FrameAxes(_glueA.Position, _glueB.Position, _glueC.Position, out f, out u))
+            SkinPoint anchor; Vector3 fwd;
+            if (!_slipper.TrySocket(out anchor, out fwd))
             {
-                ModLog.Warn("TrollFigure: " + name + " could not glue to the slipper (points " + (_glueA != null) + "/" + (_glueB != null) + "/" + (_glueC != null) + ") - stays placed on the foot");
+                ModLog.Warn("TrollFigure: " + name + " cannot anchor - the slipper has no TrollSocket (rebuild the bundle) - stays placed on the foot");
                 _glueA = null;
                 return;
             }
-            var frame = Quaternion.LookRotation(f, u);
-            var inv = Quaternion.Inverse(frame);
-            _glueRot = inv * transform.rotation;
-            _gluePos = inv * (transform.position - _glueA.Position);
-            ModLog.Verbose("TrollFigure: " + name + " glued to slipper build " + _boundSlipper + " at " + bottom.ToString("F3") + " (" + _glueA.BoneCount + "/" + _glueB.BoneCount + "/" + _glueC.BoneCount
-                + " bones), pivot " + _gluePos.ToString("F3") + " m above the glue point in its frame");
-            ModLog.CheckRange("TrollFigure: " + name + " glue point -> troll bottom", (_glueA.Position - bottom).magnitude, 0f, 0.001f, "m");
+            _glueA = anchor; _socketFwdInFoot = fwd; _socketUpInFoot = _slipper.SocketUpInFoot;
+            // D-157 (test runs 020834 and 095924: ONE 61 deg turn ~5 s after the bind, both times): the troll was placed with the foot's heading + FigureYaw and the first socket frame
+            // snapped to the socket's heading. It now starts from the heading it has and turns to the socket's at the rate limit (~0.1 s).
+            var h = Vector3.ProjectOnPlane(transform.forward, _player.up);
+            _heading = h.sqrMagnitude > 1e-4f ? h.normalized : Vector3.zero;
+            ModLog.Verbose("TrollFigure: " + name + " anchored to the slipper socket, build " + _boundSlipper + " (" + anchor.BoneCount + " bones), pivot " + _bottomBelowPivot.ToString("F3") + " m above it");
         }
 
-        // Follows the glue points: the troll moves, tilts and bends with the slipper under it.
+        // Follows the socket anchor: position from the slipper skin, facing from the socket flattened to the player's up, yaw tunable on top.
         void Follow()
         {
-            Vector3 f, u;
-            var a = _glueA.Position;
-            if (!FitGeometry.FrameAxes(a, _glueB.Position, _glueC.Position, out f, out u)) { Place(); return; }
-            var frame = Quaternion.LookRotation(f, u);
-            transform.SetPositionAndRotation(a + frame * _gluePos, frame * _glueRot);
+            // D-159: the troll leans with the slipper (socket up, at most MaxLeanDeg from the player's up); the heading stays flat against the player's up
+            var up = _player.up;
+            var lean = FitGeometry.LeanUp(up, _foot.rotation * _socketUpInFoot, MaxLeanDeg);
+            var want = FitGeometry.UprightForward(_foot.rotation * _socketFwdInFoot, up, _player.forward);
+            // D-157: a turn-rate limit on the facing (a steep foot pitch swings the flattened socket direction by tens of degrees in one frame)
+            var fwd = FitGeometry.StepHeading(_heading, want, HeadingRateDegPerSecond * Mathf.Max(Time.deltaTime, 0.001f), up);
+            _heading = fwd;
+            var rot = Quaternion.LookRotation(Vector3.ProjectOnPlane(fwd, lean).sqrMagnitude > 1e-4f ? Vector3.ProjectOnPlane(fwd, lean) : fwd, lean) * Quaternion.Euler(0f, ModSettings.FigureYaw.Value, 0f);
+            transform.SetPositionAndRotation(_glueA.Position + lean * _bottomBelowPivot, rot);
+            ModLog.CheckRange("TrollFigure: " + name + " troll bottom -> socket", (transform.position - transform.up * _bottomBelowPivot - _glueA.Position).magnitude, 0f, 0.001f, "m");
+            CheckTilt();
+        }
+
+        // D-140 (test run 231819: from the FIRST glue on, 398 of 400 sole checks showed the trolls tilted 71 / 88 deg, i.e. hanging under the slippers, and the foot-pose guard
+        // never fired): the guard compares with the pose the troll had at bind time in the foot's space - and when that bind happens while the foot bone is in an odd pose
+        // (just after the slippers appear, the animator not settled), the troll is "upright" in THAT pose and tilted for good, skin and foot agreeing with each other.
+        // So the world is the judge: a troll that stays tilted more than RebindTiltDeg against the player's up for RebindAfterSeconds while the player stands still on the
+        // ground is placed and glued again (foot pose settled by then).
+        const float RebindTiltDeg = 60f, RebindAfterSeconds = 1f, StillSpeed = 0.5f;
+        float _tiltSince = -1f, _nextSettleLog;
+        const float SettleSeconds = 8f;
+        static int _playerId; static float _playerAt;
+        static float PlayerSince(Player p) { int id = p.GetInstanceID(); if (id != _playerId) { _playerId = id; _playerAt = Time.time; } return _playerAt; }
+        static string SettleState(Player p)
+        {
+            return "since spawn " + (Time.time - PlayerSince(p)).ToString("F1") + " s, teleporting " + p.IsTeleporting() + ", bed " + p.InBed() + ", sitting " + p.IsSitting() + ", emote " + p.InEmote() + ", attached " + p.IsAttached();
+        }
+        int _rebinds;
+
+        void CheckTilt()
+        {
+            if (Vector3.Angle(transform.up, _player.up) <= RebindTiltDeg) { _tiltSince = -1f; return; }
+            if (_tiltSince < 0f) _tiltSince = Time.time;
+            var me = Player.m_localPlayer;
+            if (me == null) return;
+            // D-146: the player is settling in (just spawned / teleporting / in bed / emote / sitting): the FOOT is tilted, a new glue changes nothing
+            bool settling = me.IsTeleporting() || me.InBed() || me.IsSitting() || me.InEmote() || me.IsAttached() || Time.time - PlayerSince(me) < SettleSeconds;
+            if (!FitGeometry.ShouldRebind(Time.time - _tiltSince, RebindAfterSeconds, me.IsOnGround(), me.GetVelocity().magnitude, StillSpeed, settling))
+            {
+                if (settling && Time.time >= _nextSettleLog) { _nextSettleLog = Time.time + 5f; ModLog.Info("TrollFigure: " + name + " is tilted " + Vector3.Angle(transform.up, _player.up).ToString("F0") + " deg while the player is settling in (" + SettleState(me) + ") - no new glue, the foot is tilted"); }
+                return;
+            }
+            _tiltSince = -1f; _rebinds++;
+            _boundSlipper = -1;                              // LateUpdate places it flat on the foot and glues it again
+            ModLog.Warn("TrollFigure: " + name + " stayed tilted " + Vector3.Angle(transform.up, _player.up).ToString("F0") + " deg against the player's up for over " + RebindAfterSeconds + " s while the player stood still - placed and glued again (" + _rebinds + ". time)");
         }
 
         // D-029 flip detector, measured AGAINST THE FOOT (D-036): the glued troll turns with the foot, so a world-space step also counts the
@@ -224,7 +264,9 @@ namespace SteveTheTroll.Figure
         // A real glue or placement flip still turns the troll against its foot. 3D, not flattened (TEST-008).
         void Watch()
         {
-            var fwd = _foot != null ? Quaternion.Inverse(_foot.rotation) * transform.forward : transform.forward;
+            // D-157: glued to a socket the troll stands upright on purpose and does not follow the foot's pitch / roll, so its turn is measured against the PLAYER's facing
+            var fwd = _glueA != null && _player != null ? Quaternion.Inverse(Quaternion.LookRotation(FitGeometry.UprightForward(_player.forward, _player.up, Vector3.forward), _player.up)) * transform.forward
+                : _foot != null ? Quaternion.Inverse(_foot.rotation) * transform.forward : transform.forward;
             float step = FitGeometry.FlipStep(_lastFwd, fwd);
             if (step > _maxStep) _maxStep = step;
             if (FitGeometry.IsJump(step)) _jumps++;
@@ -268,15 +310,21 @@ namespace SteveTheTroll.Figure
             ModLog.Check("TrollFigure: " + name + " log length", length, target, 0.01, "m");
         }
 
+        bool _say;
+        float _nextSay;
+
         void Diag()
         {
             _nextDiag = Time.time + DiagEverySeconds;
             float dist = (transform.position - _foot.position).magnitude;
-            ModLog.Verbose("TrollFigure: " + name + " foot " + _foot.position.ToString("F2") + ", figure " + transform.position.ToString("F2")
+            float tiltNow = Vector3.Angle(transform.up, Vector3.up);
+            _say = Time.time >= _nextSay || tiltNow >= 10f;       // D-145: the routine numbers once a minute (or when tilted); the CHECKs below stay in every pass
+            if (_say) _nextSay = Time.time + 60f;
+            if (_say) ModLog.Verbose("TrollFigure: " + name + " foot " + _foot.position.ToString("F2") + ", figure " + transform.position.ToString("F2")
                 + " (" + dist.ToString("F3") + " m from the foot), height " + _measuredHeight.ToString("F3") + " m, scale " + transform.localScale.x.ToString("F4")
                 + ", yaw " + ModSettings.FigureYaw.Value.ToString("F0") + " deg, foot turned " + Vector3.SignedAngle(TrollFitMath.Flat(_player.forward, Vector3.forward), TrollFitMath.FootForward(_foot, _toe, _player.forward), Vector3.up).ToString("F0") + " deg from the player's forward");
             ModLog.CheckRange("TrollFigure: " + name + " distance to the foot", dist, 0f, 0.6f, "m");
-            ModLog.Verbose("TrollFigure: " + name + " " + (_glueA != null ? "glued to the slipper, tilt " + Vector3.Angle(transform.up, Vector3.up).ToString("F0") + " deg" : "placed on the foot (not glued)"));
+            if (_say) ModLog.Verbose("TrollFigure: " + name + " " + (_glueA != null ? "glued to the slipper, tilt " + Vector3.Angle(transform.up, Vector3.up).ToString("F0") + " deg" : "placed on the foot (not glued)"));
             ModLog.Check("TrollFigure: " + name + " frame-to-frame turns against the foot over 45 deg in the last " + DiagEverySeconds + " s (largest " + _maxStep.ToString("F0") + " deg)", _jumps, 0, 0, "");
             _jumps = 0; _maxStep = 0f;
             WatchSole();
@@ -284,19 +332,30 @@ namespace SteveTheTroll.Figure
 
         // Known bug (user, 2026-10-30): now and then the troll hangs UNDER the slipper, its head at the sole. Nothing checked it before, so the logs
         // could not show it. Checks: the troll's up axis points the way the player's does; while upright its lowest vertex is near the sole
-        // (normal 0.115 m below the foot bone, hanging under it ~0.40 m) and its head is just below the foot bone (normal 0.025 m, bug ~0.115 m).
+        // (measured when standing: 0.095 m below the foot bone, 0.375 m when hanging under it) and its head is ABOVE the foot bone (measured: 0.185 m
+        // above = -0.185, when hanging it is ~0.095 m below). The 21:35 session had the troll tilted 65 - 88 deg for minutes (screenshots).
+        // D-160: the figures that exist and what the last sole check measured (RuntimeHealth and the test hooks read them)
+        internal static readonly System.Collections.Generic.List<TrollFigure> All = new System.Collections.Generic.List<TrollFigure>();
+        void OnEnable() { if (!All.Contains(this)) All.Add(this); }
+        void OnDisable() { All.Remove(this); }
+        internal float LastTilt, LastBelowSole = float.NaN, LastHeadAboveTop = float.NaN;
+
         void WatchSole()
         {
             float tilt = Vector3.Angle(transform.up, _player.up);
+            LastTilt = tilt;
             ModLog.CheckRange("TrollFigure: " + name + " up axis against the player's up", tilt, 0f, 90f, "deg");
             if (_bake == null || _body == null) return;
             float min, max;
             if (!TrollFitMath.MeasureY(_body, _bake, out min, out max)) return;
             float feet = _foot.position.y - min, head = _foot.position.y - max;
-            ModLog.Verbose("TrollFigure: " + name + " lowest vertex " + feet.ToString("F3") + " m and head " + head.ToString("F3") + " m below the foot bone, tilt " + tilt.ToString("F0") + " deg");
+            // D-160: against the SLIPPER (its renderer bounds), not only the foot bone: how far the figure's lowest vertex is below the slipper's bottom, and its head above the slipper's top
+            float sb, st;
+            if (_slipper != null && _slipper.TryExtent(out sb, out st)) { LastBelowSole = sb - min; LastHeadAboveTop = max - st; }
+            if (_say) ModLog.Verbose("TrollFigure: " + name + " lowest vertex " + feet.ToString("F3") + " m and head " + head.ToString("F3") + " m below the foot bone, tilt " + tilt.ToString("F0") + " deg");
             if (tilt >= 30f) return;
             ModLog.CheckRange("TrollFigure: " + name + " upright troll: lowest vertex below the foot bone (sole)", feet, 0f, 0.2f, "m");
-            ModLog.CheckRange("TrollFigure: " + name + " upright troll: head below the foot bone (more = hangs under the slipper)", head, -0.05f, 0.075f, "m");
+            ModLog.CheckRange("TrollFigure: " + name + " upright troll: head below the foot bone (more = hangs under the slipper)", head, -0.3f, -0.05f, "m");
         }
 
         void OnDestroy()

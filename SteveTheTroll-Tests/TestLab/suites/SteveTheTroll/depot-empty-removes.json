@@ -1,0 +1,19 @@
+{
+  "name": "depot-empty-removes",
+  "description": "A troll-built depot disappears as soon as its last item is taken out",
+  "timeout": 60,
+  "steps": [
+    { "do": "hook", "name": "stt.reset" },
+    { "do": "hook", "name": "stt.spawnDepot", "args": { "dz": 8 }, "as": "depot" },
+    { "do": "hook", "name": "stt.depotChests", "args": { "frame": "depot" }, "expect": 4, "label": "four chests" },
+    { "do": "hook", "name": "stt.depotPut", "args": { "frame": "depot", "index": 0, "prefab": "Stone", "count": 5 }, "expect": true },
+    { "do": "wait", "seconds": 2 },
+    { "do": "hook", "name": "stt.depotCount", "expect": 1, "label": "still there while it holds an item" },
+    { "do": "hook", "name": "stt.depotTake", "args": { "frame": "depot" } },
+    { "do": "wait", "until": { "check": "hook", "name": "stt.depotCount", "expect": 0 }, "timeout": 15 }
+  ],
+  "asserts": [
+    { "check": "hook", "name": "stt.depotCount", "expect": 0, "label": "frame and chests are gone" },
+    { "check": "noErrors", "source": "SteveTheTroll" }
+  ]
+}

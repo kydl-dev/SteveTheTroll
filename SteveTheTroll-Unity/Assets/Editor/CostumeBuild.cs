@@ -87,8 +87,8 @@ namespace SteveTheTroll.EditorTools
                 for (int i = 0; i < bv.Length; i++) { src[i] = body.transform.TransformPoint(bv[i]); strong[i] = bones[bw[i].boneIndex0].name; }
 
                 var chest = Skinned(costume, "CostumeChest", body, src, bw, strong, mat => mat == "straw_yellow" ? (System.Func<string, bool>)(n => Collar.Contains(n)) : ChestBone);
-                var legs = Skinned(costume, "CostumeLegs", body, src, bw, strong, mat => mat == "straw_yellow" ? (System.Func<string, bool>)(n => Belt.Contains(n)) : n => Legs.Contains(n));
-                var feet = Skinned(costume, "CostumeFeet", body, src, bw, strong, mat => n => Feet.Contains(n));
+                var legs = Skinned(costume, "CostumeLegs", body, src, bw, strong, mat => mat == "straw_yellow" ? (System.Func<string, bool>)(n => Belt.Contains(n)) : n => Legs.Contains(n), true);
+                var feet = Skinned(costume, "CostumeFeet", body, src, bw, strong, mat => n => Feet.Contains(n), true);       // D-160: each foot only follows its own side too
                 SkinPrefab("CostumeChestParts", visual, armature, body, new[] { chest });
                 SkinPrefab("CostumeLegsParts", visual, armature, body, new[] { legs, feet });
 
@@ -176,8 +176,15 @@ namespace SteveTheTroll.EditorTools
         /// The FBX part in the body's mesh space, with weights from the nearest body vertices whose strongest bone the part may follow
         /// (allowed(material) -> bone-name filter, so the belt / collar stay on the hips / neck and a leg never follows the other leg or a hand).
         static SkinnedPart Skinned(GameObject fbx, string name, SkinnedMeshRenderer body, Vector3[] src, BoneWeight[] bw, string[] strong,
-                                   System.Func<string, System.Func<string, bool>> allowed)
+                                   System.Func<string, System.Func<string, bool>> allowed, bool splitSides = false)
         {
+            // D-158 (user: the trousers stretch and the fabric between the legs "does not feel right"): with splitSides a vertex only follows the bones of ITS side of the body
+            // (+X or -X of the player's middle) plus the middle bones (Hips / Spine): the nearest body vertices at the crotch / inner thigh belong to the OTHER leg too, and
+            // blending them made the inner fabric follow both legs and stretch whenever the legs moved apart.
+            float rx = 0f; int rn = 0;
+            for (int j = 0; j < src.Length; j++) if (strong[j].StartsWith("Right")) { rx += src[j].x; rn++; }
+            bool rightIsPlusX = rn == 0 || rx / rn >= 0f;
+            int mixedBefore = 0, mixedAfter = 0, stripped = 0;
             var (mf, mats) = Part(fbx, name);
             var m = mf.sharedMesh; var toRoot = Fix * mf.transform.localToWorldMatrix;            // FBX asset root sits at the origin = player root
             var toBody = body.transform.worldToLocalMatrix;                                   // player root == world here
@@ -194,18 +201,34 @@ namespace SteveTheTroll.EditorTools
                 lo = Vector3.Min(lo, p); hi = Vector3.Max(hi, p);
                 outV[i] = toBody.MultiplyPoint3x4(p);
                 outN[i] = toBody.MultiplyVector(toRoot.MultiplyVector(n[i])).normalized;
-                string key = vmat[i] ?? "";
+                bool right = splitSides && ((p.x >= 0f) == rightIsPlusX);
+                string key = (vmat[i] ?? "") + (splitSides ? (right ? "|R" : "|L") : "");
                 if (!filterCache.TryGetValue(key, out var cand))
                 {
-                    var f = allowed(key);
+                    var f0 = allowed(vmat[i] ?? "");
+                    System.Func<string, bool> f = !splitSides ? f0 : n => f0(n) && (n.StartsWith("Right") ? right : !n.StartsWith("Left") || !right);
                     cand = Enumerable.Range(0, src.Length).Where(j => f(strong[j])).ToArray();
                     filterCache[key] = cand;
                     Log("  " + name + " / " + key + ": " + cand.Length + " body source vertices");
                 }
                 outW[i] = Blend(p, src, bw, cand, out float d0);
+                if (splitSides && vmat[i] != "straw_yellow")
+                {
+                    // the body vertices' own weights can still carry the other leg at the crotch: drop those and renormalise
+                    var before = BothSides(outW[i], body.bones);
+                    outW[i] = StripOtherSide(outW[i], body.bones, right);
+                    if (before) stripped++;
+                }
+                if (splitSides && vmat[i] != "straw_yellow")
+                {
+                    if (BothSides(outW[i], body.bones)) mixedAfter++;
+                    var open = Enumerable.Range(0, src.Length).Where(j => allowed(vmat[i] ?? "")(strong[j])).ToArray();
+                    if (BothSides(Blend(p, src, bw, open, out _), body.bones)) mixedBefore++;
+                }
                 far = Mathf.Max(far, d0);
                 used.Add(body.bones[outW[i].boneIndex0].name);
             }
+            if (splitSides) Log(name + ": vertices whose weights follow BOTH legs: " + mixedBefore + " before the side split, " + mixedAfter + " after it (of " + v.Length + "); " + stripped + " vertices had the other leg's weights removed");
             var mesh = new Mesh { name = name, indexFormat = v.Length > 65000 ? UnityEngine.Rendering.IndexFormat.UInt32 : UnityEngine.Rendering.IndexFormat.UInt16 };
             mesh.vertices = outV; mesh.normals = outN; mesh.subMeshCount = m.subMeshCount;
             for (int s = 0; s < m.subMeshCount; s++) mesh.SetTriangles(m.GetTriangles(s), s);
@@ -214,6 +237,41 @@ namespace SteveTheTroll.EditorTools
             Log(name + ": " + v.Length + " verts, " + m.subMeshCount + " materials [" + string.Join(", ", mats.Select(x => x.name)) + "], root-space bounds "
                 + lo.ToString("F2") + " .. " + hi.ToString("F2") + ", farthest source " + (far * 100f).ToString("F0") + " cm, main bones: " + string.Join(", ", used.OrderBy(x => x)));
             return new SkinnedPart { Name = name, Mesh = Save(mesh, name + "_Skinned"), Mats = mats.Select(x => Mat(x.name)).ToArray() };
+        }
+
+        /// Removes the weights of the other side's leg bones (a left vertex keeps no Right* bone) and renormalises; nothing left = all on Hips.
+        static BoneWeight StripOtherSide(BoneWeight w, Transform[] bones, bool right)
+        {
+            var idx = new[] { w.boneIndex0, w.boneIndex1, w.boneIndex2, w.boneIndex3 };
+            var wt = new[] { w.weight0, w.weight1, w.weight2, w.weight3 };
+            var keepI = new List<int>(); var keepW = new List<float>(); float sum = 0f;
+            for (int k = 0; k < 4; k++)
+            {
+                if (wt[k] <= 0f) continue;
+                string n = bones[idx[k]].name;
+                if (right ? n.StartsWith("Left") : n.StartsWith("Right")) continue;
+                keepI.Add(idx[k]); keepW.Add(wt[k]); sum += wt[k];
+            }
+            var r = new BoneWeight();
+            if (keepI.Count == 0 || sum <= 0f)
+            {
+                int hips = System.Array.FindIndex(bones, b => b.name == "Hips");
+                r.boneIndex0 = hips < 0 ? 0 : hips; r.weight0 = 1f;
+                return r;
+            }
+            r.boneIndex0 = keepI[0]; r.weight0 = keepW[0] / sum;
+            if (keepI.Count > 1) { r.boneIndex1 = keepI[1]; r.weight1 = keepW[1] / sum; }
+            if (keepI.Count > 2) { r.boneIndex2 = keepI[2]; r.weight2 = keepW[2] / sum; }
+            if (keepI.Count > 3) { r.boneIndex3 = keepI[3]; r.weight3 = keepW[3] / sum; }
+            return r;
+        }
+
+        static bool BothSides(BoneWeight w, Transform[] bones)
+        {
+            bool l = false, r = false;
+            void See(int i, float x) { if (x < 0.05f) return; var n = bones[i].name; if (n.StartsWith("Left")) l = true; else if (n.StartsWith("Right")) r = true; }
+            See(w.boneIndex0, w.weight0); See(w.boneIndex1, w.weight1); See(w.boneIndex2, w.weight2); See(w.boneIndex3, w.weight3);
+            return l && r;
         }
 
         static BoneWeight Blend(Vector3 p, Vector3[] src, BoneWeight[] bw, int[] cand, out float nearest)

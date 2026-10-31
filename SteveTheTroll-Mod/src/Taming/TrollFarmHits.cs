@@ -40,7 +40,7 @@ namespace SteveTheTroll.Taming
             {
                 _nextLog = UnityEngine.Time.time + 5f;
                 var c = __instance as UnityEngine.Component;
-                ModLog.Verbose("TrollFarmHits: " + attacker.name + " hits " + (c != null ? c.name : "?") + ": tool tier " + before + " -> " + hit.m_toolTier + ", chop / pickaxe " + dmg.ToString("0"));
+                ModLog.Verbose("TrollFarmHits: " + attacker.name + " hits " + (c != null ? TrollTaming.Tag(c) : "?") + ": tool tier " + before + " -> " + hit.m_toolTier + ", chop / pickaxe " + dmg.ToString("0"));
             }
         }
     }

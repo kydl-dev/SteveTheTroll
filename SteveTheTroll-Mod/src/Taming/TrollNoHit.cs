@@ -52,7 +52,7 @@ namespace SteveTheTroll.Taming
                 if (Time.time >= _nextLog)
                 {
                     _nextLog = Time.time + 10f;
-                    ModLog.Verbose("TrollNoHit: " + __instance.name + " is within " + ModSettings.NoHitRadius.Value.ToString("0") + " m of the bed - no swing (" + _blocked + " swing(s) stopped so far)");
+                    ModLog.Verbose("TrollNoHit: " + TrollTaming.Tag(__instance) + " is within " + ModSettings.NoHitRadius.Value.ToString("0") + " m of the bed - no swing (" + _blocked + " swing(s) stopped so far)");
                 }
                 return false;
             }

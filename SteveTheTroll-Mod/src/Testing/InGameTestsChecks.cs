@@ -118,21 +118,24 @@ namespace SteveTheTroll.Testing
             return (inside && outside && patched ? "PASS: " : "FAIL: ") + detail;
         }
 
-        // D-118: a loaded tamed troll takes no elemental damage (fire, frost, lightning, poison, spirit Immune), pierce / slash at least Resistant.
+        // D-118 (D-160: EVERY loaded tamed troll, not the first): no elemental damage (fire, frost, lightning, poison, spirit Immune), pierce / slash at least Resistant.
         static string World_TrollElementalImmune()
         {
+            int n = 0, bad = 0;
+            var sb = new System.Text.StringBuilder();
             foreach (var c in Character.GetAllCharacters())
             {
                 if (!Taming.TamedTrollStats.IsTamedTroll(c)) continue;
                 var m = c.GetDamageModifiers();
                 int immune = Taming.TamedTrollStats.Immune(m);
                 bool tough = m.m_pierce != HitData.DamageModifier.Normal && m.m_slash != HitData.DamageModifier.Normal;
-                string detail = c.name + ": immune " + immune + "/5 (fire " + m.m_fire + ", frost " + m.m_frost + ", lightning " + m.m_lightning + ", poison " + m.m_poison
-                    + ", spirit " + m.m_spirit + "), pierce " + m.m_pierce + ", slash " + m.m_slash;
-                ModLog.Verbose("InGameTests: World_TrollElementalImmune " + detail);
-                return (immune == 5 && tough ? "PASS: " : "FAIL: ") + detail;
+                n++;
+                if (immune != 5 || !tough) { bad++; sb.Append(c.name + ": immune " + immune + "/5, pierce " + m.m_pierce + ", slash " + m.m_slash + "; "); }
             }
-            return "SKIP: no tamed troll loaded";
+            if (n == 0) return "SKIP: no tamed troll loaded";
+            string detail = n + " tamed troll(s) checked, " + bad + " wrong " + sb;
+            ModLog.Verbose("InGameTests: World_TrollElementalImmune " + detail);
+            return (bad == 0 ? "PASS: " : "FAIL: ") + detail;
         }
     }
 }

@@ -11,12 +11,22 @@ namespace Kydl.Ui
     /// pill switches, thin sliders with a round handle and a typed number box, drop-downs, text fields, a colour editor. Plain VisualElements
     /// with inline styles (no theme needed). Nothing shrinks (flexShrink 0): the window scrolls instead.
     /// </summary>
+#if KYDL_CORE_PUBLIC
+    public static class UiControls
+#else
     internal static class UiControls
+#endif
     {
         // --- button ---------------------------------------------------------------------------------------------------------
-        internal static Button Button(string text, Action onClick, bool primary = false)
+#if KYDL_CORE_PUBLIC
+        const float PressDim = 0.35f;          // share of black mixed in while the button is pressed (D-048)
+        const long PressFeedbackMs = 120;      // the dimmed look stays this long after the release, so a quick click is still seen
+#endif
+
+        /// A gold (primary) or dark push button; logs every press. The KydlCore build also dims it while it is pressed and draws a thin red border while the pointer is over it (D-048).
+        public static Button Button(string text, Action onClick, bool primary = false)
         {
-            var b = new Button(() => { UiLog.Verbose("Ui: button '" + text + "' pressed"); onClick?.Invoke(); }) { text = text };
+            var b = new Button(UiLog.Wrap(() => { UiLog.Verbose("Ui: button '" + text + "' pressed"); onClick?.Invoke(); })) { text = text };
             Color bg = primary ? UiKit.GoldDim : UiKit.PanelLight, hot = primary ? UiKit.Gold : UiKit.PanelHover;
             b.style.backgroundColor = bg;
             b.style.color = primary ? UiKit.OnDark : UiKit.Text;
@@ -25,16 +35,29 @@ namespace Kydl.Ui
             b.style.flexShrink = 0;
             b.style.marginLeft = 3; b.style.marginRight = 3; b.style.marginTop = 3; b.style.marginBottom = 3;
             UiKit.Fade(b, "background-color");
+#if KYDL_CORE_PUBLIC
+            bool hovered = false, pressed = false;
+            Action show = () =>
+            {
+                b.style.backgroundColor = pressed ? Color.Lerp(hot, Color.black, PressDim) : hovered ? hot : bg;
+                UiKit.Borders(b, 1, hovered ? UiKit.TabColor : UiKit.Border);
+            };
+            b.RegisterCallback<PointerEnterEvent>(e => { hovered = true; show(); });
+            b.RegisterCallback<PointerLeaveEvent>(e => { hovered = false; pressed = false; show(); });
+            b.RegisterCallback<PointerDownEvent>(e => { pressed = true; show(); UiLog.Verbose("Ui: button '" + text + "' down, dimmed " + (PressDim * 100f).ToString("0") + "% for at least " + PressFeedbackMs + " ms"); });
+            b.RegisterCallback<PointerUpEvent>(e => b.schedule.Execute(() => { pressed = false; show(); }).StartingIn(PressFeedbackMs));
+#else
             b.RegisterCallback<PointerEnterEvent>(e => b.style.backgroundColor = hot);
             b.RegisterCallback<PointerLeaveEvent>(e => b.style.backgroundColor = bg);
+#endif
             return b;
         }
 
         /// A button that looks like an input field (dark, text on the left): the closed drop-down.
-        internal static Button Field(string text, Action onClick)
+        public static Button Field(string text, Action onClick)
         {
-            var b = new Button(() => { UiLog.Verbose("Ui: field '" + text + "' opened"); onClick?.Invoke(); }) { text = text };
-            b.style.backgroundColor = UiKit.Track; b.style.color = UiKit.Gold; b.style.fontSize = UiKit.FontSize;
+            var b = new Button(UiLog.Wrap(() => { UiLog.Verbose("Ui: field '" + text + "' opened"); onClick?.Invoke(); })) { text = text };
+            b.style.backgroundColor = UiKit.Track; b.style.color = UiKit.ValueColor; b.style.fontSize = UiKit.FontSize;
             UiKit.Borders(b, 1, UiKit.Border); UiKit.Radius(b, 4); UiKit.Pad(b, 5, 10);
             b.style.unityTextAlign = TextAnchor.MiddleLeft;
             b.style.flexShrink = 0; b.style.marginLeft = 0; b.style.marginRight = 0;
@@ -45,11 +68,15 @@ namespace Kydl.Ui
         }
 
         // --- text -------------------------------------------------------------------------------------------------------------
-        /// An upper-case gold section title with a line under it (FollowPlayer's Section).
-        internal static VisualElement Heading(string text)
+        /// A section title with a line under it (FollowPlayer's Section). Other mods: upper-case, NameColor. KydlCore build: the text as written (PascalCase) in TabColor, because a section is a settings tab (D-049).
+        public static VisualElement Heading(string text)
         {
             var s = new VisualElement(); s.style.flexShrink = 0; s.style.marginTop = 16; s.style.marginBottom = 6;
-            var head = UiKit.Label(text.ToUpperInvariant(), UiKit.SectionSize, UiKit.Gold, true);
+#if KYDL_CORE_PUBLIC
+            var head = UiKit.Label(text, UiKit.SectionSize, UiKit.TabColor, true);
+#else
+            var head = UiKit.Label(text.ToUpperInvariant(), UiKit.SectionSize, UiKit.NameColor, true);
+#endif
             head.style.letterSpacing = 1.5f;
             s.Add(head);
             var line = new VisualElement(); line.style.height = 1; line.style.backgroundColor = UiKit.Border; line.style.marginTop = 4;
@@ -57,7 +84,8 @@ namespace Kydl.Ui
             return s;
         }
 
-        internal static Label Note(string text)
+        /// A small dim wrapping text line (hints, explanations).
+        public static Label Note(string text)
         {
             var l = UiKit.Label(text, UiKit.SmallSize, UiKit.TextDim);
             l.style.whiteSpace = WhiteSpace.Normal; l.style.flexShrink = 0; l.style.marginTop = 2; l.style.marginBottom = 2;
@@ -65,19 +93,20 @@ namespace Kydl.Ui
         }
 
         /// A row: label on the left (fixed width), control on the right.
-        internal static VisualElement Row(string label, VisualElement control)
+        public static VisualElement Row(string label, VisualElement control)
         {
             var r = new VisualElement();
             r.style.flexDirection = FlexDirection.Row; r.style.alignItems = Align.Center; r.style.flexShrink = 0;
             r.style.marginTop = 4; r.style.marginBottom = 4;
-            var l = UiKit.Label(label, UiKit.FontSize, UiKit.Text); l.style.width = 170; l.style.flexShrink = 0;
+            var l = UiKit.Label(label, UiKit.NameSize, UiKit.NameColor); l.style.width = 170; l.style.flexShrink = 0;
             r.Add(l);
             control.style.flexGrow = 1; control.style.flexShrink = 1;
             r.Add(control);
             return r;
         }
 
-        internal static VisualElement Line(params VisualElement[] items)
+        /// Puts the items side by side in one wrapping line.
+        public static VisualElement Line(params VisualElement[] items)
         {
             var r = new VisualElement();
             r.style.flexDirection = FlexDirection.Row; r.style.flexWrap = Wrap.Wrap; r.style.alignItems = Align.Center; r.style.flexShrink = 0;
@@ -86,8 +115,10 @@ namespace Kydl.Ui
         }
 
         // --- text field -----------------------------------------------------------------------------------------------------
-        internal static TextField TextField(string value, int maxLength, Action<string> changed)
+        /// A dark single-line text input; `changed` gets the new text on every edit.
+        public static TextField TextField(string value, int maxLength, Action<string> changed)
         {
+            changed = UiLog.Wrap(changed);       // log lines of the callback belong to the mod whose tab built this control (UiLog.Owner)
             var f = new TextField { value = value ?? "", maxLength = maxLength };
             f.style.marginLeft = 0; f.style.marginRight = 0; f.style.marginTop = 0; f.style.marginBottom = 0; f.style.flexShrink = 0;
             StyleInput(f, UiKit.FontSize);
@@ -98,7 +129,7 @@ namespace Kydl.Ui
         static void StyleInput(TextField f, int size)
         {
             var input = f.Q(className: UnityEngine.UIElements.TextField.inputUssClassName) ?? f;
-            input.style.backgroundColor = UiKit.Track; input.style.color = UiKit.Gold; input.style.fontSize = size;
+            input.style.backgroundColor = UiKit.Track; input.style.color = UiKit.ValueColor; input.style.fontSize = size;
             UiKit.Borders(input, 1, UiKit.Border); UiKit.Radius(input, 4); UiKit.Pad(input, 5, 8);
             input.style.unityTextAlign = TextAnchor.MiddleLeft;
             f.RegisterCallback<FocusInEvent>(e => UiKit.Borders(input, 1, UiKit.Gold));
@@ -107,8 +138,9 @@ namespace Kydl.Ui
 
         // --- switch -----------------------------------------------------------------------------------------------------------
         /// A pill switch with its label (FollowPlayer's toggle); click anywhere on it.
-        internal static VisualElement Toggle(string text, bool on, Action<bool> changed)
+        public static VisualElement Toggle(string text, bool on, Action<bool> changed)
         {
+            changed = UiLog.Wrap(changed);
             bool state = on;
             var row = new VisualElement();
             row.style.flexDirection = FlexDirection.Row; row.style.alignItems = Align.Center; row.style.flexShrink = 0;
@@ -123,7 +155,7 @@ namespace Kydl.Ui
             UiKit.Radius(knob, 8); UiKit.Fade(knob, "left", "background-color");
             sw.Add(knob);
             row.Add(sw);
-            row.Add(UiKit.Label(text, UiKit.FontSize, UiKit.Text));
+            row.Add(UiKit.Label(text, UiKit.NameSize, UiKit.NameColor));
 
             void Show()
             {
@@ -146,8 +178,9 @@ namespace Kydl.Ui
 
         // --- slider -----------------------------------------------------------------------------------------------------------
         /// A thin slider with a round handle and a number box (type a value, Enter or click elsewhere applies it). `format` formats the value.
-        internal static VisualElement Slider(float min, float max, float value, string format, Action<float> changed)
+        public static VisualElement Slider(float min, float max, float value, string format, Action<float> changed)
         {
+            changed = UiLog.Wrap(changed);
             var box = new VisualElement();
             box.style.flexDirection = FlexDirection.Row; box.style.alignItems = Align.Center; box.style.flexShrink = 0; box.style.minHeight = 34;
 
@@ -207,8 +240,9 @@ namespace Kydl.Ui
         const float ItemHeight = 40f, ListMax = 400f;
 
         /// A field that opens a scrolling list of `options` under it. `label` turns an option into its shown text.
-        internal static Button Dropdown(IList<string> options, string current, Func<string, string> label, Action<string> chosen)
+        public static Button Dropdown(IList<string> options, string current, Func<string, string> label, Action<string> chosen)
         {
+            chosen = UiLog.Wrap(chosen);
             Button b = null;
             string cur = current;
             VisualElement openList = null;   // the list of this field while it is open
@@ -233,7 +267,7 @@ namespace Kydl.Ui
                 foreach (var o in options)
                 {
                     string opt = o;
-                    var item = UiKit.Label(label(opt), UiKit.FontSize, opt == cur ? UiKit.Gold : UiKit.Text);
+                    var item = UiKit.Label(label(opt), UiKit.FontSize, opt == cur ? UiKit.ValueColor : UiKit.Text);
                     item.pickingMode = PickingMode.Position;
                     item.style.height = ItemHeight - 4f; item.style.unityTextAlign = TextAnchor.MiddleLeft; item.style.flexShrink = 0;
                     UiKit.Pad(item, 0, 10); UiKit.Radius(item, 4); UiKit.Fade(item, "background-color");
@@ -273,8 +307,9 @@ namespace Kydl.Ui
         static readonly string[] Palette = { "#FFFFFF", "#000000", "#E8D5A9", "#FFB85C", "#C0392B", "#E67E22", "#F1C40F", "#2ECC71", "#1ABC9C", "#00FFFF", "#3498DB", "#9B59B6", "#FF33FF", "#7F8C8D" };
 
         /// FollowPlayer's colour editor: preview bar, preset swatches, Red / Green / Blue sliders, hex box. `changed` gets "#RRGGBB".
-        internal static VisualElement ColorPicker(string hex, Action<string> changed, out Action<string> set)
+        public static VisualElement ColorPicker(string hex, Action<string> changed, out Action<string> set)
         {
+            changed = UiLog.Wrap(changed);
             var box = new VisualElement(); box.style.flexShrink = 0;
             Color c;
             if (!ColorUtility.TryParseHtmlString(hex ?? "#FFFFFF", out c)) c = Color.white;

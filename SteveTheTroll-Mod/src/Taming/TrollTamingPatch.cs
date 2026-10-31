@@ -81,10 +81,10 @@ namespace SteveTheTroll.Taming
             var troll = TCharacter(t);
             if (nview == null || !nview.IsValid() || !nview.IsOwner() || troll == null || troll.IsDead()) return;
             bool diag = Time.time >= _nextDiag;
-            if (troll.IsTamed()) { if (diag) Diag(troll, "tamed, owner " + TrollTaming.Owner(troll)); return; }
+            if (troll.IsTamed()) return;      // D-145: a tamed troll needs no diagnostic (it was 179 lines per test run)
             if (t.m_tamingTime != ModSettings.TameSeconds.Value)
             {
-                ModLog.Verbose("TrollTamingPatch: " + troll.name + " taming time " + t.m_tamingTime + " -> " + ModSettings.TameSeconds.Value + " s (Tunable changed)");
+                ModLog.Verbose("TrollTamingPatch: " + TrollTaming.Tag(troll) + " taming time " + t.m_tamingTime + " -> " + ModSettings.TameSeconds.Value + " s (Tunable changed)");
                 t.m_tamingTime = ModSettings.TameSeconds.Value;
             }
 
@@ -114,8 +114,8 @@ namespace SteveTheTroll.Taming
             float left = TamingRules.CountDown(before, TickSeconds);
             nview.GetZDO().Set(ZDOVars.s_tameTimeLeft, left);
             float stored = GetRemaining(t);
-            ModLog.Check("TrollTamingPatch: " + troll.name + " stored taming time", stored, left, 0.01, "s");
-            ModLog.Verbose("TrollTamingPatch: " + troll.name + " taming by " + wearer.GetPlayerName() + " at " + wearerDist.ToString("F1") + " m: " + before.ToString("F1") + " -> " + left.ToString("F1") + " s left");
+            ModLog.Check("TrollTamingPatch: " + TrollTaming.Tag(troll) + " stored taming time", stored, left, 0.01, "s");
+            ModLog.Verbose("TrollTamingPatch: " + TrollTaming.Tag(troll) + " taming by " + wearer.GetPlayerName() + " at " + wearerDist.ToString("F1") + " m: " + before.ToString("F1") + " -> " + left.ToString("F1") + " s left");
             if (!TamingRules.Done(left)) return;
 
             bool owned = TrollTaming.SetOwner(troll, wearer);
@@ -133,12 +133,12 @@ namespace SteveTheTroll.Taming
                 else Ui.Notify.Show(Loc.T("stevethetroll_troll_coming", baseName), Ui.Notify.Kind.Good);
             }
             else ModLog.Verbose("TrollTamingPatch: tamer " + wearer.GetPlayerName() + " is on another client - no 'is coming' message here");
-            ModLog.Info("TrollTamingPatch: " + troll.name + " tamed by " + wearer.GetPlayerName() + " as '" + name + "' (owner set " + owned + ", tamed " + troll.IsTamed() + ")");
-            ModLog.Check("TrollTamingPatch: " + troll.name + " tamed after the countdown", troll.IsTamed() ? 1 : 0, 1, 0, "");
+            ModLog.Info("TrollTamingPatch: " + TrollTaming.Tag(troll) + " tamed by " + wearer.GetPlayerName() + " as '" + name + "' (owner set " + owned + ", tamed " + troll.IsTamed() + ")");
+            ModLog.Check("TrollTamingPatch: " + TrollTaming.Tag(troll) + " tamed after the countdown", troll.IsTamed() ? 1 : 0, 1, 0, "");
             TamedTrollStats.Refresh(troll);           // D-042: x3 health from now on
-            ModLog.Verbose("TrollTamingPatch: " + troll.name + " item set kept: '" + TrollSpawnBoost.Remember(troll) + "' (D-063)");
+            ModLog.Verbose("TrollTamingPatch: " + TrollTaming.Tag(troll) + " item set kept: '" + TrollSpawnBoost.Remember(troll) + "' (D-063)");
             TrollArrival.Begin(troll, wearer);       // D-043: walk to the tamer, then wait for orders
-            ModLog.Verbose("TrollTamingPatch: " + troll.name + " id " + id + ", walking to " + wearer.GetPlayerName());
+            ModLog.Verbose("TrollTamingPatch: " + TrollTaming.Tag(troll) + " id " + id + ", walking to " + wearer.GetPlayerName());
         }
 
         // D-037: the wearer's own tamed troll walks to the wearer (follows) instead of a second taming. Only the troll's ZDO owner may steer it.
@@ -148,16 +148,16 @@ namespace SteveTheTroll.Taming
             var view = own != null ? own.GetComponent<ZNetView>() : null;
             if (ai == null || wearer == null) { ModLog.VerboseWarn("TrollTamingPatch: cannot call the own troll (ai " + (ai != null) + ", wearer " + (wearer != null) + ")"); return; }
             if (ai.GetFollowTarget() == wearer.gameObject) return;
-            if (view == null || !view.IsValid() || !view.IsOwner()) { ModLog.Verbose("TrollTamingPatch: own troll " + own.name + " is owned by another client - it is called on that client"); return; }
+            if (view == null || !view.IsValid() || !view.IsOwner()) { ModLog.Verbose("TrollTamingPatch: own troll " + TrollTaming.Tag(own) + " is owned by another client - it is called on that client"); return; }
             ai.SetFollowTarget(wearer.gameObject);
-            ModLog.Info("TrollTamingPatch: " + wearer.GetPlayerName() + " already has a tamed troll (" + own.name + ") - no second taming, it now follows the wearer");
+            ModLog.Info("TrollTamingPatch: " + wearer.GetPlayerName() + " already has a tamed troll (" + TrollTaming.Tag(own) + ") - no second taming, it now follows the wearer");
             ModLog.Check("TrollTamingPatch: called troll follows the wearer", ai.GetFollowTarget() == wearer.gameObject ? 1 : 0, 1, 0, "");
         }
 
         static void Diag(Character troll, string what)
         {
             _nextDiag = Time.time + DiagEverySeconds;
-            ModLog.Verbose("TrollTamingPatch: " + troll.name + " at " + troll.transform.position.ToString("F0") + " " + what);
+            ModLog.Verbose("TrollTamingPatch: " + TrollTaming.Tag(troll) + " at " + troll.transform.position.ToString("F0") + " " + what);
         }
     }
 }

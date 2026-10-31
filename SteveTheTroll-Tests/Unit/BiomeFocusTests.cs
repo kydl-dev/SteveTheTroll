@@ -19,6 +19,7 @@ namespace SteveTheTroll.Tests.Unit
 
         [TestCase("AshLands", "Blackwood")]
         [TestCase("ashlands", "Blackwood")]
+        [TestCase("AshLands", "FlametalOreNew")]
         [TestCase("Mistlands", "BlackMarble")]
         [TestCase("DeepNorth", "Frostwood")]
         [TestCase("DeepNorth", "GoldOre")]
@@ -53,6 +54,7 @@ namespace SteveTheTroll.Tests.Unit
         public void UnknownCurrent_NotAdded() { Assert.That(TrollFocus.ChoicesFor("Meadows", "Stone").Count, Is.EqualTo(TrollFocus.Choices.Count)); }
 
         [TestCase("Blackwood", "stevethetroll_focus_blackwood")]
+        [TestCase("FlametalOreNew", "stevethetroll_focus_flametal")]
         [TestCase("BlackMarble", "stevethetroll_focus_blackmarble")]
         [TestCase("Frostwood", "stevethetroll_focus_timberwood")]
         [TestCase("GoldOre", "stevethetroll_focus_goldore")]
@@ -90,6 +92,7 @@ namespace SteveTheTroll.Tests.Unit
         {
             var line = new TrollInfo { Id = "1:5", Biome = "Mistlands", BackpackUsed = 2, BackpackSlots = 24 }.Encode();
             string old = line.Substring(0, line.LastIndexOf(TrollInfo.Sep));
+            old = old.Substring(0, old.LastIndexOf(TrollInfo.Sep));       // D-162: the destination, then the biome
             var back = TrollInfo.Decode(old);
             Assert.That(back, Is.Not.Null);
             Assert.That(back.Biome, Is.EqualTo(""));

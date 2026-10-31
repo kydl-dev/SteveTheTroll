@@ -38,7 +38,7 @@ namespace SteveTheTroll.Ui
             groups.Add(res);
             var p = new DetailGroup(text("stevethetroll_troll_position"));
             p.Add("X / Y / Z", t.X.ToString("0", c) + " / " + t.Y.ToString("0", c) + " / " + t.Z.ToString("0", c));
-            p.Add(text("stevethetroll_troll_bed"), t.BedDistance >= 0f ? t.BedDistance.ToString("0", c) + " m" : text("stevethetroll_troll_nobed"));
+            p.Add(t.Dest.Length > 0 ? string.Format(text("stevethetroll_troll_hubdist"), t.Dest) : text("stevethetroll_troll_bed"), t.BedDistance >= 0f ? t.BedDistance.ToString("0", c) + " m" : text("stevethetroll_troll_nobed"));
             groups.Add(p);
             return groups;
         }

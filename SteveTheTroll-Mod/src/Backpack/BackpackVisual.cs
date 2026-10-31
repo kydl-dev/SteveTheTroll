@@ -35,7 +35,7 @@ namespace SteveTheTroll.Backpack
                 var v = c.GetComponent<BackpackVisual>();
                 bool want = c.IsTamed() && !c.IsDead();
                 if (want && v == null) { c.gameObject.AddComponent<BackpackVisual>(); added++; }
-                else if (!want && v != null) { ModLog.Verbose("BackpackVisual: " + c.name + " is not tamed (any more) - backpack removed"); Destroy(v); }
+                else if (!want && v != null) { ModLog.Verbose("BackpackVisual: " + Taming.TrollTaming.Tag(c) + " is not tamed (any more) - backpack removed"); Destroy(v); }
             }
             return added;
         }

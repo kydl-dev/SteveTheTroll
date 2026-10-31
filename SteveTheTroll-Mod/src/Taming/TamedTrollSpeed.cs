@@ -29,6 +29,8 @@ namespace SteveTheTroll.Taming
         internal static bool SelfCheck() { return EventCharacter != null && EventAnimator != null; }
 
         static float Factor { get { return ModSettings.TamedSpeedFactor.Value; } }
+        /// D-135: the factor of THIS troll (Troll Hubs: half speed without a hub within 750 m, x1.5 inside a hub circle).
+        static float FactorOf(Character c) { return Hub.HubSpeed.Factor(c, Factor); }
 
         /// The instance's own vanilla speeds, taken the first time the troll is seen (by the animation callback or the swim update, whichever
         /// comes first - both run before this mod changes anything on it). Expected outcome: the Base of this troll.
@@ -39,7 +41,7 @@ namespace SteveTheTroll.Taming
             if (Bases.TryGetValue(id, out b)) return b;
             b = new Base { Speed = c.m_speed, Walk = c.m_walkSpeed, Run = c.m_runSpeed, Factor = 1f, Swim = c.m_swimSpeed, SwimDepth = c.m_swimDepth, SwimAccel = c.m_swimAcceleration, SwimTurn = c.m_swimTurnSpeed };
             Bases[id] = b;
-            ModLog.Verbose("TamedTrollSpeed: " + c.name + " vanilla speeds jog " + b.Speed + ", walk " + b.Walk + ", run " + b.Run + " m/s, swim " + b.Swim + " m/s, swim acceleration "
+            ModLog.Verbose("TamedTrollSpeed: " + TrollTaming.Tag(c) + " vanilla speeds jog " + b.Speed + ", walk " + b.Walk + ", run " + b.Run + " m/s, swim " + b.Swim + " m/s, swim acceleration "
                 + b.SwimAccel + ", swim turn " + b.SwimTurn);
             return b;
         }
@@ -53,10 +55,10 @@ namespace SteveTheTroll.Taming
             if (!Mathf.Approximately(b.Factor, factor))
             {
                 c.m_speed = b.Speed * factor; c.m_walkSpeed = b.Walk * factor; c.m_runSpeed = b.Run * factor;
-                ModLog.Info("TamedTrollSpeed: " + c.name + " speed x" + factor.ToString("0.00") + " (was x" + b.Factor.ToString("0.00") + "): jog " + c.m_speed.ToString("F1")
+                ModLog.Info("TamedTrollSpeed: " + TrollTaming.Tag(c) + " speed x" + factor.ToString("0.00") + " (was x" + b.Factor.ToString("0.00") + "): jog " + c.m_speed.ToString("F1")
                     + ", walk " + c.m_walkSpeed.ToString("F1") + ", run " + c.m_runSpeed.ToString("F1") + " m/s");
                 b.Factor = factor;
-                ModLog.Check("TamedTrollSpeed: " + c.name + " run speed", c.m_runSpeed, b.Run * factor, 0.001, "m/s");
+                ModLog.Check("TamedTrollSpeed: " + TrollTaming.Tag(c) + " run speed", c.m_runSpeed, b.Run * factor, 0.001, "m/s");
             }
             return Mathf.Approximately(c.m_runSpeed, b.Run * factor);
         }
@@ -73,7 +75,7 @@ namespace SteveTheTroll.Taming
             if (now != b.Wading)
             {
                 b.Wading = now;
-                ModLog.Info("TamedTrollSpeed: " + c.name + (now ? " wades" : " out of deep water") + " (water " + depth.ToString("F1") + " m, wade from " + ModSettings.WadeDepth.Value.ToString("F1")
+                ModLog.Info("TamedTrollSpeed: " + TrollTaming.Tag(c) + (now ? " wades" : " out of deep water") + " (water " + depth.ToString("F1") + " m, wade from " + ModSettings.WadeDepth.Value.ToString("F1")
                     + " m, swimming " + c.IsSwimming() + ") -> speed x" + BreakRules.MoveFactor(now || c.IsSwimming(), tamedFactor, ModSettings.WadeFactor.Value).ToString("0.00"));
             }
             // D-130: keep the wade factor while the game has the troll swimming too (no drop to the tamed factor at the swim edge: the legs and
@@ -115,7 +117,7 @@ namespace SteveTheTroll.Taming
             if (Time.time >= _nextSwimLog)
             {
                 _nextSwimLog = Time.time + 5f;
-                ModLog.Verbose("TamedTrollSpeed: " + c.name + " swims at " + want.ToString("F1") + " m/s, real " + c.GetVelocity().magnitude.ToString("F1") + " m/s (vanilla swim " + b.Swim.ToString("F1")
+                ModLog.Verbose("TamedTrollSpeed: " + TrollTaming.Tag(c) + " swims at " + want.ToString("F1") + " m/s, real " + c.GetVelocity().magnitude.ToString("F1") + " m/s (vanilla swim " + b.Swim.ToString("F1")
                     + ", run " + b.Run.ToString("F1") + ", following " + (player != null ? player.GetPlayerName() + " at " + playerSpeed.ToString("F1") + " m/s, " + distance.ToString("F1") + " m away" : "nobody")
                     + "), acceleration " + c.m_swimAcceleration.ToString("F2") + ", turn " + c.m_swimTurnSpeed.ToString("F0") + ", swim depth " + c.m_swimDepth.ToString("F1") + " m");
             }
@@ -146,7 +148,7 @@ namespace SteveTheTroll.Taming
                     if (Bases.ContainsKey(c.gameObject.GetInstanceID())) { Movement(c, 1f); Swim(c, false); }   // no longer tamed / mod off: vanilla again
                     return;
                 }
-                float f = Wade(c, Factor);                       // D-129: WadeFactor x in water from WadeDepth, else the tamed factor
+                float f = Wade(c, FactorOf(c));                       // D-129: WadeFactor x in water from WadeDepth, else the tamed factor
                 Movement(c, f);                                  // D-130: swimming is handled by SwimUpdate, not here
                 var anim = EventAnimator(__instance);
                 if (anim == null) return;
@@ -156,7 +158,7 @@ namespace SteveTheTroll.Taming
                 if (Time.time >= _nextLog)
                 {
                     _nextLog = Time.time + 5f;
-                    ModLog.Verbose("TamedTrollSpeed: " + c.name + " animator speed " + was.ToString("F3") + " -> " + now.ToString("F3") + " (factor " + f.ToString("F2") + ", real speed " + c.GetVelocity().magnitude.ToString("F1") + " m/s, attack " + c.InAttack() + ")");
+                    ModLog.Verbose("TamedTrollSpeed: " + TrollTaming.Tag(c) + " animator speed " + was.ToString("F3") + " -> " + now.ToString("F3") + " (factor " + f.ToString("F2") + ", real speed " + c.GetVelocity().magnitude.ToString("F1") + " m/s, attack " + c.InAttack() + ")");
                 }
             }
         }
@@ -170,8 +172,8 @@ namespace SteveTheTroll.Taming
                 if (!TamedTrollStats.IsTamedTroll(c)) return;
                 var anim = EventAnimator(__instance);
                 if (anim == null) return;
-                anim.speed = TamingRules.AttackAnimSpeed(speedScale, Factor);
-                ModLog.Verbose("TamedTrollSpeed: " + c.name + " attack clip speed " + speedScale.ToString("F2") + " -> " + anim.speed.ToString("F2"));
+                anim.speed = TamingRules.AttackAnimSpeed(speedScale, FactorOf(c));
+                ModLog.Verbose("TamedTrollSpeed: " + TrollTaming.Tag(c) + " attack clip speed " + speedScale.ToString("F2") + " -> " + anim.speed.ToString("F2"));
             }
         }
     }

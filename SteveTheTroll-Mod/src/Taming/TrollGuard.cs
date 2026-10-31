@@ -31,16 +31,46 @@ namespace SteveTheTroll.Taming
             var me = Player.m_localPlayer;
             if (me == null) return 0;
             int changed = 0;
-            foreach (var c in Character.GetAllCharacters())
+            // D-141 (performance review): ONE pass over all characters per tick finds both the owner's trolls and the creatures that go for the owner; every troll then
+            // checks only that short list (it used to walk the whole character list again for each troll: 7 passes x 4 a second with six trolls).
+            Mine.Clear(); Hunters.Clear();
+            long myId = me.GetPlayerID();
+            var all = Character.GetAllCharacters();
+            long t0 = System.Diagnostics.Stopwatch.GetTimestamp();
+            foreach (var c in all)
             {
-                if (c == null || c.IsDead() || !c.IsTamed() || !TrollTaming.IsTroll(c) || TrollTaming.Owner(c) != me.GetPlayerID()) continue;
-                var view = c.GetComponent<ZNetView>();
-                var ai = c.GetComponent<MonsterAI>();
-                if (ai == null || view == null || !view.IsValid() || !view.IsOwner() || c.GetComponent<TrollSlam>() != null) continue;
-                if (Guard(c, ai, me)) changed++;
+                if (c == null || c.IsDead()) continue;
+                if (c.IsTamed())
+                {
+                    if (!TrollTaming.IsTroll(c) || TrollTaming.Owner(c) != myId) continue;
+                    var view = c.GetComponent<ZNetView>();
+                    var ai = c.GetComponent<MonsterAI>();
+                    if (ai == null || view == null || !view.IsValid() || !view.IsOwner() || c.GetComponent<TrollSlam>() != null) continue;
+                    Mine.Add(new KeyValuePair<Character, MonsterAI>(c, ai));
+                    continue;
+                }
+                if (c.IsPlayer()) continue;
+                var mai = c.GetComponent<MonsterAI>();
+                if (mai != null && Target(mai) == me) Hunters.Add(c);          // D-084: creatures that go for the troll itself: TrollCounter (on its hits)
+            }
+            if (Hunters.Count > 0) foreach (var m in Mine) if (Guard(m.Key, m.Value, me)) changed++;
+            _ticks++; _chars += all.Count; _trolls += Mine.Count; _hunters += Hunters.Count;
+            _scanTicks += System.Diagnostics.Stopwatch.GetTimestamp() - t0;
+            if (ModLog.DebugOn && Time.time >= _nextStats)
+            {
+                _nextStats = Time.time + 5f;
+                ModLog.Verbose("TrollGuard: last 5 s - " + _ticks + " tick(s), avg " + (_ticks > 0 ? _chars / _ticks : 0) + " character(s), " + (_ticks > 0 ? _trolls / (float)_ticks : 0).ToString("F1") + " own troll(s), "
+                    + (_ticks > 0 ? _hunters / (float)_ticks : 0).ToString("F1") + " creature(s) after the owner; one pass took " + (_ticks > 0 ? _scanTicks * 1000.0 / System.Diagnostics.Stopwatch.Frequency / _ticks : 0).ToString("F3") + " ms on average");
+                _ticks = _chars = _trolls = _hunters = 0; _scanTicks = 0;
             }
             return changed;
         }
+
+        static readonly List<KeyValuePair<Character, MonsterAI>> Mine = new List<KeyValuePair<Character, MonsterAI>>();
+        static readonly List<Character> Hunters = new List<Character>();
+        static int _ticks, _chars, _trolls, _hunters;
+        static long _scanTicks;
+        static float _nextStats;
 
         /// The attack key (TrollOrders) or a hit on the troll: attack this creature now. Expected outcome: whether the target was set.
         internal static bool Order(Character troll, Character creature)
@@ -52,7 +82,7 @@ namespace SteveTheTroll.Taming
             if (Target(ai) == creature) return false;
             SetTarget(ai, creature);
             ai.Alert();
-            ModLog.Info("TrollGuard: " + troll.name + " ordered / hit - attacks " + creature.name + " (" + Vector3.Distance(troll.transform.position, creature.transform.position).ToString("F1") + " m)");
+            ModLog.Info("TrollGuard: " + TrollTaming.Tag(troll) + " ordered / hit - attacks " + creature.name + " (" + Vector3.Distance(troll.transform.position, creature.transform.position).ToString("F1") + " m)");
             return true;
         }
 
@@ -86,7 +116,7 @@ namespace SteveTheTroll.Taming
             if (t == null || t.IsDead() || t.IsTamed() || Vector3.Distance(t.transform.position, ai.transform.position) > KeepRange)
             {
                 Forced.Remove(id);
-                ModLog.Verbose("TrollGuard: " + ai.name + " forced target gone (" + (t == null ? "removed" : t.IsDead() ? "dead" : "tamed / far") + ")");
+                ModLog.Verbose("TrollGuard: " + TrollTaming.Tag(ai) + " forced target gone (" + (t == null ? "removed" : t.IsDead() ? "dead" : "tamed / far") + ")");
                 return false;
             }
             if (Target(ai) != t) Target(ai) = t;
@@ -102,20 +132,20 @@ namespace SteveTheTroll.Taming
             // itself is within DefendRange of the player (as TrollDefend), and no attacker further than KeepRange from the troll
             bool ownerNear = Vector3.Distance(owner.transform.position, troll.transform.position) <= range;
             Attackers.Clear();
-            foreach (var m in Character.GetAllCharacters())
+            var trollPos = troll.transform.position;
+            var ownerPos = owner.transform.position;
+            float keep2 = KeepRange * KeepRange, range2 = range * range, guard2 = ModSettings.GuardOwnerRange.Value * ModSettings.GuardOwnerRange.Value;
+            bool defends = TamingRules.DefendsOwner(wears, raid);
+            foreach (var m in Hunters)
             {
-                if (m == null || m.IsDead() || m.IsPlayer() || m.IsTamed() || m == troll) continue;
-                var mai = m.GetComponent<MonsterAI>();
-                if (mai == null) continue;
-                var t = Target(mai);
-                if (t != owner) continue;                                 // D-084: creatures that go for the troll itself: TrollCounter (on its hits)
-                if (t == owner && !TamingRules.DefendsOwner(wears, raid)) continue;            // T-008e: slippers off -> it defends the player only during a raid
-                if (t == owner && !ownerNear) continue;
+                if (m == null || m.IsDead() || m.IsTamed()) continue;        // Hunters were collected this tick; one may have died / been tamed since
+                if (!defends || !ownerNear) continue;                         // T-008e: slippers off -> it defends the player only during a raid; D-078: only while the troll is near the player
+                var mp = m.transform.position;
+                float dTroll2 = (mp - trollPos).sqrMagnitude;
                 // D-081 (TEST-034: a farming Steve ran 60 m back home to a greydwarf that only aimed at the player): a creature that goes for the
                 // player is taken on only when it is near the troll (a real HIT on the player still calls trolls within DefendRange: TrollDefend)
-                if (t == owner && Vector3.Distance(m.transform.position, troll.transform.position) > ModSettings.GuardOwnerRange.Value) continue;
-                if (Vector3.Distance(m.transform.position, troll.transform.position) > KeepRange) continue;
-                if (Vector3.Distance(m.transform.position, troll.transform.position) > range && Vector3.Distance(m.transform.position, owner.transform.position) > range) continue;
+                if (dTroll2 > guard2 || dTroll2 > keep2) continue;
+                if (dTroll2 > range2 && (mp - ownerPos).sqrMagnitude > range2) continue;
                 Attackers.Add(m);
             }
             if (Attackers.Count == 0) return false;
@@ -135,7 +165,7 @@ namespace SteveTheTroll.Taming
             SetTarget(ai, nearest);
             ai.Alert();
             var farmer = troll.GetComponent<TrollFarmer>();
-            ModLog.Info("TrollGuard: " + troll.name + " attacks " + nearest.name + " (" + best.ToString("F1") + " m) - it targets " + (Target(nearest.GetComponent<MonsterAI>()) == troll ? "the troll" : owner.GetPlayerName())
+            ModLog.Info("TrollGuard: " + TrollTaming.Tag(troll) + " attacks " + nearest.name + " (" + best.ToString("F1") + " m) - it targets " + (Target(nearest.GetComponent<MonsterAI>()) == troll ? "the troll" : owner.GetPlayerName())
                 + ", " + Attackers.Count + " attacker(s)" + (farmer != null ? ", farming paused" : ""));
             TrollDefend.UnderAttack(Target(nearest.GetComponent<MonsterAI>()) == troll ? TrollOrders.Shown(troll) : owner.GetPlayerName());     // D-068: the one that is attacked
             return true;

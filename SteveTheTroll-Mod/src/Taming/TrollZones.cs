@@ -24,12 +24,49 @@ namespace SteveTheTroll.Taming
         static readonly List<Vector2s> Kept = new List<Vector2s>();
         static readonly HashSet<Vector2s> KeptSet = new HashSet<Vector2s>();
         static readonly List<ZDO> Temp = new List<ZDO>();
+        static readonly List<Vector2s> Stale = new List<Vector2s>();
+        static readonly List<Vector3> Centres = new List<Vector3>();       // the far trolls of this tick: objects are claimed only within the farming radius of one
         static readonly List<ZDO> Scan = new List<ZDO>();
         static readonly System.Reflection.MethodInfo Poke = AccessTools.Method(typeof(ZoneSystem), "PokeLocalZone");
         static readonly System.Reflection.MethodInfo FindObjects = AccessTools.Method(typeof(ZDOMan), "FindObjects");
         // TEST-037: the 3rd parameter is HashSet<ZoneSystem.SectorIndex> in 1.0.20, not HashSet<int> - made from the real parameter type
         static readonly System.Type VisitedType = FindObjects != null && FindObjects.GetParameters().Length == 3 ? FindObjects.GetParameters()[2].ParameterType : null;
         static bool _broken;
+
+        // D-138 (review of the 2026-10-30 test runs: 1 % lows of 11 - 17 fps, hitches up to 417 ms, ~5 000 unowned objects scanned per kept-zone pass): the world is searched
+        // ONCE per tick (1 s) and the result is kept per zone; CreateObjects (30+ times a second) only appends it - it used to run FindObjects for every kept zone, with new
+        // argument arrays, new visited sets and a new de-duplication set, on every call.
+        sealed class ZoneObjects
+        {
+            internal Vector2s Zone;
+            internal readonly List<ZDO> All = new List<ZDO>();
+            internal readonly List<ZDO> NotDistant = new List<ZDO>();
+        }
+        static readonly List<ZoneObjects> Cached = new List<ZoneObjects>();
+        static readonly Dictionary<Vector2s, ZoneObjects> CachePool = new Dictionary<Vector2s, ZoneObjects>();
+        static readonly HashSet<ZDO> CacheSeen = new HashSet<ZDO>();
+        static readonly HashSet<ZDOID> LastClaimed = new HashSet<ZDOID>(), NowClaimed = new HashSet<ZDOID>();
+        static readonly object[] FindArgs = new object[3];
+        static readonly object[] PokeArgs = new object[1];
+        static object _visited;
+        static readonly System.Reflection.MethodInfo VisitedClear = VisitedType != null ? VisitedType.GetMethod("Clear", System.Type.EmptyTypes) : null;
+        static readonly System.Diagnostics.Stopwatch Clock = new System.Diagnostics.Stopwatch();
+        static double _tickMs, _tickMaxMs, _createMs, _createMaxMs;
+        static int _tickCount, _createCount, _scanned, _claimedTotal, _reclaimed;
+        static float _nextStats, _nextZoneLog;
+        static double _fullMs, _fullMaxMs;
+        static int _fullCount;
+        static long _findTicks, _claimTicks;
+        static readonly System.Text.StringBuilder _zoneLines = new System.Text.StringBuilder();
+
+        /// One FindObjects call with reused arguments and a cleared (so equal to fresh) visited set. Expected outcome: `into` holds the zone's ZDOs.
+        static void Find(ZDOMan zm, Vector2s zone, List<ZDO> into)
+        {
+            if (_visited == null) _visited = NewVisited();
+            if (VisitedClear != null) VisitedClear.Invoke(_visited, null); else _visited = NewVisited();
+            FindArgs[0] = zone; FindArgs[1] = into; FindArgs[2] = _visited;
+            FindObjects.Invoke(zm, FindArgs);
+        }
 
         /// A fresh "visited sectors" set of the type the game's FindObjects wants. Expected outcome: the set, or null when it cannot be made.
         internal static object NewVisited() { return VisitedType != null ? System.Activator.CreateInstance(VisitedType) : null; }
@@ -79,11 +116,12 @@ namespace SteveTheTroll.Taming
         {
             if (Time.time < _next) return -1;
             _next = Time.time + TickSeconds;
-            Kept.Clear(); KeptSet.Clear();
+            Clock.Reset(); Clock.Start();                       // D-141: the whole tick is measured, the clean-up included
+            Kept.Clear(); KeptSet.Clear(); Cached.Clear(); Centres.Clear();
             var p = Player.m_localPlayer;
             var zm = ZDOMan.instance;
             var zs = ZoneSystem.instance;
-            if (p == null || zm == null || zs == null || ZNetScene.instance == null || !ModSettings.On || ModSettings.TrollZoneRadius.Value <= 0f || !TrollTaming.Wears(p)) return Log(0);
+            if (p == null || zm == null || zs == null || ZNetScene.instance == null || ZNet.instance == null || !ModSettings.On || ModSettings.TrollZoneRadius.Value <= 0f || !TrollTaming.Wears(p)) { if (CachePool.Count > 0) CachePool.Clear(); return Log(0); }
             Track(p, zm);
             long me = p.GetPlayerID();
             var refPos = ZNet.instance != null ? ZNet.instance.GetReferencePosition() : p.transform.position;
@@ -95,6 +133,7 @@ namespace SteveTheTroll.Taming
                 if (z == null || z.GetFloat(ZDOVars.s_health, 1f) <= 0f || z.GetLong(TrollTaming.OwnerKey, 0L) != me) { gone.Add(id); continue; }
                 var pos = z.GetPosition();
                 if (ZNetScene.InActiveArea(ZoneSystem.GetZonePos(ZoneSystem.GetZone(pos)), refPos)) continue;      // the game runs it anyway
+                Centres.Add(pos);
                 for (int dx = -1; dx <= 1; dx++)
                     for (int dz = -1; dz <= 1; dz++)
                     {
@@ -106,17 +145,88 @@ namespace SteveTheTroll.Taming
                     }
             }
             foreach (var id in gone) Trolls.Remove(id);
+            // D-141 (review): the pool kept an entry (and its ZDO lists) for every zone a troll ever visited and the tick walked them all; only the kept zones stay
+            if (CachePool.Count > Kept.Count)
+            {
+                Stale.Clear();
+                foreach (var key in CachePool.Keys) if (!KeptSet.Contains(key)) Stale.Add(key);
+                foreach (var key in Stale) CachePool.Remove(key);
+            }
             long session = ZDOMan.GetSessionID();
-            int claimed = 0;
+            int claimed = 0, scanned = 0, reclaimed = 0;
+            bool debug = ModLog.DebugOn;
+            if (debug) NowClaimed.Clear();
+            CacheSeen.Clear();
+            var sim = ZNet.instance.GetSyncedSimulationDistance();
+            var centre = ZoneSystem.GetZone(refPos);
+            bool claimNear = ModSettings.ZoneClaimNearBand.Value;
+            float claimReach = r + ClaimMargin, claimReach2 = claimReach * claimReach;
+            bool zoneLog = debug && Time.time >= _nextZoneLog;
+            if (zoneLog) { _nextZoneLog = Time.time + 5f; _zoneLines.Length = 0; }
+            long t0;
             foreach (var zone in Kept)
             {
-                if (Poke != null) Poke.Invoke(zs, new object[] { zone });
+                string band = !debug && claimNear ? null : (Within(centre, zone, sim.NearSimulationDistance, sim.IsClassic, false) ? "near" : Within(centre, zone, sim.TotalSimulationDistance, sim.IsClassic, true) ? "far" : "beyond");
+                int zoneUnowned = 0, zoneClaimed = 0;
+                if (Poke != null) { PokeArgs[0] = zone; Poke.Invoke(zs, PokeArgs); }
                 Temp.Clear();
-                if (FindObjects != null) FindObjects.Invoke(zm, new object[] { zone, Temp, NewVisited() });
-                foreach (var z in Temp) if (z != null && z.Persistent && !z.HasOwner()) { z.SetOwner(session); claimed++; }
+                if (FindObjects == null) continue;
+                t0 = System.Diagnostics.Stopwatch.GetTimestamp();
+                Find(zm, zone, Temp);
+                _findTicks += System.Diagnostics.Stopwatch.GetTimestamp() - t0;
+                scanned += Temp.Count;
+                ZoneObjects zo;
+                if (!CachePool.TryGetValue(zone, out zo)) { zo = new ZoneObjects { Zone = zone }; CachePool[zone] = zo; }
+                zo.All.Clear(); zo.NotDistant.Clear();
+                bool mayClaim = claimNear || band != "near";
+                t0 = System.Diagnostics.Stopwatch.GetTimestamp();
+                foreach (var z in Temp)
+                {
+                    if (z == null) continue;
+                    if (z.Persistent && !z.HasOwner())
+                    {
+                        zoneUnowned++;
+                        // D-139: only what a troll can reach. The kept zones are whole 64 m squares (3 x 3 around each troll, ~5 000 objects), the troll works within
+                        // TrollZoneRadius (50 m): the rest was claimed every second for nothing (thousands of SetOwner calls a second, each a ZDO update for the network).
+                        if (mayClaim && claimed < MaxClaimsPerTick && NearTroll(z.GetPosition(), claimReach2))
+                        {
+                            z.SetOwner(session); claimed++; zoneClaimed++;
+                            if (debug) { if (LastClaimed.Contains(z.m_uid)) reclaimed++; NowClaimed.Add(z.m_uid); }
+                        }
+                    }
+                    if (!CacheSeen.Add(z)) continue;               // portal objects can come once per sector call
+                    zo.All.Add(z);
+                    if (!z.Distant) zo.NotDistant.Add(z);
+                }
+                _claimTicks += System.Diagnostics.Stopwatch.GetTimestamp() - t0;
+                if (zoneLog) _zoneLines.Append("\n    zone ").Append(zone.x).Append('/').Append(zone.y).Append(' ').Append(band).Append(": ").Append(Temp.Count).Append(" object(s), ").Append(zoneUnowned).Append(" unowned persistent, ").Append(zoneClaimed).Append(" claimed");
+                Cached.Add(zo);
             }
-            if (claimed > 0 && ModLog.DebugOn) ModLog.Verbose("TrollZones: " + claimed + " unowned object(s) claimed in " + Kept.Count + " kept zone(s)");
+            if (debug) { LastClaimed.Clear(); foreach (var id in NowClaimed) LastClaimed.Add(id); }
+            _scanned += scanned; _claimedTotal += claimed; _reclaimed += reclaimed;
+            Clock.Stop();
+            double ms = Clock.Elapsed.TotalMilliseconds;
+            _tickMs += ms; _tickCount++; if (ms > _tickMaxMs) _tickMaxMs = ms;
+            if (zoneLog) ModLog.Verbose("TrollZones: per kept zone (band = the game's simulation band; near " + sim.NearSimulationDistance + ", total " + sim.TotalSimulationDistance + " zones; claim in the near band " + (claimNear ? "ON" : "OFF (test)") + ")" + _zoneLines);
+            if (claimed > 0 && debug) ModLog.Verbose("TrollZones: " + claimed + " unowned object(s) claimed in " + Kept.Count + " kept zone(s), " + reclaimed + " of them were already claimed by this client in the pass before (the game gave them back)");
+            Stats();
             return Log(Kept.Count);
+        }
+
+        // Review figures (D-138): what the zone work costs, every 5 s - the numbers to compare before / after and with [TrollZones] radius 0.
+        static void Stats()
+        {
+            if (!ModLog.DebugOn || Time.time < _nextStats) return;
+            _nextStats = Time.time + 5f;
+            ModLog.Verbose("TrollZones: last 5 s - Tick " + _tickCount + "x avg " + (_tickCount > 0 ? _tickMs / _tickCount : 0).ToString("F2") + " ms, max " + _tickMaxMs.ToString("F2") + " ms; CreateObjects prefix " + _createCount
+                + "x avg " + (_createCount > 0 ? _createMs / _createCount : 0).ToString("F3") + " ms, max " + _createMaxMs.ToString("F3") + " ms; " + Kept.Count + " zone(s), " + _scanned + " object(s) scanned, "
+                + _claimedTotal + " claimed (" + _reclaimed + " of them again after the game gave them back)");
+            ModLog.Verbose("TrollZones: last 5 s - the game's whole CreateObjects (with our prefix) " + _fullCount + "x avg " + (_fullCount > 0 ? _fullMs / _fullCount : 0).ToString("F2") + " ms, max " + _fullMaxMs.ToString("F2") + " ms; zone cache " + CachePool.Count + " entr(ies) for " + Kept.Count + " kept zone(s)");
+            _fullMs = _fullMaxMs = 0; _fullCount = 0;
+            double perMs = 1000.0 / System.Diagnostics.Stopwatch.Frequency;
+            ModLog.Verbose("TrollZones: last 5 s - of the Tick time " + (_findTicks * perMs).ToString("F1") + " ms went into FindObjects and " + (_claimTicks * perMs).ToString("F1") + " ms into the claim / cache loop");
+            _findTicks = _claimTicks = 0;
+            _tickMs = _tickMaxMs = _createMs = _createMaxMs = 0; _tickCount = _createCount = _scanned = _claimedTotal = _reclaimed = 0;
         }
 
         /// Is `zone` inside the game's own ring of `radius` zones around `centre`? Classic distance = a square (the game's IsClassic rule),
@@ -125,6 +235,20 @@ namespace SteveTheTroll.Taming
         {
             if (classic) return System.Math.Max(System.Math.Abs(zone.x - centre.x), System.Math.Abs(zone.y - centre.y)) <= radius;
             return ZoneSystem.instance.ZonesWithinRadius(centre, zone, radius, ghost);
+        }
+
+        const int MaxClaimsPerTick = 500;     // D-142: test run 235053 had single ticks of 26 - 35 ms when new zones came in; claims are repeated every second, so the rest follows
+        const float ClaimMargin = 10f;       // m beyond the farming radius: the troll walks, trees fall, drops roll
+
+        /// Is `at` within sqrt(reach2) metres (flat) of a far troll of this tick? Expected outcome: true when a troll can reach it.
+        static bool NearTroll(Vector3 at, float reach2)
+        {
+            for (int i = 0; i < Centres.Count; i++)
+            {
+                float dx = at.x - Centres[i].x, dz = at.z - Centres[i].z;
+                if (dx * dx + dz * dz <= reach2) return true;
+            }
+            return false;
         }
 
         static int Log(int n)
@@ -163,40 +287,54 @@ namespace SteveTheTroll.Taming
             // already listed (adding it again made the game create the troll twice); in the far band the game lists its Distant ZDOs in the
             // distant list. So per call: near-band zones add nothing, far-band zones add only non-Distant ZDOs, zones beyond add all - the
             // lists stay disjoint without a per-frame set of the whole near list (TEST-049: that set cost ~19 000 inserts 30 times a second).
-            static readonly List<ZDO> Found = new List<ZDO>();
-            static readonly HashSet<ZDO> Seen = new HashSet<ZDO>();
             static float _nextLog;
+            static long _started;
+
+            // D-141 (review: "the timing covers only this mod's prefix"): the postfix closes the time of the WHOLE game method (prefix + the game's own creating / removing).
+            static void Postfix()
+            {
+                if (_started == 0) return;
+                double ms = (System.Diagnostics.Stopwatch.GetTimestamp() - _started) * 1000.0 / System.Diagnostics.Stopwatch.Frequency;
+                _started = 0;
+                _fullMs += ms; _fullCount++; if (ms > _fullMaxMs) _fullMaxMs = ms;
+            }
 
             static void Prefix(List<ZDO> currentNearObjects)
             {
-                if (_broken || Kept.Count == 0 || currentNearObjects == null || FindObjects == null || ZDOMan.instance == null || ZNet.instance == null || ZoneSystem.instance == null) return;
+                _started = System.Diagnostics.Stopwatch.GetTimestamp();
+                if (_broken || Cached.Count == 0 || currentNearObjects == null || ZNet.instance == null || ZoneSystem.instance == null) return;
                 try
                 {
+                    Clock.Reset(); Clock.Start();
                     var sim = ZNet.instance.GetSyncedSimulationDistance();
                     var centre = ZoneSystem.GetZone(ZNet.instance.GetReferencePosition());
-                    Found.Clear();
-                    int nearZones = 0, farZones = 0, outZones = 0, distantSkipped = 0;
-                    foreach (var zone in Kept)
+                    int notLoaded = 0, nearZones = 0, farZones = 0, outZones = 0, before = currentNearObjects.Count, added = 0;
+                    // the zone's band is decided on every call (the player moves between ticks); only the search is cached
+                    foreach (var zo in Cached)
                     {
-                        if (Within(centre, zone, sim.NearSimulationDistance, sim.IsClassic, false)) { nearZones++; continue; }
-                        bool far = Within(centre, zone, sim.TotalSimulationDistance, sim.IsClassic, true);
-                        int start = Found.Count;
-                        FindObjects.Invoke(ZDOMan.instance, new object[] { zone, Found, NewVisited() });
-                        if (far)
+                        if (Within(centre, zo.Zone, sim.NearSimulationDistance, sim.IsClassic, false)) { nearZones++; continue; }
+                        List<ZDO> list;
+                        if (Within(centre, zo.Zone, sim.TotalSimulationDistance, sim.IsClassic, true)) { farZones++; list = zo.NotDistant; }
+                        else { outZones++; list = zo.All; }
+                        // D-150 (test run 014829: 134 NullReferenceExceptions in TerrainComp.Load, "Terrain compiler could not find hmap"): objects of a kept zone are only handed to the
+                        // game once that zone's terrain is loaded (we poke it every second, it loads a moment later) - a TerrainComp created before its heightmap throws every frame.
+                        if (!ZoneSystem.instance.IsZoneLoaded(zo.Zone)) { notLoaded++; continue; }
+                        for (int k = 0; k < list.Count; k++)
                         {
-                            farZones++;
-                            for (int k = Found.Count - 1; k >= start; k--) if (Found[k] != null && Found[k].Distant) { Found.RemoveAt(k); distantSkipped++; }
+                            var z = list[k];
+                            if (z == null || !z.IsValid()) continue;     // destroyed since the last search
+                            currentNearObjects.Add(z); added++;
                         }
-                        else outZones++;
                     }
-                    int before = currentNearObjects.Count;
-                    int added = TamingRules.AddDistinct(currentNearObjects, Found, Seen);     // portal objects can come once per sector call
+                    Clock.Stop();
+                    double ms = Clock.Elapsed.TotalMilliseconds;
+                    _createMs += ms; _createCount++; if (ms > _createMaxMs) _createMaxMs = ms;
                     if (Time.time >= _nextLog)
                     {
                         _nextLog = Time.time + 5f;
                         ModLog.Verbose("TrollZones: CreateObjects - simulation near " + sim.NearSimulationDistance + " / total " + sim.TotalSimulationDistance + (sim.IsClassic ? " classic" : "")
-                            + ", game listed " + before + " ZDO(s); kept zones " + Kept.Count + ": " + nearZones + " already in the game's near list, " + farZones + " in its far band ("
-                            + distantSkipped + " Distant ZDO(s) left to the game), " + outZones + " beyond; added " + added);
+                            + ", game listed " + before + " ZDO(s); kept zones " + Cached.Count + ": " + nearZones + " already in the game's near list, " + farZones + " in its far band (Distant ZDOs left to the game), "
+                            + outZones + " beyond; " + notLoaded + " not loaded yet (skipped); added " + added + " from the cache");
                     }
                     ModLog.Check("TrollZones: near list grew by the added ZDOs only", currentNearObjects.Count - before, added, 0f, "ZDO(s)");
                 }

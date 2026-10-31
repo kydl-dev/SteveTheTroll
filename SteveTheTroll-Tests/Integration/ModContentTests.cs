@@ -30,9 +30,10 @@ namespace SteveTheTroll.Tests.Integration
 
         static Dictionary<string, string> Texts()
         {
-            var d = (IDictionary)ModAssembly.GetStatic("SteveTheTroll.Ui.UiText", "En");
             var r = new Dictionary<string, string>();
-            foreach (DictionaryEntry e in d) r[(string)e.Key] = (string)e.Value;
+            // UiText = menus and items; HubText = the Troll Hub and its sign menu (D-135)
+            foreach (var type in new[] { "SteveTheTroll.Ui.UiText", "SteveTheTroll.Ui.HubText" })
+                foreach (DictionaryEntry e in (IDictionary)ModAssembly.GetStatic(type, "En")) r[(string)e.Key] = (string)e.Value;
             return r;
         }
 
@@ -49,7 +50,7 @@ namespace SteveTheTroll.Tests.Integration
             where = new Dictionary<string, string>();
             foreach (var f in CodeFiles())
             {
-                if (Path.GetFileName(f) == "UiText.cs") continue;
+                if (Path.GetFileName(f) == "UiText.cs" || Path.GetFileName(f) == "HubText.cs") continue;
                 foreach (Match m in KeyLiteral.Matches(File.ReadAllText(f)))
                 {
                     if (NotTexts.Contains(m.Groups[1].Value)) continue;
@@ -87,7 +88,7 @@ namespace SteveTheTroll.Tests.Integration
             Dictionary<string, string> where;
             var used = UsedKeys(out where);
             var all = new HashSet<string>();
-            foreach (var f in CodeFiles()) if (Path.GetFileName(f) != "UiText.cs") all.UnionWith(Regex.Matches(File.ReadAllText(f), "stevethetroll_[a-z0-9_]+").Cast<Match>().Select(m => m.Value));
+            foreach (var f in CodeFiles()) if (Path.GetFileName(f) != "UiText.cs" && Path.GetFileName(f) != "HubText.cs") all.UnionWith(Regex.Matches(File.ReadAllText(f), "stevethetroll_[a-z0-9_]+").Cast<Match>().Select(m => m.Value));
             // item descriptions are built as token + "_desc" (Jotunn ItemConfig)
             var unused = Texts().Keys.Where(k => !used.Contains(k) && !all.Any(p => p.EndsWith("_") && k.StartsWith(p))
                 && !(k.EndsWith("_desc") && used.Contains(k.Substring(0, k.Length - 5)))).ToList();
