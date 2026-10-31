@@ -11,8 +11,16 @@
 - **Troll Hub**: a big building you make with the hammer (KY-Items; 50 wood, 20 copper ore, 20 tin ore, 20 resin, 50 stone) once the Steve The Troll set bonus has been active.
   Up to 10 per player, at least 1000 m apart, each serves a 500 m circle. Trolls go there when you log out, unload there and heal there like at the bed;
   a troll uses the hub you assigned in the new **Troll Hub** tab (F6) or the nearest one (`[TrollHub] AutoAssign`). Each hub has a sign (HUB 1, 2, 3 ...)
-  you can rename and style with the pen in the tab or with E on the sign. With hubs on and the set bonus active, trolls with no hub within 750 m work at half speed
+  you can rename and style with the pen in the tab or with E on the sign. With hubs on and the set bonus active, trolls with no hub within 1250 m work at half speed
   and trolls inside a hub circle are 50 % faster than vanilla (instead of 25 %). Removing a hub with the hammer gives back what it cost. `[TrollHub] Enable` switches it off.
+- Hub ranges: a troll uses any of your hubs within 1000 m, and a troll with a hub does not farm further than 950 m from it.
+- Walk back to the hub: a troll you have not told to follow you that ends up more than 1000 m from its hub walks back until it is inside 950 m and then farms again.
+  Only a new follow order, or an attack on the troll or on you, interrupts the walk.
+- The Trolls tab shows "Distance from <hub name>" for a troll that has a hub (the bed otherwise); messages name the hub they talk about.
+- A troll with a full backpack now unloads first, even while it is farming. A depot that could not be removed because a chest window was open is retried; a troll that finds no depot spot tries again after 20 s.
+- The red hub notice is centred on the screen and is no longer cut off at the left on wide screens.
+- Mini trolls on the slippers lean with the slipper (at most 50 degrees from upright) and turn smoothly instead of snapping when the slippers are put on.
+- Troll Mascot trousers: the legs no longer stretch between the thighs when you walk, run or sit.
 - Hub window 15 % wider; the Slippers / Costume / My trolls / Troll work / Trolls tabs use the Settings tab's text size.
 - Far-troll farming costs much less: the zones around far trolls are searched once a second instead of on every game object update (fewer stutters with many trolls).
 - Safer little trolls on the slippers: when the skin reading goes wrong they follow the foot instead of ending up under the sole.

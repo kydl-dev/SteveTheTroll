@@ -2,7 +2,7 @@
   "name": "SteveTheTroll",
   "version_number": "2.0.0",
   "website_url": "",
-  "description": "Fluffy Slippers: soft plush slippers with a little troll on each foot (armor, frost resistance). Wear them and see what happens.",
+  "description": "Tame real trolls with the Fluffy Slippers. They follow, fight, farm wood and ore, unload into depots and work from Troll Hubs. Add the troll costume and club.",
   "dependencies": [
     "denikson-BepInExPack_Valheim-5.4.2202",
     "ValheimModding-Jotunn-2.30.2",
