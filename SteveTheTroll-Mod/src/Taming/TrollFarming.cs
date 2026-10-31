@@ -222,6 +222,114 @@ namespace SteveTheTroll.Taming
             return best;
         }
 
+        // ---- Long range (user 2026-10-31: "increase troll search for material (long range) at 500 m, keep the immediate search at 20 m") ----
+        // The loaded objects (Instances) only reach as far as the loaded area; beyond it the search walks the game's ZDO list (every object this session knows about, in zones
+        // that need not be loaded) and returns the POSITION of the nearest source: the troll walks there, the zone loads around it, and the normal search takes over.
+        internal struct FarInfo { internal bool Source, Young; internal string Name; internal int MinTier; }
+        static readonly Dictionary<int, FarInfo> FarKnown = new Dictionary<int, FarInfo>();
+        static readonly Dictionary<long, bool> FarYields = new Dictionary<long, bool>();
+        static readonly List<ZDO> FarZdos = new List<ZDO>();
+        internal static string LastFar = "";
+        // ZDOMan.FindObjects(sector, list, visitedSectorIndices) is private in the game: the ZDOs of ONE zone (loaded or not), whatever this session knows of it
+        static readonly System.Reflection.MethodInfo FindObjectsMethod = AccessTools.Method(typeof(ZDOMan), "FindObjects");
+
+        static bool _farWarned;
+
+        static FarInfo FarOf(int hash)
+        {
+            FarInfo fi;
+            if (FarKnown.TryGetValue(hash, out fi)) return fi;
+            var prefab = ZNetScene.instance != null ? ZNetScene.instance.GetPrefab(hash) : null;
+            if (prefab != null)
+            {
+                bool tree = prefab.GetComponent<TreeBase>() != null, log = prefab.GetComponent<TreeLog>() != null;
+                bool rock = prefab.GetComponent<MineRock5>() != null || prefab.GetComponent<MineRock>() != null;
+                if (tree || log || rock)
+                {
+                    fi.Source = true;
+                    fi.Name = Utils.GetPrefabName(prefab);
+                    fi.MinTier = MinTier(prefab);
+                    fi.Young = !log && !rock && TamingRules.IsYoungGrowth(fi.Name);
+                }
+            }
+            FarKnown[hash] = fi;
+            return fi;
+        }
+
+        static bool FarYieldsItem(int hash, string item)
+        {
+            long key = ((long)hash << 20) ^ item.GetStableHashCode();
+            bool y;
+            if (FarYields.TryGetValue(key, out y)) return y;
+            var prefab = ZNetScene.instance != null ? ZNetScene.instance.GetPrefab(hash) : null;
+            y = prefab != null && Yields(prefab, item);
+            FarYields[key] = y;
+            return y;
+        }
+
+        /// Nearest farm source beyond `nearRange` and within `range` of `from` that yields a goal, the goals in priority order (the first goal that has any source wins).
+        /// `skip` gets the source's position (no-hit area, hub leash, positions given up). Expected outcome: true with its position and the item it yields.
+        internal static bool FindFar(Vector3 from, float range, float nearRange, int tier, IEnumerable<Ui.TrollFocus.Goal> goals, System.Func<Vector3, bool> skip, out Vector3 pos, out string item)
+        {
+            pos = Vector3.zero; item = "";
+            var man = ZDOMan.instance;
+            if (man == null || ZNetScene.instance == null || FindObjectsMethod == null) return false;
+            var gl = new List<Ui.TrollFocus.Goal>(goals);
+            var bestD = new float[gl.Count];
+            var bestP = new Vector3[gl.Count];
+            for (int i = 0; i < bestD.Length; i++) bestD[i] = float.MaxValue;
+            long t0 = System.Diagnostics.Stopwatch.GetTimestamp();
+            FarZdos.Clear();
+            var zone = ZoneSystem.GetZone(from);
+            int reachZones = Mathf.CeilToInt(range / ZoneSystem.c_ZoneSize);
+            // The visited-sector set is HashSet<int> in some game versions and HashSet<ZoneSystem.SectorIndex> in others (TEST-037 again, found by the lab):
+            // built from the method's own parameter type so it matches whichever game runs.
+            var visited = System.Activator.CreateInstance(FindObjectsMethod.GetParameters()[2].ParameterType);
+            try
+            {
+                for (int zx = -reachZones; zx <= reachZones; zx++)
+                    for (int zy = -reachZones; zy <= reachZones; zy++)
+                        FindObjectsMethod.Invoke(man, new object[] { new Vector2s((short)(zone.x + zx), (short)(zone.y + zy)), FarZdos, visited });
+            }
+            catch (System.Exception e)
+            {
+                LastFar = "FAILED: " + (e.InnerException != null ? e.InnerException.Message : e.Message);
+                if (!_farWarned) { _farWarned = true; ModLog.Warn("TrollFarming: the long-range search failed once and is skipped: " + LastFar); }
+                FarZdos.Clear();
+                return false;
+            }
+            float r2 = range * range, n2 = nearRange * nearRange;
+            bool skipYoung = ModSettings.FarmSkipYoung.Value;
+            int sources = 0;
+            foreach (var z in FarZdos)
+            {
+                if (z == null) continue;
+                var zp = z.GetPosition();
+                float dx = zp.x - from.x, dz = zp.z - from.z, d2 = dx * dx + dz * dz;
+                if (d2 > r2 || d2 <= n2) continue;
+                int hash = z.GetPrefab();
+                var info = FarOf(hash);
+                if (!info.Source || info.MinTier > tier || (info.Young && skipYoung)) continue;
+                sources++;
+                for (int i = 0; i < gl.Count; i++)
+                {
+                    if (d2 >= bestD[i] || !FarYieldsItem(hash, gl[i].Item) || !Ui.TrollFocus.SourceMatches(gl[i], info.Name)) continue;
+                    if (skip != null && skip(zp)) continue;
+                    bestD[i] = d2; bestP[i] = zp;
+                }
+            }
+            double ms = (System.Diagnostics.Stopwatch.GetTimestamp() - t0) * 1000.0 / System.Diagnostics.Stopwatch.Frequency;
+            LastFar = FarZdos.Count + " object(s) known, " + sources + " source(s) in " + nearRange.ToString("0") + " .. " + range.ToString("0") + " m, " + ms.ToString("F1") + " ms";
+            for (int i = 0; i < gl.Count; i++)
+            {
+                if (bestD[i] >= float.MaxValue) continue;
+                pos = bestP[i]; item = gl[i].Item;
+                LastFar += ", best " + item + " " + Mathf.Sqrt(bestD[i]).ToString("F0") + " m away";
+                return true;
+            }
+            return false;
+        }
+
         // The source data of a networked object (null = not a farm source), cached per object.
         static FarmSourceCache Source(ZNetView v)
         {

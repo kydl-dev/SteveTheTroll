@@ -174,6 +174,26 @@ namespace SteveTheTroll.Testing
             return (best == null ? "SKIP: " : "PASS: ") + detail;
         }
 
+        // Long-range farm search (FarmLongRange, 500 m default): the zone scan runs through the reflected private ZDOMan.FindObjects without an
+        // exception, finds sources beyond the near range and stays cheap (one scan, not per frame).
+        static string World_FarmFar()
+        {
+            var p = Player.m_localPlayer;
+            if (p == null) return "SKIP: no local player";
+            Vector3 pos; string item;
+            long t0 = System.Diagnostics.Stopwatch.GetTimestamp();
+            bool found = Taming.TrollFarming.FindFar(p.transform.position, ModSettings.FarmLongRange.Value, ModSettings.FarmMaxRange.Value, 10,
+                new[] { new Ui.TrollFocus.Goal("Wood") }, null, out pos, out item);
+            double ms = (System.Diagnostics.Stopwatch.GetTimestamp() - t0) * 1000.0 / System.Diagnostics.Stopwatch.Frequency;
+            string detail = "Wood between " + ModSettings.FarmMaxRange.Value.ToString("0") + " and " + ModSettings.FarmLongRange.Value.ToString("0") + " m: " + Taming.TrollFarming.LastFar + "; " + ms.ToString("0.0") + " ms (max 250)";
+            ModLog.Verbose("InGameTests: World_FarmFar " + detail);
+            if (ms > 250.0 || (Taming.TrollFarming.LastFar ?? "").StartsWith("FAILED")) return "FAIL: " + detail;
+            if (!found) return "SKIP: " + detail;
+            float d = Vector2.Distance(new Vector2(pos.x, pos.z), new Vector2(p.transform.position.x, p.transform.position.z));
+            bool inRange = d >= ModSettings.FarmMaxRange.Value - 1f && d <= ModSettings.FarmLongRange.Value + 1f;
+            return (inRange ? "PASS: " : "FAIL: ") + detail + ", nearest " + item + " at " + d.ToString("0") + " m";
+        }
+
         // T-008a: the game's Troll prefab carries a Tameable with the taming time and E commands (follow / stay).
         static string World_TrollTameable()
         {

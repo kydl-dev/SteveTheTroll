@@ -24,6 +24,7 @@ namespace SteveTheTroll.Testing
             if (p == null) return "no player";
             Game.instance.GetPlayerProfile().SetCustomSpawnPoint(p.transform.position);
             ClearHubs();
+            ClearFarTrees();
             int gone = 0;
             foreach (var v in Object.FindObjectsByType<ZNetView>(FindObjectsSortMode.None))
             {
@@ -48,6 +49,67 @@ namespace SteveTheTroll.Testing
             if (!TrollTaming.SetOwner(c, Player.m_localPlayer)) throw new System.Exception("owner not set");
             return go;
         }
+
+        /// A tamed troll `dx`,`dz` metres from the player, set on the ground there (far spawns: the player's own height may be far from the ground at that place).
+        [TestHook("stt.spawnTrollFar")]
+        static GameObject SpawnTrollFar(float dx, float dz)
+        {
+            var p = Player.m_localPlayer;
+            var at = p.transform.position + new Vector3(dx, 0f, dz);
+            at.y = ZoneSystem.instance.GetGroundHeight(at) + 0.5f;
+            return SpawnTroll(at);
+        }
+
+        /// Moves a troll `dx`,`dz` metres from the player onto the ground there (a troll made far away is removed by the game at once; one that is moved there is kept by TrollZones, like a real one).
+        [TestHook("stt.moveTrollFar")]
+        static string MoveTrollFar(GameObject troll, float dx, float dz)
+        {
+            var p = Player.m_localPlayer;
+            var at = p.transform.position + new Vector3(dx, 0f, dz);
+            at.y = ZoneSystem.instance.GetGroundHeight(at) + 0.5f;
+            troll.transform.position = at;
+            return at.ToString("F0");
+        }
+
+        /// The player teleports `dx`,`dz` metres from where they stand (the game's own TeleportTo: zones load around the new place). A troll made far from the player is removed by the game, so
+        /// "a troll 400 m from its hub" is made by taking the player there and spawning the troll next to them.
+        [TestHook("stt.teleport")]
+        static string Teleport(float dx, float dz)
+        {
+            var p = Player.m_localPlayer;
+            var at = p.transform.position + new Vector3(dx, 0f, dz);
+            at.y = ZoneSystem.instance.GetGroundHeight(at) + 1f;
+            p.TeleportTo(at, p.transform.rotation, false);
+            return at.ToString("F0");
+        }
+
+        static readonly Dictionary<int, Vector3> Marks = new Dictionary<int, Vector3>();
+
+        /// Remembers where the troll stands now (see stt.moved).
+        [TestHook("stt.mark")]
+        static string Mark(GameObject troll) { Marks[troll.GetInstanceID()] = troll.transform.position; return troll.transform.position.ToString("F0"); }
+
+        /// Flat metres the troll has moved since stt.mark.
+        [TestHook("stt.moved")]
+        static int Moved(GameObject troll)
+        {
+            Vector3 was;
+            if (!Marks.TryGetValue(troll.GetInstanceID(), out was)) throw new System.Exception("stt.mark was not called");
+            return Mathf.RoundToInt(Hub.HubRules.Flat(troll.transform.position - was));
+        }
+
+        /// Flat metres from the troll to the hub it would use (-1 = none).
+        [TestHook("stt.hubDistance")]
+        static int HubDistance(GameObject troll)
+        {
+            Hub.HubRegistry.All(true);
+            var hub = Hub.HubRegistry.For(troll.GetComponent<Character>());
+            return hub != null ? Mathf.RoundToInt(Hub.HubRules.Flat(hub.Pos - troll.transform.position)) : -1;
+        }
+
+        /// The "walk to the owner's bed" order (the Trolls page / E menu command).
+        [TestHook("stt.sendHome")]
+        static bool SendHomeOrder(GameObject troll) { return TrollFarming.SendHome(troll.GetComponent<Character>()); }
 
         [TestHook("stt.moveTroll")]
         static string MoveTroll(GameObject troll, Vector3 position)
@@ -89,6 +151,11 @@ namespace SteveTheTroll.Testing
 
         [TestHook("stt.backpackStacks")]
         static int BackpackStacks(GameObject troll) { int used, slots; Backpack.BackpackStore.Fill(TrollTaming.Zdo(troll.GetComponent<Character>()), out used, out slots); return used; }
+
+        /// True when the backpack holds at most the given number of stacks. A troll that has unloaded goes back to farming
+        /// and fills the pack again, so "exactly 0" is a race; "emptied to a few stacks" is what the scenario means.
+        [TestHook("stt.backpackAtMost")]
+        static bool BackpackAtMost(GameObject troll, int stacks) { return BackpackStacks(troll) <= stacks; }
 
         [TestHook("stt.backpackSlots")]
         static int BackpackSlots(GameObject troll) { int used, slots; Backpack.BackpackStore.Fill(TrollTaming.Zdo(troll.GetComponent<Character>()), out used, out slots); return slots; }
@@ -144,6 +211,74 @@ namespace SteveTheTroll.Testing
 
         [TestHook("stt.unloading")]
         static bool Unloading(GameObject troll) { var f = troll.GetComponent<TrollFarmer>(); return f != null && f.Unloading; }
+
+        // ---- long-range farming and the remembered spot (user 2026-10-31) -------------------------------------------------------------------------------
+
+        static readonly List<ZDO> FakeTrees = new List<ZDO>();
+
+        /// A tree that exists only as a ZDO (like a source in a zone nobody loads) `dx`,`dz` metres from the player. Returns the number of fake trees.
+        [TestHook("stt.addFarTree")]
+        static int AddFarTree(float dx, float dz)
+        {
+            var p = Player.m_localPlayer;
+            var at = p.transform.position + new Vector3(dx, 0f, dz);
+            at.y = ZoneSystem.instance.GetGroundHeight(at);
+            int hash = "Beech1".GetStableHashCode();
+            var z = ZDOMan.instance.CreateNewZDO(at, hash);
+            z.SetPrefab(hash);
+            z.Persistent = false;
+            FakeTrees.Add(z);
+            return FakeTrees.Count;
+        }
+
+        [TestHook("stt.clearFarTrees")]
+        static int ClearFarTrees()
+        {
+            int n = FakeTrees.Count;
+            foreach (var z in FakeTrees) { z.SetOwner(ZDOMan.GetSessionID()); ZDOMan.instance.DestroyZDO(z); }
+            FakeTrees.Clear();
+            return n;
+        }
+
+        /// The long-range search from the player for wood: "none" or "<flat metres> m <item>".
+        [TestHook("stt.farSearch")]
+        static string FarSearch()
+        {
+            var p = Player.m_localPlayer;
+            Vector3 pos; string item;
+            bool found = TrollFarming.FindFar(p.transform.position, ModSettings.FarmLongRange.Value, ModSettings.FarmMaxRange.Value, 10,
+                new[] { new Ui.TrollFocus.Goal("Wood") }, null, out pos, out item);
+            return found ? Mathf.RoundToInt(Hub.HubRules.Flat(pos - p.transform.position)) + " m " + item : "none";
+        }
+
+        /// Flat metres to the nearest long-range wood source (-1 = none). The lab world has real trees, so suites assert limits, not exact values.
+        [TestHook("stt.farMetres")]
+        static int FarMetres()
+        {
+            var p = Player.m_localPlayer;
+            Vector3 pos; string item;
+            bool found = TrollFarming.FindFar(p.transform.position, ModSettings.FarmLongRange.Value, ModSettings.FarmMaxRange.Value, 10,
+                new[] { new Ui.TrollFocus.Goal("Wood") }, null, out pos, out item);
+            return found ? Mathf.RoundToInt(Hub.HubRules.Flat(pos - p.transform.position)) : -1;
+        }
+
+        /// The troll remembers a farm spot `dx`,`dz` metres from the player, as if it had broken a tree there.
+        [TestHook("stt.rememberSpot")]
+        static bool RememberSpot(GameObject troll, float dx, float dz)
+        {
+            var f = troll.GetComponent<TrollFarmer>();
+            if (f == null) return false;
+            var at = Player.m_localPlayer.transform.position + new Vector3(dx, 0f, dz);
+            f.RememberSpotForTest(at);
+            return true;
+        }
+
+        /// Flat metres from the troll to its remembered spot (-1 = none).
+        [TestHook("stt.spotDistance")]
+        static int SpotDistance(GameObject troll) { var f = troll.GetComponent<TrollFarmer>(); return f != null ? f.SpotDistance : -2; }
+
+        [TestHook("stt.travelling")]
+        static bool Travelling(GameObject troll) { var f = troll.GetComponent<TrollFarmer>(); return f != null && f.Travelling; }
 
         // ---- depot -------------------------------------------------------------------------------------------------------------------------------------
 

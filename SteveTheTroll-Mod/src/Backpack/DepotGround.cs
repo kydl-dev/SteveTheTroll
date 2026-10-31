@@ -80,11 +80,69 @@ namespace SteveTheTroll.Backpack
         /// Whether depots may stand on uneven ground (our depot op is made and registered).
         internal static bool CanLevel { get { return Registered(_depot); } }
 
+        // User 2026-10-31 (SmarterHoe, idea only): a terrain op that reaches over several terrain tiles (a TerrainComp each, 64 m zones) can only change the tiles this client has
+        // initialised, loaded and owns (the likely reason a wide op levels only part of the ground - not proven in game for the depot). SmarterHoe therefore (1) initialises + loads + claims every
+        // tile under the op's radius before it, and (2) force-sends the tiles' ZDOs right after. The same two steps wrap every op of this class.
+        static readonly System.Reflection.MethodInfo CompInit = HarmonyLib.AccessTools.Method(typeof(TerrainComp), "Initialize");
+        static readonly System.Reflection.MethodInfo CompCheckLoad = HarmonyLib.AccessTools.Method(typeof(TerrainComp), "CheckLoad");
+        static readonly System.Reflection.FieldInfo CompInitialized = HarmonyLib.AccessTools.Field(typeof(TerrainComp), "m_initialized");
+        static readonly System.Reflection.FieldInfo CompView = HarmonyLib.AccessTools.Field(typeof(TerrainComp), "m_nview");
+        static readonly System.Collections.Generic.List<Heightmap> Maps = new System.Collections.Generic.List<Heightmap>();
+
+        /// Prepares every terrain tile within `radius` of `centre` for writing. Expected outcome: the number of tiles prepared (0 = none found / the game's members were not found).
+        internal static int Prepare(Vector3 centre, float radius, System.Collections.Generic.List<ZNetView> views = null)
+        {
+            Maps.Clear();
+            Heightmap.FindHeightmap(centre, radius, Maps);
+            int n = 0;
+            foreach (var hm in Maps)
+            {
+                var comp = hm != null ? hm.GetAndCreateTerrainCompiler() : null;
+                if (comp == null) continue;
+                try
+                {
+                    if (CompInitialized != null && CompInit != null && !(bool)CompInitialized.GetValue(comp)) CompInit.Invoke(comp, null);
+                    var nv = CompView != null ? CompView.GetValue(comp) as ZNetView : null;
+                    if (nv != null && nv.IsValid())
+                    {
+                        if (CompCheckLoad != null) CompCheckLoad.Invoke(comp, null);
+                        if (!nv.IsOwner()) nv.ClaimOwnership();
+                        if (views != null) views.Add(nv);
+                    }
+                    n++;
+                }
+                catch (System.Exception e) { ModLog.Warn("DepotGround: could not prepare a terrain tile: " + e.GetType().Name + ": " + e.Message); }
+            }
+            return n;
+        }
+
+        /// Sends the prepared tiles' data at once (a client that is not the tile's owner would otherwise see the old ground until the next sync).
+        static void Flush(System.Collections.Generic.List<ZNetView> views)
+        {
+            if (ZDOMan.instance == null) return;
+            foreach (var nv in views)
+            {
+                if (nv == null || !nv.IsValid()) continue;
+                var z = nv.GetZDO();
+                if (z != null) ZDOMan.instance.ForceSendZDO(z.m_uid);
+            }
+        }
+
+        // Prepare, place the op (TerrainOp.Awake applies itself to the terrain and destroys the object), flush.
+        static void Apply(GameObject op, Vector3 at)
+        {
+            var views = new System.Collections.Generic.List<ZNetView>();
+            int tiles = Prepare(at, op.GetComponent<TerrainOp>().m_settings.m_levelRadius * 1.5f, views);
+            Object.Instantiate(op, at, Quaternion.identity);
+            Flush(views);
+            ModLog.Verbose("DepotGround: " + tiles + " terrain tile(s) prepared and sent for " + op.name + " at " + at.ToString("F1"));
+        }
+
         /// Levels the depot's footprint around `ground` to ground.y with ONE op. Expected outcome: true when it was levelled.
         internal static bool Flatten(Vector3 ground, Quaternion rot)
         {
             if (!CanLevel) return false;
-            Object.Instantiate(_depot, ground, Quaternion.identity);      // TerrainOp.Awake applies itself to the terrain and destroys the object
+            Apply(_depot, ground);
             ModLog.Info("DepotGround: levelled a " + (2f * _depot.GetComponent<TerrainOp>().m_settings.m_levelRadius).ToString("F1") + " m square at " + ground.ToString("F1"));
             return true;
         }
@@ -93,7 +151,7 @@ namespace SteveTheTroll.Backpack
         internal static bool FlattenHub(Vector3 ground)
         {
             if (!Registered(_hub)) return false;
-            Object.Instantiate(_hub, ground, Quaternion.identity);
+            Apply(_hub, ground);
             ModLog.Info("DepotGround: levelled the Troll Hub square at " + ground.ToString("F1"));
             return true;
         }
@@ -102,7 +160,7 @@ namespace SteveTheTroll.Backpack
         internal static bool Repair(Vector3 centre, float height)
         {
             if (!Registered(_repair)) return false;
-            Object.Instantiate(_repair, new Vector3(centre.x, height, centre.z), Quaternion.identity);
+            Apply(_repair, new Vector3(centre.x, height, centre.z));
             ModLog.Info("DepotGround: repaired a " + (2f * RepairRadius).ToString("0") + " m square at " + centre.ToString("F1") + " to height " + height.ToString("F2"));
             return true;
         }

@@ -14,6 +14,6 @@
     "depot-empty-removes", "depot-window-open-waits", "depot-not-empty-stays", "depot-reserved-waits",
     "backpack-roundtrip", "backpack-full-cache",
     "hub-choice-ranges", "hub-ignores-other-owner", "hub-walk-back", "hub-walk-back-follow-cancels",
-    "slipper-figures", "full-backpack-unloads", "full-while-farming", "ownership-handover", "health-clean"
+    "slipper-figures", "full-backpack-unloads", "full-while-farming", "far-search", "spot-return", "far-troll-goes-home", "instruction-latency", "ownership-handover", "health-clean"
   ]
 }

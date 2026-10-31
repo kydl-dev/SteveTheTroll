@@ -219,7 +219,8 @@ collar = prim("torus", "collar", (0, -0.01, COL_Z), (1.0, RY / RX, 0.55), materi
 log.append(f"collar: ring at z {COL_Z:.2f}, rx {RX:.2f} ry {RY:.2f} (plush there {cx:.2f} / {cy:.2f})")
 for s in (1, -1):
     f = J[side("LeftFoot", s)]
-    prim("torus", f"cuff_{s}", (f.x, f.y, ANKLE + 0.01), (1.0, 1.0, 0.8), material="blue_dark", major_radius=0.105 * S * 0.62, minor_radius=0.035)
+    # D-165 (user 2026-10-31: "a blue line at the bottom, from one leg to the other, at the level of the slippers"): the protruding cuff ring was wide enough that the two rings
+    # touched in the middle and read as ONE blue bar across both feet. The trousers now simply end at the ankle (closed by the flat cap below, narrower than the leg); no ring.
     prim("sphere", f"cuff_cap_{s}", (f.x, f.y, ANKLE), (0.105 * S * 0.62, 0.105 * S * 0.62, 0.02), material="blue_dark")
 
 # the Fluffy Slippers as the feet (our own model, exports/Slipper.fbx; worn fit: 0.097 m ahead of the foot bone, on the ground, x1.1)

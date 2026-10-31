@@ -24,7 +24,7 @@ namespace SteveTheTroll.Backpack
         // MaxSlope: ground this even is used as is; MaxSlopeLevelled: what the level op (DepotGround) flattens first; MaxSlopeAsIs: the old
         // limit (depot on the highest point) when the game has no level op.
         // Reach: the troll's path must end this close to a new depot (D-106: it unloads from up to 10 m away)
-        const float RingStep = 2f, Reach = 10f, MaxSlope = 0.15f, MaxSlopeLevelled = 2.5f, MaxSlopeAsIs = 1f, ColumnMatch = 0.5f;
+        const float RingStep = 2f, Reach = 10f, MaxSlope = 0.15f, MaxSlopeLevelled = 2.5f, MaxSlopeRelaxed = 5f, MaxSlopeAsIs = 1f, ColumnMatch = 0.5f;
         const int Angles = 16, MaxNewDepots = 6;
         const float ChestSlack = 1.5f;
         static readonly AccessTools.FieldRef<ZNetScene, Dictionary<ZDO, ZNetView>> Instances = AccessTools.FieldRefAccess<ZNetScene, Dictionary<ZDO, ZNetView>>("m_instances");
@@ -276,25 +276,33 @@ namespace SteveTheTroll.Backpack
             var ai = troll.GetComponent<BaseAI>();
             var agent = ai != null ? ai.m_pathAgentType : Pathfinding.AgentType.TrollSize;
             int tried = 0, badGround = 0, blocked = 0, nearStack = 0, covered = 0, unreachable = 0;
-            for (float r = MinFromBed; r <= MaxFromBed; r += RingStep)
+            // User 2026-10-31 (a full troll stood at the bed and did nothing - test run 141207: "none of 288 spot(s) fits ... unreachable 229"): pass 1 is the strict search; when it finds
+            // nothing, pass 2 takes ground up to MaxSlopeRelaxed uneven (the level op cuts and fills it) and does not ask the game's pathfinding whether the troll can come within
+            // 10 m of the spot - the walk to the depot gives up after UnloadWalkSeconds and the unload does not need the troll to stand next to the chest.
+            for (int pass = 0; pass < 2; pass++)
             {
-                for (int k = 0; k < Angles; k++)
+                bool relaxed = pass == 1;
+                float slopeLimit = relaxed && canLevel ? MaxSlopeRelaxed : maxSlope;
+                for (float r = MinFromBed; r <= MaxFromBed; r += RingStep)
                 {
-                    float a = (k + (r / RingStep) * 0.5f) * Mathf.PI * 2f / Angles;
-                    var p = bed + new Vector3(Mathf.Cos(a), 0f, Mathf.Sin(a)) * r;
-                    var toBed = bed - p; toBed.y = 0f;
-                    var q = Quaternion.LookRotation(toBed.normalized, Vector3.up);
-                    tried++;
-                    Vector3 ground; float slope;
-                    bool flatten;
-                    if (!Level(p, q, maxSlope, canLevel, out ground, out slope, out flatten)) { badGround++; continue; }
-                    if (!Free(ground, q)) { blocked++; continue; }
-                    if (!AwayFromStacks(ground)) { nearStack++; continue; }
-                    if (Covered(ground, q)) { covered++; continue; }
-                    if (!Reachable(troll, agent, ground)) { unreachable++; continue; }
-                    at = ground; rot = q; level = flatten;
-                    ModLog.Info("TrollDepot: new stack at " + at.ToString("F1") + ", " + r.ToString("0") + " m from the bed, ground uneven by " + slope.ToString("F2") + " m" + (level ? " -> levelled" : "") + " (" + tried + " spot(s) checked)");
-                    return true;
+                    for (int k = 0; k < Angles; k++)
+                    {
+                        float a = (k + (r / RingStep) * 0.5f) * Mathf.PI * 2f / Angles;
+                        var p = bed + new Vector3(Mathf.Cos(a), 0f, Mathf.Sin(a)) * r;
+                        var toBed = bed - p; toBed.y = 0f;
+                        var q = Quaternion.LookRotation(toBed.normalized, Vector3.up);
+                        tried++;
+                        Vector3 ground; float slope;
+                        bool flatten;
+                        if (!Level(p, q, slopeLimit, canLevel, out ground, out slope, out flatten)) { badGround++; continue; }
+                        if (!Free(ground, q)) { blocked++; continue; }
+                        if (!AwayFromStacks(ground)) { nearStack++; continue; }
+                        if (Covered(ground, q)) { covered++; continue; }
+                        if (!relaxed && !Reachable(troll, agent, ground)) { unreachable++; continue; }
+                        at = ground; rot = q; level = flatten;
+                        ModLog.Info("TrollDepot: new stack at " + at.ToString("F1") + ", " + r.ToString("0") + " m from the bed, ground uneven by " + slope.ToString("F2") + " m" + (level ? " -> levelled" : "") + (relaxed ? " (relaxed search: reachability not checked)" : "") + " (" + tried + " spot(s) checked)");
+                        return true;
+                    }
                 }
             }
             ModLog.Info("TrollDepot: none of " + tried + " spot(s) near the bed fits (ground too uneven " + badGround + ", blocked " + blocked + ", too near another depot " + nearStack + ", under a roof " + covered + ", unreachable " + unreachable + ")");

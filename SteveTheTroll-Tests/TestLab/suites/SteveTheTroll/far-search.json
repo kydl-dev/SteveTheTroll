@@ -1,0 +1,16 @@
+{
+  "name": "far-search",
+  "description": "Long-range farm search (FarmLongRange, 500 m): the search runs without an error, never returns a source beyond the long range, and finds a tree known only as a ZDO 300 m away (user request 2026-10-31)",
+  "timeout": 90,
+  "steps": [
+    { "do": "hook", "name": "stt.reset" },
+    { "do": "hook", "name": "stt.addFarTree", "args": { "dx": 700, "dz": 0 } },
+    { "do": "hook", "name": "stt.farMetres", "max": 500, "label": "the 700 m tree is beyond the long range (any answer is -1 or at most 500 m)" },
+    { "do": "hook", "name": "stt.addFarTree", "args": { "dx": 0, "dz": 300 } },
+    { "do": "hook", "name": "stt.farMetres", "min": 21, "max": 300, "label": "the 300 m tree (or a nearer real one) is found" }
+  ],
+  "asserts": [
+    { "check": "hook", "name": "stt.farMetres", "min": 21, "max": 300 },
+    { "check": "noErrors", "source": "SteveTheTroll" }
+  ]
+}

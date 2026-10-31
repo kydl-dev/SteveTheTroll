@@ -1,4 +1,5 @@
 using Kydl.Common;
+using TMPro;
 using UnityEngine;
 
 namespace SteveTheTroll.Ui
@@ -52,7 +53,7 @@ namespace SteveTheTroll.Ui
             finally { TrollMessages.Passing = false; }
             return p != null;
         }
-    
+
         static TMPro.TMP_Text _timed;
         static float _timedUntil;
 
@@ -76,7 +77,7 @@ namespace SteveTheTroll.Ui
                 rt.sizeDelta = new Vector2(1600f, 60f);
                 rt.anchoredPosition = new Vector2(0f, -170f);
                 _timed.alignment = TMPro.TextAlignmentOptions.Top;
-                _timed.enableWordWrapping = false;
+                _timed.textWrappingMode = TextWrappingModes.Normal;
                 _timed.overflowMode = TMPro.TextOverflowModes.Overflow;
                 _timed.richText = true;
             }

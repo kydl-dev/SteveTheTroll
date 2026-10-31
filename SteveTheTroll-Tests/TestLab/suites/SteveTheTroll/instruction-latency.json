@@ -1,0 +1,21 @@
+{
+  "name": "instruction-latency",
+  "description": "User rule 2026-10-31: a troll starts carrying out an instruction within 5 seconds (Go farm, walk to the bed)",
+  "timeout": 90,
+  "steps": [
+    { "do": "hook", "name": "stt.reset" },
+    { "do": "give", "prefab": "STT_TrollSlippers", "count": 1, "equip": true },
+    { "do": "hook", "name": "stt.addHub", "args": { "number": 1, "dx": 0, "dz": 25 } },
+    { "do": "hook", "name": "stt.spawnTroll", "args": { "dz": -70 }, "as": "troll" },
+    { "do": "hook", "name": "stt.startFarm", "args": { "troll": "troll" }, "expect": true },
+    { "do": "wait", "seconds": 1 },
+    { "do": "hook", "name": "stt.state", "args": { "troll": "troll" }, "contains": "farming", "label": "Go farm: farming within 1 s" },
+    { "do": "hook", "name": "stt.mark", "args": { "troll": "troll" } },
+    { "do": "hook", "name": "stt.sendHome", "args": { "troll": "troll" }, "expect": true },
+    { "do": "wait", "seconds": 5 },
+    { "do": "hook", "name": "stt.moved", "args": { "troll": "troll" }, "min": 15, "label": "walk to the bed: at least 15 m moved (net distance, so circling does not count) within 5 s" }
+  ],
+  "asserts": [
+    { "check": "noErrors", "source": "SteveTheTroll" }
+  ]
+}

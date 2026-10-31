@@ -22,7 +22,9 @@ namespace SteveTheTroll.Figure
         SlipperDriver _slipper;
         SkinPoint _glueA;                                  // the socket anchor (D-147)
         Vector3 _socketFwdInFoot = Vector3.forward, _socketUpInFoot = Vector3.up;
-        const float MaxLeanDeg = 50f;      // D-159
+        const float MaxLeanDeg = 22f;      // D-159 (50) -> 22 on 2026-10-31
+        const float LeanRateDegPerSecond = 240f;
+        Vector3 _leanDir = Vector3.zero;                  // the troll's up last frame (zero = none yet)
         Vector3 _heading = Vector3.zero;                  // D-157: the troll's flat facing last frame (zero = none yet)
         const float HeadingRateDegPerSecond = 540f;
         // D-137 (user 22:55, the troll was under the slipper AGAIN): the safe fallback is the troll's own PLACED pose (Place(): upright, on the foot
@@ -206,6 +208,7 @@ namespace SteveTheTroll.Figure
             // snapped to the socket's heading. It now starts from the heading it has and turns to the socket's at the rate limit (~0.1 s).
             var h = Vector3.ProjectOnPlane(transform.forward, _player.up);
             _heading = h.sqrMagnitude > 1e-4f ? h.normalized : Vector3.zero;
+            _leanDir = Vector3.zero;
             ModLog.Verbose("TrollFigure: " + name + " anchored to the slipper socket, build " + _boundSlipper + " (" + anchor.BoneCount + " bones), pivot " + _bottomBelowPivot.ToString("F3") + " m above it");
         }
 
@@ -214,7 +217,12 @@ namespace SteveTheTroll.Figure
         {
             // D-159: the troll leans with the slipper (socket up, at most MaxLeanDeg from the player's up); the heading stays flat against the player's up
             var up = _player.up;
-            var lean = FitGeometry.LeanUp(up, _foot.rotation * _socketUpInFoot, MaxLeanDeg);
+            // User 2026-10-31 (slipper trolls "going under or sideways when running / jumping"): the lean is capped at MaxLeanDeg (was 50, which laid the troll on its side when the foot
+            // pitched) and follows the slipper at LeanRateDegPerSecond at most, so a foot swing in one frame does not throw the body over. Still some lean, so it does not sink into the slipper (D-159).
+            var leanWant = FitGeometry.LeanUp(up, _foot.rotation * _socketUpInFoot, MaxLeanDeg);
+            var lean = _leanDir.sqrMagnitude < 0.5f ? leanWant : Vector3.RotateTowards(_leanDir, leanWant, LeanRateDegPerSecond * Mathf.Deg2Rad * Mathf.Max(Time.deltaTime, 0.001f), 0f);
+            lean.Normalize();
+            _leanDir = lean;
             var want = FitGeometry.UprightForward(_foot.rotation * _socketFwdInFoot, up, _player.forward);
             // D-157: a turn-rate limit on the facing (a steep foot pitch swings the flattened socket direction by tens of degrees in one frame)
             var fwd = FitGeometry.StepHeading(_heading, want, HeadingRateDegPerSecond * Mathf.Max(Time.deltaTime, 0.001f), up);

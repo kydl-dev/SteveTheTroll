@@ -34,12 +34,101 @@ namespace SteveTheTroll.Taming
         float _nextFullCheck;
         ItemDrop.ItemData _lastWeapon;
 
+        // User 2026-10-31: (1) beyond FarmMaxRange the troll walks to the nearest source the game knows of (FarmLongRange, 500 m), (2) it remembers where it farmed last and goes back there
+        // after emptying its backpack. SpotKey is in the troll's ZDO so the memory survives a re-created troll and the TrollIdle path (a new farmer component).
+        internal const string SpotKey = "stt_spot";
+        const float TravelArriveMetres = 12f, TravelStuckSeconds = 25f, TravelMaxSeconds = 420f, SpotMinMetres = 40f, FarBadSeconds = 180f, FarBadRadius = 30f;
+        bool _travelling;
+        Vector3 _travelTo;
+        float _travelStart, _travelBest = float.MaxValue, _travelBestAt;
+        readonly List<KeyValuePair<Vector3, float>> _badFar = new List<KeyValuePair<Vector3, float>>();
+
+        /// Walking to a far source or back to the remembered spot (test hooks and the status text).
+        internal bool Travelling { get { return _travelling; } }
+        /// The remembered farm spot, distance in flat metres from the troll (-1 = none). Test hook.
+        internal int SpotDistance { get { Vector3 s; if (!Spot(out s)) return -1; s.y = transform.position.y; return Mathf.RoundToInt(Vector3.Distance(s, transform.position)); } }
+        /// Test hook: stores a spot as if the troll had farmed there.
+        internal void RememberSpotForTest(Vector3 at) { RememberSpot(at); }
+
         internal string CurrentItem { get; private set; } = "";
+
+        /// The place of the last source this troll worked on (its ZDO), or false when it has none.
+        bool Spot(out Vector3 spot)
+        {
+            spot = Vector3.zero;
+            var view = GetComponent<ZNetView>();
+            if (view == null || !view.IsValid()) return false;
+            var z = view.GetZDO();
+            spot = z.GetVec3(SpotKey, Vector3.zero);
+            return spot != Vector3.zero;
+        }
+
+        void RememberSpot(Vector3 at)
+        {
+            var view = GetComponent<ZNetView>();
+            if (view != null && view.IsValid() && view.IsOwner()) view.GetZDO().Set(SpotKey, at);
+        }
+
+        bool BadFar(Vector3 p)
+        {
+            for (int i = _badFar.Count - 1; i >= 0; i--)
+            {
+                if (Time.time >= _badFar[i].Value) { _badFar.RemoveAt(i); continue; }
+                var d = _badFar[i].Key - p; d.y = 0f;
+                if (d.sqrMagnitude <= FarBadRadius * FarBadRadius) return true;
+            }
+            return false;
+        }
+
+        void StartTravel(Vector3 to)
+        {
+            _travelling = true; _travelTo = to; _travelStart = Time.time; _travelBest = float.MaxValue; _travelBestAt = Time.time;
+            _nextSearch = Time.time + SearchSeconds;      // the normal search runs every SearchSeconds on the way: the zone loads, the near sources show up
+        }
+
+        void EndTravel(bool failed)
+        {
+            if (failed) _badFar.Add(new KeyValuePair<Vector3, float>(_travelTo, Time.time + FarBadSeconds));
+            _travelling = false;
+            _nextSearch = failed ? Time.time + NothingWaitSeconds : 0f;
+        }
+
+        // Walking to a far source / back to the farm spot. Expected outcome: true = the walk drove the troll this frame.
+        bool Travel(MonsterAI ai, float dt, System.Func<BaseAI, float, Vector3, float, bool, bool> moveTo)
+        {
+            var flat = _travelTo - transform.position; flat.y = 0f;
+            float d = flat.magnitude;
+            if (d <= TravelArriveMetres)
+            {
+                ModLog.Info("TrollFarmer: " + TrollTaming.Tag(this) + " arrived at the far farm place " + _travelTo.ToString("F0") + " (" + (Time.time - _travelStart).ToString("F0") + " s) - searches there");
+                EndTravel(false);
+                return true;
+            }
+            if (d < _travelBest - 1f) { _travelBest = d; _travelBestAt = Time.time; }
+            bool stuck = Time.time - _travelBestAt > TravelStuckSeconds, late = Time.time - _travelStart > TravelMaxSeconds;
+            if (stuck || late)
+            {
+                ModLog.Info("TrollFarmer: " + TrollTaming.Tag(this) + " does not get to " + _travelTo.ToString("F0") + " (" + d.ToString("F0") + " m left, " + (stuck ? "stuck " + TravelStuckSeconds.ToString("0") + " s" : "walked too long") + ") - gives that place up for " + FarBadSeconds.ToString("0") + " s");
+                EndTravel(true);
+                return true;
+            }
+            moveTo(ai, dt, d > FarWalkMetres ? Waypoint(transform.position, _travelTo) : _travelTo, TravelArriveMetres * 0.5f, true);
+            return true;
+        }
+
+        const float FarWalkMetres = 80f, WaypointMetres = 30f, FarHomeStuckSeconds = 45f;
+
+        /// A point `WaypointMetres` ahead on the straight line to `to` (the game's path search fails for a far destination outside the loaded area; same idea as TrollReturn).
+        internal static Vector3 Waypoint(Vector3 from, Vector3 to)
+        {
+            var dir = to - from; dir.y = 0f;
+            return from + dir.normalized * Mathf.Min(WaypointMetres, dir.magnitude);
+        }
 
         /// `announce` (D-058): the troll starts on its own after waiting without orders - its owner gets a message with the item it found.
         internal void Setup(string focus, Vector3 centre, bool announce = false)
         {
-            _focus = focus ?? ""; _centre = centre; _target = null; _hit = null; _nextSearch = 0f; CurrentItem = ""; _home = false; _announce = announce; _auto = announce;
+            _focus = focus ?? ""; _centre = centre; _target = null; _hit = null; _nextSearch = 0f; CurrentItem = ""; _home = false; _announce = announce; _auto = announce; _travelling = false;
             ResetTries();
             MarkFarming(true);
         }
@@ -88,7 +177,8 @@ namespace SteveTheTroll.Taming
             if (col == null) { ModLog.Warn("TrollFarmer: " + TrollTaming.Tag(this) + " cannot farm " + (source != null ? source.name : "?") + " (no collider)"); return false; }
             string item = Utils.GetPrefabName(source);      // shown as is when it yields none of the known items
             foreach (var g in Ui.TrollFocus.DefaultOrder) if (TrollFarming.Yields(source, g.Item)) { item = g.Item; break; }
-            _target = source; _hit = col; CurrentItem = item; _home = false;
+            _target = source; _hit = col; CurrentItem = item; _home = false; _travelling = false;
+            RememberSpot(source.transform.position);
             ResetTries();
             _nextSearch = Time.time + SearchSeconds;
             ModLog.Info("TrollFarmer: " + TrollTaming.Tag(this) + " ordered to break " + source.name + " (" + TrollFarming.KindOf(source) + ", " + item + ")");
@@ -111,7 +201,7 @@ namespace SteveTheTroll.Taming
             _noWeaponSince = -1f;
             if ((_target == null || _hit == null) && Time.time >= _nextSearch) Search(weapon);
             if (_home) return true;
-            if (_target == null || _hit == null) return _target != null;
+            if (_target == null || _hit == null) return _target != null || (_travelling && Travel(ai, dt, moveTo));
 
             Hold(_target);
             var point = AimPoint();
@@ -341,11 +431,39 @@ namespace SteveTheTroll.Taming
                     if (_target == null) continue;
                     string was = CurrentItem;
                     CurrentItem = item;
+                    _travelling = false;
+                    RememberSpot(_target.transform.position);
                     Hold(_target);
                     ModLog.Info("TrollFarmer: " + TrollTaming.Tag(this) + " farms " + item + (_focus.Length > 0 && item != _focus ? " (no " + _focus + " found, farming something else)" : "") + " from "
                         + _target.name + " (" + TrollFarming.KindOf(_target) + ") within " + range + " m" + (was != item && was.Length > 0 ? ", was " + was : ""));
                     if (_announce && IsMine()) Ui.Notify.Show(Loc.T("stevethetroll_farm_auto", Shown(), Loc.T(Ui.TrollFocus.KeyOf(item))), Ui.Notify.Kind.Farm);
                     _announce = false;
+                    return;
+                }
+            }
+            // User 2026-10-31: nothing within FarmMaxRange -> the long-range search (FarmLongRange, 500 m) walks to the nearest source the game knows of; on the way the near search above
+            // runs again every SearchSeconds (the zone loads around the troll) and takes over as soon as a source is in range.
+            if (_travelling) { _target = null; _hit = null; return; }
+            float longRange = ModSettings.FarmLongRange.Value;
+            if (longRange > ModSettings.FarmMaxRange.Value)
+            {
+                Vector3 bedPos;
+                bool hasBedPos = TrollNoHit.Bed(out bedPos);
+                float noHitR = ModSettings.NoHitRadius.Value;
+                System.Func<Vector3, bool> farSkip = p => BadFar(p)
+                    || (ModSettings.On && hasBedPos && noHitR > 0f && TrollNoHit.Inside(bedPos, p, noHitR))
+                    || (hub != null && !Hub.HubRules.FarmAllowed(true, Hub.HubRules.Flat(p - hub.Pos)));
+                Vector3 farPos; string farItem;
+                bool found = TrollFarming.FindFar(transform.position, longRange, ModSettings.FarmMaxRange.Value, tier, goals, farSkip, out farPos, out farItem);
+                ModLog.Verbose("TrollFarmer: " + TrollTaming.Tag(this) + " long-range search: " + TrollFarming.LastFar);
+                if (found)
+                {
+                    CurrentItem = farItem;
+                    var away = farPos - transform.position; away.y = 0f;
+                    ModLog.Info("TrollFarmer: " + TrollTaming.Tag(this) + " finds nothing within " + ModSettings.FarmMaxRange.Value + " m - walks " + away.magnitude.ToString("F0") + " m to a " + farItem + " source at " + farPos.ToString("F0"));
+                    if (_announce && IsMine()) Ui.Notify.Show(Loc.T("stevethetroll_farm_auto", Shown(), Loc.T(Ui.TrollFocus.KeyOf(farItem))), Ui.Notify.Kind.Farm);
+                    _announce = false;
+                    StartTravel(farPos);
                     return;
                 }
             }
@@ -361,7 +479,7 @@ namespace SteveTheTroll.Taming
             if (IsMine() && !_auto && !_saidNothing)      // D-062: a troll that went farming on its own does not report "nothing found" every search; a ordered one says it once
             {
                 _saidNothing = true;
-                Ui.Notify.Show(Loc.T("stevethetroll_farm_nothing", Shown(), ModSettings.FarmMaxRange.Value.ToString("0")), Ui.Notify.Kind.Farm);
+                Ui.Notify.Show(Loc.T("stevethetroll_farm_nothing", Shown(), Mathf.Max(ModSettings.FarmMaxRange.Value, ModSettings.FarmLongRange.Value).ToString("0")), Ui.Notify.Kind.Farm);
             }
         }
         const float NothingWaitSeconds = 20f;
@@ -392,7 +510,21 @@ namespace SteveTheTroll.Taming
             // D-097 (user: "as close as 15m from the bed, not right on top of the bed"): home = within HomeRadius, it waits there
             float home = ModSettings.HomeRadius.Value;
             bool there = d <= home + 1f || (_full && d <= Backpack.TrollDepot.MaxFromBed) || stuck;
-            if (!there) { moveTo(ai, dt, bed, home, false); return true; }
+            if (!there)
+            {
+                // User 2026-10-31 (Steve 3, ~400 m from the hub, did not move): the game's path search fails for a destination far outside the loaded area (D-162 found it for the 1000 m
+                // walk back), so a far walk goes to a point 30 m ahead, renewed every step, and runs.
+                if (d > FarWalkMetres) moveTo(ai, dt, Waypoint(transform.position, bed), 0.5f, true);
+                else moveTo(ai, dt, bed, home, false);
+                if (d > Backpack.TrollDepot.MaxFromBed && Time.time - _homeBestAt > FarHomeStuckSeconds)
+                {
+                    ModLog.Warn("TrollFarmer: " + TrollTaming.Tag(this) + " does not get closer to " + Hub.HubRegistry.DestinationName(GetComponent<Character>()) + " than " + d.ToString("F0") + " m for " + FarHomeStuckSeconds.ToString("0") + " s - gives the walk up and tries again soon");
+                    TrollIdle.RetrySoon(GetComponent<Character>());
+                    ai.StopMoving();
+                    Destroy(this);
+                }
+                return true;
+            }
             if (stuck && d > home + 1f && !_full) ModLog.Info("TrollFarmer: " + TrollTaming.Tag(this) + " gets no closer to the bed than " + d.ToString("F1") + " m - counts as home");
             if (_full)
             {
@@ -425,7 +557,28 @@ namespace SteveTheTroll.Taming
             int moved = Backpack.TrollDepot.Unload(me, bed, TrollTaming.Owner(me), out left);
             ModLog.Info("TrollFarmer: " + TrollTaming.Tag(this) + " unloaded " + moved + " stack(s) at the depot (" + flat.magnitude.ToString("F1") + " m" + (late ? ", walked too long" : "") + "), " + left + " left");
             if (IsMine()) Ui.Notify.Show(left > 0 ? Loc.T("stevethetroll_depot_full", Shown(), left.ToString()) : Loc.T("stevethetroll_depot_done", Shown(), moved.ToString()), left > 0 ? Ui.Notify.Kind.Warn : Ui.Notify.Kind.Farm);
+            if (left == 0 && ResumeAtSpot()) return true;
             Destroy(this);
+            return true;
+        }
+
+        // User 2026-10-31 ("have trolls remember the spot where they've farmed before coming home to empty the backpack"): an emptied troll walks back to where it last worked and farms on
+        // from there (focus from its ZDO). Too close to bother (SpotMinMetres), out of the hub's farm leash or no spot known -> false (the idle check sends it farming from here).
+        bool ResumeAtSpot()
+        {
+            Vector3 spot;
+            if (!Spot(out spot)) return false;
+            var away = spot - transform.position; away.y = 0f;
+            if (away.magnitude < SpotMinMetres) return false;
+            var me = GetComponent<Character>();
+            var hub = Hub.HubRegistry.For(me);
+            if (hub != null && !Hub.HubRules.FarmAllowed(true, Hub.HubRules.Flat(spot - hub.Pos))) return false;
+            var z = TrollTaming.Zdo(me);
+            string focus = z != null ? Ui.TrollFocus.Normalize(z.GetString(TrollRegistry.FocusKey, "")) : "";
+            Setup(focus, spot, false);
+            _full = false; _unloading = false; _homeBest = float.MaxValue; _auto = true;
+            StartTravel(spot);
+            ModLog.Info("TrollFarmer: " + TrollTaming.Tag(this) + " emptied its backpack - walks " + away.magnitude.ToString("F0") + " m back to where it farmed (" + spot.ToString("F0") + ")" + (focus.Length > 0 ? ", focus '" + focus + "'" : ""));
             return true;
         }
 
@@ -436,7 +589,7 @@ namespace SteveTheTroll.Taming
             var view = GetComponent<ZNetView>();
             if (view == null || !view.IsValid() || !Backpack.BackpackStore.IsFull(view.GetZDO())) return false;
             ModLog.Info("TrollFarmer: " + TrollTaming.Tag(this) + " backpack is full - goes to " + Hub.HubRegistry.DestinationName(GetComponent<Character>()));
-            _home = true; _auto = true; _full = true; _target = null; _hit = null; CurrentItem = "";
+            _home = true; _auto = true; _full = true; _target = null; _hit = null; CurrentItem = ""; _travelling = false;
             if (IsMine()) Ui.Notify.Show(Loc.T("stevethetroll_backpack_full", Shown(), Hub.HubRegistry.DestinationName(GetComponent<Character>())), Ui.Notify.Kind.Farm);
             return true;
         }
