@@ -25,7 +25,5 @@ namespace SteveTheTroll.Taming
 
         internal static bool DepotStuck(float emptyWaitingSeconds) { return emptyWaitingSeconds > DepotWaitSeconds; }
 
-        /// A figure (little troll on a slipper) whose lowest point is below the slipper sole by more than `tolerance` metres, or that is tilted more than `maxTiltDeg`.
-        internal static bool FigureBad(float bottomBelowSole, float tolerance, float tiltDeg, float maxTiltDeg) { return bottomBelowSole > tolerance || tiltDeg > maxTiltDeg; }
     }
 }

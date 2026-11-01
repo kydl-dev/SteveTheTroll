@@ -1,12 +1,13 @@
 {
-  "name": "slipper-figures",
-  "description": "Slippers on, run and turn: the little trolls stay on top of the slippers (measured against the slipper's own bounds, D-160)",
+  "name": "slipper-skin",
+  "description": "D-166: slippers on, run and turn: the slippers carry their trolls as ONE baked skinned mesh (attach_skin): present, bones intact, on the feet, not under them",
   "timeout": 90,
   "steps": [
     { "do": "hook", "name": "stt.reset" },
     { "do": "give", "prefab": "STT_TrollSlippers", "count": 1, "equip": true },
-    { "do": "wait", "seconds": 7 },
-    { "do": "hook", "name": "stt.figureCount", "expect": 2, "label": "a figure on each slipper (measured)" },
+    { "do": "wait", "seconds": 3 },
+    { "do": "hook", "name": "stt.slipperSkinsOk", "expect": true, "label": "one slipper skin on the player, all bones, standing on the feet (no waiting for the world: it is part of the item)" },
+    { "do": "hook", "name": "stt.slipperSkins" },
     { "do": "holdKey", "key": "LeftShift", "on": true },
     { "do": "holdKey", "key": "W", "on": true },
     { "do": "wait", "seconds": 3 },
@@ -15,11 +16,11 @@
     { "do": "holdKey", "key": "D", "on": false },
     { "do": "wait", "seconds": 3 },
     { "do": "releaseKeys" },
-    { "do": "wait", "seconds": 6 },
-    { "do": "hook", "name": "stt.figures" }
+    { "do": "wait", "seconds": 4 },
+    { "do": "hook", "name": "stt.slipperSkins" }
   ],
   "asserts": [
-    { "check": "hook", "name": "stt.figuresOk", "expect": true, "label": "no figure under or inside a slipper, none tilted over 60 deg" },
+    { "check": "hook", "name": "stt.slipperSkinsOk", "expect": true, "label": "after running and turning the skin is still one piece on the feet" },
     { "check": "logContains", "source": "SteveTheTroll", "text": "RuntimeHealth", "expect": false, "label": "the health monitor reported nothing" },
     { "check": "noErrors", "source": "SteveTheTroll" }
   ]

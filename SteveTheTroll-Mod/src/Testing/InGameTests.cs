@@ -19,20 +19,19 @@ namespace SteveTheTroll.Testing
             return ModSettings.On ? "PASS: EnableAll on, slippers " + ModSettings.SlippersOn + ", costume " + ModSettings.CostumeOn + ", trolls " + ModSettings.TrollsOn : "SKIP: EnableAll is off in the config";
         }
 
-        /// T-004b: everything the runtime troll figure reads from the game exists (Troll/Visual, the troll's log, the player's feet).
-        static string World_TrollFigureSources()
+        /// D-166: the slippers and their trolls are baked into the bundle prefab SlipperSkinParts: the prefab loads, its attach_skin has the skinned mesh with the player's 53 bones, and the item carries it.
+        static string World_SlipperSkinAsset()
         {
-            var troll = ZNetScene.instance != null ? ZNetScene.instance.GetPrefab(Figure.TrollFigureFactory.TrollPrefab) : null;
-            var visual = troll != null ? troll.transform.Find("Visual") : null;
-            var logItem = ObjectDB.instance != null ? ObjectDB.instance.GetItemPrefab(Figure.TrollFigureFactory.LogItemPrefab) : null;
-            var logAttach = logItem != null ? logItem.transform.Find("attach") : null;
-            var p = Player.m_localPlayer;
-            var foot = p != null ? Utils.FindChild(p.transform, "LeftFoot") : null;
-            string detail = "Troll " + (troll != null) + ", Troll/Visual " + (visual != null) + ", " + Figure.TrollFigureFactory.LogItemPrefab + "/attach " + (logAttach != null) + ", player LeftFoot " + (foot != null);
-            ModLog.Verbose("InGameTests: World_TrollFigureSources " + detail);
-            return troll != null && visual != null && logAttach != null && foot != null ? "PASS: " + detail : "FAIL: " + detail;
+            var parts = BundleAssets.Load<GameObject>(BundleAssets.SlipperSkinParts);
+            var skin = parts != null ? parts.transform.Find("attach_skin/SlipperSkin") : null;
+            var smr = skin != null ? skin.GetComponent<SkinnedMeshRenderer>() : null;
+            var prefab = ObjectDB.instance != null ? ObjectDB.instance.GetItemPrefab(Item.SlipperItem.PrefabName) : null;
+            var onItem = prefab != null ? prefab.transform.Find("attach_skin/SlipperSkin") : null;
+            int verts = smr != null && smr.sharedMesh != null ? smr.sharedMesh.vertexCount : 0, mats = smr != null ? smr.sharedMaterials.Length : 0, bones = smr != null ? smr.bones.Length : 0;
+            string detail = "prefab " + (parts != null) + ", skinned mesh " + (smr != null) + " (" + verts + " verts, " + mats + " materials, " + bones + " bones), on the item " + (onItem != null);
+            ModLog.Verbose("InGameTests: World_SlipperSkinAsset " + detail);
+            return verts > 10000 && mats == 7 && bones == 53 && onItem != null ? "PASS: " + detail : "FAIL: " + detail;
         }
-
         /// T-007: the slipper item exists with its stats (armor 5, max quality 4, utility, frost resistant) and has a recipe.
         static string World_SlipperItem()
         {
@@ -48,7 +47,7 @@ namespace SteveTheTroll.Testing
             int hide = TrollHideAmount(recipe);
             string upgrades = UpgradeAmounts(recipe, out bool upgradesOk);
             string shown = Localization.instance != null ? Localization.instance.Localize(s.m_name) : s.m_name;
-            string detail = "ground slippers " + slippers + ", ground collider " + groundCol + ", worn belt part attach_skin " + (prefab.transform.Find("attach_skin") != null) + ", type " + s.m_itemType + ", armor " + s.m_armor + " +" + s.m_armorPerLevel + "/q, max quality " + s.m_maxQuality + ", frost resistant " + frost + ", recipe " + (recipe != null) + ", TrollHide " + hide + " (expected " + Item.SlipperItem.TrollHideCost + "), upgrades q2/q3/q4 " + upgrades + " (expected " + Item.SlipperItem.UpgradeCostPerItem + " each), name " + s.m_name + " = '" + shown + "' (expected '" + ExpectedName + "')";
+            string detail = "ground slippers " + slippers + ", ground collider " + groundCol + ", worn skin attach_skin " + (prefab.transform.Find("attach_skin") != null) + ", type " + s.m_itemType + ", armor " + s.m_armor + " +" + s.m_armorPerLevel + "/q, max quality " + s.m_maxQuality + ", frost resistant " + frost + ", recipe " + (recipe != null) + ", TrollHide " + hide + " (expected " + Item.SlipperItem.TrollHideCost + "), upgrades q2/q3/q4 " + upgrades + " (expected " + Item.SlipperItem.UpgradeCostPerItem + " each), name " + s.m_name + " = '" + shown + "' (expected '" + ExpectedName + "')";
             ModLog.Verbose("InGameTests: World_SlipperItem " + detail);
             bool ok = s.m_itemType == ItemDrop.ItemData.ItemType.Utility && Mathf.Approximately(s.m_armor, Item.SlipperItem.BaseArmor) && s.m_maxQuality == Item.SlipperItem.MaxQuality && frost && recipe != null && hide == Item.SlipperItem.TrollHideCost && upgradesOk && shown == ExpectedName && slippers == 2 && groundCol && prefab.transform.Find("attach_skin") == null;
             return (ok ? "PASS: " : "FAIL: ") + detail;

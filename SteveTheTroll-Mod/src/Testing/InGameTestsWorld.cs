@@ -76,18 +76,6 @@ namespace SteveTheTroll.Testing
             return (bad == 0 ? "PASS: " : "FAIL: ") + detail;
         }
 
-        /// Every slipper on the player has its TrollSocket (without it the little troll cannot anchor).
-        static string World_SlipperSockets()
-        {
-            var drivers = Object.FindObjectsByType<Figure.SlipperDriver>(FindObjectsSortMode.None);
-            if (drivers.Length == 0) return "SKIP: no slipper worn / visible";
-            int without = 0;
-            foreach (var d in drivers) if (!d.HasSocket) without++;
-            string detail = drivers.Length + " slipper(s), " + without + " without a TrollSocket";
-            ModLog.Verbose("InGameTests: World_SlipperSockets " + detail);
-            return (without == 0 ? "PASS: " : "FAIL: ") + detail;
-        }
-
         /// The read-only runtime monitor (RuntimeHealth) has found nothing wrong with the player's trolls in its last pass.
         static string World_RuntimeHealth()
         {

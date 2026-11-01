@@ -16,6 +16,7 @@ Shader "SteveTheTroll/ShellFur"
         _Shell ("Shell (0 root .. 1 tip, set per material)", Range(0, 1)) = 0.5
         _Occlusion ("Root darkening", Range(0, 1)) = 0.55
         _Glossiness ("Smoothness", Range(0, 1)) = 0.05
+        _Cutoff ("Alpha cut-off of the albedo (0 = off; the troll's straw cards)", Range(0, 1)) = 0
     }
     SubShader
     {
@@ -29,10 +30,10 @@ Shader "SteveTheTroll/ShellFur"
 
         sampler2D _MainTex;
         fixed4 _Color, _TipColor;
-        float _FurLength, _Density, _Thickness, _Gravity, _Shell, _Occlusion;
+        float _FurLength, _Density, _Thickness, _Gravity, _Shell, _Occlusion, _Cutoff;
         half _Glossiness;
 
-        struct Input { float2 uv_MainTex; };
+        struct Input { float2 uv_MainTex; fixed facing : VFACE; };
 
         void vert(inout appdata_full v)
         {
@@ -52,6 +53,7 @@ Shader "SteveTheTroll/ShellFur"
 
         void surf(Input IN, inout SurfaceOutputStandard o)
         {
+            o.Normal = float3(0, 0, IN.facing > 0 ? 1 : -1);          // two-sided cards (the troll's straw): the back face is lit like a back face
             float2 g = IN.uv_MainTex * _Density;
             float2 cell = floor(g);
             float h = hash12(cell);                                   // strand length 0..1 of the full fur length
@@ -63,6 +65,7 @@ Shader "SteveTheTroll/ShellFur"
                 clip((1.0 - rel) * _Thickness * 0.5 - length(local));
             }
             fixed4 c = tex2D(_MainTex, IN.uv_MainTex) * _Color;
+            if (_Cutoff > 0.001) clip(c.a - _Cutoff);
             c.rgb = lerp(c.rgb, c.rgb * _TipColor.rgb * 1.3, _Shell);
             c.rgb *= lerp(1.0 - _Occlusion, 1.0, _Shell);
             o.Albedo = c.rgb;

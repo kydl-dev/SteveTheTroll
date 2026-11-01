@@ -30,11 +30,5 @@ namespace SteveTheTroll.Tests.Unit
         [TestCase(120f, false)]
         [TestCase(0f, false)]
         public void DepotStuck(float s, bool expected) { Assert.That(HealthRules.DepotStuck(s), Is.EqualTo(expected)); }
-
-        [TestCase(0.05f, 10f, true)]      // 5 cm below the sole with 2 cm tolerance... (tolerance below)
-        [TestCase(0.01f, 10f, false)]
-        [TestCase(0f, 70f, true)]
-        [TestCase(0f, 40f, false)]
-        public void FigureBad(float below, float tilt, bool expected) { Assert.That(HealthRules.FigureBad(below, 0.02f, tilt, 60f), Is.EqualTo(expected)); }
     }
 }

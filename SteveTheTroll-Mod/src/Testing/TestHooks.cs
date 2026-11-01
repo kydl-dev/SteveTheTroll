@@ -430,33 +430,5 @@ namespace SteveTheTroll.Testing
 
         [TestHook("stt.healthText")]
         static string HealthText() { return RuntimeHealth.LastText; }
-
-        /// The little trolls on the slippers: "n figure(s), worst below-sole x m, worst tilt y deg, head above top z m" (measured against the slipper's own bounds).
-        [TestHook("stt.figures")]
-        static string Figures()
-        {
-            int n = 0; float worstBelow = float.MinValue, worstTilt = 0f, worstHead = float.MaxValue;
-            foreach (var f in Figure.TrollFigure.All)
-            {
-                if (f == null || float.IsNaN(f.LastBelowSole)) continue;
-                n++;
-                worstBelow = Mathf.Max(worstBelow, f.LastBelowSole); worstTilt = Mathf.Max(worstTilt, f.LastTilt); worstHead = Mathf.Min(worstHead, f.LastHeadAboveTop);
-            }
-            return n == 0 ? "no measured figure" : n + " figure(s), worst below-sole " + worstBelow.ToString("F3") + " m, worst tilt " + worstTilt.ToString("F0") + " deg, head above top " + worstHead.ToString("F3") + " m";
-        }
-
-        [TestHook("stt.figuresOk")]
-        static bool FiguresOk()
-        {
-            foreach (var f in Figure.TrollFigure.All)
-            {
-                if (f == null || float.IsNaN(f.LastBelowSole)) continue;
-                if (HealthRules.FigureBad(f.LastBelowSole, 0.03f, f.LastTilt, 60f)) return false;
-            }
-            return true;
-        }
-
-        [TestHook("stt.figureCount")]
-        static int FigureCount() { int n = 0; foreach (var f in Figure.TrollFigure.All) if (f != null && !float.IsNaN(f.LastBelowSole)) n++; return n; }
     }
 }

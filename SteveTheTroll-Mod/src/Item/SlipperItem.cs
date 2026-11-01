@@ -4,14 +4,14 @@ using Jotunn.Configs;
 using Jotunn.Entities;
 using Jotunn.Managers;
 using Kydl.Common;
-using SteveTheTroll.Figure;
 using UnityEngine;
 
 namespace SteveTheTroll.Item
 {
     /// <summary>
     /// T-007 (D-030): the craftable item "Fluffy Slippers" (D-034; was "Steve the Troll Slippers") in the utility slot (D-009). Cloned from the vanilla belt so the
-    /// utility-slot handling is the game's own; nothing of the belt's look stays: worn look = SlipperSet, ground look = SlipperDropModel.
+    /// utility-slot handling is the game's own; nothing of the belt's look stays: worn look = the bundle's SlipperSkinParts (D-166: the slippers WITH their trolls, one skinned mesh, grafted as
+    /// attach_skin exactly like the costume pieces: the game puts it on every wearer's own bones), ground look = SlipperDropModel.
     /// Stats (D-005): armor 5 (+1 per quality), max quality 4, frost resistant, workbench level 1. Recipe: 5 TrollHide (D-034), 4 DeerHide, 6 Blueberries.
     /// </summary>
     internal static class SlipperItem
@@ -66,6 +66,7 @@ namespace SteveTheTroll.Item
             var item = new CustomItem(PrefabName, BasePrefab, cfg);
             if (item.ItemPrefab == null || item.ItemDrop == null) { ModLog.Error("SlipperItem: could not clone " + BasePrefab + " - no slipper item"); return; }
             int removed = Strip(item.ItemPrefab);
+            bool worn = AddSkin(item.ItemPrefab);
             bool dropLook = SlipperDropModel.Build(item.ItemPrefab);
             var shared = item.ItemDrop.m_itemData.m_shared;
             shared.m_itemType = ItemDrop.ItemData.ItemType.Utility;
@@ -82,7 +83,7 @@ namespace SteveTheTroll.Item
             Shared = shared;
             bool added = ItemManager.Instance.AddItem(item);
             _hash = PrefabName.GetStableHashCode();
-            ModLog.Info("SlipperItem: " + PrefabName + " added " + added + " (armor " + shared.m_armor + " +" + shared.m_armorPerLevel + "/quality, max quality " + shared.m_maxQuality + ", worn belt parts removed " + removed + ", ground look slippers " + dropLook + ", hash " + _hash + ")");
+            ModLog.Info("SlipperItem: " + PrefabName + " added " + added + " (armor " + shared.m_armor + " +" + shared.m_armorPerLevel + "/quality, max quality " + shared.m_maxQuality + ", worn belt parts removed " + removed + ", worn skin grafted " + worn + ", ground look slippers " + dropLook + ", hash " + _hash + ")");
             ModLog.Check("SlipperItem: armor at quality 1", shared.m_armor, BaseArmor, 0.001, "");
             ModLog.Check("SlipperItem: max quality", shared.m_maxQuality, MaxQuality, 0, "");
         }
@@ -105,6 +106,21 @@ namespace SteveTheTroll.Item
             return se;
         }
 
+        /// D-166: the worn look. The bundle prefab SlipperSkinParts has one child "attach_skin" (the player's armature + the SlipperSkin mesh: both slippers and both trolls, weights from the
+        /// player's body); it goes into the item inactive, as vanilla: VisEquipment.AttachArmor activates its copy under each wearer. Expected outcome: true when the skinned mesh is on the item.
+        static bool AddSkin(GameObject prefab)
+        {
+            var parts = BundleAssets.Load<GameObject>(BundleAssets.SlipperSkinParts);
+            var skin = parts != null ? parts.transform.Find("attach_skin") : null;
+            if (skin == null) { ModLog.Error("SlipperItem: bundle part " + BundleAssets.SlipperSkinParts + "/attach_skin missing (prefab " + (parts != null) + ") - the slippers have no worn look"); return false; }
+            var mine = Object.Instantiate(skin.gameObject, prefab.transform, false);
+            mine.name = "attach_skin";
+            mine.SetActive(false);
+            var smr = mine.GetComponentInChildren<SkinnedMeshRenderer>(true);
+            ModLog.Verbose("SlipperItem: worn skin grafted: " + (smr != null && smr.sharedMesh != null ? smr.sharedMesh.vertexCount + " verts, " + smr.sharedMaterials.Length + " materials, " + smr.bones.Length + " bones" : "NO skinned mesh"));
+            return smr != null && smr.sharedMesh != null;
+        }
+
         /// Removes the belt's worn visual (children named attach_*, e.g. attach_skin); the ground model "attach" stays and gets the
         /// slipper pair (SlipperDropModel). Returns how many worn parts were removed.
         static int Strip(GameObject prefab)
@@ -116,8 +132,8 @@ namespace SteveTheTroll.Item
         }
     }
 
-    /// Every character (local and remote players) wearing the slippers in the utility slot gets a SlipperSet: VisEquipment is synced over
-    /// the network by the game, so other players see it as long as they have the mod (D-007).
+    /// Every character (local and remote players) wearing the slippers in the utility slot is marked (the costume legs hide their plush feet then). The look itself is the game's:
+    /// VisEquipment attaches the item's attach_skin on each wearer and syncs it over the network, so other players see it as long as they have the mod (D-007).
     [HarmonyPatch(typeof(VisEquipment), "SetUtilityEquipped")]
     internal static class SlipperVisualPatch
     {
@@ -135,46 +151,20 @@ namespace SteveTheTroll.Item
         }
     }
 
-    /// Owns the SlipperSet of one character; removes it when unequipped or when the character is destroyed.
+    /// Tells whether this character wears the slippers now (read by the costume legs).
     internal sealed class SlipperWearer : MonoBehaviour
     {
-        SlipperSet _set;
         bool _on;
 
         /// The slippers are worn by this character now (the costume legs hide their plush feet then).
         public bool On { get { return _on; } }
 
-        /// Expected outcome: the set exists exactly when on is true (returns that check).
+        /// Expected outcome: the state is the one asked for (returns that check).
         public bool Set(bool on)
         {
-            if (on == _on) return (_set != null) == on;
             _on = on;
-            if (on) _set = SlipperSet.Spawn(transform, name);
-            else if (_set != null) { _set.Despawn(); _set = null; }
-            ModLog.Verbose("SlipperWearer: " + name + " slippers " + (on ? "on" : "off") + ", set " + (_set != null ? (_set.Complete ? "complete" : "incomplete") : "none"));
-            _fills = 0;
-            return (_set != null) == on;
-        }
-
-        const float FillEverySeconds = 1f;
-        const int MaxFills = 60;
-        float _nextFill;
-        int _fills;
-
-        // TEST-008: worn while the world loads -> the trolls could not be made yet; add the missing parts once it is ready (1 s steps, 60 tries).
-        void Update()
-        {
-            if (!_on || _set == null || _set.Complete || _fills >= MaxFills || Time.time < _nextFill) return;
-            _nextFill = Time.time + FillEverySeconds;
-            _fills++;
-            int n = _set.Fill();
-            ModLog.Verbose("SlipperWearer: " + name + " filled the set, try " + _fills + ": " + n + "/4 parts");
-            if (_fills == MaxFills && !_set.Complete) ModLog.Warn("SlipperWearer: " + name + " set still incomplete after " + MaxFills + " tries (" + n + "/4)");
-        }
-
-        void OnDestroy()
-        {
-            if (_set != null) { _set.Despawn(); _set = null; }
+            ModLog.Verbose("SlipperWearer: " + name + " slippers " + (on ? "on" : "off"));
+            return _on == on;
         }
     }
 }

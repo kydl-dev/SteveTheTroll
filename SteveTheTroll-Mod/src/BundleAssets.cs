@@ -11,22 +11,20 @@ namespace SteveTheTroll
     internal static class BundleAssets
     {
         // prefabs
-        internal const string SlipperParts = "SlipperParts", CostumeHelmetParts = "CostumeHelmetParts", CostumeChestParts = "CostumeChestParts",
+        internal const string SlipperParts = "SlipperParts", SlipperSkinParts = "SlipperSkinParts", CostumeHelmetParts = "CostumeHelmetParts", CostumeChestParts = "CostumeChestParts",
             CostumeLegsParts = "CostumeLegsParts", ClubParts = "ClubParts", CostumeChestGround = "CostumeChestGround", CostumeLegsGround = "CostumeLegsGround",
             CostumeViewer = "CostumeViewer";
         // sprites (item / status effect / map icons)
         internal const string SlipperIcon = "SlipperIcon", CostumeHelmetIcon = "CostumeHelmetIcon", CostumeChestIcon = "CostumeChestIcon",
             CostumeLegsIcon = "CostumeLegsIcon", TrollClubIcon = "TrollClubIcon", SetIcon = "SteveTheTrollSetIcon";
-        // materials
-        internal const string TrollFur = "TrollFur";
 
         /// Name and type of every asset above (World_BundleAssets loads each; the integration tests compare it with the constants).
         internal static readonly System.Collections.Generic.KeyValuePair<string, System.Type>[] All =
         {
-            Of<GameObject>(SlipperParts), Of<GameObject>(CostumeHelmetParts), Of<GameObject>(CostumeChestParts), Of<GameObject>(CostumeLegsParts),
+            Of<GameObject>(SlipperParts), Of<GameObject>(SlipperSkinParts), Of<GameObject>(CostumeHelmetParts), Of<GameObject>(CostumeChestParts), Of<GameObject>(CostumeLegsParts),
             Of<GameObject>(ClubParts), Of<GameObject>(CostumeChestGround), Of<GameObject>(CostumeLegsGround), Of<GameObject>(CostumeViewer),
             Of<Sprite>(SlipperIcon), Of<Sprite>(CostumeHelmetIcon), Of<Sprite>(CostumeChestIcon), Of<Sprite>(CostumeLegsIcon), Of<Sprite>(TrollClubIcon),
-            Of<Sprite>(SetIcon), Of<Material>(TrollFur),
+            Of<Sprite>(SetIcon),
         };
 
         static System.Collections.Generic.KeyValuePair<string, System.Type> Of<T>(string name) { return new System.Collections.Generic.KeyValuePair<string, System.Type>(name, typeof(T)); }

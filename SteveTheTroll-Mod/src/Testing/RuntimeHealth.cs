@@ -56,13 +56,6 @@ namespace SteveTheTroll.Testing
                 if (assigned > 0 && HealthRules.StaleAssignment(assigned, Hub.HubRegistry.Find(me, assigned) != null))
                     problems += Report(c, "stale-hub", "assigned to hub " + assigned + " which does not exist", text);
             }
-            foreach (var f in Figure.TrollFigure.All)
-            {
-                if (f == null || float.IsNaN(f.LastBelowSole)) continue;
-                // the figure's lowest vertex 3 cm or more below the slipper's bottom, or tilted over 60 deg = it hangs under the slipper
-                if (HealthRules.FigureBad(f.LastBelowSole, 0.03f, f.LastTilt, 60f))
-                    problems += Report("fig" + f.GetInstanceID(), f.name, "figure under / inside the slipper: lowest vertex " + f.LastBelowSole.ToString("F3") + " m below the slipper bottom, head " + f.LastHeadAboveTop.ToString("F3") + " m above its top, tilt " + f.LastTilt.ToString("F0") + " deg", text);
-            }
             float wait = Backpack.TrollDepot.LongestWait();
             if (HealthRules.DepotStuck(wait) && Time.time - _depotSaid > RepeatSeconds)
             {

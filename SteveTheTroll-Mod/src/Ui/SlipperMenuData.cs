@@ -51,13 +51,26 @@ namespace SteveTheTroll.Ui
             var prefab = ObjectDB.instance != null ? ObjectDB.instance.GetItemPrefab(Item.SlipperItem.PrefabName) : null;
             var attach = prefab != null ? prefab.transform.Find("attach") : null;
             if (attach == null) { ModLog.Warn("SlipperMenuData: no ground model 'attach' on " + Item.SlipperItem.PrefabName + " (prefab " + (prefab != null) + ")"); return null; }
+            if (TamedOnce())
+            {
+                // D-166: once a troll was tamed the viewer shows the real worn look: the baked skin (slippers with their trolls) in its rest pose
+                var parts = BundleAssets.Load<GameObject>(BundleAssets.SlipperSkinParts);
+                var skin = parts != null ? parts.transform.Find("attach_skin") : null;
+                if (skin != null)
+                {
+                    var worn = Object.Instantiate(skin.gameObject);
+                    worn.name = "SteveTheTroll_ViewerSlippers";
+                    worn.SetActive(true);
+                    ModLog.Verbose("SlipperMenuData: viewer model = the baked slipper skin (first troll tamed), " + worn.GetComponentsInChildren<Renderer>(true).Length + " renderer(s)");
+                    return worn;
+                }
+                ModLog.Warn("SlipperMenuData: the baked slipper skin is missing - the viewer shows the slippers only");
+            }
             var copy = Object.Instantiate(attach.gameObject);
             copy.name = "SteveTheTroll_ViewerSlippers";
             int behaviours = 0;
             foreach (var b in copy.GetComponentsInChildren<MonoBehaviour>(true)) { b.enabled = false; behaviours++; }
             copy.SetActive(true);
-            int trolls = TamedOnce() ? AddTrolls(copy) : 0;
-            ModLog.Verbose("SlipperMenuData: viewer model with " + trolls + " mini troll(s) (first troll tamed " + TamedOnce() + ")");
             ModLog.Verbose("SlipperMenuData: viewer model from '" + attach.name + "', " + copy.GetComponentsInChildren<Renderer>(true).Length + " renderer(s), " + behaviours + " behaviour(s) off");
             return copy;
         }
@@ -68,32 +81,6 @@ namespace SteveTheTroll.Ui
             var p = Player.m_localPlayer;
             if (p != null && p.m_customData.ContainsKey(Taming.TrollTamingPatch.FirstTameKey)) return true;
             return Taming.TrollRegistry.Trolls().Count > 0;
-        }
-
-        // A stand-in foot above each slipper of the ground model (the worn fit: the slipper sits 0.097 m ahead of and 0.134 m below the
-        // foot bone; the slipper mesh's toe is -Z, SlipperFit.MeshToFoot), then the same troll figure as on the worn slippers.
-        static int AddTrolls(GameObject copy)
-        {
-            int n = 0;
-            foreach (var left in new[] { true, false })
-            {
-                var slip = Utils.FindChild(copy.transform, left ? "SlipperDropLeft" : "SlipperDropRight");
-                if (slip == null) { ModLog.Warn("SlipperMenuData: no " + (left ? "left" : "right") + " slipper in the viewer model"); continue; }
-                var toe = -slip.forward;
-                var foot = new GameObject(left ? "LeftFoot" : "RightFoot").transform;
-                foot.SetParent(slip, true);
-                foot.SetPositionAndRotation(slip.position - toe * ModSettings.SlipperForward.Value - slip.up * ModSettings.SlipperUp.Value, Quaternion.LookRotation(toe, slip.up));
-                var holder = Figure.TrollFigureFactory.Build(left ? "SteveTheTroll_ViewerFigureLeft" : "SteveTheTroll_ViewerFigureRight");
-                if (holder == null) continue;
-                holder.transform.SetParent(copy.transform, false);
-                var fig = holder.AddComponent<Figure.TrollFigure>();
-                bool ready = fig.Init(foot, foot, left, null);
-                holder.SetActive(true);
-                fig.Settle();
-                n++;
-                ModLog.Verbose("SlipperMenuData: viewer " + holder.name + " on the " + (left ? "left" : "right") + " slipper, init " + ready);
-            }
-            return n;
         }
 
         /// D-044 "Go farm": the troll leaves follow / stay and farms its focus (or the D-038 priority). Only a troll that is near and simulated

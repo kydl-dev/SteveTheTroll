@@ -106,87 +106,9 @@ namespace SteveTheTroll
         public static readonly Tunable<float> ExampleSpeed = new Tunable<float>("Example", "ExampleSpeed", 1f, 0f, 10f,
             "Example dev-only value: replace or remove. Read it with ModSettings.ExampleSpeed.Value.");
 
-        // --- runtime troll figure on each slipper (D-013 trial). Defaults = the Unity fit (TrollFitData, D-014/D-015); these Tunables are the
-        //     user's in-game fine tune on top of it (KydlTools). Sizes in metres, angles in degrees. Settled values go back into the fit / here.
-        public static readonly Tunable<float> FigureHeight = new Tunable<float>("TrollPlace", "Height", Fit.TrollFitData.Height, 0.05f, 0.8f,
-            "World height of the seated mini troll on each slipper, in metres (picture: about mid-shin).");
-        public static readonly Tunable<float> FigureForward = new Tunable<float>("TrollPlace", "OffsetForward", Fit.TrollFitData.Forward, -0.3f, 0.3f,
-            "Moves the troll along the player's facing direction from the foot bone, in metres (+ = toward the toes).");
-        public static readonly Tunable<float> FigureUp = new Tunable<float>("TrollPlace", "OffsetUp", Fit.TrollFitData.Up, -0.2f, 0.3f,
-            "Height of the troll's lowest point above the foot bone, in metres.");
-        public static readonly Tunable<float> FigureSide = new Tunable<float>("TrollPlace", "OffsetSide", Fit.TrollFitData.Side, -0.2f, 0.2f,
-            "Moves both trolls sideways in their foot's frame (+ = outward from the body, mirrored per foot), in metres.");
-        public static readonly Tunable<float> FigureSideLeft = new Tunable<float>("TrollPlace", "OffsetSideLeftFoot", 0f, -0.15f, 0.15f,
-            "Extra sideways move of the LEFT-foot troll only (+ = outward, to the player's left), in metres.");
-        public static readonly Tunable<float> FigureSideRight = new Tunable<float>("TrollPlace", "OffsetSideRightFoot", 0f, -0.15f, 0.15f,
-            "Extra sideways move of the RIGHT-foot troll only (+ = outward, to the player's right), in metres.");
-        public static readonly Tunable<float> FigureYaw = new Tunable<float>("TrollPlace", "Yaw", Fit.TrollFitData.Yaw, -180f, 180f,
-            "Turns the troll around the up axis, in degrees (0 = looks where its foot points).");
-        public static readonly Tunable<float> PoseSpineX = new Tunable<float>("TrollTune", "SpineX", 0f, -90f, 90f, "Extra Spine0 bend on top of the Unity fit, local X, degrees.");
-        public static readonly Tunable<float> PoseUpLegX = new Tunable<float>("TrollTune", "UpLegX", 0f, -90f, 90f, "Extra thigh swing on top of the fit, local X, degrees.");
-        public static readonly Tunable<float> PoseUpLegZ = new Tunable<float>("TrollTune", "UpLegZ", 0f, -90f, 90f, "Extra thigh spread on top of the fit, local Z, degrees (mirrored on the right leg).");
-        public static readonly Tunable<float> PoseLegX = new Tunable<float>("TrollTune", "LegX", 0f, -90f, 90f, "Extra knee bend on top of the fit, local X, degrees.");
-        public static readonly Tunable<float> PoseRightArmX = new Tunable<float>("TrollTune", "RightArmX", 0f, -90f, 90f, "Extra right upper arm (log arm) on top of the fit, local X, degrees.");
-        public static readonly Tunable<float> PoseRightArmZ = new Tunable<float>("TrollTune", "RightArmZ", 0f, -90f, 90f, "Extra right upper arm on top of the fit, local Z, degrees.");
-        public static readonly Tunable<float> PoseRightForeArmX = new Tunable<float>("TrollTune", "RightForeArmX", 0f, -90f, 90f, "Extra right forearm on top of the fit, local X, degrees.");
-        public static readonly Tunable<float> PoseLeftArmX = new Tunable<float>("TrollTune", "LeftArmX", 0f, -90f, 90f, "Extra left upper arm on top of the fit, local X, degrees.");
-        public static readonly Tunable<float> PoseLeftArmZ = new Tunable<float>("TrollTune", "LeftArmZ", 0f, -90f, 90f, "Extra left upper arm on top of the fit, local Z, degrees.");
-        public static readonly Tunable<float> PoseLeftForeArmX = new Tunable<float>("TrollTune", "LeftForeArmX", 0f, -90f, 90f, "Extra left forearm on top of the fit, local X, degrees.");
-
-        // --- D-019 in-game fine tune of the log and the right hand, on top of the Unity fit (all 0 / 1 = exactly the fit)
-        public static readonly Tunable<float> LogForward = new Tunable<float>("TrollLog", "OffsetForward", 0f, -0.1f, 0.1f, "Moves the log along the troll's facing direction, in metres.");
-        public static readonly Tunable<float> LogUp = new Tunable<float>("TrollLog", "OffsetUp", 0f, -0.1f, 0.1f, "Moves the log up / down, in metres.");
-        public static readonly Tunable<float> LogSide = new Tunable<float>("TrollLog", "OffsetSide", 0f, -0.1f, 0.1f, "Moves the log to the troll's right (+) / left (-), in metres.");
-        public static readonly Tunable<float> LogYaw = new Tunable<float>("TrollLog", "Yaw", 0f, -90f, 90f, "Turns the log left / right around the up axis, in degrees.");
-        public static readonly Tunable<float> LogPitch = new Tunable<float>("TrollLog", "Pitch", 0f, -90f, 90f, "Tilts the log up / down (around the troll's right axis), in degrees.");
-        public static readonly Tunable<float> LogRoll = new Tunable<float>("TrollLog", "Roll", 0f, -180f, 180f, "Rolls the log around its own length, in degrees.");
-        public static readonly Tunable<float> LogLengthScale = new Tunable<float>("TrollLog", "LengthScale", 1f, 0.3f, 2f, "Log length as a factor of the fitted length (1 = as fitted).");
-        public static readonly Tunable<float> HandWristX = new Tunable<float>("TrollHand", "WristX", 0f, -90f, 90f, "Extra right-wrist turn, local X, degrees.");
-        public static readonly Tunable<float> HandWristY = new Tunable<float>("TrollHand", "WristY", 0f, -90f, 90f, "Extra right-wrist turn, local Y, degrees.");
-        public static readonly Tunable<float> HandWristZ = new Tunable<float>("TrollHand", "WristZ", 0f, -90f, 90f, "Extra right-wrist turn, local Z, degrees.");
-        public static readonly Tunable<float> HandFingerCurl = new Tunable<float>("TrollHand", "FingerCurl", 0f, -60f, 60f, "Extra curl of index, middle and ring finger (each joint, around the knuckle line), degrees.");
-        public static readonly Tunable<float> HandThumbCurl = new Tunable<float>("TrollHand", "ThumbCurl", 0f, -60f, 60f, "Extra curl of the thumb (each joint, around the knuckle line), degrees.");
-
-        // --- D-020 fluffy fur on the mini trolls (shell fur, bundle material "TrollFur"); values of the Unity preview fur_v4 (user: v2 "kind of bad" -> denser, shorter, softer, lighter; D-026)
-        public static readonly Tunable<bool> FurEnable = new Tunable<bool>("TrollFur", "Enable", false, "Fur strands (shells) on the mini trolls. Off by default since D-027 (the user chose the smooth plush look).");
-        public static readonly Tunable<int> FurShells = new Tunable<int>("TrollFur", "Shells", 4, 4, 32, "Number of fur layers (more = smoother fur, more cost).");
-        public static readonly Tunable<float> FurLength = new Tunable<float>("TrollFur", "Length", 0.00218f, 0.001f, 0.04f, "Fur length in metres.");
-        public static readonly Tunable<float> FurDensity = new Tunable<float>("TrollFur", "Density", 545f, 50f, 1500f, "Strands per texture unit (higher = finer fur).");
-        public static readonly Tunable<float> FurThickness = new Tunable<float>("TrollFur", "Thickness", 0.864f, 0.2f, 1.5f, "Strand thickness at the root (share of a strand cell).");
-        public static readonly Tunable<float> FurDroop = new Tunable<float>("TrollFur", "Droop", 0.02f, 0f, 0.02f, "How far the tips hang down, in metres.");
-        // D-083 (user: "change them to 0-255 ... with 0-255 I know exactly"): colour as R / G / B 0..255 (as any colour picker) + a Brightness factor;
-        // the old multipliers 0.73 / 0.4545 / 0.6 = colour (186, 116, 153) x 1.0
-        public static readonly Tunable<int> FurColorR = new Tunable<int>("TrollFur", "ColorR", 186, 0, 255, "Fur colour, red (0-255).");
-        public static readonly Tunable<int> FurColorG = new Tunable<int>("TrollFur", "ColorG", 116, 0, 255, "Fur colour, green (0-255).");
-        public static readonly Tunable<int> FurColorB = new Tunable<int>("TrollFur", "ColorB", 153, 0, 255, "Fur colour, blue (0-255).");
-        public static readonly Tunable<float> FurBrightness = new Tunable<float>("TrollFur", "Brightness", 1f, 0f, 1.5f, "Brightness factor on the fur colour (1 = the colour as set).");
-        public static readonly Tunable<float> FurTipLight = new Tunable<float>("TrollFur", "TipLight", 1.01f, 0.3f, 1.5f, "Brightness of the fur tips (1 = like the roots before darkening).");
-
-        // --- D-027 smooth plush look of the mini trolls (user picked style D): the troll skin re-coloured, no strands
-        public static readonly Tunable<bool> PlushEnable = new Tunable<bool>("TrollPlush", "Enable", true, "Smooth plush colour on the mini trolls (off = the game's troll skin).");
-        // D-083: the old multipliers 1.0 / 1.2 / 1.25 = colour (204, 245, 255) x brightness 1.25 (the troll skin texture is multiplied by it)
-        public static readonly Tunable<int> PlushColorR = new Tunable<int>("TrollPlush", "ColorR", 204, 0, 255, "Plush colour on the troll skin, red (0-255).");
-        public static readonly Tunable<int> PlushColorG = new Tunable<int>("TrollPlush", "ColorG", 245, 0, 255, "Plush colour on the troll skin, green (0-255).");
-        public static readonly Tunable<int> PlushColorB = new Tunable<int>("TrollPlush", "ColorB", 255, 0, 255, "Plush colour on the troll skin, blue (0-255).");
-        public static readonly Tunable<float> PlushBrightness = new Tunable<float>("TrollPlush", "Brightness", 1.25f, 0f, 2f, "Brightness factor on the plush colour (1 = the colour as set; above 1 lightens the dark troll skin).");
-
-        /// D-083: a colour from 0..255 channels and a brightness factor (alpha 1).
-        public static UnityEngine.Color Rgb(Tunable<int> r, Tunable<int> g, Tunable<int> b, Tunable<float> brightness)
-        {
-            float k = brightness.Value / 255f;
-            return new UnityEngine.Color(r.Value * k, g.Value * k, b.Value * k, 1f);
-        }
-        public static readonly Tunable<float> PlushSmoothness = new Tunable<float>("TrollPlush", "Smoothness", 0.0727f, 0f, 0.6f, "Shine of the plush (0 = matt fabric; 0.07 = the user's TEST-008 choice).");
-
-        // --- D-025 slipper on each foot (bundle prefab "SlipperParts", skinned to the player's foot + toe bones). Placement defaults = Unity fit.
+        // --- D-166: the slippers carry their trolls in the bundle (prefab SlipperSkinParts, attach_skin); these two tint the GROUND look (SlipperDropModel) only. Placement defaults = Unity fit.
         public static readonly Tunable<float> SlipperBrightness = new Tunable<float>("Slipper", "Brightness", 0.84f, 0.3f, 1.7f, "Brightness of the blue plush slipper (1 = as modelled; 0.84 = the user's choice, TEST-005).");
         public static readonly Tunable<float> SlipperRimBrightness = new Tunable<float>("Slipper", "RimBrightness", 0.88f, 0.3f, 1.7f, "Brightness of the fluffy rim around the opening (1 = as modelled; 0.88 = the user's choice, TEST-005).");
-        public static readonly Tunable<float> SlipperForward = new Tunable<float>("Slipper", "OffsetForward", Fit.TrollFitData.SlipperForward, -0.15f, 0.25f, "Slipper middle along the foot from the foot bone, in metres.");
-        public static readonly Tunable<float> SlipperUp = new Tunable<float>("Slipper", "OffsetUp", Fit.TrollFitData.SlipperUp, -0.25f, 0f, "Slipper ground plane below the foot bone, in metres.");
-        public static readonly Tunable<float> SlipperSide = new Tunable<float>("Slipper", "OffsetSide", Fit.TrollFitData.SlipperSide, -0.1f, 0.1f, "Moves the slippers outward (+) / inward (-), in metres.");
-        public static readonly Tunable<float> SlipperYaw = new Tunable<float>("Slipper", "Yaw", Fit.TrollFitData.SlipperYaw, -45f, 45f, "Turns the slippers around the up axis, in degrees.");
-        public static readonly Tunable<float> SlipperScale = new Tunable<float>("Slipper", "Scale", Fit.TrollFitData.SlipperScale, 0.6f, 1.6f, "Size of the slippers (1 = as modelled, 0.40 m long).");
-        public static readonly Tunable<float> SlipperWidth = new Tunable<float>("Slipper", "Width", Fit.TrollFitData.SlipperWidth, 0.6f, 1.3f, "Width of the slippers across the foot (1 = as modelled, 16 cm at the widest; the user's TEST-008 choice 1.05 with Scale 1.1).");
 
         // --- D-077 Troll Club in the hand (TEST-032: "the club goes into the head mesh"): turns / slides the club around the grip, live (F7).
         // Axes in the hand: Outward = the tip towards the player's right in the rest pose, Up = the tip upwards, Twist = round the club.

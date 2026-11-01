@@ -36,9 +36,7 @@ namespace SteveTheTroll
             ModLog.Init(Logger, ModName, () => ModSettings.DebugLog != null && ModSettings.DebugLog.Value);
             ModLog.Info(ModName + " " + ModVersion + " loaded (dll built " + File.GetLastWriteTime(Assembly.GetExecutingAssembly().Location).ToString("yyyy-MM-dd HH:mm:ss") + ")");
 
-            // the UI kit, the input lock and the hub come from KydlCore (it logs through its own log); only the fit math logs through this mod
-            Fit.TrollFitMath.Log = s => ModLog.Verbose(s);     // shared with the Unity fit scene: it logs through the mod's log here
-            Fit.TrollFitMath.Warn = s => ModLog.Warn(s);
+            // the UI kit, the input lock and the hub come from KydlCore (it logs through its own log)
 
             ModSettings.Bind(Config);
             _cfgWatcher = new ConfigReloader(Config);
@@ -60,14 +58,13 @@ namespace SteveTheTroll
             }
             ModLog.Verbose("Plugin: set up slippers " + ModSettings.SlippersOn + ", costume " + ModSettings.CostumeOn + ", trolls " + ModSettings.TrollsOn);
             new Harmony(ModGuid).PatchAll(Assembly.GetExecutingAssembly());
-            Jotunn.Managers.CommandManager.Instance.AddConsoleCommand(new Figure.FigurePreviewCommand());   // T-004b look test: stt_preview
             Jotunn.Managers.CommandManager.Instance.AddConsoleCommand(new Backpack.BuildDumpCommand());   // T-008b: stt_dumpbuild (backpack model)
             Jotunn.Managers.CommandManager.Instance.AddConsoleCommand(new Testing.ClearCommand());        // D-093: stt_clear (clean test area)
             Jotunn.Managers.CommandManager.Instance.AddConsoleCommand(new Testing.ClearDepotsCommand());  // D-104: stt_cleardepots (start clean)
             Jotunn.Managers.CommandManager.Instance.AddConsoleCommand(new Testing.LevelGroundCommand());   // D-105: stt_levelground (repair)
             Jotunn.Managers.CommandManager.Instance.AddConsoleCommand(new Ui.ComingPreviewCommand());     // D-058 preview: stt_coming [name]
             Jotunn.Managers.CommandManager.Instance.AddConsoleCommand(new Backpack.FillBackpackCommand());  // D-064 test: stt_fillbackpack [item]
-            ModLog.Verbose("Plugin: console commands stt_preview, stt_dumpbuild, stt_clear, stt_cleardepots, stt_levelground, stt_coming, stt_fillbackpack registered");
+            ModLog.Verbose("Plugin: console commands stt_dumpbuild, stt_clear, stt_cleardepots, stt_levelground, stt_coming, stt_fillbackpack registered");
             ModLog.Verbose("Plugin: Awake finished (Harmony patches applied)");
         }
 
