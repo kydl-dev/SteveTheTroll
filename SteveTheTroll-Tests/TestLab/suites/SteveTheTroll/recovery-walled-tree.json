@@ -1,0 +1,20 @@
+{
+  "name": "recovery-walled-tree",
+  "description": "D-167: a tree inside a closed ring of player-built walls. The troll gets stuck, never attacks a wall, walks around (detours), fails two complete recovery cycles and blacklists THAT tree for itself",
+  "timeout": 420,
+  "steps": [
+    { "do": "hook", "name": "stt.reset" },
+    { "do": "give", "prefab": "STT_TrollSlippers", "count": 1, "equip": true },
+    { "do": "hook", "name": "stt.walledTree", "args": { "dx": 0, "dz": 30, "radius": 6 }, "as": "tree" },
+    { "do": "hook", "name": "stt.spawnTroll", "args": { "dz": -5 }, "as": "troll" },
+    { "do": "wait", "seconds": 2 },
+    { "do": "hook", "name": "stt.farmOn", "args": { "troll": "troll", "source": "tree" }, "expect": true, "label": "the troll is ordered to farm the walled tree" },
+    { "do": "wait", "until": { "check": "hook", "name": "stt.blacklisted", "args": { "troll": "troll", "source": "tree" }, "expect": true }, "timeout": 360 }
+  ],
+  "asserts": [
+    { "check": "hook", "name": "stt.blacklisted", "args": { "troll": "troll", "source": "tree" }, "expect": true },
+    { "check": "hook", "name": "stt.wallsHit", "expect": 0 },
+    { "check": "hook", "name": "stt.treeStands", "args": { "tree": "tree" }, "expect": 1 },
+    { "check": "noErrors", "source": "SteveTheTroll" }
+  ]
+}

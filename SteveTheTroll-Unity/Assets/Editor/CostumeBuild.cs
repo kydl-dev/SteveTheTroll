@@ -65,7 +65,7 @@ namespace SteveTheTroll.EditorTools
             var playerAsset = AssetDatabase.LoadAssetAtPath<GameObject>(PlayerPrefab);
             if (playerAsset == null) return Done("FAIL: " + PlayerPrefab + " missing (run _agent/tools/copy-rip-reference.ps1)");
             foreach (var f in new[] { Gen, MatDir }) if (!AssetDatabase.IsValidFolder(f)) AssetDatabase.CreateFolder(Root, f.Substring(Root.Length + 1));
-            Readable(Root + "/Costume.fbx"); Readable(Root + "/Club.fbx");
+            Readable(Root + "/Costume.fbx"); Readable(Root + "/Club.fbx"); Readable(Root + "/Pants.fbx");
 
             var player = (GameObject)Object.Instantiate(playerAsset);
             player.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
@@ -79,7 +79,10 @@ namespace SteveTheTroll.EditorTools
 
                 var costume = AssetDatabase.LoadAssetAtPath<GameObject>(Root + "/Costume.fbx");
                 var club = AssetDatabase.LoadAssetAtPath<GameObject>(Root + "/Club.fbx");
-                if (costume == null || club == null) return Done("FAIL: Costume.fbx / Club.fbx not imported under " + Root);
+                // D-166: the legs piece (trousers + belt + loincloth) comes from its own FBX, pants_model.py (written from scratch 2026-11-01); helmet, chest and feet stay in Costume.fbx
+                var pants = AssetDatabase.LoadAssetAtPath<GameObject>(Root + "/Pants.fbx");
+                if (costume == null || club == null || pants == null) return Done("FAIL: Costume.fbx / Club.fbx / Pants.fbx not imported under " + Root);
+                System.Func<string, GameObject> fbxOf = n => n == "CostumeLegs" ? pants : costume;
 
                 // --- body source points (player root space = the Blender export's space) with their weights / strongest bone
                 var bm = body.sharedMesh; var bv = bm.vertices; var bw = bm.boneWeights; var bones = body.bones;
@@ -87,7 +90,7 @@ namespace SteveTheTroll.EditorTools
                 for (int i = 0; i < bv.Length; i++) { src[i] = body.transform.TransformPoint(bv[i]); strong[i] = bones[bw[i].boneIndex0].name; }
 
                 var chest = Skinned(costume, "CostumeChest", body, src, bw, strong, mat => mat == "straw_yellow" ? (System.Func<string, bool>)(n => Collar.Contains(n)) : ChestBone);
-                var legs = Skinned(costume, "CostumeLegs", body, src, bw, strong, mat => mat == "straw_yellow" ? (System.Func<string, bool>)(n => Belt.Contains(n)) : n => Legs.Contains(n), true);
+                var legs = Skinned(pants, "CostumeLegs", body, src, bw, strong, mat => mat == "straw_yellow" ? (System.Func<string, bool>)(n => Belt.Contains(n)) : n => Legs.Contains(n), true);
                 var feet = Skinned(costume, "CostumeFeet", body, src, bw, strong, mat => n => Feet.Contains(n), true);       // D-160: each foot only follows its own side too
                 SkinPrefab("CostumeChestParts", visual, armature, body, new[] { chest });
                 SkinPrefab("CostumeLegsParts", visual, armature, body, new[] { legs, feet });
@@ -97,10 +100,10 @@ namespace SteveTheTroll.EditorTools
                 // club: Blender +Z (trunk) arrives as Unity +Y; the vanilla sledges' attach space has the shaft along +Z -> model rotated +90 deg about X
                 RigidPrefab("ClubParts", club, "Club", Matrix4x4.identity, Quaternion.Euler(90f, 0f, 0f));
                 // D-080 ground looks (the item lying on the ground): suit / trousers + feet laid on their back, half size
-                GroundPrefab("CostumeChestGround", costume, new[] { "CostumeChest" }, 0.5f, true);
-                GroundPrefab("CostumeLegsGround", costume, new[] { "CostumeLegs", "CostumeFeet" }, 0.5f, true);
+                GroundPrefab("CostumeChestGround", fbxOf, new[] { "CostumeChest" }, 0.5f, true);
+                GroundPrefab("CostumeLegsGround", fbxOf, new[] { "CostumeLegs", "CostumeFeet" }, 0.5f, true);
                 // D-080 the F6 Costume tab's 3D model: the whole mascot standing (static)
-                GroundPrefab("CostumeViewer", costume, new[] { "CostumeHelmet", "CostumeChest", "CostumeLegs", "CostumeFeet" }, 1f, false);
+                GroundPrefab("CostumeViewer", fbxOf, new[] { "CostumeHelmet", "CostumeChest", "CostumeLegs", "CostumeFeet" }, 1f, false);
             }
             finally { Object.DestroyImmediate(player); }
             AssetDatabase.SaveAssets();
@@ -140,6 +143,8 @@ namespace SteveTheTroll.EditorTools
         static (MeshFilter mf, Material[] mats) Part(GameObject fbx, string name)
         {
             var t = Find(fbx.transform, name);
+            // an FBX with ONE mesh object (Pants.fbx) is imported as the root itself: the mesh carries the part name
+            if (t == null) { var rootMf = fbx.GetComponent<MeshFilter>(); if (rootMf != null && rootMf.sharedMesh != null && rootMf.sharedMesh.name == name) t = fbx.transform; }
             var mf = t != null ? t.GetComponent<MeshFilter>() : null;
             if (mf == null) throw new System.Exception("part '" + name + "' not in " + fbx.name);
             return (mf, t.GetComponent<MeshRenderer>().sharedMaterials);
@@ -339,9 +344,9 @@ namespace SteveTheTroll.EditorTools
         }
 
         /// D-080: a static model of FBX parts (ground look or the F6 viewer's mascot): centred on the origin, laid on its back (front up) or standing, scaled. Child "model_<part>" per part.
-        static void GroundPrefab(string prefabName, GameObject fbx, string[] parts, float scale, bool layDown)
+        static void GroundPrefab(string prefabName, System.Func<string, GameObject> fbxOf, string[] parts, float scale, bool layDown)
         {
-            var srcs = parts.Select(n => Part(fbx, n)).ToArray();
+            var srcs = parts.Select(n => Part(fbxOf(n), n)).ToArray();
             var b = new Bounds(); bool first = true;
             foreach (var (mf, _) in srcs)
             {

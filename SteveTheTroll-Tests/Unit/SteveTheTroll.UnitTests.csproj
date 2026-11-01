@@ -33,6 +33,10 @@
     <Compile Include="..\..\SteveTheTroll-Mod\src\Taming\IdleRules.cs" Link="Mod\IdleRules.cs" />
     <Compile Include="..\..\SteveTheTroll-Mod\src\Backpack\DepotRules.cs" Link="Mod\DepotRules.cs" />
     <Compile Include="..\..\SteveTheTroll-Mod\src\Taming\HealthRules.cs" Link="Mod\HealthRules.cs" />
+    <!-- D-167 stuck detection and recovery: pure rules, the escalation ladder, the per troll + resource failure book (TargetRules: head-on test) -->
+    <Compile Include="..\..\SteveTheTroll-Mod\src\Taming\StuckRules.cs" Link="Mod\StuckRules.cs" />
+    <Compile Include="..\..\SteveTheTroll-Mod\src\Taming\RecoveryMachine.cs" Link="Mod\RecoveryMachine.cs" />
+    <Compile Include="..\..\SteveTheTroll-Mod\src\Taming\TargetRules.cs" Link="Mod\TargetRules.cs" />
     <Compile Include="..\..\SteveTheTroll-Mod\src\Hub\HubData.cs" Link="Mod\HubData.cs" />
   </ItemGroup>
   <ItemGroup>

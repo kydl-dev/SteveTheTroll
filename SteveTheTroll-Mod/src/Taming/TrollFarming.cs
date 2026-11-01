@@ -413,7 +413,7 @@ namespace SteveTheTroll.Taming
                 TrollGuard.Keep(__instance);                                                                     // D-066: the forced target stays
                 if (TrollHold.Holds(__instance)) { __instance.StopMoving(); __result = true; return false; }     // D-063
                 var back = __instance.GetComponent<TrollReturn>();
-                if (back != null && back.Step(__instance, dt, MoveTo)) { __result = true; return false; }          // D-162: past the hub's reach, no follow order - walks back
+                if (back != null && back.Step(__instance, dt, MoveTo, LookAt)) { __result = true; return false; }          // D-162: past the hub's reach, no follow order - walks back
                 var f = __instance.GetComponent<TrollFarmer>();
                 if (f == null) return true;
                 var view = __instance.GetComponent<ZNetView>();

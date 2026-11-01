@@ -25,6 +25,7 @@ namespace SteveTheTroll.Testing
             Game.instance.GetPlayerProfile().SetCustomSpawnPoint(p.transform.position);
             ClearHubs();
             ClearFarTrees();
+            RecoveryTestHooks.ClearWalled();           // D-167: the walled tree of the recovery scenario
             int gone = 0;
             foreach (var v in Object.FindObjectsByType<ZNetView>(FindObjectsSortMode.None))
             {

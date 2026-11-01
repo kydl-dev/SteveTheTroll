@@ -14,7 +14,7 @@ namespace SteveTheTroll.Taming
     /// </summary>
     internal sealed class TrollFarmer : MonoBehaviour
     {
-        const float SearchSeconds = 3f, LogSeconds = 5f, LookAngle = 25f, MinAttackGap = 0.3f, StuckSeconds = 8f, BadSeconds = 120f;
+        const float SearchSeconds = 3f, LogSeconds = 5f, LookAngle = 25f, MinAttackGap = 0.3f, BadSeconds = 120f;
         const float StepMetres = 2f, StepSeconds = 2.5f, CloseWaitSeconds = 0.5f, FullCheckSeconds = 2f, AtItSlack = 1f, UnloadMetres = 10f, UnloadStopMetres = 8f, UnloadWalkSeconds = 60f, StuckHomeSeconds = 8f;
         float _homeBest = float.MaxValue, _homeBestAt;
         const int SwingsPerTry = 2, Tries = 4;
@@ -37,10 +37,10 @@ namespace SteveTheTroll.Taming
         // User 2026-10-31: (1) beyond FarmMaxRange the troll walks to the nearest source the game knows of (FarmLongRange, 500 m), (2) it remembers where it farmed last and goes back there
         // after emptying its backpack. SpotKey is in the troll's ZDO so the memory survives a re-created troll and the TrollIdle path (a new farmer component).
         internal const string SpotKey = "stt_spot";
-        const float TravelArriveMetres = 12f, TravelStuckSeconds = 25f, TravelMaxSeconds = 420f, SpotMinMetres = 40f, FarBadSeconds = 180f, FarBadRadius = 30f;
+        const float TravelArriveMetres = 12f, TravelMaxSeconds = 420f, SpotMinMetres = 40f, FarBadSeconds = 120f, FarBadRadius = 30f;
         bool _travelling;
         Vector3 _travelTo;
-        float _travelStart, _travelBest = float.MaxValue, _travelBestAt;
+        float _travelStart;
         readonly List<KeyValuePair<Vector3, float>> _badFar = new List<KeyValuePair<Vector3, float>>();
 
         /// Walking to a far source or back to the remembered spot (test hooks and the status text).
@@ -82,7 +82,7 @@ namespace SteveTheTroll.Taming
 
         void StartTravel(Vector3 to)
         {
-            _travelling = true; _travelTo = to; _travelStart = Time.time; _travelBest = float.MaxValue; _travelBestAt = Time.time;
+            _travelling = true; _travelTo = to; _travelStart = Time.time;
             _nextSearch = Time.time + SearchSeconds;      // the normal search runs every SearchSeconds on the way: the zone loads, the near sources show up
         }
 
@@ -94,21 +94,32 @@ namespace SteveTheTroll.Taming
         }
 
         // Walking to a far source / back to the farm spot. Expected outcome: true = the walk drove the troll this frame.
-        bool Travel(MonsterAI ai, float dt, System.Func<BaseAI, float, Vector3, float, bool, bool> moveTo)
+        bool Travel(MonsterAI ai, float dt, System.Func<BaseAI, float, Vector3, float, bool, bool> moveTo, System.Action<BaseAI, Vector3> lookAt)
         {
             var flat = _travelTo - transform.position; flat.y = 0f;
             float d = flat.magnitude;
             if (d <= TravelArriveMetres)
             {
                 ModLog.Info("TrollFarmer: " + TrollTaming.Tag(this) + " arrived at the far farm place " + _travelTo.ToString("F0") + " (" + (Time.time - _travelStart).ToString("F0") + " s) - searches there");
+                var rr = GetComponent<TrollRecovery>(); if (rr != null) rr.Reached();
                 EndTravel(false);
                 return true;
             }
-            if (d < _travelBest - 1f) { _travelBest = d; _travelBestAt = Time.time; }
-            bool stuck = Time.time - _travelBestAt > TravelStuckSeconds, late = Time.time - _travelStart > TravelMaxSeconds;
-            if (stuck || late)
+            bool late = Time.time - _travelStart > TravelMaxSeconds;
+            if (late)
             {
-                ModLog.Info("TrollFarmer: " + TrollTaming.Tag(this) + " does not get to " + _travelTo.ToString("F0") + " (" + d.ToString("F0") + " m left, " + (stuck ? "stuck " + TravelStuckSeconds.ToString("0") + " s" : "walked too long") + ") - gives that place up for " + FarBadSeconds.ToString("0") + " s");
+                ModLog.Info("TrollFarmer: " + TrollTaming.Tag(this) + " does not get to " + _travelTo.ToString("F0") + " (" + d.ToString("F0") + " m left, walked too long) - gives that place up for " + FarBadSeconds.ToString("0") + " s");
+                EndTravel(true);
+                return true;
+            }
+            // D-167: stuck detection, rage and detours are TrollRecovery; a far place that fails two complete cycles is given up (spec 3: 120 s)
+            long ka, kb;
+            TrollRecovery.KeyOfPlace(_travelTo, out ka, out kb);
+            var rec = TrollRecovery.Of(this);
+            if (rec.Tick(ai, dt, moveTo, lookAt, _travelTo, ka, kb, true, true, null)) return true;
+            if (rec.TakeAbandon())
+            {
+                ModLog.Info("TrollFarmer: " + TrollTaming.Tag(this) + " does not get to " + _travelTo.ToString("F0") + " (" + d.ToString("F0") + " m left, two complete recovery cycles failed) - gives that place up for " + FarBadSeconds.ToString("0") + " s");
                 EndTravel(true);
                 return true;
             }
@@ -116,7 +127,7 @@ namespace SteveTheTroll.Taming
             return true;
         }
 
-        const float FarWalkMetres = 80f, WaypointMetres = 30f, FarHomeStuckSeconds = 45f;
+        const float FarWalkMetres = 80f, WaypointMetres = 30f;
 
         /// A point `WaypointMetres` ahead on the straight line to `to` (the game's path search fails for a far destination outside the loaded area; same idea as TrollReturn).
         internal static Vector3 Waypoint(Vector3 from, Vector3 to)
@@ -193,15 +204,17 @@ namespace SteveTheTroll.Taming
             if (me == null || me.IsDead()) { Destroy(this); return me != null && !me.IsDead(); }
             if (ai.GetFollowTarget() != null && !(_home && _full)) { ModLog.Info("TrollFarmer: " + TrollTaming.Tag(this) + " got a follow order - stops farming"); Destroy(this); return ai.GetFollowTarget() == null; }
             if (ai.GetTargetCreature() != null) return ai.GetTargetCreature() == null;      // fighting (D-042 defend): the game's AI drives
+            var rec = GetComponent<TrollRecovery>();                                           // D-167: a running rage / detour of the shared recovery drives first
+            if (rec != null && rec.Busy && rec.Continue(ai, dt, moveTo, lookAt)) return true;
             // D-159: the full-backpack check comes BEFORE the home branch - a troll heading home for another reason (nothing left to farm, ordered home) is promoted to the unload
             if (Time.time >= _nextFullCheck && !_full && Full()) return true;
-            if (_home) return GoHome(ai, dt, moveTo);
+            if (_home) return GoHome(ai, dt, moveTo, lookAt);
             var weapon = _target != null ? Weapon(me, _target.GetComponent<TreeBase>() == null) : (_lastWeapon ?? Weapon(me, false));
             if (weapon == null) return NoWeapon(me);
             _noWeaponSince = -1f;
             if ((_target == null || _hit == null) && Time.time >= _nextSearch) Search(weapon);
             if (_home) return true;
-            if (_target == null || _hit == null) return _target != null || (_travelling && Travel(ai, dt, moveTo));
+            if (_target == null || _hit == null) return _target != null || (_travelling && Travel(ai, dt, moveTo, lookAt));
 
             Hold(_target);
             var point = AimPoint();
@@ -226,17 +239,20 @@ namespace SteveTheTroll.Taming
                 bool atIt = d <= reach + AtItSlack;
                 if (!atIt || _stuckSeconds <= CloseWaitSeconds)
                 {
-                    if (_stuckSeconds <= StuckSeconds)
-                    {
-                        Vector3 around;
-                        if (FriendInTheWay(point, d, out around)) { moveTo(ai, dt, around, 0.6f, false); return true; }     // D-151: around it, not into it
-                        moveTo(ai, dt, point, reach * 0.7f, false);
-                        return true;
-                    }
-                    if (!atIt) { GiveUp("cannot reach it (" + d.ToString("F1") + " m, blocked)"); return true; }
+                    // D-167 (user spec): stuck detection, rage, detours and the 120 s blacklist per troll + resource are TrollRecovery (replaces the 8 s give-up of D-063)
+                    long ka, kb;
+                    TrollRecovery.KeyOf(_target, out ka, out kb);
+                    rec = TrollRecovery.Of(this);
+                    if (rec.Tick(ai, dt, moveTo, lookAt, point, ka, kb, true, true, _target)) return true;
+                    if (rec.TakeAbandon()) { GiveUp("cannot reach it (" + d.ToString("F1") + " m, two complete recovery cycles failed)"); return true; }
+                    Vector3 around;
+                    if (FriendInTheWay(point, d, out around)) { moveTo(ai, dt, around, 0.6f, false); return true; }     // D-151: around it, not into it
+                    moveTo(ai, dt, point, reach * 0.7f, false);
+                    return true;
                 }
             }
             _stuckSeconds = 0f; _lastDist = float.MaxValue;
+            if (rec != null) rec.Reached();          // D-167: at the resource: its failure counter starts again
             ai.StopMoving();
             lookAt(ai, point);
             if (me.InAttack() || Time.time < _nextAttack || !ai.IsLookingAt(point, LookAngle, false)) return true;
@@ -324,6 +340,7 @@ namespace SteveTheTroll.Taming
             float until;
             if (g != null && !IdleRules.Reachable(g.transform.position.y - transform.position.y)) return true;      // D-149: not across cliffs
             if (g != null && HeldByOther(g)) return true;                                                          // D-151: another troll already works on it
+            if (g != null && TrollRecovery.IsBlacklisted(GetComponent<Character>(), g)) return true;                // D-167: two failed recovery cycles for this troll + this resource: 120 s
             return g != null && _bad.TryGetValue(g, out until) && Time.time < until;
         }
 
@@ -486,7 +503,7 @@ namespace SteveTheTroll.Taming
         float _nextNothingLog;
         bool _saidNothing;
 
-        bool GoHome(MonsterAI ai, float dt, System.Func<BaseAI, float, Vector3, float, bool, bool> moveTo)
+        bool GoHome(MonsterAI ai, float dt, System.Func<BaseAI, float, Vector3, float, bool, bool> moveTo, System.Action<BaseAI, Vector3> lookAt)
         {
             var profile = Game.instance != null ? Game.instance.GetPlayerProfile() : null;
             bool hasBed = profile != null && profile.HaveCustomSpawnPoint();
@@ -514,17 +531,17 @@ namespace SteveTheTroll.Taming
             {
                 // User 2026-10-31 (Steve 3, ~400 m from the hub, did not move): the game's path search fails for a destination far outside the loaded area (D-162 found it for the 1000 m
                 // walk back), so a far walk goes to a point 30 m ahead, renewed every step, and runs.
+                // D-167 (user spec: "a troll must never abandon its assigned hub because of a blocked route"): stuck detection, rage and detours are TrollRecovery; the old 45 s give-up
+                // (FarHomeStuckSeconds, RetrySoon) is gone. Within the depot ring the D-095 rule above still counts a troll that gets no closer as home.
+                long ka, kb;
+                TrollRecovery.KeyOfHub(bed, out ka, out kb);
+                var rec = TrollRecovery.Of(this);
+                if (rec.Tick(ai, dt, moveTo, lookAt, bed, ka, kb, false, true, null)) return true;
                 if (d > FarWalkMetres) moveTo(ai, dt, Waypoint(transform.position, bed), 0.5f, true);
                 else moveTo(ai, dt, bed, home, false);
-                if (d > Backpack.TrollDepot.MaxFromBed && Time.time - _homeBestAt > FarHomeStuckSeconds)
-                {
-                    ModLog.Warn("TrollFarmer: " + TrollTaming.Tag(this) + " does not get closer to " + Hub.HubRegistry.DestinationName(GetComponent<Character>()) + " than " + d.ToString("F0") + " m for " + FarHomeStuckSeconds.ToString("0") + " s - gives the walk up and tries again soon");
-                    TrollIdle.RetrySoon(GetComponent<Character>());
-                    ai.StopMoving();
-                    Destroy(this);
-                }
                 return true;
             }
+            { var rh = GetComponent<TrollRecovery>(); if (rh != null) rh.Reached(); }          // D-167: at the hub: its counter starts again
             if (stuck && d > home + 1f && !_full) ModLog.Info("TrollFarmer: " + TrollTaming.Tag(this) + " gets no closer to the bed than " + d.ToString("F1") + " m - counts as home");
             if (_full)
             {
@@ -613,6 +630,6 @@ namespace SteveTheTroll.Taming
             return best;
         }
 
-        void OnDestroy() { CurrentItem = ""; Release(); }
+        void OnDestroy() { CurrentItem = ""; Release(); var rc = GetComponent<TrollRecovery>(); if (rc != null) rc.Forget(); }
     }
 }

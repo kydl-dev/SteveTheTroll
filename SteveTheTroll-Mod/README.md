@@ -64,6 +64,16 @@ A troll with a full backpack stops what it is doing and walks home to unload. It
 15 - 50 m from your bed (stacks of chests, up to 5 high; uneven ground is levelled first). If it cannot find a spot it tries again
 soon, and the depot is cleaned up once you have emptied it.
 
+### Stuck trolls
+A troll that makes no progress towards what it walks to (a tree, a far farm place or its hub) for 3 seconds works its way out:
+1. If a tree, rock, log or creature blocks it, it goes into a rage for 5 seconds and smashes it. It never touches anything a player built and never a
+   tamed creature; it walks around those.
+2. If that did not help it turns 90 degrees and walks up to 10 m, then recalculates its route.
+3. If it is stuck again soon after, it walks an L-shaped detour (10 m sideways, 10 m back towards its goal) over ground that is level, dry and free.
+4. Two such rounds in a row without success make it give up that one tree for 120 seconds and pick another one (every other tree stays available;
+   the second round turns the other way first). A troll never gives up its hub: it keeps trying, turning the other way each round.
+5. Two trolls that meet head on both turn right, so they pass each other.
+Resting, swinging, being knocked back and standing still on purpose do not count as stuck.
 ### Protection
 Trolls defend you within 50 m. When you are hit with a troll within 10 m of you, it goes into a rage and swings at everything around
 you until you are left alone. A troll that is hit answers with ground slams, then goes back to work.

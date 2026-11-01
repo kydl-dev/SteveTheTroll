@@ -19,6 +19,7 @@
 - The Trolls tab shows "Distance from <hub name>" for a troll that has a hub (the bed otherwise); messages name the hub they talk about.
 - A troll with a full backpack now unloads first, even while it is farming. A depot that could not be removed because a chest window was open is retried; a troll that finds no depot spot tries again after 20 s.
 - The red hub notice is centred on the screen and is no longer cut off at the left on wide screens.
+- Stuck trolls: after 3 s without progress a troll rages against what blocks it (trees, rocks, logs, creatures; never anything a player built, never a tamed creature), then turns 90 degrees and walks up to 10 m, then an L-shaped detour. Two failed rounds make it give that one tree up for 120 s and take another; a hub is never given up, and the walk back to the hub has the same help now. Two trolls meeting head on both turn right.
 - Mini trolls on the slippers lean with the slipper (at most 50 degrees from upright) and turn smoothly instead of snapping when the slippers are put on.
 - Troll Mascot trousers: the legs no longer stretch between the thighs when you walk, run or sit.
 - Hub window 15 % wider; the Slippers / Costume / My trolls / Troll work / Trolls tabs use the Settings tab's text size.
