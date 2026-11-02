@@ -46,5 +46,23 @@ namespace SteveTheTroll.Tests.Unit
         [Test] public void LegSeconds_ShortLegKeepsTheOldLimit() { Assert.That(StuckRules.LegSeconds(10f), Is.EqualTo(StuckRules.LegMaxSeconds)); }
         [Test] public void LegSeconds_LongLegGetsTime() { Assert.That(StuckRules.LegSeconds(30f), Is.EqualTo(30f / StuckRules.MinLegSpeed)); }
         [Test] public void LegDone_LongLegNotCutAtEightSeconds() { Assert.That(StuckRules.LegDone(15f, 30f, 9f, 0f), Is.False); Assert.That(StuckRules.LegDone(15f, 30f, 12.1f, 0f), Is.True); }
+
+        // D-175: walking back after a long detour leg is not "progress" - only beating the closest distance of the attempt is
+        [Test] public void WalkBackAfterALeg_IsNoSustainedProgress()
+        {
+            var m = new ProgressMeter(); m.NewAttempt(10f);
+            for (int i = 0; i < 20; i++) m.Update(10f - i * 0.05f, 0.1f, true);    // creeps to 9 m (the closest of the attempt)
+            m.Reset(30f);                                                             // a 20 m leg took it away
+            for (int i = 0; i < 100; i++) m.Update(30f - i * 0.2f, 0.1f, true);      // 10 s walking back from 30 m to 10 m
+            Assert.That(m.SustainedSeconds, Is.LessThan(StuckRules.SustainedReset));
+            Assert.That(m.StuckSeconds, Is.LessThan(StuckRules.StuckTrigger), "the stuck timer still sees the walk back as movement");
+        }
+        [Test] public void BeatingTheClosestDistance_IsSustainedProgress()
+        {
+            var m = new ProgressMeter(); m.NewAttempt(30f);
+            for (int i = 0; i < 120; i++) m.Update(30f - i * 0.2f, 0.1f, true);      // 12 s of real approach
+            Assert.That(m.SustainedSeconds, Is.GreaterThanOrEqualTo(StuckRules.SustainedReset));
+        }
+        [Test] public void NewAttempt_ForgetsTheOldClosest() { var m = new ProgressMeter(); m.NewAttempt(5f); m.NewAttempt(40f); Assert.That(m.SeriesBest, Is.EqualTo(40f)); }
     }
 }

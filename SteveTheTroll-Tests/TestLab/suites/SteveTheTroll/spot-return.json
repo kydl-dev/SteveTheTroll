@@ -55,6 +55,13 @@
     },
     {
       "do": "hook",
+      "name": "stt.followTroll",
+      "args": {
+        "troll": "troll"
+      }
+    },
+    {
+      "do": "hook",
       "name": "stt.fillBackpack",
       "args": {
         "troll": "troll"
@@ -64,10 +71,10 @@
       "do": "hook",
       "name": "stt.stepAside",
       "args": {
-        "dx": -40,
-        "dz": -40
+        "dx": 0,
+        "dz": -25
       },
-      "label": "the player steps out of the troll's way to its spot (TrollHold froze it in front of the player, D-175)"
+      "label": "the player steps 25 m south, off the troll's way east to its spot but no further from the spot (run 181331: 40 m south-west took the troll out of the loaded area, its object was re-created and the walk was lost)"
     },
     {
       "do": "wait",
@@ -85,11 +92,11 @@
       "do": "wait",
       "until": {
         "check": "hook",
-        "name": "stt.backpackStacks",
+        "name": "stt.followedBackpackAtMost",
         "args": {
-          "troll": "troll"
+          "stacks": 20
         },
-        "expect": 0
+        "expect": true
       },
       "timeout": 150
     },
@@ -109,9 +116,8 @@
       "do": "wait",
       "until": {
         "check": "hook",
-        "name": "stt.reachedSpot",
+        "name": "stt.followedReachedSpot",
         "args": {
-          "troll": "troll",
           "metres": 15
         },
         "expect": true
@@ -124,22 +130,19 @@
     },
     {
       "do": "hook",
-      "name": "stt.state",
-      "args": {
-        "troll": "troll"
-      },
-      "contains": "farming",
+      "name": "stt.followedFarming",
+      "expect": true,
       "label": "it farms again at the remembered spot"
     }
   ],
   "asserts": [
     {
       "check": "hook",
-      "name": "stt.backpackStacks",
+      "name": "stt.followedBackpackAtMost",
       "args": {
-        "troll": "troll"
+        "stacks": 20
       },
-      "expect": 0
+      "expect": true
     },
     {
       "check": "noErrors",
@@ -147,9 +150,8 @@
     },
     {
       "check": "hook",
-      "name": "stt.reachedSpot",
+      "name": "stt.followedReachedSpot",
       "args": {
-        "troll": "troll",
         "metres": 15
       },
       "expect": true

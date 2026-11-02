@@ -601,6 +601,27 @@ namespace SteveTheTroll.Testing
             return d <= metres;
         }
 
+        /// D-175 (run 181331: the troll's object was re-created on the way - "'troll' not found"): the FOLLOWED troll (stt.followTroll, by its ZDO) stands within `metres` of the
+        /// remembered spot. Expected outcome: false without a followed troll / spot.
+        [TestHook("stt.followedReachedSpot")]
+        static bool FollowedReachedSpot(float metres)
+        {
+            var z = FollowedZdo();
+            if (z == null || _spotTarget == Vector3.zero) return z != null && z == null;
+            float d = HubGeometry.Flat(_spotTarget - z.GetPosition());
+            if (d <= metres) ModLog.Info("TestHooks: the followed troll reached its remembered spot (" + d.ToString("F1") + " m)");
+            return d <= metres;
+        }
+
+        /// D-175: the followed troll is loaded and has a farm job that is not a home / unload trip. Expected outcome: false while not loaded.
+        [TestHook("stt.followedFarming")]
+        static bool FollowedFarming()
+        {
+            var c = _followId.Length > 0 ? TrollRegistry.FindLoaded(_followId) : null;
+            var f = c != null ? c.GetComponent<TrollFarmer>() : null;
+            return f != null && !f.Unloading;
+        }
+
         [TestHook("stt.depotItems")]
         static int DepotItems(GameObject frame) { int n = 0; foreach (var c in TrollDepot.ChestsOf(frame)) n += c.GetInventory().NrOfItems(); return n; }
 

@@ -91,11 +91,34 @@ namespace SteveTheTroll.Trolls.Farming.Infrastructure
         internal void StartTravel(Vector3 to, bool toRememberedSpot = false)
         {
             _travelling = true; _travelTo = to; _travelStart = Time.time; _toSpot = toRememberedSpot;
+            if (toRememberedSpot) SetSpotWalk(true);      // D-175: survives the troll's object being re-created on the way (zone reload)
             _nextSearch = Time.time + SearchSeconds;      // the normal search runs every SearchSeconds on the way: the zone loads, the near sources show up
+        }
+
+        // D-175 (run 181331: walking back to its remembered spot the troll crossed into a reloaded zone, its object was re-created, the new TrollFarmer knew nothing of the
+        // walk and farmed where it stood, 60 m short): the walk is flagged in the troll's ZDO (owner write); a new farm job with the flag set resumes the walk.
+        internal const string SpotWalkKey = "stt_spot_walk";
+        void SetSpotWalk(bool on)
+        {
+            var v = GetComponent<ZNetView>();
+            if (v != null && v.IsValid() && v.IsOwner() && v.GetZDO().GetBool(SpotWalkKey, false) != on) v.GetZDO().Set(SpotWalkKey, on);
+        }
+
+        /// D-175: a walk back to the remembered spot was running when this farmer was made (the object was re-created): walk on. Expected outcome: true when it resumed.
+        internal bool ResumeSpotWalk()
+        {
+            var v = GetComponent<ZNetView>();
+            if (v == null || !v.IsValid() || !v.GetZDO().GetBool(SpotWalkKey, false)) return false;
+            Vector3 spot;
+            if (!Spots.Spot(out spot) || HubGeometry.Flat(spot - transform.position) <= TravelArriveMetres) { SetSpotWalk(false); return false; }
+            StartTravel(spot, true);
+            ModLog.Info("TrollFarmer: " + TrollTaming.Tag(this) + " walks on to its remembered spot " + spot.ToString("F0") + " (" + HubGeometry.Flat(spot - transform.position).ToString("F0") + " m, the walk survived a reload)");
+            return true;
         }
 
         void EndTravel(bool failed)
         {
+            if (_toSpot) SetSpotWalk(false);
             if (failed) Spots.GiveUp(_travelTo);
             _travelling = false;
             _nextSearch = failed ? Time.time + NothingWaitSeconds : 0f;
@@ -138,6 +161,7 @@ namespace SteveTheTroll.Trolls.Farming.Infrastructure
         /// `announce` (D-058): the troll starts on its own after waiting without orders - its owner gets a message with the item it found.
         internal void Setup(string focus, Vector3 centre, bool announce = false)
         {
+            if (!announce) SetSpotWalk(false);      // D-175: an order (or ResumeAtSpot, which starts a new walk right after) ends an old walk to the spot
             _focus = focus ?? ""; _centre = centre; _target = null; _hit = null; _nextSearch = 0f; CurrentItem = ""; _home = false; _announce = announce; Auto = announce; _travelling = false;
             ResetTries();
             MarkFarming(true);
@@ -369,6 +393,7 @@ namespace SteveTheTroll.Trolls.Farming.Infrastructure
                 float range = ranges[hit.Value.RangeIndex];
                 string was = CurrentItem;
                 CurrentItem = item;
+                if (_travelling && _toSpot) SetSpotWalk(false);
                 _travelling = false;
                 Spots.Remember(_target.transform.position);
                 FarmReservations.Hold(_target, Me);

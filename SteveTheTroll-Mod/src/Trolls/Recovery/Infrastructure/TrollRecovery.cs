@@ -179,7 +179,7 @@ namespace SteveTheTroll.Trolls.Recovery.Infrastructure
             _troll = _ctx.EnsureId();       // the one explicit id write (owner only), as TrollRegistry.IdOf did here before D-169
             _ka = ka; _kb = kb; _hasCtx = true; _abandon = false;
             _pipeline.BeginCycle(Book.Failed(_troll, ka, kb));
-            _meter.Reset(d);
+            _meter.NewAttempt(d);
             ModLog.Verbose("TrollRecovery: " + TrollTaming.Tag(this) + " walks to " + (ka == -2L ? "the hub" : ka == -3L ? "a far place" : "a resource") + " " + ka + "/" + kb + ", " + d.ToString("F1") + " m, failed cycles so far "
                 + Book.Failed(_troll, ka, kb) + ", " + (_canAbandon ? "may be abandoned" : "never abandoned"));
         }

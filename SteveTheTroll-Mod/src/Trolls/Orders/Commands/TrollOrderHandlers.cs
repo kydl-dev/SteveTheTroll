@@ -45,7 +45,9 @@ namespace SteveTheTroll.Trolls.Orders.Commands
                 }
                 TrollTaming.StopFollow(ai);
                 ai.SetPatrolPoint();
-                Farmer(c.Troll).Setup(c.Focus, c.Troll.transform.position, c.Announce);
+                var farmer = Farmer(c.Troll);
+                farmer.Setup(c.Focus, c.Troll.transform.position, c.Announce);
+                if (c.Announce) farmer.ResumeSpotWalk();      // D-175: an idle restart (no player order) resumes a walk to the remembered spot that a reload cut off
                 ModLog.Info("TrollFarming: " + TrollTaming.Tag(c.Troll) + " farms '" + (c.Focus.Length > 0 ? c.Focus : "default priority") + (c.Announce ? " (no orders for a while)" : "") + "' around " + c.Troll.transform.position.ToString("F0"));
                 return OperationResponse<bool>.Success(c.Troll.GetComponent<TrollFarmer>() != null);
             }
