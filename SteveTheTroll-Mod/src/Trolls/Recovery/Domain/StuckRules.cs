@@ -4,12 +4,6 @@ using SteveTheTroll.Trolls.Farming.Domain;
 
 namespace SteveTheTroll.Trolls.Recovery.Domain
 {
-    /// <summary>What blocks a troll's way (decided from game facts by TrollRecovery; the decision itself is here and unit-tested).</summary>
-    internal enum Obstruction { None, Destructible, Indestructible, PlayerBuilt, Protected }
-
-    /// <summary>The side of a 90 degree turn relative to the intended direction of travel.</summary>
-    internal enum Side { Right, Left }
-
     /// <summary>
     /// D-167 (user spec "Troll Movement - Stuck Detection and Recovery System"): the game-free numbers and decisions of the stuck detection and recovery. All distances are flat metres
     /// (x / z), all times seconds. TrollRecovery reads the game and acts; nothing here knows Unity or Valheim.
@@ -110,30 +104,4 @@ namespace SteveTheTroll.Trolls.Recovery.Domain
         internal static bool HeadOnClear(float separation) { return separation >= HeadOnClearMetres; }
     }
 
-    /// <summary>
-    /// Measures whether a troll really gets closer to its goal (spec 1a / 5): the timer only runs while movement is expected (not during attack animations, knockback,
-    /// deliberate waits) and restarts when the distance beats the best one so far.
-    /// </summary>
-    internal sealed class ProgressMeter
-    {
-        float _best = float.MaxValue, _sinceGain, _sustained;
-
-        /// Seconds without a gain (the stuck timer).
-        internal float StuckSeconds { get { return _sinceGain; } }
-        /// Seconds of continuous progress.
-        internal float SustainedSeconds { get { return _sustained; } }
-        internal float Best { get { return _best; } }
-
-        /// New goal or new position after a manoeuvre: measure from here.
-        internal void Reset(float distance) { _best = distance; _sinceGain = 0f; _sustained = 0f; }
-
-        /// One frame. `expectMovement` false = an intentional pause: nothing runs, nothing is reset.
-        internal void Update(float distance, float dt, bool expectMovement)
-        {
-            if (!expectMovement || dt <= 0f) return;
-            if (distance < _best - StuckRules.MinGain) { _best = distance; _sinceGain = 0f; }
-            else _sinceGain += dt;
-            _sustained = _sinceGain <= StuckRules.GainWindow ? _sustained + dt : 0f;
-        }
-    }
 }
