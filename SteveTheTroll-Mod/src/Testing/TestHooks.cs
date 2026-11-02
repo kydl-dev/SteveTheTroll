@@ -456,6 +456,7 @@ namespace SteveTheTroll.Testing
             long who = owner == "other" ? Me + 777 : Me;
             var z = ZDOMan.instance.CreateNewZDO(p.transform.position + new Vector3(dx, 0f, dz), HubData.PrefabName.GetStableHashCode());
             z.SetPrefab(HubData.PrefabName.GetStableHashCode());      // CreateNewZDO ignores its prefab argument in this game version
+            z.Persistent = true;      // D-173 (run 161451): a raw ZDO is not persistent - when the player went 400 m away its zone unloaded and the game DELETED the test hub ("0 Troll Hub(s) known")
             z.Set(HubRegistry.OwnerKey, who);
             z.Set(HubRegistry.OwnerNameKey, owner == "other" ? "Other" : p.GetPlayerName());
             z.Set(HubRegistry.NumberKey, number);
