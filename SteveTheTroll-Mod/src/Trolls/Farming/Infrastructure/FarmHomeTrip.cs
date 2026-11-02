@@ -137,7 +137,7 @@ namespace SteveTheTroll.Trolls.Farming.Infrastructure
             string focus = z != null ? Ui.TrollFocus.Normalize(z.GetString(TrollRegistry.FocusKey, "")) : "";
             _f.Setup(focus, spot, false);
             _f.IsFull = false; Reset(); _f.Auto = true;
-            _f.StartTravel(spot);
+            _f.StartTravel(spot, true);
             ModLog.Info("TrollFarmer: " + TrollTaming.Tag(_f) + " emptied its backpack - walks " + away.magnitude.ToString("F0") + " m back to where it farmed (" + spot.ToString("F0") + ")" + (focus.Length > 0 ? ", focus '" + focus + "'" : ""));
             return _f.Travelling;
         }

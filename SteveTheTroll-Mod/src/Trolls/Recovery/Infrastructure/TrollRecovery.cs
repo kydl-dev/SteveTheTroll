@@ -336,8 +336,22 @@ namespace SteveTheTroll.Trolls.Recovery.Infrastructure
             return new Vector3(dx, 0f, dz);
         }
 
+        // D-174 (run 170316: "R70 0 m (height change 18.2 m at 1 m)" with nothing in the way - ZoneSystem.GetSolidHeight hits the troll's OWN colliders and backpack chests above a
+        // point within its body): the ground under `p` is the highest solid hit that is not part of this troll; no hit -> the game's solid height, else p.y.
+        static readonly RaycastHit[] DownHits = new RaycastHit[16];
+        static int _groundMask;
         float GroundY(Vector3 p)
         {
+            if (_groundMask == 0) _groundMask = LayerMask.GetMask("Default", "static_solid", "Default_small", "piece", "terrain", "vehicle");
+            int n = Physics.RaycastNonAlloc(new Vector3(p.x, p.y + 30f, p.z), Vector3.down, DownHits, 80f, _groundMask, QueryTriggerInteraction.Ignore);
+            float best = float.MinValue;
+            for (int i = 0; i < n; i++)
+            {
+                var c = DownHits[i].collider;
+                if (c == null || c.transform.IsChildOf(transform)) continue;
+                if (DownHits[i].point.y > best) best = DownHits[i].point.y;
+            }
+            if (best > float.MinValue) return best;
             float h;
             return ZoneSystem.instance != null && ZoneSystem.instance.GetSolidHeight(p, out h) ? h : p.y;
         }

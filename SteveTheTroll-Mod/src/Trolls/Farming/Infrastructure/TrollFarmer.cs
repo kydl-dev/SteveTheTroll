@@ -51,7 +51,7 @@ namespace SteveTheTroll.Trolls.Farming.Infrastructure
         Collider _hit;
         float _nextSearch, _nextAttack, _nextLog, _stepUntil, _nextFullCheck, _travelStart, _nextNothingLog;
         int _attacks;
-        bool _home, _announce, _travelling, _saidNothing;
+        bool _home, _announce, _travelling, _saidNothing, _toSpot;
         ItemDrop.ItemData _weapon;
         FarmTool _tool;
         Humanoid _me;
@@ -88,9 +88,9 @@ namespace SteveTheTroll.Trolls.Farming.Infrastructure
             ModLog.Verbose("TrollFarmer: " + TrollTaming.Tag(this) + " set up (Architecture V2: farming pipeline + executor, capabilities complete " + _ctx.Capabilities.Complete + ")");
         }
 
-        internal void StartTravel(Vector3 to)
+        internal void StartTravel(Vector3 to, bool toRememberedSpot = false)
         {
-            _travelling = true; _travelTo = to; _travelStart = Time.time;
+            _travelling = true; _travelTo = to; _travelStart = Time.time; _toSpot = toRememberedSpot;
             _nextSearch = Time.time + SearchSeconds;      // the normal search runs every SearchSeconds on the way: the zone loads, the near sources show up
         }
 
@@ -349,6 +349,7 @@ namespace SteveTheTroll.Trolls.Farming.Infrastructure
         void Search()
         {
             _nextSearch = Time.time + SearchSeconds;
+            if (_travelling && !TargetRules.NearSearchWhileTravelling(_toSpot, HubGeometry.Flat(_travelTo - transform.position))) return;      // D-174: on the way to the remembered spot
             ResetTries();
             int tier = TamingRules.TamedToolTier;      // D-059: tamed trolls break any tree / rock (TrollFarmHits)
             var goals = Ui.TrollFocus.SearchOrder(_focus);         // D-058: focus item first, then the default priority

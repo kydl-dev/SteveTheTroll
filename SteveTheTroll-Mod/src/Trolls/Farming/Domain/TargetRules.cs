@@ -47,5 +47,11 @@ namespace SteveTheTroll.Trolls.Farming.Domain
         {
             return holder != 0 && holder != me && now - heldAt < ttl;
         }
+
+        /// D-174 (spot-return, made to wait for the arrival): a troll walking back to its REMEMBERED farm spot (D-163, user: "remember the spot where they've farmed") does not
+        /// take a source near the way - the near search took over 5 m from the depot and the spot was never reached. Within SpotSearchMetres of the spot it searches as usual;
+        /// a long-range search walk (no remembered spot) keeps taking the first source in range on the way. Expected outcome: true = run the near search now.
+        internal const float SpotSearchMetres = 30f;
+        internal static bool NearSearchWhileTravelling(bool toRememberedSpot, float metresToSpot) { return !toRememberedSpot || metresToSpot <= SpotSearchMetres; }
     }
 }

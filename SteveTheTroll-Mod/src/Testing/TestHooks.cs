@@ -273,20 +273,37 @@ namespace SteveTheTroll.Testing
         /// Quantity of `prefab` in every depot chest of this player (from the chests' ZDOs: works where the depot area is not loaded).
         static int DepotQuantity(string prefab)
         {
-            var list = new List<ZDO>(); int idx = 0, guard = 0;
-            while (!ZDOMan.instance.GetAllZDOsWithPrefabIterative(DepotData.ChestPrefab, list, ref idx) && guard++ < 10000) { }
             var drop = ObjectDB.instance.GetItemPrefab(prefab);
             string shared = drop != null ? drop.GetComponent<ItemDrop>().m_itemData.m_shared.m_name : prefab;
-            int n = 0;
+            int n = 0, chests = 0, mine = 0, loaded = 0, fromZdo = 0;
+            // loaded depot chests: their live inventory (what TrollDepot.Unload wrote, saved or not)
+            var seen = new HashSet<ZDOID>();
+            foreach (var c in Object.FindObjectsByType<Container>(FindObjectsSortMode.None))
+            {
+                var v = c != null ? c.GetComponent<ZNetView>() : null;
+                if (v == null || !v.IsValid()) continue;
+                var z = v.GetZDO();
+                if (!z.GetBool(TrollDepot.FlagKey) || z.GetLong(TrollDepot.OwnerKey) != Me) continue;
+                seen.Add(z.m_uid); loaded++;
+                foreach (var it in c.GetInventory().GetAllItems()) if (it.m_shared.m_name == shared) n += it.m_stack;
+            }
+            // unloaded ones: the inventory the game saved in the chest's ZDO
+            var list = new List<ZDO>(); int idx = 0, guard = 0;
+            while (!ZDOMan.instance.GetAllZDOsWithPrefabIterative(DepotData.ChestPrefab, list, ref idx) && guard++ < 10000) { }
             foreach (var z in list)
             {
+                chests++;
                 if (!z.GetBool(TrollDepot.FlagKey) || z.GetLong(TrollDepot.OwnerKey) != Me) continue;
+                mine++;
+                if (seen.Contains(z.m_uid)) continue;
                 string data = z.GetString(ZDOVars.s_items, "");
                 if (data.Length == 0) continue;
                 var inv = new Inventory("depot", null, 8, 8);
                 inv.Load(new ZPackage(data));
+                fromZdo++;
                 foreach (var it in inv.GetAllItems()) if (it.m_shared.m_name == shared) n += it.m_stack;
             }
+            ModLog.Info("TestHooks: depot " + prefab + " " + n + " (chest ZDOs " + chests + ", this player's depot chests " + mine + ", loaded " + loaded + ", read from ZDO " + fromZdo + ")");
             return n;
         }
 
