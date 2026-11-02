@@ -38,6 +38,8 @@
     <Compile Include="..\..\SteveTheTroll-Mod\src\Taming\RecoveryMachine.cs" Link="Mod\RecoveryMachine.cs" />
     <Compile Include="..\..\SteveTheTroll-Mod\src\Taming\TargetRules.cs" Link="Mod\TargetRules.cs" />
     <Compile Include="..\..\SteveTheTroll-Mod\src\Hub\HubData.cs" Link="Mod\HubData.cs" />
+    <!-- D-169 Architecture V2: the game-free foundation (typed responses, validation, commands, pipeline) -->
+    <Compile Include="..\..\SteveTheTroll-Mod\src\Core\**\*.cs" Link="Mod\Core\%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="UnityEngine.CoreModule"><HintPath>$(ValheimRefs)\UnityEngine.CoreModule.dll</HintPath><Private>true</Private></Reference>
