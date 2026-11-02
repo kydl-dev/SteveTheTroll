@@ -2,6 +2,7 @@ using Kydl.Common;
 using SteveTheTroll.Backpack.Infrastructure;
 using SteveTheTroll.Hubs.Domain;
 using SteveTheTroll.Hubs.Infrastructure;
+using SteveTheTroll.Trolls.Home.Domain;
 using SteveTheTroll.Trolls.Home.Infrastructure;
 using SteveTheTroll.Trolls.Recovery.Infrastructure;
 using SteveTheTroll.Trolls.Registry.Infrastructure;
@@ -106,7 +107,17 @@ namespace SteveTheTroll.Trolls.Farming.Infrastructure
             int moved = TrollDepot.Unload(me, bed, TrollTaming.Owner(me), out left);
             ModLog.Info("TrollFarmer: " + TrollTaming.Tag(_f) + " unloaded " + moved + " stack(s) at the depot (" + flat.magnitude.ToString("F1") + " m" + (late ? ", walked too long" : "") + "), " + left + " left");
             if (_f.IsMine()) Ui.Notify.Show(left > 0 ? Loc.T("stevethetroll_depot_full", _f.Shown(), left.ToString()) : Loc.T("stevethetroll_depot_done", _f.Shown(), moved.ToString()), left > 0 ? Ui.Notify.Kind.Warn : Ui.Notify.Kind.Farm);
-            if (left == 0 && ResumeAtSpot()) return left == 0;
+            switch (HomeRules.AfterUnloading(left, TrollHome.OwnerWears(me)))
+            {
+                case AfterUnload.ResumeSpot:
+                    if (ResumeAtSpot()) return true;
+                    break;
+                case AfterUnload.StayHome:
+                    // D-173: no slippers - home is where it waits; GoHome walks it on to the home radius (not full any more) and the farmer ends there
+                    _f.IsFull = false; _unloading = false;
+                    ModLog.Info("TrollFarmer: " + TrollTaming.Tag(_f) + " emptied its backpack at home - the owner wears no slippers, it stays home");
+                    return true;
+            }
             _f.Remove();
             return moved >= 0;
         }

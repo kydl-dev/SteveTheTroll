@@ -7,6 +7,11 @@ namespace SteveTheTroll.Tests.Unit
     [TestFixture]
     public class HomeRulesTests
     {
+        // D-173 (user: "go home and unload there"): after the home unload - left-overs stop, slippers on resume the farm spot, no slippers stay home
+        [TestCase(0, true, "ResumeSpot")] [TestCase(0, false, "StayHome")] [TestCase(3, true, "Stop")] [TestCase(3, false, "Stop")]
+        public void AfterUnloading(int left, bool wears, string expected)
+        { Assert.That(SteveTheTroll.Trolls.Home.Domain.HomeRules.AfterUnloading(left, wears).ToString(), Is.EqualTo(expected)); }
+
         [Test] public void HealRange() { Assert.That(HomeRules.InHealRange(30f, 40f, 2500f), Is.True); Assert.That(HomeRules.InHealRange(30f, 40.1f, 2500f), Is.False); }
         [Test] public void Holds_OnlyWhileLookedAtLately()
         {
