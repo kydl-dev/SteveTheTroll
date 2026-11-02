@@ -18,6 +18,8 @@ namespace SteveTheTroll.Testing
         static readonly List<GameObject> Built = new List<GameObject>();
         static readonly List<GameObject> Walls = new List<GameObject>();
         static GameObject _tree;
+        static Vector3 _centre;
+        static float _radius;
         // D-172: Piece.IsPlacedByPlayer() reads the creator the Piece cached in Awake (m_creator), not the ZDO - writing only the ZDO left the ring walls "not player-built",
         // the troll raged at them and felled the walled tree (recovery-walled-tree, 2026-11-02). Both are set now.
         static readonly AccessTools.FieldRef<Piece, long> CreatorField = AccessTools.FieldRefAccess<Piece, long>("m_creator");
@@ -36,14 +38,19 @@ namespace SteveTheTroll.Testing
             if (treePrefab == null || wallPrefab == null) throw new System.Exception("Beech1 or stone_wall_4x2 prefab missing");
             var tree = Object.Instantiate(treePrefab, centre, Quaternion.identity);
             Built.Add(tree);
-            _tree = tree;
+            _tree = tree; _centre = centre; _radius = radius;
             int n = Mathf.CeilToInt(2f * Mathf.PI * radius / 3.2f);      // the wall is 4 m long along its local X: forward = radial puts that axis along the tangent
-            for (int i = 0; i < n; i++)
+            // D-172 (run 141510: the walls stood, none was hit, yet the troll reached the tree - it got over / under the ring where the ground slopes): each wall sits at the
+            // LOWEST ground of its 4 m length (no gap under the downhill end) and the ring is TWO walls high (4 m), so the walled tree cannot be reached without breaking a wall.
+            for (int k = 0; k < 2 * n; k++)
             {
+                int i = k % n, layer = k / n;
                 float a = i * 2f * Mathf.PI / n;
                 var radial = new Vector3(Mathf.Cos(a), 0f, Mathf.Sin(a));
+                var tangent = new Vector3(-radial.z, 0f, radial.x);
                 var at = centre + radial * radius;
-                at.y = ZoneSystem.instance.GetGroundHeight(at) - 0.3f;
+                float low = Mathf.Min(ZoneSystem.instance.GetGroundHeight(at), Mathf.Min(ZoneSystem.instance.GetGroundHeight(at + tangent * 2f), ZoneSystem.instance.GetGroundHeight(at - tangent * 2f)));
+                at.y = low - 0.3f + layer * 2f;
                 var wall = Object.Instantiate(wallPrefab, at, Quaternion.LookRotation(radial));
                 var view = wall.GetComponent<ZNetView>();
                 var piece = wall.GetComponent<Piece>();
@@ -51,12 +58,12 @@ namespace SteveTheTroll.Testing
                 if (view == null || !view.IsValid()) ModLog.Warn("RecoveryTestHooks: wall " + i + " has no valid ZNetView - creator not set in the ZDO");
                 else view.GetZDO().Set(ZDOVars.s_creator, creator);
                 if (piece != null) CreatorField(piece) = creator;
-                if (i == 0)      // one line is enough, they are all built the same way
+                if (k == 0)      // one line is enough, they are all built the same way
                     ModLog.Info("RecoveryTestHooks: wall 0 creator in ZDO " + (view != null && view.IsValid() ? view.GetZDO().GetLong(ZDOVars.s_creator, 0L).ToString() : "no valid ZDO")
                         + ", Piece found " + (piece != null) + ", GetCreator " + (piece != null ? piece.GetCreator().ToString() : "-") + ", IsPlacedByPlayer " + (piece != null && piece.IsPlacedByPlayer()));
                 Walls.Add(wall); Built.Add(wall);
             }
-            ModLog.Info("RecoveryTestHooks: tree at " + centre.ToString("F0") + " inside a ring of " + n + " player-built walls, radius " + radius.ToString("F0") + " m, creator " + (Me != 0L ? Me : 4711L));
+            ModLog.Info("RecoveryTestHooks: tree at " + centre.ToString("F0") + " inside a ring of " + n + " x 2 player-built walls, radius " + radius.ToString("F0") + " m, creator " + (Me != 0L ? Me : 4711L));
             return tree;
         }
 
@@ -131,7 +138,8 @@ namespace SteveTheTroll.Testing
             if (_tree != null && _tree.activeInHierarchy) return "waiting";
             int alive = 0; foreach (var w in Walls) if (w != null && w.activeInHierarchy) alive++;
             var r = troll != null ? troll.GetComponent<TrollRecovery>() : null;
-            string why = "tree felled, walls standing " + alive + " of " + Walls.Count + ", walls hit " + WallsHit() + ", stage " + (r == null ? "none" : r.Stage.ToString());
+            string why = "tree felled, walls standing " + alive + " of " + Walls.Count + ", walls hit " + WallsHit() + ", stage " + (r == null ? "none" : r.Stage.ToString())
+                + (troll != null ? ", troll " + Vector3.Distance(new Vector3(troll.transform.position.x, 0f, troll.transform.position.z), new Vector3(_centre.x, 0f, _centre.z)).ToString("F1") + " m from the tree (ring " + _radius.ToString("F0") + " m)" : "");
             ModLog.Info("RecoveryTestHooks: walled tree outcome - " + why);
             return why;
         }
