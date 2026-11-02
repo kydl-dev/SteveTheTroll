@@ -1,6 +1,6 @@
-using NUnit.Framework;
 using System.IO;
 using System.Runtime.CompilerServices;
+using NUnit.Framework;
 
 namespace SteveTheTroll.Tests.Unit
 {

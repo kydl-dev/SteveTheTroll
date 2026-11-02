@@ -1,0 +1,65 @@
+{
+  "name": "attack-key-nothing",
+  "description": "D-171: the attack key on nothing - the troll goes farming its focus (OrderKind.FarmFocus)",
+  "timeout": 60,
+  "steps": [
+    {
+      "do": "hook",
+      "name": "stt.reset"
+    },
+    {
+      "do": "give",
+      "prefab": "STT_TrollSlippers",
+      "count": 1,
+      "equip": true
+    },
+    {
+      "do": "hook",
+      "name": "stt.addHub",
+      "args": {
+        "number": 1,
+        "dx": 0,
+        "dz": 25
+      }
+    },
+    {
+      "do": "hook",
+      "name": "stt.spawnTroll",
+      "args": {
+        "dx": -8,
+        "dz": -8
+      },
+      "as": "troll"
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "hook",
+      "name": "stt.attackKeyPress",
+      "args": {
+        "count": 1
+      }
+    },
+    {
+      "do": "wait",
+      "seconds": 2
+    }
+  ],
+  "asserts": [
+    {
+      "check": "hook",
+      "name": "stt.hasFarmer",
+      "args": {
+        "troll": "troll"
+      },
+      "expect": true,
+      "label": "farms"
+    },
+    {
+      "check": "noErrors",
+      "source": "SteveTheTroll"
+    }
+  ]
+}

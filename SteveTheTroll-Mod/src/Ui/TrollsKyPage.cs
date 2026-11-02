@@ -1,7 +1,8 @@
-using System;
 using System.Collections.Generic;
+using System;
 using Kydl.Common;
 using KydlCore;
+using SteveTheTroll.Trolls.Combat.Infrastructure;
 
 namespace SteveTheTroll.Ui
 {

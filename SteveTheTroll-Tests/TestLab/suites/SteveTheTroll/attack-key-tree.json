@@ -1,0 +1,91 @@
+{
+  "name": "attack-key-tree",
+  "description": "D-171: the player walks (teleports) to a tree, looks at it and presses the attack key (queued through stt.attackKeyPress, read by the real TrollOrders.Tick) - the troll breaks it",
+  "timeout": 90,
+  "steps": [
+    {
+      "do": "hook",
+      "name": "stt.reset"
+    },
+    {
+      "do": "give",
+      "prefab": "STT_TrollSlippers",
+      "count": 1,
+      "equip": true
+    },
+    {
+      "do": "hook",
+      "name": "stt.addHub",
+      "args": {
+        "number": 1,
+        "dx": 0,
+        "dz": 25
+      }
+    },
+    {
+      "do": "hook",
+      "name": "stt.plantTree",
+      "args": {
+        "dx": 20,
+        "dz": 20
+      },
+      "as": "tree"
+    },
+    {
+      "do": "hook",
+      "name": "stt.spawnTroll",
+      "args": {
+        "dx": -8,
+        "dz": -8
+      },
+      "as": "troll"
+    },
+    {
+      "do": "teleport",
+      "to": "tree",
+      "distance": 6
+    },
+    {
+      "do": "face",
+      "target": "tree"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "hook",
+      "name": "stt.attackKeyPress",
+      "args": {
+        "count": 1
+      }
+    },
+    {
+      "do": "wait",
+      "until": {
+        "check": "hook",
+        "name": "stt.plantedUntouched",
+        "expect": 0
+      },
+      "timeout": 45
+    }
+  ],
+  "asserts": [
+    {
+      "check": "hook",
+      "name": "stt.plantedUntouched",
+      "expect": 0,
+      "label": "the tree the player looked at was hit"
+    },
+    {
+      "check": "logContains",
+      "source": "SteveTheTroll",
+      "text": "ordered to break Beech1",
+      "expect": true
+    },
+    {
+      "check": "noErrors",
+      "source": "SteveTheTroll"
+    }
+  ]
+}

@@ -3,13 +3,13 @@ using NUnit.Framework;
 namespace SteveTheTroll.Tests.Unit
 {
     /// <summary>
-    /// D-120 .. D-125: SteveTheTroll.Taming.BreakRules - what the Troll Club / 2-star trolls break, boosted spawn sets, the global taming cap,
+    /// D-120 .. D-125: BreakRules - what the Troll Club / 2-star trolls break, boosted spawn sets, the global taming cap,
     /// the set's stagger resistance and the tamed trolls' swim speed.
     /// </summary>
     [TestFixture]
     public class BreakRulesTests
     {
-        const string T = "SteveTheTroll.Taming.BreakRules";
+        const string T = "SteveTheTroll.Trolls.Combat.Domain.BreakRules";
         static object Call(string m, params object[] a) { return ModAssembly.Call(T, m, a); }
 
         [TestCase("YggaShoot1(Clone)", true)]

@@ -1,20 +1,77 @@
 {
   "name": "SteveTheTroll",
   "description": "SteveTheTroll (Architecture V2, D-169 - architecture-v2 runs first): depot lifecycle, backpack storage, hub choice, full-backpack unload, slipper figures, ownership (D-160)",
-  "requireMods": [ { "guid": "com.kydldev.SteveTheTroll" } ],
+  "requireMods": [
+    {
+      "guid": "com.kydldev.SteveTheTroll"
+    }
+  ],
   "configOverrides": [
-    { "guid": "com.kydldev.SteveTheTroll", "section": "Trolls", "key": "Enable", "value": true },
-    { "guid": "com.kydldev.SteveTheTroll", "section": "TrollHub", "key": "Enable", "value": true },
-    { "guid": "com.kydldev.SteveTheTroll", "section": "TrollHub", "key": "AutoAssign", "value": true },
-    { "guid": "com.kydldev.SteveTheTroll", "section": "TrollBackpack", "key": "RemoveEmptyDepots", "value": true },
-    { "guid": "com.kydldev.SteveTheTroll", "section": "DebugLog", "key": "Enable", "value": true }
+    {
+      "guid": "com.kydldev.SteveTheTroll",
+      "section": "Trolls",
+      "key": "Enable",
+      "value": true
+    },
+    {
+      "guid": "com.kydldev.SteveTheTroll",
+      "section": "TrollHub",
+      "key": "Enable",
+      "value": true
+    },
+    {
+      "guid": "com.kydldev.SteveTheTroll",
+      "section": "TrollHub",
+      "key": "AutoAssign",
+      "value": true
+    },
+    {
+      "guid": "com.kydldev.SteveTheTroll",
+      "section": "TrollBackpack",
+      "key": "RemoveEmptyDepots",
+      "value": true
+    },
+    {
+      "guid": "com.kydldev.SteveTheTroll",
+      "section": "DebugLog",
+      "key": "Enable",
+      "value": true
+    }
   ],
   "resetBetweenTests": true,
   "tests": [
     "architecture-v2",
-    "depot-empty-removes", "depot-window-open-waits", "depot-not-empty-stays", "depot-reserved-waits",
-    "backpack-roundtrip", "backpack-full-cache",
-    "hub-choice-ranges", "hub-ignores-other-owner", "hub-walk-back", "hub-walk-back-follow-cancels",
-    "slipper-skin", "full-backpack-unloads", "full-while-farming", "far-search", "spot-return", "far-troll-goes-home", "instruction-latency", "ownership-handover", "health-clean", "farm-chops-tree", "recovery-walled-tree"
+    "depot-empty-removes",
+    "depot-window-open-waits",
+    "depot-not-empty-stays",
+    "depot-reserved-waits",
+    "backpack-roundtrip",
+    "backpack-full-cache",
+    "hub-choice-ranges",
+    "hub-ignores-other-owner",
+    "hub-walk-back",
+    "hub-walk-back-follow-cancels",
+    "slipper-skin",
+    "full-backpack-unloads",
+    "full-while-farming",
+    "far-search",
+    "spot-return",
+    "far-troll-goes-home",
+    "instruction-latency",
+    "ownership-handover",
+    "health-clean",
+    "farm-chops-tree",
+    "defend-rage",
+    "counter-slam",
+    "guard-mob",
+    "nohit-zone",
+    "walls-two-star",
+    "attack-key-tree-press",
+    "attack-key-tree",
+    "attack-key-creature",
+    "attack-key-nothing",
+    "unarmed-farm",
+    "noweapon-farm",
+    "recovery-walled-tree"
   ]
 }

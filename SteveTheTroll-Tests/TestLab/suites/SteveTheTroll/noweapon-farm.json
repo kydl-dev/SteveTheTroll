@@ -1,0 +1,88 @@
+{
+  "name": "noweapon-farm",
+  "description": "D-171: a troll with no item at all asks the game for its default items once (D-149, FarmTool) and then farms",
+  "timeout": 90,
+  "steps": [
+    {
+      "do": "hook",
+      "name": "stt.reset"
+    },
+    {
+      "do": "give",
+      "prefab": "STT_TrollSlippers",
+      "count": 1,
+      "equip": true
+    },
+    {
+      "do": "hook",
+      "name": "stt.addHub",
+      "args": {
+        "number": 1,
+        "dx": 0,
+        "dz": 25
+      }
+    },
+    {
+      "do": "hook",
+      "name": "stt.spawnTroll",
+      "args": {
+        "dx": -8,
+        "dz": -8
+      },
+      "as": "troll"
+    },
+    {
+      "do": "hook",
+      "name": "stt.stripWeapons",
+      "args": {
+        "troll": "troll"
+      }
+    },
+    {
+      "do": "hook",
+      "name": "stt.plantTree",
+      "args": {
+        "dx": -14,
+        "dz": -14
+      },
+      "as": "tree"
+    },
+    {
+      "do": "hook",
+      "name": "stt.farmOn",
+      "args": {
+        "troll": "troll",
+        "source": "tree"
+      },
+      "expect": true
+    },
+    {
+      "do": "wait",
+      "until": {
+        "check": "hook",
+        "name": "stt.plantedUntouched",
+        "expect": 0
+      },
+      "timeout": 60
+    }
+  ],
+  "asserts": [
+    {
+      "check": "logContains",
+      "source": "SteveTheTroll",
+      "text": "asks the game for its default items",
+      "expect": true,
+      "label": "the no-weapon path ran"
+    },
+    {
+      "check": "hook",
+      "name": "stt.plantedUntouched",
+      "expect": 0,
+      "label": "farms after the default items"
+    },
+    {
+      "check": "noErrors",
+      "source": "SteveTheTroll"
+    }
+  ]
+}

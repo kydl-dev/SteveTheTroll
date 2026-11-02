@@ -1,5 +1,5 @@
-using System;
 using System.Collections.Generic;
+using System;
 using NUnit.Framework;
 using SteveTheTroll.Core.Results;
 using SteveTheTroll.Trolls.Contracts;

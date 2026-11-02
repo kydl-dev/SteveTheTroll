@@ -1,4 +1,5 @@
 using Kydl.Common;
+using SteveTheTroll.Trolls.Combat.Infrastructure;
 using SteveTheTroll.Trolls.Farming.Infrastructure;
 using UnityEngine;
 
@@ -163,7 +164,7 @@ namespace SteveTheTroll.Testing
             try
             {
                 string r = Taming.TrollTamingPatch.SelfCheck();
-                bool speed = Taming.TamedTrollSpeed.SelfCheck(), stats = Taming.TamedTrollStats.SelfCheck(), defend = Taming.TrollDefend.SelfCheck(), farm = TrollFarming.SelfCheck(), store = Backpack.BackpackStore.SelfCheck();
+                bool speed = Taming.TamedTrollSpeed.SelfCheck(), stats = Taming.TamedTrollStats.SelfCheck(), defend = TrollDefend.SelfCheck(), farm = TrollFarming.SelfCheck(), store = Backpack.BackpackStore.SelfCheck();
                 bool keep = Taming.TrollWaterKeep.SelfCheck();      // D-131
                 string more = ", TamedTrollSpeed " + speed + ", TamedTrollStats " + stats + ", TrollDefend " + defend + ", TrollFarming " + farm + ", BackpackStore " + store + ", TrollWaterKeep " + keep;
                 return r.StartsWith("PASS") && speed && stats && defend && farm && store && keep ? r + more : "FAIL: " + r + more;

@@ -3,6 +3,7 @@ using System.Reflection;
 using HarmonyLib;
 using Kydl.Common;
 using SteveTheTroll.Taming;
+using SteveTheTroll.Trolls.Combat.Domain;
 using UnityEngine;
 
 namespace SteveTheTroll.Item

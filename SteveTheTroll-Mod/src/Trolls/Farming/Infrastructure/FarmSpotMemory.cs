@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Kydl.Common;
 using SteveTheTroll.Taming;
+using SteveTheTroll.Trolls.Combat.Infrastructure;
 using UnityEngine;
 
 namespace SteveTheTroll.Trolls.Farming.Infrastructure

@@ -1,0 +1,89 @@
+{
+  "name": "unarmed-farm",
+  "description": "D-171: an unarmed troll (no log, D-121) still farms with its own body attacks",
+  "timeout": 90,
+  "steps": [
+    {
+      "do": "hook",
+      "name": "stt.reset"
+    },
+    {
+      "do": "give",
+      "prefab": "STT_TrollSlippers",
+      "count": 1,
+      "equip": true
+    },
+    {
+      "do": "hook",
+      "name": "stt.addHub",
+      "args": {
+        "number": 1,
+        "dx": 0,
+        "dz": 25
+      }
+    },
+    {
+      "do": "hook",
+      "name": "stt.spawnTroll",
+      "args": {
+        "dx": -8,
+        "dz": -8
+      },
+      "as": "troll"
+    },
+    {
+      "do": "hook",
+      "name": "stt.weaponOf",
+      "args": {
+        "troll": "troll"
+      },
+      "contains": "slap",
+      "label": "swings its slap"
+    },
+    {
+      "do": "hook",
+      "name": "stt.disarm",
+      "args": {
+        "troll": "troll"
+      }
+    },
+    {
+      "do": "hook",
+      "name": "stt.plantTree",
+      "args": {
+        "dx": -14,
+        "dz": -14
+      },
+      "as": "tree"
+    },
+    {
+      "do": "hook",
+      "name": "stt.farmOn",
+      "args": {
+        "troll": "troll",
+        "source": "tree"
+      },
+      "expect": true
+    },
+    {
+      "do": "wait",
+      "until": {
+        "check": "hook",
+        "name": "stt.plantedUntouched",
+        "expect": 0
+      },
+      "timeout": 45
+    }
+  ],
+  "asserts": [
+    {
+      "check": "hook",
+      "name": "stt.plantedUntouched",
+      "expect": 0
+    },
+    {
+      "check": "noErrors",
+      "source": "SteveTheTroll"
+    }
+  ]
+}

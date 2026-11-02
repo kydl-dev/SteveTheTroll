@@ -1,5 +1,6 @@
 using Kydl.Common;
 using SteveTheTroll.Taming;
+using SteveTheTroll.Trolls.Combat.Infrastructure;
 using SteveTheTroll.Trolls.Farming.Infrastructure;
 using SteveTheTroll.Trolls.Orders.Application;
 using SteveTheTroll.Trolls.Orders.Commands;
@@ -79,9 +80,13 @@ namespace SteveTheTroll.Trolls.Orders.Infrastructure
             }
         }
 
+        /// D-171: TestLab only (hook stt.attackKeyPress) - presses of the attack key queued by a test, used up one per frame. 0 in normal play.
+        internal static int FakePresses;
+
         // ZInput first (the game's input), the plain Unity input as a fallback for the extra mouse buttons.
         static bool Pressed(KeyCode key)
         {
+            if (FakePresses > 0) { FakePresses--; ModLog.Info("TrollOrders: attack key " + key + " pressed by a test (" + FakePresses + " left)"); return FakePresses >= 0; }
             try { if (ZInput.GetKeyDown(key, false)) return true; } catch (System.Exception) { }
             try { return Input.GetKeyDown(key); } catch (System.Exception) { return false; }
         }

@@ -1,5 +1,6 @@
 using BepInEx.Configuration;
 using Kydl.Common;
+using SteveTheTroll.Trolls.Combat.Domain;
 using UnityEngine;
 
 namespace SteveTheTroll
@@ -58,10 +59,10 @@ namespace SteveTheTroll
         public static readonly Tunable<float> AutoFarmSeconds = new Tunable<float>("TrollTamed", "AutoFarmSeconds", 120f, 10f, 600f, "Seconds a newly tamed troll waits at the player for an order; no order -> it farms the default priority on its own (user: 2 minutes).");
         public static readonly Tunable<float> HoldNearPlayerRange = new Tunable<float>("TrollTamed", "HoldNearPlayerRange", 4f, 0f, 15f, "Metres: a tamed troll that is not following stands still while a player is this close (D-063, to open the backpack; 0 = off).");
         public static readonly Tunable<bool> TrollMapPins = new Tunable<bool>("TrollTamed", "MapPins", true, "Shows each own tamed troll on the map (costume head icon) at its live / last known place (D-081).");
-        public static readonly Tunable<int> GlobalTameCap = new Tunable<int>("TrollTaming", "GlobalTameCap", Taming.BreakRules.GlobalTameCap, 1, 50, "D-123: most living tamed trolls one player may have in total, near or far (user: 15).");
-        public static readonly Tunable<float> WadeDepth = new Tunable<float>("TrollTamed", "WadeDepth", Taming.BreakRules.WadeDepth, 0.3f, 5f, "D-129: water depth (m) from which tamed trolls walk WadeFactor x faster (user: 3x speed from 1.5 m into the water).");
-        public static readonly Tunable<float> WadeFactor = new Tunable<float>("TrollTamed", "WadeFactor", Taming.BreakRules.WadeFactor, 1f, 5f, "D-129: tamed trolls walk / run this many times their vanilla speed in water from WadeDepth (user: 3x).");
-        public static readonly Tunable<float> WaterKeepDistance = new Tunable<float>("TrollTamed", "WaterKeepDistance", Taming.BreakRules.WaterKeepDistance, 0f, 40f, "D-131: metres a following tamed troll keeps from you while it is in water (room to steer the boat; user: 15 m; 0 = off, the game's 3 m follow).");
+        public static readonly Tunable<int> GlobalTameCap = new Tunable<int>("TrollTaming", "GlobalTameCap", BreakRules.GlobalTameCap, 1, 50, "D-123: most living tamed trolls one player may have in total, near or far (user: 15).");
+        public static readonly Tunable<float> WadeDepth = new Tunable<float>("TrollTamed", "WadeDepth", BreakRules.WadeDepth, 0.3f, 5f, "D-129: water depth (m) from which tamed trolls walk WadeFactor x faster (user: 3x speed from 1.5 m into the water).");
+        public static readonly Tunable<float> WadeFactor = new Tunable<float>("TrollTamed", "WadeFactor", BreakRules.WadeFactor, 1f, 5f, "D-129: tamed trolls walk / run this many times their vanilla speed in water from WadeDepth (user: 3x).");
+        public static readonly Tunable<float> WaterKeepDistance = new Tunable<float>("TrollTamed", "WaterKeepDistance", BreakRules.WaterKeepDistance, 0f, 40f, "D-131: metres a following tamed troll keeps from you while it is in water (room to steer the boat; user: 15 m; 0 = off, the game's 3 m follow).");
         public static readonly Tunable<float> SwimRunFactor = new Tunable<float>("TrollTamed", "SwimRunFactor", 3f, 0.5f, 5f, "D-122: tamed trolls swim up to this many times their vanilla run speed; following the player they match the player's speed (user: up to 300 %).");
         public static readonly Tunable<float> SwimFollowAdvantage = new Tunable<float>("TrollTamed", "SwimFollowAdvantage", 1.5f, 0f, 10f, "D-130: m/s a swimming tamed troll stays faster than the player it follows (so it catches up instead of only matching).");
         public static readonly Tunable<float> SwimAcceleration = new Tunable<float>("TrollTamed", "SwimAcceleration", 0.5f, 0.05f, 1f, "D-130: how quickly a swimming tamed troll reaches its swim speed (vanilla about 0.05; 1 = at once).");

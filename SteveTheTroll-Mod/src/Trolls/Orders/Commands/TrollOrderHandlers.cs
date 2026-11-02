@@ -2,6 +2,7 @@ using Kydl.Common;
 using SteveTheTroll.Core.Commands;
 using SteveTheTroll.Core.Results;
 using SteveTheTroll.Taming;
+using SteveTheTroll.Trolls.Combat.Infrastructure;
 using SteveTheTroll.Trolls.Farming.Infrastructure;
 using UnityEngine;
 

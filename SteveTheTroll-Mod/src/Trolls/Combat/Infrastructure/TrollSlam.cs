@@ -1,7 +1,9 @@
 using Kydl.Common;
+using SteveTheTroll.Taming;
+using SteveTheTroll.Trolls.Combat.Domain;
 using UnityEngine;
 
-namespace SteveTheTroll.Taming
+namespace SteveTheTroll.Trolls.Combat.Infrastructure
 {
     /// <summary>
     /// D-065 (user: "if a lot of mobs are targeting the player / troll ... do 4 hits in fast succession to the ground and then target any mobs
@@ -40,7 +42,7 @@ namespace SteveTheTroll.Taming
             var me = GetComponent<Humanoid>();
             if (me == null || me.IsDead()) { Destroy(this); return false; }
             bool late = Time.time - _start > MaxSeconds;
-            if ((_left <= 0 && !me.InAttack()) || late)
+            if (SlamRules.Done(_left, me.InAttack(), Time.time - _start, MaxSeconds))
             {
                 ModLog.Info("TrollSlam: " + TrollTaming.Tag(this) + " done (" + (_count - _left) + " slam(s)" + (late ? ", time up" : "") + ")");
                 if (_counter) TrollCounter.Done(me);
@@ -50,7 +52,7 @@ namespace SteveTheTroll.Taming
             ai.StopMoving();
             var point = _towards != null ? _towards.transform.position : _aim;
             lookAt(ai, point);
-            if (_left <= 0 || me.InAttack() || Time.time < _next || !ai.IsLookingAt(point, LookAngle, false)) return true;
+            if (!SlamRules.Ready(_left, me.InAttack(), Time.time >= _next, ai.IsLookingAt(point, LookAngle, false))) return true;
             var weapon = TrollWeapons.Pick(me, Attack.AttackType.Vertical, false);
             if (weapon == null) { ModLog.Warn("TrollSlam: " + TrollTaming.Tag(this) + " has no melee attack"); Destroy(this); return false; }
             if (!me.IsItemEquiped(weapon)) me.EquipItem(weapon, false);

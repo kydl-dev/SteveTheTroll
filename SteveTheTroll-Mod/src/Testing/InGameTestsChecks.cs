@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using HarmonyLib;
 using Kydl.Common;
+using SteveTheTroll.Trolls.Combat.Infrastructure;
 using UnityEngine;
 
 namespace SteveTheTroll.Testing
@@ -74,7 +75,7 @@ namespace SteveTheTroll.Testing
         static string World_HomeSpots()
         {
             Vector3 bed;
-            if (!Taming.TrollNoHit.Bed(out bed)) return "SKIP: no bed set";
+            if (!TrollNoHit.Bed(out bed)) return "SKIP: no bed set";
             float r = ModSettings.HomeRadius.Value;
             var spots = new List<Vector3>();
             var sb = new System.Text.StringBuilder("home radius " + r.ToString("0") + " m; ");
@@ -101,18 +102,18 @@ namespace SteveTheTroll.Testing
         static string World_NoHitZone()
         {
             Vector3 bed;
-            if (!Taming.TrollNoHit.Bed(out bed)) return "SKIP: no bed set";
+            if (!TrollNoHit.Bed(out bed)) return "SKIP: no bed set";
             float r = ModSettings.NoHitRadius.Value;
             if (r <= 0f) return "SKIP: NoHitRadius is 0 (off)";
-            bool inside = Taming.TrollNoHit.InZone(bed + new Vector3(Mathf.Min(5f, r * 0.5f), 0f, 0f));
-            bool outside = !Taming.TrollNoHit.InZone(bed + new Vector3(0f, 0f, r + 5f));
+            bool inside = TrollNoHit.InZone(bed + new Vector3(Mathf.Min(5f, r * 0.5f), 0f, 0f));
+            bool outside = !TrollNoHit.InZone(bed + new Vector3(0f, 0f, r + 5f));
             var info = Harmony.GetPatchInfo(AccessTools.Method(typeof(Humanoid), nameof(Humanoid.StartAttack)));
             bool patched = info != null && info.Owners.Contains(Plugin.ModGuid);
             int own = 0, ownInside = 0;
             var p = Player.m_localPlayer;
             foreach (var c in Character.GetAllCharacters())
                 if (c != null && c.IsTamed() && Taming.TrollTaming.IsTroll(c) && p != null && Taming.TrollTaming.Owner(c) == p.GetPlayerID())
-                { own++; if (Taming.TrollNoHit.InZone(c.transform.position)) ownInside++; }
+                { own++; if (TrollNoHit.InZone(c.transform.position)) ownInside++; }
             string detail = "radius " + r.ToString("0") + " m: inside " + inside + ", outside " + outside + ", swing patch " + patched + "; own trolls loaded " + own + ", in the zone now " + ownInside;
             ModLog.Verbose("InGameTests: World_NoHitZone " + detail);
             return (inside && outside && patched ? "PASS: " : "FAIL: ") + detail;

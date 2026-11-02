@@ -1,5 +1,6 @@
 using Kydl.Common;
 using SteveTheTroll.Hub;
+using SteveTheTroll.Trolls.Combat.Infrastructure;
 using SteveTheTroll.Trolls.Farming.Infrastructure;
 using SteveTheTroll.Trolls.Recovery.Infrastructure;
 using UnityEngine;

@@ -1,8 +1,10 @@
 using HarmonyLib;
 using Kydl.Common;
+using SteveTheTroll.Taming;
+using SteveTheTroll.Trolls.Combat.Domain;
 using UnityEngine;
 
-namespace SteveTheTroll.Taming
+namespace SteveTheTroll.Trolls.Combat.Infrastructure
 {
     /// <summary>
     /// D-097 (user: "set no hit zone 15m from bed"): the local player's own tamed trolls never swing within NoHitRadius of the player's bed
@@ -27,9 +29,7 @@ namespace SteveTheTroll.Taming
         /// Pure: inside the no-hit circle around the bed (flat, inclusive). Expected outcome: false for radius 0 (off).
         internal static bool Inside(Vector3 bed, Vector3 pos, float radius)
         {
-            if (radius <= 0f) return false;
-            float dx = pos.x - bed.x, dz = pos.z - bed.z;
-            return dx * dx + dz * dz <= radius * radius;
+            return NoHitRules.Inside(bed.x, bed.z, pos.x, pos.z, radius);      // D-171: the rule is game-free
         }
 
         /// The position lies in the local player's no-hit circle.

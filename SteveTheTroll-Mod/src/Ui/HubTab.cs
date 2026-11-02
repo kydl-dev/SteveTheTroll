@@ -1,10 +1,11 @@
 using System.Collections.Generic;
 using Kydl.Common;
 using Kydl.Ui;
+using KydlCore;
 using SteveTheTroll.Hub;
 using SteveTheTroll.Taming;
+using SteveTheTroll.Trolls.Combat.Infrastructure;
 using UnityEngine;
-using KydlCore;
 
 namespace SteveTheTroll.Ui
 {

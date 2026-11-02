@@ -7,7 +7,7 @@ namespace SteveTheTroll.Tests.Unit
     [TestFixture]
     public class HomeAndNoHitTests
     {
-        const string Spot = "SteveTheTroll.Taming.TrollHomeSpot", NoHit = "SteveTheTroll.Taming.TrollNoHit";
+        const string Spot = "SteveTheTroll.Taming.TrollHomeSpot", NoHit = "SteveTheTroll.Trolls.Combat.Infrastructure.TrollNoHit";
 
         static Vector3 Candidate(int n, float r) { return (Vector3)ModAssembly.Call(Spot, "Candidate", n, r); }
 

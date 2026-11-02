@@ -1,10 +1,12 @@
 using System.Collections.Generic;
 using Kydl.Common;
+using SteveTheTroll.Taming;
+using SteveTheTroll.Trolls.Combat.Domain;
 using SteveTheTroll.Trolls.Farming.Infrastructure;
 using SteveTheTroll.Trolls.Orders.Infrastructure;
 using UnityEngine;
 
-namespace SteveTheTroll.Taming
+namespace SteveTheTroll.Trolls.Combat.Infrastructure
 {
     /// <summary>
     /// D-084 (user: "When trolls are getting attacked, they should do 3 hits overhead into the ground and then go back to farming (no retreat,
@@ -46,18 +48,19 @@ namespace SteveTheTroll.Taming
             if (troll == null || attacker == null || troll.IsDead()) return "none";
             var view = troll.GetComponent<ZNetView>();
             if (view == null || !view.IsValid() || !view.IsOwner()) return "not owner";
-            if (troll.GetComponent<TrollRage>() != null || troll.GetComponent<TrollSlam>() != null || troll.GetComponent<TrollChase>() != null) return "busy";
+            bool busy = troll.GetComponent<TrollRage>() != null || troll.GetComponent<TrollSlam>() != null || troll.GetComponent<TrollChase>() != null;
             var s = Of(troll);
             float now = Time.time;
-            if (now < s.IgnoreUntil)
+            var answer = CounterRules.Respond(busy, now, s.IgnoreUntil, s.LastResponse, s.Slammed, CalmSeconds);      // D-171: the decision is game-free
+            if (answer == CounterResponse.Busy) return "busy";
+            if (answer == CounterResponse.Ignore)
             {
                 if (now - s.LastIgnoredLog > 5f) { s.LastIgnoredLog = now; ModLog.Verbose("TrollCounter: " + TrollOrders.Shown(troll) + " ignores the hit of " + attacker.name + " - keeps working (" + (s.IgnoreUntil - now).ToString("F0") + " s left)"); }
                 return "ignore";
             }
-            bool calm = now - s.LastResponse > CalmSeconds;
             s.LastResponse = now;
             s.IgnoreUntil = float.MaxValue;               // until the response is done (Done starts the window)
-            if (!s.Slammed || calm)
+            if (answer == CounterResponse.Slam)
             {
                 s.Slammed = true;
                 if (TrollSlam.Begin(troll, null, attacker.transform.position, 1, CounterSlams, true) != null)

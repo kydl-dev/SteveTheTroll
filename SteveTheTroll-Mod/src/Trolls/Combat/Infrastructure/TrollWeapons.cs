@@ -1,4 +1,4 @@
-namespace SteveTheTroll.Taming
+namespace SteveTheTroll.Trolls.Combat.Infrastructure
 {
     /// <summary>The troll's melee attacks (punch / log swing, never the throw): the one of the wanted swing direction first.</summary>
     internal static class TrollWeapons

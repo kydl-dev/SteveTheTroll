@@ -1,0 +1,86 @@
+{
+  "name": "attack-key-creature",
+  "description": "D-171: the player looks at a creature and presses the attack key - the nearest own troll attacks it (OrderKind.Attack, AttackTargetCommand)",
+  "timeout": 60,
+  "steps": [
+    {
+      "do": "hook",
+      "name": "stt.reset"
+    },
+    {
+      "do": "give",
+      "prefab": "STT_TrollSlippers",
+      "count": 1,
+      "equip": true
+    },
+    {
+      "do": "hook",
+      "name": "stt.addHub",
+      "args": {
+        "number": 1,
+        "dx": 0,
+        "dz": 25
+      }
+    },
+    {
+      "do": "hook",
+      "name": "stt.spawnTroll",
+      "args": {
+        "dx": -8,
+        "dz": -8
+      },
+      "as": "troll"
+    },
+    {
+      "do": "spawn",
+      "prefab": "Greydwarf",
+      "dz": 10,
+      "as": "mob"
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "face",
+      "target": "mob"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "hook",
+      "name": "stt.attackKeyPress",
+      "args": {
+        "count": 1
+      }
+    },
+    {
+      "do": "wait",
+      "until": {
+        "check": "hook",
+        "name": "stt.targetOf",
+        "args": {
+          "troll": "troll"
+        },
+        "expect": "Greydwarf"
+      },
+      "timeout": 5
+    }
+  ],
+  "asserts": [
+    {
+      "check": "hook",
+      "name": "stt.targetOf",
+      "args": {
+        "troll": "troll"
+      },
+      "expect": "Greydwarf"
+    },
+    {
+      "check": "noErrors",
+      "source": "SteveTheTroll"
+    }
+  ]
+}

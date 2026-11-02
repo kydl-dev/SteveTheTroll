@@ -1,0 +1,87 @@
+{
+  "name": "attack-key-tree-press",
+  "description": "D-171 P4/P8: the player looks at a tree and presses the attack key (the lab's own fake key press, Mouse3) - the troll breaks THAT tree",
+  "timeout": 90,
+  "steps": [
+    {
+      "do": "hook",
+      "name": "stt.reset"
+    },
+    {
+      "do": "give",
+      "prefab": "STT_TrollSlippers",
+      "count": 1,
+      "equip": true
+    },
+    {
+      "do": "hook",
+      "name": "stt.addHub",
+      "args": {
+        "number": 1,
+        "dx": 0,
+        "dz": 25
+      }
+    },
+    {
+      "do": "hook",
+      "name": "stt.plantTree",
+      "args": {
+        "dx": 0,
+        "dz": 12
+      },
+      "as": "tree"
+    },
+    {
+      "do": "hook",
+      "name": "stt.spawnTroll",
+      "args": {
+        "dx": -8,
+        "dz": -8
+      },
+      "as": "troll"
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "face",
+      "target": "tree"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "pressKey",
+      "key": "Mouse3"
+    },
+    {
+      "do": "wait",
+      "until": {
+        "check": "hook",
+        "name": "stt.plantedUntouched",
+        "expect": 0
+      },
+      "timeout": 45
+    }
+  ],
+  "asserts": [
+    {
+      "check": "hook",
+      "name": "stt.plantedUntouched",
+      "expect": 0,
+      "label": "the tree the player looked at was hit"
+    },
+    {
+      "check": "logContains",
+      "source": "SteveTheTroll",
+      "text": "ordered to break Beech1",
+      "expect": true
+    },
+    {
+      "check": "noErrors",
+      "source": "SteveTheTroll"
+    }
+  ]
+}

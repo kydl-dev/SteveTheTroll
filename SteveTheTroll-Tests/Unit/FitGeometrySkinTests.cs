@@ -1,5 +1,5 @@
-using System;
 using System.Linq;
+using System;
 using FsCheck;
 using UnityEngine;
 

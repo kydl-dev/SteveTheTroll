@@ -53,6 +53,8 @@
     <Compile Include="..\..\SteveTheTroll-Mod\src\Trolls\Farming\Execution\*.cs" Link="Mod\Farming\%(Filename)%(Extension)" />
     <Compile Include="..\..\SteveTheTroll-Mod\src\Trolls\Orders\Domain\*.cs" Link="Mod\Orders\%(Filename)%(Extension)" />
     <Compile Include="..\..\SteveTheTroll-Mod\src\Trolls\Orders\Application\*.cs" Link="Mod\Orders\%(Filename)%(Extension)" />
+    <!-- D-171 P5..P8: the game-free rules of combat, backpack, hubs / home, taming -->
+    <Compile Include="..\..\SteveTheTroll-Mod\src\Trolls\Combat\Domain\*.cs" Link="Mod\Combat\%(Filename)%(Extension)" />
     <Compile Include="..\..\SteveTheTroll-Mod\src\Trolls\Farming\Domain\TargetRules.cs" Link="Mod\TargetRules.cs" />
     <Compile Include="..\..\SteveTheTroll-Mod\src\Hub\HubData.cs" Link="Mod\HubData.cs" />
     <!-- D-169 Architecture V2: the game-free foundation (typed responses, validation, commands, pipeline) -->

@@ -1,0 +1,68 @@
+{
+  "name": "walls-two-star",
+  "description": "D-171 P5: only 2-star tamed trolls may break fortress walls (D-124)",
+  "timeout": 30,
+  "steps": [
+    {
+      "do": "hook",
+      "name": "stt.reset"
+    },
+    {
+      "do": "give",
+      "prefab": "STT_TrollSlippers",
+      "count": 1,
+      "equip": true
+    },
+    {
+      "do": "hook",
+      "name": "stt.addHub",
+      "args": {
+        "number": 1,
+        "dx": 0,
+        "dz": 25
+      }
+    },
+    {
+      "do": "hook",
+      "name": "stt.spawnTroll",
+      "args": {
+        "dx": -6,
+        "dz": -6
+      },
+      "as": "troll"
+    },
+    {
+      "do": "hook",
+      "name": "stt.wallBreaker",
+      "args": {
+        "troll": "troll"
+      },
+      "expect": false,
+      "label": "no star: no walls"
+    },
+    {
+      "do": "hook",
+      "name": "stt.setLevel",
+      "args": {
+        "troll": "troll",
+        "level": 3
+      },
+      "expect": 3
+    }
+  ],
+  "asserts": [
+    {
+      "check": "hook",
+      "name": "stt.wallBreaker",
+      "args": {
+        "troll": "troll"
+      },
+      "expect": true,
+      "label": "2 stars: walls"
+    },
+    {
+      "check": "noErrors",
+      "source": "SteveTheTroll"
+    }
+  ]
+}

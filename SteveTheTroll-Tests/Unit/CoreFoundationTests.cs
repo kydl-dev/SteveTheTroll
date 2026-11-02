@@ -1,5 +1,5 @@
-using System;
 using System.Collections.Generic;
+using System;
 using NUnit.Framework;
 using SteveTheTroll.Core.Commands;
 using SteveTheTroll.Core.Pipeline;

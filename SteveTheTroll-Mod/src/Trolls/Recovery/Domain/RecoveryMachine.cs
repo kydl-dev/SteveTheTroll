@@ -1,3 +1,4 @@
+
 namespace SteveTheTroll.Trolls.Recovery.Domain
 {
     /// <summary>

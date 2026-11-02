@@ -1,11 +1,13 @@
 using System.Collections.Generic;
 using HarmonyLib;
 using Kydl.Common;
+using SteveTheTroll.Taming;
+using SteveTheTroll.Trolls.Combat.Domain;
 using SteveTheTroll.Trolls.Farming.Infrastructure;
 using SteveTheTroll.Trolls.Orders.Infrastructure;
 using UnityEngine;
 
-namespace SteveTheTroll.Taming
+namespace SteveTheTroll.Trolls.Combat.Infrastructure
 {
     /// <summary>
     /// D-065 (user: "if a mob, any mob is attacking either the tamed troll or the player, instantly target that mob"): 4 times a second, on
@@ -141,13 +143,10 @@ namespace SteveTheTroll.Taming
             foreach (var m in Hunters)
             {
                 if (m == null || m.IsDead() || m.IsTamed()) continue;        // Hunters were collected this tick; one may have died / been tamed since
-                if (!defends || !ownerNear) continue;                         // T-008e: slippers off -> it defends the player only during a raid; D-078: only while the troll is near the player
+                // T-008e: slippers off -> it defends the player only during a raid; D-078: only while the troll is near the player; D-081 (TEST-034: a farming Steve ran 60 m back
+                // home to a greydwarf that only aimed at the player): a creature that goes for the player is taken on only when it is near the troll. D-171: GuardRules decides.
                 var mp = m.transform.position;
-                float dTroll2 = (mp - trollPos).sqrMagnitude;
-                // D-081 (TEST-034: a farming Steve ran 60 m back home to a greydwarf that only aimed at the player): a creature that goes for the
-                // player is taken on only when it is near the troll (a real HIT on the player still calls trolls within DefendRange: TrollDefend)
-                if (dTroll2 > guard2 || dTroll2 > keep2) continue;
-                if (dTroll2 > range2 && (mp - ownerPos).sqrMagnitude > range2) continue;
+                if (!GuardRules.Eligible(defends, ownerNear, (mp - trollPos).sqrMagnitude, (mp - ownerPos).sqrMagnitude, guard2, keep2, range2)) continue;
                 Attackers.Add(m);
             }
             if (Attackers.Count == 0) return false;

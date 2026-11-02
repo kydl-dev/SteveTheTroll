@@ -1,5 +1,5 @@
-using System;
 using System.Reflection;
+using System;
 using FsCheck;
 
 namespace SteveTheTroll.Tests.Unit

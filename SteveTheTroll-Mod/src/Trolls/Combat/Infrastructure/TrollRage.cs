@@ -1,10 +1,12 @@
 using System.Collections.Generic;
 using Kydl.Common;
+using SteveTheTroll.Taming;
+using SteveTheTroll.Trolls.Combat.Domain;
 using SteveTheTroll.Trolls.Farming.Infrastructure;
 using SteveTheTroll.Trolls.Orders.Infrastructure;
 using UnityEngine;
 
-namespace SteveTheTroll.Taming
+namespace SteveTheTroll.Trolls.Combat.Infrastructure
 {
     /// <summary>
     /// D-082 enrage (user: "if I am within 10m of them and attacked then they should go in enrage mode and hit everything and anything in their
@@ -33,7 +35,7 @@ namespace SteveTheTroll.Taming
             foreach (var c in Character.GetAllCharacters())
             {
                 if (c == null || c.IsDead() || !TamedTrollStats.IsTamedTroll(c) || TrollTaming.Owner(c) != id) continue;
-                if (Vector3.Distance(c.transform.position, owner.transform.position) > ModSettings.RageRange.Value) continue;
+                if (!RageRules.Enrages(Vector3.Distance(c.transform.position, owner.transform.position), ModSettings.RageRange.Value)) continue;
                 var view = c.GetComponent<ZNetView>();
                 if (view == null || !view.IsValid() || !view.IsOwner()) continue;
                 var r = c.GetComponent<TrollRage>();
@@ -53,7 +55,8 @@ namespace SteveTheTroll.Taming
         {
             var me = GetComponent<Humanoid>();
             float hit;
-            if (me == null || me.IsDead() || !HitAt.TryGetValue(_owner, out hit) || Time.time - hit > ModSettings.RageCalmSeconds.Value)
+            bool wasHit = HitAt.TryGetValue(_owner, out hit);
+            if (RageRules.CalmsDown(me != null && !me.IsDead(), wasHit, Time.time - hit, ModSettings.RageCalmSeconds.Value))
             {
                 if (me != null) ModLog.Info("TrollRage: " + TrollOrders.Shown(me) + " calms down after " + (Time.time - _start).ToString("F0") + " s, " + _swings + " swing(s)");
                 Destroy(this);
@@ -87,7 +90,7 @@ namespace SteveTheTroll.Taming
         /// D-084: centre-to-centre distance from which the troll's swing reaches the other creature (both body radii + WeaponReach).
         internal static float ReachTo(Character me, Character other)
         {
-            return (me != null ? me.GetRadius() : 1f) + (other != null ? other.GetRadius() : 0.5f) + WeaponReach;
+            return RageRules.Reach(me != null ? me.GetRadius() : 1f, other != null ? other.GetRadius() : 0.5f);
         }
 
         // The nearest living hostile creature within SeekRange of the troll; the player's last attacker when nothing else is near.

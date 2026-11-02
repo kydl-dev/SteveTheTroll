@@ -3,6 +3,7 @@ using Jotunn.Configs;
 using Jotunn.Entities;
 using Jotunn.Managers;
 using Kydl.Common;
+using SteveTheTroll.Trolls.Combat.Domain;
 using UnityEngine;
 
 namespace SteveTheTroll.Item
@@ -41,7 +42,7 @@ namespace SteveTheTroll.Item
         public const float SetSpeed = 0.5f;                          // run 50 % faster
         public const float SetCarryPercent = 0.25f;                  // D-112: carry weight x 1.25 of the TOTAL (Megingjord included; SetCarryPatch)
         public const int SetTrollLimit = 5;
-        public const float SetStaggerResistance = Taming.BreakRules.SetStaggerResistance;   // D-125: 75 % less stagger (SE_Stats.m_staggerModifier -0.75)
+        public const float SetStaggerResistance = BreakRules.SetStaggerResistance;   // D-125: 75 % less stagger (SE_Stats.m_staggerModifier -0.75)
         public const float SetStamina = -0.5f;                       // D-077: -50 % stamina use (run, jump, attack, block, dodge, swim, sneak, tools)
         static StatusEffect _set;
 

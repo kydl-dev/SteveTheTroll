@@ -1,9 +1,10 @@
 using System.Collections.Generic;
 using HarmonyLib;
 using Kydl.Common;
+using SteveTheTroll.Taming;
 using UnityEngine;
 
-namespace SteveTheTroll.Taming
+namespace SteveTheTroll.Trolls.Combat.Infrastructure
 {
     /// <summary>
     /// D-042: when a player is hit by a creature, that player's own tamed trolls within DefendRange drop follow / farm and attack the attacker

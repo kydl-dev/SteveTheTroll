@@ -1,11 +1,11 @@
-using System;
-using System.Collections;
 using System.Collections.Generic;
+using System.Collections;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Web.Script.Serialization;
+using System;
 
 namespace SteveTheTroll.Tests.Integration
 {
