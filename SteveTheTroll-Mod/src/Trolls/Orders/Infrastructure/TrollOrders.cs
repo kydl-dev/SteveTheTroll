@@ -109,6 +109,19 @@ namespace SteveTheTroll.Trolls.Orders.Infrastructure
         }
 
         // What the player looks at: an enemy creature, or a farm source (tree, log, rock, vein, destructible). Expected outcome: the creature or null (+ source).
+        // D-172 (review: "add a pre-press check that the actual GameCamera ray intersects the target tree"): the test asks the SAME lookup the attack key uses, without an order
+        static bool _probing;
+        static string KeyLog { get { return _probing ? "TrollOrders: test probe - the crosshair is on " : "TrollOrders: attack key on "; } }
+
+        /// Test seam: what the attack key would act on right now (real camera position and forward, same mask and rules). Expected outcome: the name of the creature or
+        /// source under the crosshair, "" for nothing.
+        internal static string Aimed(Player p)
+        {
+            _probing = true;
+            try { GameObject source; var ch = Look(p, out source); return ch != null ? ch.name : (source != null ? source.name : ""); }
+            finally { _probing = false; }
+        }
+
         static Character Look(Player p, out GameObject source)
         {
             source = null;
@@ -143,7 +156,7 @@ namespace SteveTheTroll.Trolls.Orders.Infrastructure
                 if (ch != null)
                 {
                     if (ch.IsDead() || ch.IsPlayer() || ch.IsTamed()) return null;
-                    ModLog.Info("TrollOrders: attack key on " + ch.name + " at " + Hits[i].distance.ToString("F1") + " m");
+                    ModLog.Info(KeyLog + ch.name + " at " + Hits[i].distance.ToString("F1") + " m");
                     return ch;
                 }
                 var view = col.GetComponentInParent<ZNetView>();
@@ -151,10 +164,10 @@ namespace SteveTheTroll.Trolls.Orders.Infrastructure
                 if (g != null && (g.GetComponent<TreeBase>() != null || g.GetComponent<TreeLog>() != null || g.GetComponent<MineRock5>() != null || g.GetComponent<MineRock>() != null || g.GetComponent<Destructible>() != null || TrollWalls.IsWall(g)))   // D-124: fortress walls too
                 {
                     source = g;
-                    ModLog.Info("TrollOrders: attack key on " + g.name + " (" + TrollFarming.KindOf(g) + ") at " + Hits[i].distance.ToString("F1") + " m");
+                    ModLog.Info(KeyLog + g.name + " (" + TrollFarming.KindOf(g) + ") at " + Hits[i].distance.ToString("F1") + " m");
                     return null;
                 }
-                ModLog.Info("TrollOrders: attack key on " + col.name + " (nothing to attack) at " + Hits[i].distance.ToString("F1") + " m");
+                ModLog.Info(KeyLog + col.name + " (nothing to attack) at " + Hits[i].distance.ToString("F1") + " m");
                 return null;
             }
             return null;

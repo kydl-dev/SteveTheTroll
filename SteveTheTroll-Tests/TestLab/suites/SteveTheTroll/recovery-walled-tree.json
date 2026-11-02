@@ -67,6 +67,11 @@
     },
     {
       "do": "hook",
+      "name": "stt.walledTreeHealth",
+      "label": "tree health right after the order (diagnosis)"
+    },
+    {
+      "do": "hook",
       "name": "stt.wallsAlive",
       "label": "walls still standing (diagnosis)"
     },
@@ -96,6 +101,11 @@
       "name": "stt.wallsHit",
       "expect": 0,
       "label": "no player-built wall was hit"
+    },
+    {
+      "do": "hook",
+      "name": "stt.walledTreeHealth",
+      "label": "tree health at the end (diagnosis)"
     }
   ],
   "asserts": [

@@ -43,6 +43,7 @@ namespace SteveTheTroll.Testing
             var dir = _spot - _start; dir.y = 0f; dir.Normalize();
             var to = _spot + dir * metres;
             to.y = ZoneSystem.instance.GetGroundHeight(to) + 0.2f;
+            _further = true; _furtherSpot = to;
             Place(p, to, Quaternion.identity);           // D-172: same facing as after stt.reset (world +z), so dz > 0 stays "in front"
             ModLog.Info("TestArena: player " + metres.ToString("F0") + " m further out at " + to.ToString("F0") + " (stands at " + p.transform.position.ToString("F0") + "), facing +z");
             return p.transform.position;
@@ -106,6 +107,16 @@ namespace SteveTheTroll.Testing
             MaxAirAltitude(p) = to.y;
             ZNet.instance.SetReferencePosition(to);
         }
+
+        /// D-172: within `metres` of the arena spot, of the spot stt.arenaFurther went to, or of the player now (stt.teleport tests). False before the first stt.reset.
+        internal static bool InArena(Vector3 at, float metres)
+        {
+            if (!_known) return false;
+            var p = Player.m_localPlayer;
+            return Flat(at - _spot) <= metres || (_further && Flat(at - _furtherSpot) <= metres) || (p != null && Flat(at - p.transform.position) <= metres);
+        }
+        static bool _further;
+        static Vector3 _furtherSpot;
 
         static float Flat(Vector3 v) { v.y = 0f; return v.magnitude; }
 

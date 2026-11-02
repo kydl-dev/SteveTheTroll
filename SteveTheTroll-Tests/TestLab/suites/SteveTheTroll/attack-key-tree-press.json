@@ -85,6 +85,18 @@
       "seconds": 0.5
     },
     {
+      "do": "hook",
+      "name": "stt.aimedAt",
+      "contains": "Beech1",
+      "label": "the real camera ray (what the attack key uses) is on the planted tree"
+    },
+    {
+      "do": "hook",
+      "name": "stt.plantedUntouched",
+      "expect": 1,
+      "label": "the tree is untouched before the press (damage after it belongs to the order)"
+    },
+    {
       "do": "pressKey",
       "key": "Mouse3"
     },

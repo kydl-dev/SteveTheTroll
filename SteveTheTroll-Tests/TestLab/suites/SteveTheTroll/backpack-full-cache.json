@@ -8,6 +8,21 @@
       "name": "stt.reset"
     },
     {
+      "do": "give",
+      "prefab": "STT_TrollSlippers",
+      "count": 1,
+      "equip": true
+    },
+    {
+      "do": "hook",
+      "name": "stt.slippers",
+      "args": {
+        "on": false
+      },
+      "expect": false,
+      "label": "slippers off: the plugin sends no full troll to a depot (D-149) - the chests stay as the test filled them"
+    },
+    {
       "do": "hook",
       "name": "stt.clearTrolls"
     },
@@ -16,7 +31,7 @@
       "name": "stt.spawnTroll",
       "args": {
         "dx": 0,
-        "dz": 60
+        "dz": 20
       },
       "as": "troll"
     },
@@ -75,6 +90,24 @@
       },
       "expect": false,
       "label": "cache dropped by the write"
+    },
+    {
+      "do": "hook",
+      "name": "stt.unloading",
+      "args": {
+        "troll": "troll"
+      },
+      "expect": false,
+      "label": "the troll never started an unload during the test"
+    },
+    {
+      "do": "hook",
+      "name": "stt.slippers",
+      "args": {
+        "on": true
+      },
+      "expect": true,
+      "label": "slippers back on for the next tests"
     }
   ],
   "asserts": [

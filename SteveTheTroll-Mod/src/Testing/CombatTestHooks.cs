@@ -190,15 +190,46 @@ namespace SteveTheTroll.Testing
         [TestHook("stt.clearTrolls")]
         static int ClearTrolls()
         {
-            int n = 0;
+            // D-172 (review: "restrict it to the test arena or track test-created trolls"): only trolls a test hook made, or tamed trolls within ArenaClearMetres of the
+            // test arena (stt.arenaFurther / stt.teleport places included) - never a player's trolls elsewhere in a normal save
+            int n = 0, kept = 0;
             foreach (var c in new System.Collections.Generic.List<Character>(Character.GetAllCharacters()))
             {
                 if (c == null || !c.IsTamed() || !TrollTaming.IsTroll(c)) continue;
                 var v = c.GetComponent<ZNetView>();
-                if (v != null && v.IsValid()) { v.ClaimOwnership(); ZNetScene.instance.Destroy(c.gameObject); n++; }
+                if (v == null || !v.IsValid()) continue;
+                if (!TestHooks.MadeByTest(v.GetZDO().m_uid) && !TestArena.InArena(c.transform.position, ArenaClearMetres)) { kept++; continue; }
+                v.ClaimOwnership(); ZNetScene.instance.Destroy(c.gameObject); n++;
             }
-            ModLog.Info("CombatTestHooks: " + n + " tamed troll(s) removed before the test");
+            ModLog.Info("CombatTestHooks: " + n + " tamed troll(s) removed before the test (test-made or within " + ArenaClearMetres + " m of the arena), " + kept + " kept");
             return n;
+        }
+
+        const float ArenaClearMetres = 150f;
+
+        /// D-172: what the REAL attack key would act on now (TrollOrders.Aimed: camera position + forward, the key's own rules), checked before the lab presses the key.
+        /// Expected outcome: the name under the crosshair, "" for nothing.
+        [TestHook("stt.aimedAt")]
+        static string AimedAt() { return TrollOrders.Aimed(Player.m_localPlayer); }
+
+        /// D-172: the player puts the Fluffy Slippers on / takes them off (the plugin's own rule: no slippers -> a full troll is not sent to a depot, D-149).
+        /// Expected outcome: whether the slippers are worn afterwards.
+        [TestHook("stt.slippers")]
+        static bool Slippers(bool on)
+        {
+            var p = Player.m_localPlayer;
+            ItemDrop.ItemData any = null, worn = null;      // earlier tests' 'give' steps leave several pairs: act on the worn one
+            foreach (var it in p.GetInventory().GetAllItems())
+            {
+                if (it.m_dropPrefab == null || it.m_dropPrefab.name != "STT_TrollSlippers") continue;
+                if (any == null) any = it;
+                if (p.IsItemEquiped(it)) worn = it;
+            }
+            if (any == null) throw new System.Exception("the player has no STT_TrollSlippers");
+            if (on && worn == null) { p.EquipItem(any); worn = p.IsItemEquiped(any) ? any : null; }
+            if (!on && worn != null) { p.UnequipItem(worn); worn = p.IsItemEquiped(worn) ? worn : null; }
+            ModLog.Info("CombatTestHooks: slippers " + (worn != null ? "on" : "off"));
+            return worn != null;
         }
 
         /// Whether the troll has a farmer component (it farms / goes home / unloads).

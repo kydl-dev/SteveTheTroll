@@ -67,6 +67,7 @@ namespace SteveTheTroll.Testing
                         + ", Piece found " + (piece != null) + ", GetCreator " + (piece != null ? piece.GetCreator().ToString() : "-") + ", IsPlacedByPlayer " + (piece != null && piece.IsPlacedByPlayer()));
                 Walls.Add(wall); Built.Add(wall);
             }
+            ModLog.Info("RecoveryTestHooks: walled tree created, " + TreeHealth(tree));
             ModLog.Info("RecoveryTestHooks: tree at " + centre.ToString("F0") + " inside a ring of " + n + " x 2 player-built walls, radius " + radius.ToString("F0") + " m, creator " + (Me != 0L ? Me : 4711L));
             return tree;
         }
@@ -126,11 +127,34 @@ namespace SteveTheTroll.Testing
                 int layer = k < Walls.Count / 2 ? 0 : 1;
                 if (w == null) { hit++; detail.Append(" #" + k + " (layer " + layer + ") gone;"); continue; }
                 var wnt = w.GetComponent<WearNTear>();
-                if (wnt != null && wnt.GetHealthPercentage() < 0.999f) { hit++; detail.Append(" #" + k + " (layer " + layer + ") " + (wnt.GetHealthPercentage() * 100f).ToString("F0") + "%;"); }
+                if (wnt == null) throw new System.Exception("ring wall #" + k + " has no WearNTear - fixture error, its damage cannot be measured");
+                float pct = wnt.GetHealthPercentage();
+                if (pct < 0.999f)
+                {
+                    hit++;
+                    var wv = w.GetComponent<ZNetView>();
+                    float cur = wv != null && wv.IsValid() ? wv.GetZDO().GetFloat(ZDOVars.s_health, wnt.m_health) : pct * wnt.m_health;
+                    detail.Append(" #" + k + " (layer " + layer + ") " + ((1f - pct) * 100f).ToString("F0") + "% damage, health " + cur.ToString("F0") + " of " + wnt.m_health.ToString("F0") + ";");
+                }
             }
             ModLog.Info("RecoveryTestHooks: " + hit + " of " + Walls.Count + " ring walls damaged or gone" + (hit > 0 ? ":" + detail : ""));
             return hit;
         }
+
+        /// D-172 (review: log the target tree's ZDO health and max health after creation and after the recovery): "health H of M (ZDO value / prefab m_health)".
+        static string TreeHealth(GameObject tree)
+        {
+            if (tree == null || !tree.activeInHierarchy) return "tree gone";
+            var t = tree.GetComponent<TreeBase>();
+            var v = tree.GetComponent<ZNetView>();
+            if (t == null || v == null || !v.IsValid()) return "no TreeBase / valid ZNetView";
+            float h = v.GetZDO().GetFloat(ZDOVars.s_health, t.m_health);
+            return "health " + h.ToString("F1") + " of " + t.m_health.ToString("F1") + (h < t.m_health - 0.01f ? " (damaged " + (t.m_health - h).ToString("F1") + ")" : " (untouched)");
+        }
+
+        /// D-172: the walled tree's health now (diagnosis step). Expected outcome: the TreeHealth text.
+        [TestHook("stt.walledTreeHealth")]
+        static string WalledTreeHealth() { string h = TreeHealth(_tree); ModLog.Info("RecoveryTestHooks: walled tree " + h); return h; }
 
         /// D-172: true once the walled-tree scenario has an outcome - the troll blacklisted the tree (the expected end) OR the tree is gone (felled: the troll broke in). Lets the
         /// test stop at once instead of waiting out 360 s on a tree that no longer exists. Reads the tree walledTree built (the lab's 'tree' binding dies with the tree).
@@ -142,7 +166,7 @@ namespace SteveTheTroll.Testing
         static string WalledOutcome(GameObject troll)
         {
             var ch = troll != null ? troll.GetComponent<Character>() : null;
-            if (_tree != null && _tree.activeInHierarchy && ch != null && TrollRecovery.IsBlacklisted(ch, _tree)) return "blacklisted";
+            if (_tree != null && _tree.activeInHierarchy && ch != null && TrollRecovery.IsBlacklisted(ch, _tree)) { ModLog.Info("RecoveryTestHooks: walled tree outcome - blacklisted, " + TreeHealth(_tree)); return "blacklisted"; }
             if (_tree != null && _tree.activeInHierarchy) return "waiting";
             int alive = 0; foreach (var w in Walls) if (w != null && w.activeInHierarchy) alive++;
             var r = troll != null ? troll.GetComponent<TrollRecovery>() : null;

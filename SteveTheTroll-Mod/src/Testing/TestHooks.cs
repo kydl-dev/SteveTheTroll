@@ -74,6 +74,10 @@ namespace SteveTheTroll.Testing
             return SpawnTrollAt(at);
         }
 
+        static readonly HashSet<ZDOID> Made = new HashSet<ZDOID>();
+        /// D-172: trolls a test hook made (stt.clearTrolls removes these wherever they walked).
+        internal static bool MadeByTest(ZDOID id) { return Made.Contains(id); }
+
         static GameObject SpawnTrollAt(Vector3 position)
         {
             var prefab = ZNetScene.instance.GetPrefab(TrollTaming.TrollPrefab);
@@ -84,6 +88,8 @@ namespace SteveTheTroll.Testing
             HarmonyLib.AccessTools.Method(typeof(Tameable), "Tame").Invoke(tame, null);
             var c = go.GetComponent<Character>();
             if (!TrollTaming.SetOwner(c, Player.m_localPlayer)) throw new System.Exception("owner not set");
+            var mv = go.GetComponent<ZNetView>();
+            if (mv != null && mv.IsValid()) Made.Add(mv.GetZDO().m_uid);
             return go;
         }
 
