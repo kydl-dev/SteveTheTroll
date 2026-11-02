@@ -34,8 +34,16 @@
     <Compile Include="..\..\SteveTheTroll-Mod\src\Backpack\DepotRules.cs" Link="Mod\DepotRules.cs" />
     <Compile Include="..\..\SteveTheTroll-Mod\src\Taming\HealthRules.cs" Link="Mod\HealthRules.cs" />
     <!-- D-167 stuck detection and recovery: pure rules, the escalation ladder, the per troll + resource failure book (TargetRules: head-on test) -->
-    <Compile Include="..\..\SteveTheTroll-Mod\src\Taming\StuckRules.cs" Link="Mod\StuckRules.cs" />
-    <Compile Include="..\..\SteveTheTroll-Mod\src\Taming\RecoveryMachine.cs" Link="Mod\RecoveryMachine.cs" />
+    <Compile Include="..\..\SteveTheTroll-Mod\src\Trolls\Recovery\Domain\StuckRules.cs" Link="Mod\StuckRules.cs" />
+    <Compile Include="..\..\SteveTheTroll-Mod\src\Trolls\Recovery\Domain\RecoveryMachine.cs" Link="Mod\RecoveryMachine.cs" />
+    <Compile Include="..\..\SteveTheTroll-Mod\src\Trolls\Recovery\Domain\RecoveryBook.cs" Link="Mod\RecoveryBook.cs" />
+    <Compile Include="..\..\SteveTheTroll-Mod\src\Trolls\Recovery\Domain\RecoveryStage.cs" Link="Mod\RecoveryStage.cs" />
+    <!-- D-169 Recovery V2: typed input / decision, the pipeline and the executor (game-free) + the capability contracts the executor checks -->
+    <Compile Include="..\..\SteveTheTroll-Mod\src\Trolls\Recovery\Domain\RecoveryInput.cs" Link="Mod\RecoveryInput.cs" />
+    <Compile Include="..\..\SteveTheTroll-Mod\src\Trolls\Recovery\Domain\RecoveryDecision.cs" Link="Mod\RecoveryDecision.cs" />
+    <Compile Include="..\..\SteveTheTroll-Mod\src\Trolls\Recovery\Application\RecoveryPipeline.cs" Link="Mod\RecoveryPipeline.cs" />
+    <Compile Include="..\..\SteveTheTroll-Mod\src\Trolls\Recovery\Execution\RecoveryExecutor.cs" Link="Mod\RecoveryExecutor.cs" />
+    <Compile Include="..\..\SteveTheTroll-Mod\src\Trolls\Contracts\ITrollOwnership.cs" Link="Mod\ITrollOwnership.cs" />
     <Compile Include="..\..\SteveTheTroll-Mod\src\Taming\TargetRules.cs" Link="Mod\TargetRules.cs" />
     <Compile Include="..\..\SteveTheTroll-Mod\src\Hub\HubData.cs" Link="Mod\HubData.cs" />
     <!-- D-169 Architecture V2: the game-free foundation (typed responses, validation, commands, pipeline) -->

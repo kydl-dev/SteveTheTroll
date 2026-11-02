@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Kydl.Common;
+using SteveTheTroll.Trolls.Recovery.Infrastructure;
 using UnityEngine;
 
 namespace SteveTheTroll.Taming
@@ -116,7 +117,7 @@ namespace SteveTheTroll.Taming
             long ka, kb;
             TrollRecovery.KeyOfPlace(_travelTo, out ka, out kb);
             var rec = TrollRecovery.Of(this);
-            if (rec.Tick(ai, dt, moveTo, lookAt, _travelTo, ka, kb, true, true, null)) return true;
+            if (rec.Tick(dt, _travelTo, ka, kb, true, true, null)) return true;
             if (rec.TakeAbandon())
             {
                 ModLog.Info("TrollFarmer: " + TrollTaming.Tag(this) + " does not get to " + _travelTo.ToString("F0") + " (" + d.ToString("F0") + " m left, two complete recovery cycles failed) - gives that place up for " + FarBadSeconds.ToString("0") + " s");
@@ -205,7 +206,7 @@ namespace SteveTheTroll.Taming
             if (ai.GetFollowTarget() != null && !(_home && _full)) { ModLog.Info("TrollFarmer: " + TrollTaming.Tag(this) + " got a follow order - stops farming"); Destroy(this); return ai.GetFollowTarget() == null; }
             if (ai.GetTargetCreature() != null) return ai.GetTargetCreature() == null;      // fighting (D-042 defend): the game's AI drives
             var rec = GetComponent<TrollRecovery>();                                           // D-167: a running rage / detour of the shared recovery drives first
-            if (rec != null && rec.Busy && rec.Continue(ai, dt, moveTo, lookAt)) return true;
+            if (rec != null && rec.Busy && rec.Continue(dt)) return true;
             // D-159: the full-backpack check comes BEFORE the home branch - a troll heading home for another reason (nothing left to farm, ordered home) is promoted to the unload
             if (Time.time >= _nextFullCheck && !_full && Full()) return true;
             if (_home) return GoHome(ai, dt, moveTo, lookAt);
@@ -243,7 +244,7 @@ namespace SteveTheTroll.Taming
                     long ka, kb;
                     TrollRecovery.KeyOf(_target, out ka, out kb);
                     rec = TrollRecovery.Of(this);
-                    if (rec.Tick(ai, dt, moveTo, lookAt, point, ka, kb, true, true, _target)) return true;
+                    if (rec.Tick(dt, point, ka, kb, true, true, _target)) return true;
                     if (rec.TakeAbandon()) { GiveUp("cannot reach it (" + d.ToString("F1") + " m, two complete recovery cycles failed)"); return true; }
                     Vector3 around;
                     if (FriendInTheWay(point, d, out around)) { moveTo(ai, dt, around, 0.6f, false); return true; }     // D-151: around it, not into it
@@ -536,7 +537,7 @@ namespace SteveTheTroll.Taming
                 long ka, kb;
                 TrollRecovery.KeyOfHub(bed, out ka, out kb);
                 var rec = TrollRecovery.Of(this);
-                if (rec.Tick(ai, dt, moveTo, lookAt, bed, ka, kb, false, true, null)) return true;
+                if (rec.Tick(dt, bed, ka, kb, false, true, null)) return true;
                 if (d > FarWalkMetres) moveTo(ai, dt, Waypoint(transform.position, bed), 0.5f, true);
                 else moveTo(ai, dt, bed, home, false);
                 return true;

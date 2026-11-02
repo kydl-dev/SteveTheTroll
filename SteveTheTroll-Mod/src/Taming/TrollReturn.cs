@@ -1,5 +1,6 @@
 using Kydl.Common;
 using SteveTheTroll.Hub;
+using SteveTheTroll.Trolls.Recovery.Infrastructure;
 using UnityEngine;
 
 namespace SteveTheTroll.Taming
@@ -65,7 +66,7 @@ namespace SteveTheTroll.Taming
             var c = GetComponent<Character>();
             if (c == null || c.IsDead()) { Destroy(this); return false; }
             var rec = TrollRecovery.Of(this);                                                  // D-167: a running rage / detour drives first
-            if (rec.Busy && rec.Continue(ai, dt, moveTo, lookAt)) return true;
+            if (rec.Busy && rec.Continue(dt)) return true;
             float d = _hub != null ? HubRules.Flat(_hub.Pos - transform.position) : -1f;
             if (_hub == null) { ModLog.Info("TrollReturn: " + TrollTaming.Tag(c) + " lost its hub - stops walking back"); Destroy(this); return false; }
             bool fighting = ai.GetTargetCreature() != null || GetComponent<TrollRage>() != null || GetComponent<TrollChase>() != null || GetComponent<TrollSlam>() != null;
@@ -92,7 +93,7 @@ namespace SteveTheTroll.Taming
             // D-167: the walk back had no stuck detection at all; a hub is never abandoned, so a failed cycle only starts the next one (turning the other way first)
             long ka, kb;
             TrollRecovery.KeyOfHub(_hub.Pos, out ka, out kb);
-            if (rec.Tick(ai, dt, moveTo, lookAt, _hub.Pos, ka, kb, false, true, null)) return true;
+            if (rec.Tick(dt, _hub.Pos, ka, kb, false, true, null)) return true;
             moveTo(ai, dt, ahead, 0.5f, true);
             return true;
         }

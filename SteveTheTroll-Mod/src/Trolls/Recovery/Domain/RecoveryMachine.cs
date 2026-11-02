@@ -1,13 +1,5 @@
-using System;
-using System.Collections.Generic;
-
-namespace SteveTheTroll.Taming
+namespace SteveTheTroll.Trolls.Recovery.Domain
 {
-    internal enum RecoveryStage { Travel, Rage, Leg }
-
-    /// <summary>What the game side has to do now.</summary>
-    internal enum RecoveryCmd { None, StartRage, EndRage, StartLeg, EndLeg, CycleFailed, CycleReset }
-
     /// <summary>
     /// D-167: the escalation ladder of ONE complete recovery cycle (spec 1 / 2): rage against a destructible obstruction, a first detour (turn 90 degrees, walk up to 10 m), a second
     /// detour (L shape: 90 degrees one way 10 m, then back to the intended direction 10 m), then the cycle has failed. Game-free; the caller passes the facts and executes the command.
@@ -79,77 +71,6 @@ namespace SteveTheTroll.Taming
             DetourNumber = DetoursDone + 1; Leg = 0; HeadOn = headOn && DetoursDone == 0;
             Stage = RecoveryStage.Leg; _stageStart = now;
             return RecoveryCmd.StartLeg;
-        }
-    }
-
-    /// <summary>
-    /// D-167 (spec "failure counter attached to each troll-resource pair"): per troll and per resource (its network identity, never the prefab) how many complete recovery cycles failed,
-    /// and until when the resource is unavailable to that troll. Lives in a static registry, not in a movement component, so a re-created farmer cannot erase it.
-    /// </summary>
-    internal sealed class RecoveryBook
-    {
-        sealed class Entry { internal int Failed; internal float BlacklistedUntil; }
-
-        struct Key : IEquatable<Key>
-        {
-            internal string Troll; internal long A, B;
-            public bool Equals(Key o) { return Troll == o.Troll && A == o.A && B == o.B; }
-            public override bool Equals(object o) { return o is Key && Equals((Key)o); }
-            public override int GetHashCode() { unchecked { return ((Troll != null ? Troll.GetHashCode() : 0) * 397 ^ A.GetHashCode()) * 397 ^ B.GetHashCode(); } }
-        }
-
-        readonly Dictionary<Key, Entry> _entries = new Dictionary<Key, Entry>();
-        const int MaxEntries = 2000;
-
-        static Key K(string troll, long a, long b) { return new Key { Troll = troll ?? "", A = a, B = b }; }
-
-        Entry Get(string troll, long a, long b, bool create)
-        {
-            Entry e;
-            if (_entries.TryGetValue(K(troll, a, b), out e)) return e;
-            if (!create) return null;
-            if (_entries.Count > MaxEntries) _entries.Clear();
-            e = new Entry();
-            _entries[K(troll, a, b)] = e;
-            return e;
-        }
-
-        internal int Failed(string troll, long a, long b) { var e = Get(troll, a, b, false); return e != null ? e.Failed : 0; }
-
-        internal bool IsBlacklisted(string troll, long a, long b, float now)
-        {
-            var e = Get(troll, a, b, false);
-            return e != null && now < e.BlacklistedUntil;
-        }
-
-        /// A complete cycle failed. Expected outcome: true when this was the failure that blacklists the resource (only when `canBlacklist`: a hub is never abandoned; its counter
-        /// keeps counting so the detour direction keeps alternating). The counter starts again after a blacklisting.
-        internal bool CycleFailed(string troll, long a, long b, float now, bool canBlacklist)
-        {
-            var e = Get(troll, a, b, true);
-            e.Failed++;
-            bool blacklist = canBlacklist && e.Failed >= StuckRules.MaxFailedCycles;
-            if (blacklist) { e.BlacklistedUntil = now + StuckRules.BlacklistSeconds; e.Failed = 0; }
-            return blacklist;
-        }
-
-        /// The troll recovered (reached the resource, or made continuous progress for StuckRules.SustainedReset): the counter starts from zero. A running blacklist stays.
-        internal void Recovered(string troll, long a, long b)
-        {
-            var e = Get(troll, a, b, false);
-            if (e != null) e.Failed = 0;
-        }
-
-        /// How many entries are kept (diagnostics).
-        internal int Count { get { return _entries.Count; } }
-
-        /// Drops entries that are neither counting nor blacklisted any more.
-        internal int Prune(float now)
-        {
-            var dead = new List<Key>();
-            foreach (var kv in _entries) if (kv.Value.Failed == 0 && now >= kv.Value.BlacklistedUntil) dead.Add(kv.Key);
-            foreach (var k in dead) _entries.Remove(k);
-            return dead.Count;
         }
     }
 }

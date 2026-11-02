@@ -1,8 +1,15 @@
 using System.Collections.Generic;
 using Kydl.Common;
+using SteveTheTroll.Core.Results;
+using SteveTheTroll.Taming;
+using SteveTheTroll.Trolls.Contracts;
+using SteveTheTroll.Trolls.Core;
+using SteveTheTroll.Trolls.Recovery.Application;
+using SteveTheTroll.Trolls.Recovery.Domain;
+using SteveTheTroll.Trolls.Recovery.Execution;
 using UnityEngine;
 
-namespace SteveTheTroll.Taming
+namespace SteveTheTroll.Trolls.Recovery.Infrastructure
 {
     /// <summary>
     /// D-167 (user spec "Troll Movement - Stuck Detection and Recovery System"): ONE stuck detection and recovery per troll, shared by the farming walk (TrollFarmer) and the walk to the hub
@@ -11,6 +18,8 @@ namespace SteveTheTroll.Taming
     /// detour of 90 degrees and up to 10 m, a second L-shaped detour, then the cycle has failed; two failed cycles for the same troll + resource blacklist that resource for that troll
     /// for 120 s (RecoveryBook, static: it outlives this component and the farmer). The decisions are game-free (StuckRules, RecoveryMachine, RecoveryBook; unit-tested); this class
     /// reads the game (what blocks, which ground is valid) and acts. It lives as long as the troll.
+    /// Architecture V2 (D-169): the adapter of the recovery slice - reads the facts into a RecoveryInput, RecoveryPipeline decides (alive / owner checks, then the machine),
+    /// RecoveryExecutor performs the decision (ownership checked again at the execution boundary), movement and swings go through the troll's capabilities (TrollContext).
     /// </summary>
     internal sealed class TrollRecovery : MonoBehaviour
     {
@@ -20,8 +29,12 @@ namespace SteveTheTroll.Taming
         static int _mask, _blockMask;
         static float _nextPrune;
 
-        readonly RecoveryMachine _m = new RecoveryMachine();
         readonly ProgressMeter _meter = new ProgressMeter();
+        RecoveryPipeline _pipeline;
+        RecoveryExecutor _executor;
+        TrollContext _ctx;
+        ResponseStatus _lastStatus = ResponseStatus.Success;
+        float _d;                      // distance to the goal in the frame being executed (m)
         string _troll = "";
         long _ka, _kb;
         bool _hasCtx, _canAbandon, _abandon;
@@ -41,10 +54,21 @@ namespace SteveTheTroll.Taming
             return r != null ? r : c.gameObject.AddComponent<TrollRecovery>();
         }
 
-        /// A manoeuvre (rage / detour leg) is running right now: the caller must hand the frame to Continue.
-        internal bool Busy { get { return _m.Stage != RecoveryStage.Travel && Time.time - _lastTick < StaleSeconds; } }
+        void Awake()
+        {
+            _ctx = new TrollContext(GetComponent<Character>());
+            _pipeline = new RecoveryPipeline();
+            // the executor owns the delegates: bound once here (method groups), never per frame
+            _executor = new RecoveryExecutor(_ctx, OnStartRage, OnEndRage, OnStartLeg, OnEndLeg, OnCycleFailed, OnCycleReset);
+            ModLog.Verbose("TrollRecovery: " + TrollTaming.Tag(this) + " set up (Architecture V2: pipeline + executor, capabilities complete " + _ctx.Capabilities.Complete + ")");
+        }
 
-        internal RecoveryStage Stage { get { return _m.Stage; } }
+        RecoveryMachine M { get { return _pipeline.Machine; } }
+
+        /// A manoeuvre (rage / detour leg) is running right now: the caller must hand the frame to Continue.
+        internal bool Busy { get { return M.Stage != RecoveryStage.Travel && Time.time - _lastTick < StaleSeconds; } }
+
+        internal RecoveryStage Stage { get { return M.Stage; } }
 
         /// The last Tick ended a cycle with the resource blacklisted: the caller gives it up (read once). Expected outcome: true once per blacklisting.
         internal bool TakeAbandon() { bool a = _abandon; _abandon = false; return a; }
@@ -76,64 +100,81 @@ namespace SteveTheTroll.Taming
         /// The troll reached what it walked to: its failure counter starts again (spec). Expected outcome: 0 failed cycles.
         internal int Reached()
         {
-            if (!_hasCtx || (!_m.Dirty && Book.Failed(_troll, _ka, _kb) == 0)) return 0;
+            if (!_hasCtx || (!M.Dirty && Book.Failed(_troll, _ka, _kb) == 0)) return 0;
             Book.Recovered(_troll, _ka, _kb);
-            _m.BeginCycle(0);
+            _pipeline.BeginCycle(0);
             return Book.Failed(_troll, _ka, _kb);
         }
 
         /// The walk is over (the caller destroyed its target / switched jobs): forget the context so the next walk starts clean. A running manoeuvre is cut short.
-        internal void Forget() { _hasCtx = false; _m.Abort(); }
+        internal void Forget() { _hasCtx = false; _pipeline.Abort(); }
 
         /// One frame of a walk. `goal` = where the troll walks (flat distance = progress), (ka, kb) = what it walks to (KeyOf*), `canAbandon` = a farm target (true) / a hub (false),
         /// `expectMovement` = false for an intentional pause, `goalObject` = the resource itself (never an obstruction). Expected outcome: true = a manoeuvre drove the troll this frame
         /// (the caller issues no movement of its own); false = the caller walks as usual.
-        internal bool Tick(MonsterAI ai, float dt, System.Func<BaseAI, float, Vector3, float, bool, bool> moveTo, System.Action<BaseAI, Vector3> lookAt,
-            Vector3 goal, long ka, long kb, bool canAbandon, bool expectMovement, GameObject goalObject)
+        internal bool Tick(float dt, Vector3 goal, long ka, long kb, bool canAbandon, bool expectMovement, GameObject goalObject)
         {
-            var me = GetComponent<Humanoid>();
-            if (me == null || me.IsDead()) { _m.Abort(); return _m.Stage != RecoveryStage.Travel; }      // nothing to drive: Abort leaves Travel, so false
+            var combat = _ctx.Capabilities.Combat;
             float now = Time.time;
-            if (_m.Stage != RecoveryStage.Travel && now - _lastTick > StaleSeconds)
+            bool alive = combat != null && !combat.IsDead;
+            float d = 0f, stuck = 0f, sustained = 0f;
+            bool legDone = false, rageable = false, headOn = false;
+            if (alive)
             {
-                ModLog.Info("TrollRecovery: " + TrollTaming.Tag(this) + " manoeuvre cut short (" + (now - _lastTick).ToString("F1") + " s without a step) - walks on");
-                _m.Abort();
-                _meter.Reset(Flat(goal));
+                if (M.Stage != RecoveryStage.Travel && now - _lastTick > StaleSeconds)
+                {
+                    ModLog.Info("TrollRecovery: " + TrollTaming.Tag(this) + " manoeuvre cut short (" + (now - _lastTick).ToString("F1") + " s without a step) - walks on");
+                    _pipeline.Abort();
+                    _meter.Reset(Flat(goal));
+                }
+                _lastTick = now;
+                _goal = goal; _goalObject = goalObject; _canAbandon = canAbandon;
+                d = Flat(goal);
+                if (!_hasCtx || ka != _ka || kb != _kb) EnterContext(ka, kb, d);
+                if (now >= _nextPrune) { _nextPrune = now + PruneSeconds; Book.Prune(now); }
+
+                if (M.Stage == RecoveryStage.Leg) legDone = LegDone(dt);
+                if (M.Stage == RecoveryStage.Travel) _meter.Update(d, dt, expectMovement && !combat.InAttack && !combat.IsStaggering);
+                if (M.Stage == RecoveryStage.Travel && _meter.StuckSeconds >= StuckRules.StuckTrigger) Probe(out rageable, out headOn);
+                stuck = _meter.StuckSeconds; sustained = _meter.SustainedSeconds;
             }
-            _lastTick = now;
-            _goal = goal; _goalObject = goalObject; _canAbandon = canAbandon;
-            float d = Flat(goal);
-            if (!_hasCtx || ka != _ka || kb != _kb) EnterContext(ka, kb, d);
-            if (now >= _nextPrune) { _nextPrune = now + PruneSeconds; Book.Prune(now); }
 
-            bool legDone = false;
-            if (_m.Stage == RecoveryStage.Leg) legDone = LegDone(dt);
-            if (_m.Stage == RecoveryStage.Travel) _meter.Update(d, dt, expectMovement && !me.InAttack() && !me.IsStaggering());
-
-            bool rageable = false, headOn = false;
-            if (_m.Stage == RecoveryStage.Travel && _meter.StuckSeconds >= StuckRules.StuckTrigger) Probe(out rageable, out headOn);
-            var cmd = _m.Step(now, _meter.StuckSeconds, _meter.SustainedSeconds, rageable, headOn, legDone);
-            if (cmd != RecoveryCmd.None) Execute(cmd, d);
-            if (now >= _nextLog && (_m.Stage != RecoveryStage.Travel || _meter.StuckSeconds > 1f))
+            // D-169: decide (pipeline: alive / owner checks, then the machine), then perform (executor: ownership checked again at the boundary)
+            var response = _pipeline.Evaluate(new RecoveryInput(now, stuck, sustained, rageable, headOn, legDone, alive, _ctx.IsOwner));
+            if (!response.IsSuccess)
+            {
+                if (response.Status != _lastStatus) ModLog.Verbose("TrollRecovery: " + TrollTaming.Tag(this) + " recovery " + response.Status + " (" + response.Reason + ") - nothing driven, a running manoeuvre is cut short");
+                _lastStatus = response.Status;
+                _pipeline.Abort();
+                return M.Stage != RecoveryStage.Travel;          // Abort leaves Travel, so false: the caller does what it does
+            }
+            _lastStatus = response.Status;
+            if (!response.Value.IsNone)
+            {
+                _d = d;
+                var done = _executor.Execute(response.Value);
+                ModLog.Verbose("TrollRecovery: " + TrollTaming.Tag(this) + " decided " + response.Value + " -> " + done);
+            }
+            if (now >= _nextLog && (M.Stage != RecoveryStage.Travel || _meter.StuckSeconds > 1f))
             {
                 _nextLog = now + LogSeconds;
-                ModLog.Verbose("TrollRecovery: " + TrollTaming.Tag(this) + " " + _m.Stage + " goal " + d.ToString("F1") + " m, stuck " + _meter.StuckSeconds.ToString("F1") + " s, progress " + _meter.SustainedSeconds.ToString("F1")
-                    + " s, cycle failures " + Book.Failed(_troll, _ka, _kb) + ", raged " + _m.Raged + ", detours " + _m.DetoursDone);
+                ModLog.Verbose("TrollRecovery: " + TrollTaming.Tag(this) + " " + M.Stage + " goal " + d.ToString("F1") + " m, stuck " + _meter.StuckSeconds.ToString("F1") + " s, progress " + _meter.SustainedSeconds.ToString("F1")
+                    + " s, cycle failures " + Book.Failed(_troll, _ka, _kb) + ", raged " + M.Raged + ", detours " + M.DetoursDone);
             }
-            return _m.Stage != RecoveryStage.Travel && Drive(ai, dt, moveTo, lookAt, me);
+            return M.Stage != RecoveryStage.Travel && Drive(dt, combat);
         }
 
         /// Hands the frame to a running manoeuvre (the caller checks Busy first). Expected outcome: true = it drove the troll.
-        internal bool Continue(MonsterAI ai, float dt, System.Func<BaseAI, float, Vector3, float, bool, bool> moveTo, System.Action<BaseAI, Vector3> lookAt)
+        internal bool Continue(float dt)
         {
-            return _hasCtx && Tick(ai, dt, moveTo, lookAt, _goal, _ka, _kb, _canAbandon, false, _goalObject);
+            return _hasCtx && Tick(dt, _goal, _ka, _kb, _canAbandon, false, _goalObject);
         }
 
         void EnterContext(long ka, long kb, float d)
         {
-            _troll = TrollRegistry.IdOf(GetComponent<Character>());
+            _troll = _ctx.EnsureId();       // the one explicit id write (owner only), as TrollRegistry.IdOf did here before D-169
             _ka = ka; _kb = kb; _hasCtx = true; _abandon = false;
-            _m.BeginCycle(Book.Failed(_troll, ka, kb));
+            _pipeline.BeginCycle(Book.Failed(_troll, ka, kb));
             _meter.Reset(d);
             ModLog.Verbose("TrollRecovery: " + TrollTaming.Tag(this) + " walks to " + (ka == -2L ? "the hub" : ka == -3L ? "a far place" : "a resource") + " " + ka + "/" + kb + ", " + d.ToString("F1") + " m, failed cycles so far "
                 + Book.Failed(_troll, ka, kb) + ", " + (_canAbandon ? "may be abandoned" : "never abandoned"));
@@ -141,36 +182,36 @@ namespace SteveTheTroll.Taming
 
         float Flat(Vector3 goal) { var f = goal - transform.position; f.y = 0f; return f.magnitude; }
 
-        void Execute(RecoveryCmd cmd, float d)
+        // ---- the executor's actions (D-169: bound once in Awake; _d = the distance of the frame being executed) ----
+
+        void OnStartRage()
         {
-            string tag = TrollTaming.Tag(this);
-            switch (cmd)
-            {
-                case RecoveryCmd.StartRage:
-                    _rageEnd = Time.time + StuckRules.RageSeconds;
-                    ModLog.Info("TrollRecovery: " + tag + " is blocked " + _meter.StuckSeconds.ToString("F1") + " s by " + _obstacleName + " (" + _kind + ") " + d.ToString("F1") + " m from its goal - rage for " + StuckRules.RageSeconds.ToString("0") + " s");
-                    break;
-                case RecoveryCmd.EndRage:
-                    ModLog.Info("TrollRecovery: " + tag + " rage over - " + (_rageTarget == null ? "the obstruction is gone" : _obstacleName + " is still there") + ", " + d.ToString("F1") + " m from its goal");
-                    _rageTarget = null;
-                    _meter.Reset(d);
-                    break;
-                case RecoveryCmd.StartLeg:
-                    StartLeg(d);
-                    break;
-                case RecoveryCmd.EndLeg:
-                    ModLog.Info("TrollRecovery: " + tag + " detour " + _m.DetoursDone + " done after " + Flat2(_legStart) .ToString("F1") + " m - recalculates the route to its goal (" + d.ToString("F1") + " m)");
-                    _meter.Reset(d);
-                    break;
-                case RecoveryCmd.CycleFailed:
-                    CycleFailed(d);
-                    break;
-                case RecoveryCmd.CycleReset:
-                    ModLog.Info("TrollRecovery: " + tag + " made progress for " + StuckRules.SustainedReset.ToString("0") + " s - failure counter of this goal reset (was " + Book.Failed(_troll, _ka, _kb) + ")");
-                    Book.Recovered(_troll, _ka, _kb);
-                    _m.BeginCycle(0);
-                    break;
-            }
+            _rageEnd = Time.time + StuckRules.RageSeconds;
+            ModLog.Info("TrollRecovery: " + TrollTaming.Tag(this) + " is blocked " + _meter.StuckSeconds.ToString("F1") + " s by " + _obstacleName + " (" + _kind + ") " + _d.ToString("F1") + " m from its goal - rage for " + StuckRules.RageSeconds.ToString("0") + " s");
+        }
+
+        void OnEndRage()
+        {
+            ModLog.Info("TrollRecovery: " + TrollTaming.Tag(this) + " rage over - " + (_rageTarget == null ? "the obstruction is gone" : _obstacleName + " is still there") + ", " + _d.ToString("F1") + " m from its goal");
+            _rageTarget = null;
+            _meter.Reset(_d);
+        }
+
+        void OnStartLeg(RecoveryDecision decision) { StartLeg(decision); }
+
+        void OnEndLeg()
+        {
+            ModLog.Info("TrollRecovery: " + TrollTaming.Tag(this) + " detour " + M.DetoursDone + " done after " + Flat2(_legStart).ToString("F1") + " m - recalculates the route to its goal (" + _d.ToString("F1") + " m)");
+            _meter.Reset(_d);
+        }
+
+        void OnCycleFailed() { CycleFailed(_d); }
+
+        void OnCycleReset()
+        {
+            ModLog.Info("TrollRecovery: " + TrollTaming.Tag(this) + " made progress for " + StuckRules.SustainedReset.ToString("0") + " s - failure counter of this goal reset (was " + Book.Failed(_troll, _ka, _kb) + ")");
+            Book.Recovered(_troll, _ka, _kb);
+            _pipeline.BeginCycle(0);
         }
 
         float Flat2(Vector3 from) { var f = transform.position - from; f.y = 0f; return f.magnitude; }
@@ -180,7 +221,7 @@ namespace SteveTheTroll.Taming
             string tag = TrollTaming.Tag(this);
             bool blacklisted = Book.CycleFailed(_troll, _ka, _kb, Time.time, _canAbandon);
             int failed = Book.Failed(_troll, _ka, _kb);
-            _m.BeginCycle(blacklisted ? 0 : failed);
+            _pipeline.BeginCycle(blacklisted ? 0 : failed);
             _meter.Reset(d);
             if (blacklisted)
             {
@@ -189,7 +230,7 @@ namespace SteveTheTroll.Taming
             }
             else
             {
-                ModLog.Info("TrollRecovery: " + tag + " complete recovery cycle failed (" + failed + " so far, " + d.ToString("F1") + " m from its goal) - " + (_canAbandon ? "one more cycle, turning " + (_m.RightFirst ? "right" : "left") + " first" : "a hub is never abandoned, tries again turning " + (_m.RightFirst ? "right" : "left") + " first"));
+                ModLog.Info("TrollRecovery: " + tag + " complete recovery cycle failed (" + failed + " so far, " + d.ToString("F1") + " m from its goal) - " + (_canAbandon ? "one more cycle, turning " + (M.RightFirst ? "right" : "left") + " first" : "a hub is never abandoned, tries again turning " + (M.RightFirst ? "right" : "left") + " first"));
             }
         }
 
@@ -234,20 +275,20 @@ namespace SteveTheTroll.Taming
 
         // ---- detour legs ----
 
-        void StartLeg(float d)
+        void StartLeg(RecoveryDecision decision)
         {
             string tag = TrollTaming.Tag(this);
             var from = transform.position;
             var flat = _goal - from; flat.y = 0f;
-            if (_m.Leg == 0) _intended = flat.sqrMagnitude > 0.01f ? flat.normalized : transform.forward;
-            Vector3 dir; float metres; Side side = _m.LegSide;
-            if (_m.Leg == 0)
+            if (decision.Leg == 0) _intended = flat.sqrMagnitude > 0.01f ? flat.normalized : transform.forward;
+            Vector3 dir; float metres; Side side = decision.LegSide;
+            if (decision.Leg == 0)
             {
                 float rightM = PlanMetres(from, LegDir(Side.Right)), leftM = PlanMetres(from, LegDir(Side.Left));
                 float prefM = side == Side.Right ? rightM : leftM, otherM = side == Side.Right ? leftM : rightM;
                 side = StuckRules.ChooseSide(side, prefM, otherM, out metres);
                 dir = LegDir(side);
-                ModLog.Info("TrollRecovery: " + tag + " detour " + _m.DetourNumber + (_m.HeadOn ? " (head on with " + (_other != null ? TrollTaming.Tag(_other) : "a troll") + ")" : "") + ", leg 1: turns " + side + " of its intended direction, valid ground right " + rightM.ToString("F0") + " m / left " + leftM.ToString("F0") + " m, walks " + metres.ToString("F0") + " m");
+                ModLog.Info("TrollRecovery: " + tag + " detour " + decision.DetourNumber + (decision.HeadOn ? " (head on with " + (_other != null ? TrollTaming.Tag(_other) : "a troll") + ")" : "") + ", leg 1: turns " + side + " of its intended direction, valid ground right " + rightM.ToString("F0") + " m / left " + leftM.ToString("F0") + " m, walks " + metres.ToString("F0") + " m");
             }
             else
             {
@@ -305,29 +346,28 @@ namespace SteveTheTroll.Taming
             _legStalled = moved < StuckRules.LegStallMetres * dt / StuckRules.LegStallSeconds ? _legStalled + dt : 0f;
             _legLast = pos;
             float walked = Flat2(_legStart);
-            bool clear = _m.HeadOn && _other != null && StuckRules.HeadOnClear(Vector3.Distance(pos, _other.transform.position));
+            bool clear = M.HeadOn && _other != null && StuckRules.HeadOnClear(Vector3.Distance(pos, _other.transform.position));
             return clear || StuckRules.LegDone(walked, _legPlanned, Time.time - _legBegan, _legStalled);
         }
 
         // ---- driving ----
 
-        bool Drive(MonsterAI ai, float dt, System.Func<BaseAI, float, Vector3, float, bool, bool> moveTo, System.Action<BaseAI, Vector3> lookAt, Humanoid me)
+        bool Drive(float dt, ITrollCombat combat)
         {
-            if (_m.Stage == RecoveryStage.Leg) { moveTo(ai, dt, _legTarget, 0.4f, true); return true; }
-            if (_m.Stage != RecoveryStage.Rage) return false;
-            if (_rageTarget == null) { moveTo(ai, dt, _goal, 1f, false); return true; }       // gone already: walks on to its goal while the 5 s run out
+            var mv = _ctx.Capabilities.Movement;
+            if (mv == null) return mv != null;
+            if (M.Stage == RecoveryStage.Leg) { mv.MoveTo(dt, _legTarget, 0.4f, true); return M.Stage == RecoveryStage.Leg; }
+            if (M.Stage != RecoveryStage.Rage) return M.Stage == RecoveryStage.Rage;
+            if (_rageTarget == null) { mv.MoveTo(dt, _goal, 1f, false); return _rageTarget == null; }       // gone already: walks on to its goal while the 5 s run out
             var c = _rageTarget.GetComponentInChildren<Collider>();
             var point = c != null ? c.ClosestPoint(transform.position + Vector3.up * ChestHeight) : _rageTarget.transform.position;
             var flat = point - transform.position; flat.y = 0f;
-            if (flat.magnitude > RageReach) moveTo(ai, dt, point, 1.5f, false); else ai.StopMoving();
-            lookAt(ai, point);
-            if (me.InAttack() || Time.time < _nextSwing || !ai.IsLookingAt(point, 40f, false)) return true;
+            if (flat.magnitude > RageReach) mv.MoveTo(dt, point, 1.5f, false); else mv.Stop();
+            mv.LookAt(point);
+            if (combat.InAttack || Time.time < _nextSwing || !mv.IsLookingAt(point, 40f)) return M.Stage == RecoveryStage.Rage;
             bool low = c != null && c.bounds.max.y < transform.position.y + 1f;
-            var weapon = TrollWeapons.Pick(me, low ? Attack.AttackType.Vertical : Attack.AttackType.Horizontal, true) ?? TrollWeapons.Pick(me, low ? Attack.AttackType.Horizontal : Attack.AttackType.Vertical, false);
-            if (weapon == null) return true;
-            if (!me.IsItemEquiped(weapon)) me.EquipItem(weapon, false);
-            if (me.StartAttack(_rageTarget.GetComponentInParent<Character>(), false)) _nextSwing = Time.time + SwingGap;
-            return true;
+            if (combat.SwingAt(_rageTarget, low)) _nextSwing = Time.time + SwingGap;
+            return M.Stage == RecoveryStage.Rage;
         }
     }
 }

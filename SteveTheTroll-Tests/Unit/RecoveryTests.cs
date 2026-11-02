@@ -1,5 +1,6 @@
 using NUnit.Framework;
 using SteveTheTroll.Taming;
+using SteveTheTroll.Trolls.Recovery.Domain;
 
 namespace SteveTheTroll.Tests.Unit
 {
