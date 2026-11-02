@@ -10,9 +10,10 @@ namespace SteveTheTroll.Trolls.Movement.Infrastructure
     /// </summary>
     internal sealed class ValheimTrollMovement : ITrollMovement
     {
-        static readonly System.Func<BaseAI, float, Vector3, float, bool, bool> MoveToFn =
+        /// D-171 (P9): the ONE definition of the game's private BaseAI.MoveTo / LookAt delegates (TrollFarming and TrollWaterKeep use these).
+        internal static readonly System.Func<BaseAI, float, Vector3, float, bool, bool> MoveToFn =
             AccessTools.MethodDelegate<System.Func<BaseAI, float, Vector3, float, bool, bool>>(AccessTools.Method(typeof(BaseAI), "MoveTo"));
-        static readonly System.Action<BaseAI, Vector3> LookAtFn = AccessTools.MethodDelegate<System.Action<BaseAI, Vector3>>(AccessTools.Method(typeof(BaseAI), "LookAt"));
+        internal static readonly System.Action<BaseAI, Vector3> LookAtFn = AccessTools.MethodDelegate<System.Action<BaseAI, Vector3>>(AccessTools.Method(typeof(BaseAI), "LookAt"));
         const float MovingSpeed = 0.3f;
 
         readonly Character _body;

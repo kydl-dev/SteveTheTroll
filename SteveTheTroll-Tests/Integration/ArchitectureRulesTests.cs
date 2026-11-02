@@ -84,6 +84,14 @@ namespace SteveTheTroll.Tests.Integration
             }
         }
 
+        // D-171 (P9 audit): one definition of the game's private BaseAI.MoveTo delegate, and no order facade left (every caller sends a command)
+        [Test] public void P9_OneMoveToDelegate_NoOrderFacade()
+        {
+            var all = Directory.GetFiles(Src, "*.cs", SearchOption.AllDirectories).Select(File.ReadAllText).ToList();
+            Assert.That(all.Sum(t => Regex.Matches(t, @"AccessTools\.Method\(typeof\(BaseAI\), ""MoveTo""\)").Count), Is.EqualTo(1));
+            Assert.That(all.Count(t => Regex.IsMatch(t, @"TrollFarming\.(Begin|BeginOn|SendHome|BeginUnload)\(")), Is.EqualTo(0));
+        }
+
         static string Rel(string f) { return f.Substring(Src.Length + 1); }
     }
 }

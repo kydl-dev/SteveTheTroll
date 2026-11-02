@@ -3,6 +3,7 @@ using HarmonyLib;
 using Kydl.Common;
 using SteveTheTroll.Trolls.Combat.Infrastructure;
 using SteveTheTroll.Trolls.Home.Infrastructure;
+using SteveTheTroll.Trolls.Movement.Infrastructure;
 using SteveTheTroll.Trolls.Orders.Commands;
 using SteveTheTroll.Trolls.Taming.Domain;
 using UnityEngine;
@@ -18,9 +19,8 @@ namespace SteveTheTroll.Trolls.Farming.Infrastructure
     /// </summary>
     internal static class TrollFarming
     {
-        static readonly System.Func<BaseAI, float, Vector3, float, bool, bool> MoveTo =
-            AccessTools.MethodDelegate<System.Func<BaseAI, float, Vector3, float, bool, bool>>(AccessTools.Method(typeof(BaseAI), "MoveTo"));
-        static readonly System.Action<BaseAI, Vector3> LookAt = AccessTools.MethodDelegate<System.Action<BaseAI, Vector3>>(AccessTools.Method(typeof(BaseAI), "LookAt"));
+        static readonly System.Func<BaseAI, float, Vector3, float, bool, bool> MoveTo = ValheimTrollMovement.MoveToFn;      // D-171 (P9): one definition
+        static readonly System.Action<BaseAI, Vector3> LookAt = ValheimTrollMovement.LookAtFn;
         // D-051: the search walks the game's list of loaded networked objects (ZNetScene) instead of a physics overlap: no buffer to fill up
         // (TEST-021), any radius up to the loaded area (150 m)
         static readonly AccessTools.FieldRef<ZNetScene, Dictionary<ZDO, ZNetView>> Instances = AccessTools.FieldRefAccess<ZNetScene, Dictionary<ZDO, ZNetView>>("m_instances");
@@ -29,20 +29,6 @@ namespace SteveTheTroll.Trolls.Farming.Infrastructure
 
         /// In-game test Startup_TamingReflection. Expected outcome: whether both delegates were found.
         internal static bool SelfCheck() { return MoveTo != null && LookAt != null; }
-
-        // D-170: the four orders below are a facade over the order commands (Trolls/Orders/Commands, one CommandDispatcher); every caller keeps working unchanged.
-
-        /// "Go farm" (owner of the troll's ZDO only). Expected outcome: returns whether the troll now farms.
-        internal static bool Begin(Character troll, string focus, bool announce = false) { return TrollOrderService.Send(new FarmFocusCommand(troll, focus ?? "", announce)); }
-
-        /// T-008d / D-065 attack key on a tree / log / rock: farm THIS source first, then go on with the focus / default priority. Expected outcome: whether the troll now farms it.
-        internal static bool BeginOn(Character troll, GameObject source, string focus) { return TrollOrderService.Send(new BreakSourceCommand(troll, source, focus)); }
-
-        /// T-008e: walk to the owner's bed and wait there (silent). Expected outcome: whether the troll now walks home.
-        internal static bool SendHome(Character troll) { return TrollOrderService.Send(new SendHomeCommand(troll)); }
-
-        /// D-143: walk to the hub / bed and empty the backpack into the depot. Expected outcome: whether the troll now goes.
-        internal static bool BeginUnload(Character troll) { return TrollOrderService.Send(new UnloadCommand(troll)); }
 
         /// The item the troll farms now ("" = not farming).
         internal static string Farming(Character troll)

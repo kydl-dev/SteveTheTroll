@@ -4,6 +4,7 @@ using SteveTheTroll.Hubs.Domain;
 using SteveTheTroll.Hubs.Infrastructure;
 using SteveTheTroll.Trolls.Combat.Infrastructure;
 using SteveTheTroll.Trolls.Farming.Infrastructure;
+using SteveTheTroll.Trolls.Orders.Commands;
 using SteveTheTroll.Trolls.Recovery.Infrastructure;
 using SteveTheTroll.Trolls.Registry.Infrastructure;
 using SteveTheTroll.Trolls.Taming.Domain;
@@ -118,8 +119,8 @@ namespace SteveTheTroll.Trolls.Home.Infrastructure
             string focus = z != null ? Ui.TrollFocus.Normalize(z.GetString(TrollRegistry.FocusKey, "")) : "";
             bool full = z != null && BackpackStore.IsFullCached(z);
             Destroy(this);
-            if (full) TrollFarming.BeginUnload(c);
-            else TrollFarming.Begin(c, focus, true);
+            if (full) TrollOrderService.Send(new UnloadCommand(c));
+            else TrollOrderService.Send(new FarmFocusCommand(c, focus, true));
         }
     }
 }

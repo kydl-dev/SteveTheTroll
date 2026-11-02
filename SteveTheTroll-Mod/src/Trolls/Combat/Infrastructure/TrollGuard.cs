@@ -84,6 +84,7 @@ namespace SteveTheTroll.Trolls.Combat.Infrastructure
             var ai = troll != null ? troll.GetComponent<MonsterAI>() : null;
             var view = troll != null ? troll.GetComponent<ZNetView>() : null;
             if (ai == null || creature == null || view == null || !view.IsValid() || !view.IsOwner()) return false;
+            Trim();
             Forced[troll.GetInstanceID()] = creature;
             if (Target(ai) == creature) return false;
             SetTarget(ai, creature);
@@ -93,6 +94,16 @@ namespace SteveTheTroll.Trolls.Combat.Infrastructure
         }
 
         /// D-084: the troll's forced target is dropped (its counter is over / it ignores hits). Expected outcome: whether one was dropped.
+        // D-171 (P9 audit): entries of destroyed trolls were never removed; past MaxForced the map starts again (a live forced target is set again within a tick by Guard / Order).
+        const int MaxForced = 200;
+        static int Trim()
+        {
+            if (Forced.Count <= MaxForced) return Forced.Count;
+            ModLog.Verbose("TrollGuard: " + Forced.Count + " forced targets kept - cleared (stale entries of removed trolls)");
+            Forced.Clear();
+            return Forced.Count;
+        }
+
         internal static bool Forget(Character troll)
         {
             return troll != null && Forced.Remove(troll.GetInstanceID());
@@ -164,6 +175,7 @@ namespace SteveTheTroll.Trolls.Combat.Infrastructure
                 float d = Vector3.Distance(m.transform.position, troll.transform.position);
                 if (d < best) { best = d; nearest = m; }
             }
+            Trim();
             Forced[id] = nearest;
             SetTarget(ai, nearest);
             ai.Alert();

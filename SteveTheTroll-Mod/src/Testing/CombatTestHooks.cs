@@ -146,6 +146,21 @@ namespace SteveTheTroll.Testing
             return w != null ? w.m_shared.m_name : "";
         }
 
+        /// Removes every tamed troll (tests leave farming trolls behind; a stray one can chop the next test's tree). Expected outcome: how many were removed.
+        [TestHook("stt.clearTrolls")]
+        static int ClearTrolls()
+        {
+            int n = 0;
+            foreach (var c in new System.Collections.Generic.List<Character>(Character.GetAllCharacters()))
+            {
+                if (c == null || !c.IsTamed() || !TrollTaming.IsTroll(c)) continue;
+                var v = c.GetComponent<ZNetView>();
+                if (v != null && v.IsValid()) { v.ClaimOwnership(); ZNetScene.instance.Destroy(c.gameObject); n++; }
+            }
+            ModLog.Info("CombatTestHooks: " + n + " tamed troll(s) removed before the test");
+            return n;
+        }
+
         /// Whether the troll has a farmer component (it farms / goes home / unloads).
         [TestHook("stt.hasFarmer")]
         static bool HasFarmer(GameObject troll) { return troll.GetComponent<TrollFarmer>() != null; }

@@ -7,6 +7,7 @@ using SteveTheTroll.Hubs.Infrastructure;
 using SteveTheTroll.Trolls.Combat.Infrastructure;
 using SteveTheTroll.Trolls.Farming.Infrastructure;
 using SteveTheTroll.Trolls.Home.Infrastructure;
+using SteveTheTroll.Trolls.Orders.Commands;
 using SteveTheTroll.Trolls.Taming.Infrastructure;
 using UnityEngine;
 
@@ -118,7 +119,7 @@ namespace SteveTheTroll.Testing
 
         /// The "walk to the owner's bed" order (the Trolls page / E menu command).
         [TestHook("stt.sendHome")]
-        static bool SendHomeOrder(GameObject troll) { return TrollFarming.SendHome(troll.GetComponent<Character>()); }
+        static bool SendHomeOrder(GameObject troll) { return TrollOrderService.Send(new SendHomeCommand(troll.GetComponent<Character>())); }
 
         [TestHook("stt.moveTroll")]
         static string MoveTroll(GameObject troll, Vector3 position)
@@ -216,7 +217,7 @@ namespace SteveTheTroll.Testing
 
         /// The troll starts farming on its own (an active TrollFarmer: with nothing to farm it stays active and waits).
         [TestHook("stt.startFarm")]
-        static bool StartFarm(GameObject troll) { return TrollFarming.Begin(troll.GetComponent<Character>(), "", true); }
+        static bool StartFarm(GameObject troll) { return TrollOrderService.Send(new FarmFocusCommand(troll.GetComponent<Character>(), "", true)); }
 
         [TestHook("stt.unloading")]
         static bool Unloading(GameObject troll) { var f = troll.GetComponent<TrollFarmer>(); return f != null && f.Unloading; }

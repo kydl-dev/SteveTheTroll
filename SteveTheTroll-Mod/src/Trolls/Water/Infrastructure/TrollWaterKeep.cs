@@ -1,6 +1,7 @@
 using HarmonyLib;
 using Kydl.Common;
 using SteveTheTroll.Trolls.Combat.Domain;
+using SteveTheTroll.Trolls.Movement.Infrastructure;
 using SteveTheTroll.Trolls.Taming.Infrastructure;
 using UnityEngine;
 
@@ -17,8 +18,7 @@ namespace SteveTheTroll.Trolls.Water.Infrastructure
     /// </summary>
     internal static class TrollWaterKeep
     {
-        static readonly System.Func<BaseAI, float, Vector3, float, bool, bool> MoveTo =
-            AccessTools.MethodDelegate<System.Func<BaseAI, float, Vector3, float, bool, bool>>(AccessTools.Method(typeof(BaseAI), "MoveTo"));
+        static readonly System.Func<BaseAI, float, Vector3, float, bool, bool> MoveTo = ValheimTrollMovement.MoveToFn;      // D-171 (P9): one definition
         static float _nextLog, _nextShipLog;
         static string _lastState = "";
 

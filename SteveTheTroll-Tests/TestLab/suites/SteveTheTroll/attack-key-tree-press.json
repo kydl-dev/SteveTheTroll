@@ -1,11 +1,15 @@
 {
   "name": "attack-key-tree-press",
-  "description": "D-171 P4/P8: the player looks at a tree and presses the attack key (the lab's own fake key press, Mouse3) - the troll breaks THAT tree",
+  "description": "D-171 P4/P8: the player looks at a tree and presses the attack key (the lab's own fake key press, Mouse3) - the troll breaks THAT tree (troll behind the tree: its walk must not cross the player's view - TrollHold freezes a troll the player looks at within 4 m)",
   "timeout": 90,
   "steps": [
     {
       "do": "hook",
       "name": "stt.reset"
+    },
+    {
+      "do": "hook",
+      "name": "stt.clearTrolls"
     },
     {
       "do": "give",
@@ -35,8 +39,8 @@
       "do": "hook",
       "name": "stt.spawnTroll",
       "args": {
-        "dx": -8,
-        "dz": -8
+        "dx": 8,
+        "dz": 22
       },
       "as": "troll"
     },

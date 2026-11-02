@@ -2,6 +2,7 @@ using HarmonyLib;
 using Kydl.Common;
 using SteveTheTroll.Trolls.Combat.Domain;
 using SteveTheTroll.Trolls.Farming.Infrastructure;
+using SteveTheTroll.Trolls.Orders.Commands;
 using SteveTheTroll.Trolls.Orders.Infrastructure;
 using SteveTheTroll.Trolls.Registry.Infrastructure;
 using SteveTheTroll.Trolls.Taming.Domain;
@@ -41,7 +42,7 @@ namespace SteveTheTroll.Trolls.Combat.Infrastructure
         internal static bool Order(Character troll, GameObject wall, string focus)
         {
             if (!Breaks(troll) || !IsWall(wall)) { ModLog.Info("TrollWalls: " + (troll != null ? TrollTaming.Tag(troll) : "?") + " (level " + (troll != null ? troll.GetLevel() : 0) + ") cannot break " + (wall != null ? wall.name : "?") + " - only 2-star trolls break fortress walls"); return false; }
-            bool ok = TrollFarming.BeginOn(troll, wall, focus);
+            bool ok = TrollOrderService.Send(new BreakSourceCommand(troll, wall, focus));
             ModLog.Info("TrollWalls: " + TrollTaming.Tag(troll) + " sent at fortress wall " + wall.name + " " + ok);
             return ok;
         }
@@ -84,7 +85,7 @@ namespace SteveTheTroll.Trolls.Combat.Infrastructure
                 var view = c.GetComponent<ZNetView>();
                 if (ai == null || ai.GetTargetCreature() != null || view == null || !view.IsValid() || !view.IsOwner()) continue;
                 string focus = Ui.TrollFocus.Normalize(view.GetZDO().GetString(TrollRegistry.FocusKey, ""));
-                if (TrollFarming.BeginOn(c, wall, focus)) sent++;
+                if (TrollOrderService.Send(new BreakSourceCommand(c, wall, focus))) sent++;
             }
             if (sent > 0) ModLog.Info("TrollWalls: " + p.GetPlayerName() + " hits fortress wall " + wall.name + " - " + sent + " own 2-star troll(s) join in");
             return sent;

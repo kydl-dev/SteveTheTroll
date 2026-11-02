@@ -31,6 +31,7 @@ namespace SteveTheTroll.Trolls.Home.Infrastructure
             if (near == null || Vector3.Distance(near.transform.position, c.transform.position) > range) return false;
             var hover = near.GetHoverObject();
             int id = c.GetInstanceID();
+            if (LastLook.Count > 200) LastLook.Clear();          // D-171 (P9 audit): entries of removed trolls were never dropped
             if (hover != null && hover.transform.IsChildOf(c.transform)) LastLook[id] = Time.time;
             float seen;
             bool looked = LastLook.TryGetValue(id, out seen);

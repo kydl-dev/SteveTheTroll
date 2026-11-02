@@ -8,6 +8,10 @@
       "name": "stt.reset"
     },
     {
+      "do": "hook",
+      "name": "stt.clearTrolls"
+    },
+    {
       "do": "give",
       "prefab": "STT_TrollSlippers",
       "count": 1,

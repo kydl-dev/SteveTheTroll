@@ -2,6 +2,7 @@ using Jotunn.Entities;
 using Kydl.Common;
 using SteveTheTroll.Backpack.Infrastructure;
 using SteveTheTroll.Trolls.Farming.Infrastructure;
+using SteveTheTroll.Trolls.Orders.Commands;
 using SteveTheTroll.Trolls.Taming.Infrastructure;
 using UnityEngine;
 
@@ -48,7 +49,7 @@ namespace SteveTheTroll.Testing
                 }
                 BackpackStore.Write(zdo, i, inv);
             }
-            bool sent = troll.GetComponent<TrollFarmer>() != null || TrollFarming.Begin(troll, "", true);
+            bool sent = troll.GetComponent<TrollFarmer>() != null || TrollOrderService.Send(new FarmFocusCommand(troll, "", true));
             ModLog.Info("FillBackpackCommand: " + TrollTaming.Tag(troll) + " got " + stacks + " stack(s) of " + item + ", farming " + sent);
             Console.instance.Print("stt_fillbackpack: " + stacks + " stack(s) of " + item + " added; the troll heads home");
         }

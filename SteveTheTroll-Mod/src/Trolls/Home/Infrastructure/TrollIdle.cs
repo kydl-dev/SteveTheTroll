@@ -4,6 +4,7 @@ using SteveTheTroll.Backpack.Infrastructure;
 using SteveTheTroll.Hubs.Infrastructure;
 using SteveTheTroll.Trolls.Farming.Domain;
 using SteveTheTroll.Trolls.Farming.Infrastructure;
+using SteveTheTroll.Trolls.Orders.Commands;
 using SteveTheTroll.Trolls.Registry.Infrastructure;
 using SteveTheTroll.Trolls.Taming.Infrastructure;
 using UnityEngine;
@@ -73,7 +74,7 @@ namespace SteveTheTroll.Trolls.Home.Infrastructure
                 if (gate == IdleGate.Unload)
                 {
                     FullTried[id] = Time.time;
-                    if (TrollFarming.BeginUnload(c)) { sent++; ModLog.Info("TrollIdle: " + Shown(c) + " has a full backpack - walks to the depot on its own"); break; }
+                    if (TrollOrderService.Send(new UnloadCommand(c))) { sent++; ModLog.Info("TrollIdle: " + Shown(c) + " has a full backpack - walks to the depot on its own"); break; }
                     continue;
                 }
                 float since;
@@ -86,7 +87,7 @@ namespace SteveTheTroll.Trolls.Home.Infrastructure
                 // D-149 (user): a login / slippers-on with a PARTLY filled backpack goes straight on farming; only a FULL backpack is delivered (gate above)
                 string focus = Ui.TrollFocus.Normalize(view.GetZDO().GetString(TrollRegistry.FocusKey, ""));
                 ModLog.Info("TrollIdle: " + TrollTaming.Tag(c) + (resume ? " goes back to work (login / slippers on)" : wasFarming ? " was farming before it was re-created - goes back to work" : " had no job for " + ModSettings.AutoFarmSeconds.Value.ToString("0") + " s") + " - farms on its own (focus '" + focus + "')");
-                if (TrollFarming.Begin(c, focus, true)) sent++;
+                if (TrollOrderService.Send(new FarmFocusCommand(c, focus, true))) sent++;
                 break;       // D-142: Begin searches the surroundings (5 - 18 ms); one troll per tick, the others follow a second later (test run 235053: 17 ms at login)
             }
             if (Since.Count > 200) Since.Clear();

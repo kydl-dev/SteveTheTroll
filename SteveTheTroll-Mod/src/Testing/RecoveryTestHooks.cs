@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Kydl.Common;
 using SteveTheTroll.Trolls.Farming.Infrastructure;
+using SteveTheTroll.Trolls.Orders.Commands;
 using SteveTheTroll.Trolls.Recovery.Infrastructure;
 using UnityEngine;
 
@@ -65,7 +66,7 @@ namespace SteveTheTroll.Testing
 
         /// The troll farms exactly this source (the real TrollFarming.BeginOn). Expected outcome: true when it started.
         [TestHook("stt.farmOn")]
-        static bool FarmOn(GameObject troll, GameObject source) { return TrollFarming.BeginOn(troll.GetComponent<Character>(), source, ""); }
+        static bool FarmOn(GameObject troll, GameObject source) { return TrollOrderService.Send(new BreakSourceCommand(troll.GetComponent<Character>(), source, "")); }
 
         /// Resource-specific blacklist of the real RecoveryBook for this troll + this source.
         [TestHook("stt.blacklisted")]
