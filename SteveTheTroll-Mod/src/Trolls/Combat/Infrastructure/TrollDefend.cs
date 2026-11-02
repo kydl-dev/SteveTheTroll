@@ -1,6 +1,9 @@
 using System.Collections.Generic;
 using HarmonyLib;
 using Kydl.Common;
+using SteveTheTroll.Trolls.Combat.Application;
+using SteveTheTroll.Trolls.Combat.Domain;
+using SteveTheTroll.Trolls.Combat.Execution;
 using SteveTheTroll.Trolls.Home.Infrastructure;
 using SteveTheTroll.Trolls.Taming.Domain;
 using SteveTheTroll.Trolls.Taming.Infrastructure;
@@ -47,6 +50,22 @@ namespace SteveTheTroll.Trolls.Combat.Infrastructure
             return Ui.Notify.Show(Loc.T("stevethetroll_under_attack", who), Ui.Notify.Kind.Attack);
         }
 
+        static readonly DefencePipeline Defence = new DefencePipeline();
+        static readonly CombatExecutor Executor = new CombatExecutor(ForceCurrent, SetCurrent);
+        static Character _troll, _attacker;
+        static MonsterAI _ai;
+        static bool ForceCurrent() { return TrollGuard.Order(_troll, _attacker); }
+        static void SetCurrent() { SetTarget(_ai, _attacker); _ai.Alert(); }
+
+        /// ITrollOwnership over one troll's ZNetView (D-175).
+        internal readonly struct ViewOwner : SteveTheTroll.Trolls.Contracts.ITrollOwnership
+        {
+            readonly ZNetView _v;
+            internal ViewOwner(ZNetView v) { _v = v; }
+            public bool IsValid { get { return _v != null && _v.IsValid(); } }
+            public bool IsOwner { get { return IsValid && _v.IsOwner(); } }
+        }
+
         /// Expected outcome: returns how many trolls now target the attacker.
         internal static int Defend(Player owner, Character attacker)
         {
@@ -56,18 +75,22 @@ namespace SteveTheTroll.Trolls.Combat.Infrastructure
             foreach (var c in Character.GetAllCharacters())
                 if (c != null && !c.IsDead() && TamedTrollStats.IsTamedTroll(c) && TrollTaming.Owner(c) == id) Near.Add(c);
             int set = 0;
+            bool wears = TrollTaming.Wears(owner), raid = !wears && TrollHome.Raid();
             foreach (var troll in Near)
             {
                 float d = Vector3.Distance(troll.transform.position, owner.transform.position);
-                if (!TamingRules.Defends(d, ModSettings.DefendRange.Value)) { ModLog.Verbose("TrollDefend: " + TrollTaming.Tag(troll) + " is " + d.ToString("F1") + " m from " + owner.GetPlayerName() + " (range " + ModSettings.DefendRange.Value + ") - stays"); continue; }
                 var view = troll.GetComponent<ZNetView>();
                 var ai = troll.GetComponent<MonsterAI>();
-                if (ai == null || view == null || !view.IsValid() || !view.IsOwner()) { ModLog.Verbose("TrollDefend: " + TrollTaming.Tag(troll) + " is owned by another client - not steered here"); continue; }
-                // D-082 (TEST-035: Steve 1 stood 2.5 m from two wild trolls hitting the player and did nothing - the game's AI dropped / ignored the
-                // target): the attacker becomes the troll's FORCED target (TrollGuard.Keep puts it back before every AI step)
-                if (!TrollGuard.Order(troll, attacker)) { SetTarget(ai, attacker); ai.Alert(); }
+                // D-175 (Architecture V2, P5): DefencePipeline decides (slippers / raid, range, owner), CombatExecutor performs (owner-gated): the attacker becomes the troll's
+                // FORCED target (D-082: TrollGuard.Keep puts it back before every AI step), else the game's SetTarget + Alert
+                var decision = Defence.Evaluate(new DefenceInput(ai != null && view != null && view.IsValid() && view.IsOwner(), wears, raid, d, ModSettings.DefendRange.Value));
+                if (!decision.IsSuccess) { ModLog.Verbose("TrollDefend: " + TrollTaming.Tag(troll) + " (" + d.ToString("F1") + " m from " + owner.GetPlayerName() + ") does not defend - " + decision.Reason); continue; }
+                _troll = troll; _ai = ai; _attacker = attacker;
+                var done = Executor.Attack(new ViewOwner(view));
+                _troll = null; _ai = null; _attacker = null;
+                if (!done.IsSuccess) continue;
                 set++;
-                ModLog.Info("TrollDefend: " + owner.GetPlayerName() + " hit by " + attacker.name + " - " + TrollTaming.Tag(troll) + " (" + d.ToString("F1") + " m) attacks it");
+                ModLog.Info("TrollDefend: " + owner.GetPlayerName() + " hit by " + attacker.name + " - " + TrollTaming.Tag(troll) + " (" + d.ToString("F1") + " m) attacks it (" + done.Value + ")");
             }
             ModLog.Verbose("TrollDefend: " + Near.Count + " own tamed troll(s) loaded, " + set + " defending");
             if (set > 0 && owner == Player.m_localPlayer) UnderAttack(owner.GetPlayerName());

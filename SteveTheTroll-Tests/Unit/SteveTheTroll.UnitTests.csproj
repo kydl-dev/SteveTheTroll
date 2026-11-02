@@ -59,6 +59,8 @@
     <Compile Include="..\..\SteveTheTroll-Mod\src\Trolls\Orders\Application\*.cs" Link="Mod\Orders\%(Filename)%(Extension)" />
     <!-- D-171 P5..P8: the game-free rules of combat, backpack, hubs / home, taming -->
     <Compile Include="..\..\SteveTheTroll-Mod\src\Trolls\Combat\Domain\*.cs" Link="Mod\Combat\%(Filename)%(Extension)" />
+    <Compile Include="..\..\SteveTheTroll-Mod\src\Trolls\Combat\Application\*.cs" Link="Mod\Combat\%(Filename)%(Extension)" />
+    <Compile Include="..\..\SteveTheTroll-Mod\src\Trolls\Combat\Execution\*.cs" Link="Mod\Combat\%(Filename)%(Extension)" />
     <Compile Include="..\..\SteveTheTroll-Mod\src\Backpack\Domain\BackpackRules.cs" Link="Mod\Backpack\BackpackRules.cs" />
     <Compile Include="..\..\SteveTheTroll-Mod\src\Backpack\Domain\PickupRules.cs" Link="Mod\Backpack\PickupRules.cs" />
     <Compile Include="..\..\SteveTheTroll-Mod\src\Backpack\Domain\DepotPlanner.cs" Link="Mod\Backpack\DepotPlanner.cs" />
