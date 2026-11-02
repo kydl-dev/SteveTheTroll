@@ -98,9 +98,14 @@
     },
     {
       "do": "hook",
-      "name": "stt.wallsHit",
+      "name": "stt.wallsHitByTroll",
       "expect": 0,
-      "label": "no player-built wall was hit"
+      "label": "no hit of a tamed troll reached a player-built wall (PlayerPieceGuard, D-172)"
+    },
+    {
+      "do": "hook",
+      "name": "stt.wallsHit",
+      "label": "ring walls damaged by any source (diagnosis: a felled tree may fall on them - user: logs may damage)"
     },
     {
       "do": "hook",

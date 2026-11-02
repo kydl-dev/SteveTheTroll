@@ -4,6 +4,7 @@ using Kydl.Common;
 using SteveTheTroll.Trolls.Farming.Infrastructure;
 using SteveTheTroll.Trolls.Orders.Commands;
 using SteveTheTroll.Trolls.Recovery.Infrastructure;
+using SteveTheTroll.Trolls.Taming.Infrastructure;
 using UnityEngine;
 
 namespace SteveTheTroll.Testing
@@ -65,7 +66,7 @@ namespace SteveTheTroll.Testing
                 if (k == 0)      // one line is enough, they are all built the same way
                     ModLog.Info("RecoveryTestHooks: wall 0 creator in ZDO " + (view != null && view.IsValid() ? view.GetZDO().GetLong(ZDOVars.s_creator, 0L).ToString() : "no valid ZDO")
                         + ", Piece found " + (piece != null) + ", GetCreator " + (piece != null ? piece.GetCreator().ToString() : "-") + ", IsPlacedByPlayer " + (piece != null && piece.IsPlacedByPlayer()));
-                Walls.Add(wall); Built.Add(wall);
+                Walls.Add(wall); Built.Add(wall); WallIds.Add(wall.GetInstanceID());
             }
             ModLog.Info("RecoveryTestHooks: walled tree created, " + TreeHealth(tree));
             ModLog.Info("RecoveryTestHooks: tree at " + centre.ToString("F0") + " inside a ring of " + n + " x 2 player-built walls, radius " + radius.ToString("F0") + " m, creator " + (Me != 0L ? Me : 4711L));
@@ -95,7 +96,7 @@ namespace SteveTheTroll.Testing
                 else Object.Destroy(g);
                 n++;
             }
-            Built.Clear(); Walls.Clear(); _tree = null;
+            Built.Clear(); Walls.Clear(); _tree = null; WallIds.Clear(); _trollHits = 0; _otherHits = 0; _lastTrollHit = "";
             return n;
         }
 
@@ -174,6 +175,32 @@ namespace SteveTheTroll.Testing
                 + (troll != null ? ", troll " + Vector3.Distance(new Vector3(troll.transform.position.x, 0f, troll.transform.position.z), new Vector3(_centre.x, 0f, _centre.z)).ToString("F1") + " m from the tree (ring " + _radius.ToString("F0") + " m)" : "");
             ModLog.Info("RecoveryTestHooks: walled tree outcome - " + why);
             return why;
+        }
+
+        // D-173 (user 2026-11-02, falling logs: "Logs may damage" - only the troll's own swings must never damage a player's piece): every hit that reaches a ring wall's
+        // RPC_Damage (where the damage is applied) is counted by its source; PlayerPieceGuard drops troll hits before that, so a troll count above 0 means a hit got through.
+        static readonly HashSet<int> WallIds = new HashSet<int>();
+        static int _trollHits, _otherHits;
+        static string _lastTrollHit = "";
+
+        [HarmonyPatch(typeof(WearNTear), "RPC_Damage")]
+        static class CountWallHits
+        {
+            static void Prefix(WearNTear __instance, HitData hit)
+            {
+                if (__instance == null || hit == null || WallIds.Count == 0 || !WallIds.Contains(__instance.gameObject.GetInstanceID())) return;
+                var a = hit.GetAttacker();
+                if (a != null && a.IsTamed() && TrollTaming.IsTroll(a)) { _trollHits++; _lastTrollHit = a.name + " " + hit.GetTotalDamage().ToString("F0"); }
+                else _otherHits++;
+            }
+        }
+
+        /// D-173: ring-wall hits that reached the wall from a tamed troll (must stay 0: PlayerPieceGuard). Other sources (a felled tree's log) are only logged.
+        [TestHook("stt.wallsHitByTroll")]
+        static int WallsHitByTroll()
+        {
+            ModLog.Info("RecoveryTestHooks: ring walls - hits from a tamed troll " + _trollHits + (_trollHits > 0 ? " (last: " + _lastTrollHit + ")" : "") + ", from other sources (falling logs ...) " + _otherHits);
+            return _trollHits;
         }
 
         /// 1 while the tree still stands untouched.
