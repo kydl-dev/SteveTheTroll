@@ -30,16 +30,19 @@
       "do": "hook",
       "name": "stt.spawnTroll",
       "args": {
-        "dx": -6,
-        "dz": -2
+        "dx": -14,
+        "dz": 8
       },
       "as": "troll"
     },
     {
-      "do": "spawn",
-      "prefab": "Greydwarf",
-      "dx": -9,
-      "dz": -2,
+      "do": "hook",
+      "name": "stt.spawnMob",
+      "args": {
+        "prefab": "Greydwarf",
+        "dx": -11,
+        "dz": 8
+      },
       "as": "mob"
     },
     {

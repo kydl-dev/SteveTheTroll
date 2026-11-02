@@ -31,7 +31,7 @@
       "name": "stt.spawnTroll",
       "args": {
         "dx": -30,
-        "dz": 0
+        "dz": 10
       },
       "as": "troll"
     },
@@ -42,7 +42,7 @@
         "troll": "troll"
       },
       "min": 1001,
-      "label": "the only hub is 1070 m away (past the 1000 m reach; the troll stands 30 m from the player so TrollHold, which pauses a troll the player looks at within 4 m, does not apply)"
+      "label": "the only hub is about 1030 m from the troll (past the 1000 m reach; the troll stands about 32 m in front of the player so TrollHold, which pauses a troll the player looks at within 4 m, does not apply)"
     },
     {
       "do": "hook",

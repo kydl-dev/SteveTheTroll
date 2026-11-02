@@ -26,7 +26,7 @@
       "do": "hook",
       "name": "stt.spawnTroll",
       "args": {
-        "dz": 4,
+        "dz": 16,
         "dx": 0
       },
       "as": "troll"
@@ -38,7 +38,7 @@
         "troll": "troll"
       },
       "expect": 1,
-      "label": "1296 m from the hub: walks back"
+      "label": "1284 m from the hub (troll 16 m ahead of the player): walks back"
     },
     {
       "do": "wait",
@@ -101,7 +101,7 @@
         "troll": "troll"
       },
       "expect": 0,
-      "label": "936 m from a hub: inside the zone, no walk"
+      "label": "924 m from a hub: inside the zone, no walk"
     }
   ],
   "asserts": [

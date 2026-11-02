@@ -30,8 +30,8 @@
       "do": "hook",
       "name": "stt.spawnTroll",
       "args": {
-        "dx": -8,
-        "dz": -8
+        "dx": -12,
+        "dz": 12
       },
       "as": "troll"
     },
@@ -50,8 +50,8 @@
       "do": "hook",
       "name": "stt.plantTree",
       "args": {
-        "dx": -14,
-        "dz": -14
+        "dx": -20,
+        "dz": 20
       },
       "as": "tree"
     },

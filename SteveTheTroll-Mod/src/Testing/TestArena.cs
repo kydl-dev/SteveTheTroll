@@ -27,7 +27,7 @@ namespace SteveTheTroll.Testing
                 _spot = Choose(_start);
                 ModLog.Info("TestArena: lab start " + _start.ToString("F0") + " -> test spot " + _spot.ToString("F0") + " (" + Flat(_spot - _start).ToString("F0") + " m away, flattest dry area of 16 directions)");
             }
-            Place(p, _spot, p.transform.rotation);
+            Place(p, _spot, Quaternion.identity);         // D-172: always facing world +z - a test's dz > 0 is in front of the player
             if (!p.InGodMode()) p.SetGodMode(true);      // D-172 (user): god mode on, fly off - creatures still target the player, but no test dies by accident
             ModLog.Verbose("TestArena: player moved to " + _spot.ToString("F0") + ", god mode " + p.InGodMode());
             return _spot;
@@ -43,8 +43,8 @@ namespace SteveTheTroll.Testing
             var dir = _spot - _start; dir.y = 0f; dir.Normalize();
             var to = _spot + dir * metres;
             to.y = ZoneSystem.instance.GetGroundHeight(to) + 0.2f;
-            Place(p, to, Quaternion.LookRotation(dir));
-            ModLog.Info("TestArena: player " + metres.ToString("F0") + " m further out at " + to.ToString("F0") + " (stands at " + p.transform.position.ToString("F0") + "), facing away from the lab start");
+            Place(p, to, Quaternion.identity);           // D-172: same facing as after stt.reset (world +z), so dz > 0 stays "in front"
+            ModLog.Info("TestArena: player " + metres.ToString("F0") + " m further out at " + to.ToString("F0") + " (stands at " + p.transform.position.ToString("F0") + "), facing +z");
             return p.transform.position;
         }
 
@@ -68,6 +68,7 @@ namespace SteveTheTroll.Testing
             if (body != null) { body.linearVelocity = Vector3.zero; body.position = to; body.rotation = rot; }
             p.transform.position = to;
             p.transform.rotation = rot;
+            p.SetLookDir(rot * Vector3.forward);      // the look direction turns the body every frame - set it too, or the facing springs back
             MaxAirAltitude(p) = to.y;
             ZNet.instance.SetReferencePosition(to);
         }

@@ -52,16 +52,21 @@ namespace SteveTheTroll.Testing
         [TestHook("stt.spawnTroll")]
         static GameObject SpawnTroll(float dx, float dz) { return Spawn(dx, dz, MinFromPlayer); }
 
-        /// Like stt.spawnTroll but as close as asked (only for tests about a troll right next to the player, e.g. hold-look).
+        /// Like stt.spawnTroll but as close as asked (only for tests about a troll right next to the player: hold-look, defend-rage, nohit-zone) - still in front.
         [TestHook("stt.spawnTrollNear")]
         static GameObject SpawnTrollNear(float dx, float dz) { return Spawn(dx, dz, 0f); }
 
-        const float MinFromPlayer = 12f;
+        // D-172 (user 2026-11-02: "spawn trolls further from me (not behind me) so that they don't walk into player"): at least 16 m (was 12) and in FRONT of the player
+        // (stt.reset faces the player along world +z, so a test's dz > 0 is in front). A troll offset behind the player fails the step loudly instead of being moved silently.
+        const float MinFromPlayer = 16f;
 
         static GameObject Spawn(float dx, float dz, float minMetres)
         {
             var p = Player.m_localPlayer;
             var off = new Vector3(dx, 0f, dz);
+            var fwd = p.GetLookDir(); fwd.y = 0f;
+            if (Vector3.Dot(off, fwd) <= 0f)
+                throw new System.Exception("troll offset (" + dx + ", " + dz + ") is not in front of the player (facing " + fwd.normalized.ToString("F2") + ") - spawn trolls in front (D-172)");
             if (off.magnitude < minMetres) off = (off.sqrMagnitude > 0.01f ? off.normalized : -p.transform.forward) * minMetres;
             var at = p.transform.position + off;
             at.y = ZoneSystem.instance.GetGroundHeight(at) + 0.3f;

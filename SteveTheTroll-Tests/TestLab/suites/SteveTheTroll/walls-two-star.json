@@ -30,8 +30,8 @@
       "do": "hook",
       "name": "stt.spawnTroll",
       "args": {
-        "dx": -6,
-        "dz": -6
+        "dx": -12,
+        "dz": 12
       },
       "as": "troll"
     },
