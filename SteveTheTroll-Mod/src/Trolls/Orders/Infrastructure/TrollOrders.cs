@@ -118,8 +118,16 @@ namespace SteveTheTroll.Trolls.Orders.Infrastructure
             var dir = cam.forward;
             if (AimOverride != null)
             {
-                var col = AimOverride.GetComponentInChildren<Collider>();
-                var at = col != null ? col.bounds.center : AimOverride.transform.position;
+                // D-172: the trunk / body, not the bounds centre of the first collider (a tree's is up in the canopy: the ray passed the planted tree and ordered one 67 m away)
+                var chest = AimOverride.transform.position + Vector3.up * 1.5f;
+                var at = chest; float best = float.MaxValue;
+                foreach (var col in AimOverride.GetComponentsInChildren<Collider>())
+                {
+                    if (col == null || col.isTrigger || !col.enabled) continue;
+                    var q = col.ClosestPoint(chest);
+                    float d = (q - chest).sqrMagnitude;
+                    if (d < best) { best = d; at = q; }
+                }
                 dir = (at - cam.position).normalized;
                 ModLog.Info("TrollOrders: attack-key ray aimed at " + AimOverride.name + " by a test (" + Vector3.Distance(cam.position, at).ToString("F1") + " m)");
                 AimOverride = null;

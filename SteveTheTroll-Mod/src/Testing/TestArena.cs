@@ -48,6 +48,27 @@ namespace SteveTheTroll.Testing
             return p.transform.position;
         }
 
+        /// D-172: removes trees, logs, bushes and rocks of the world within `radius` m of the player (attack-key-creature: a Beech_small2 between the player and the mob took
+        /// the ray). Call it BEFORE planting / spawning the test's own objects. Expected outcome: how many were removed.
+        [TestHook("stt.clearAround")]
+        static int ClearAround(float radius)
+        {
+            var p = Player.m_localPlayer;
+            int n = 0;
+            foreach (var v in Object.FindObjectsByType<ZNetView>(FindObjectsSortMode.None))
+            {
+                if (v == null || !v.IsValid()) continue;
+                var g = v.gameObject;
+                if (Flat(g.transform.position - p.transform.position) > radius) continue;
+                bool veg = g.GetComponent<TreeBase>() != null || g.GetComponent<TreeLog>() != null || g.GetComponent<MineRock>() != null || g.GetComponent<MineRock5>() != null
+                    || (g.GetComponent<Destructible>() != null && g.GetComponent<Piece>() == null && g.GetComponent<Character>() == null);
+                if (!veg) continue;
+                v.ClaimOwnership(); ZNetScene.instance.Destroy(g); n++;
+            }
+            ModLog.Info("TestArena: " + n + " tree(s) / bush(es) / rock(s) removed within " + radius.ToString("F0") + " m of the player");
+            return n;
+        }
+
         /// D-172 (user: god mode + the player died at stt.arenaFurther): god mode for the test player, on or off (defend-rage switches it off around stt.hitPlayer).
         /// Expected outcome: the god mode afterwards.
         [TestHook("stt.godMode")]

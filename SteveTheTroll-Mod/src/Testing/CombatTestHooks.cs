@@ -143,7 +143,24 @@ namespace SteveTheTroll.Testing
                 string name = it.m_dropPrefab != null ? it.m_dropPrefab.name : it.m_shared.m_name;
                 if (name.ToLowerInvariant().Contains("log")) { h.UnequipItem(it, false); inv.RemoveItem(it); n++; }
             }
-            ModLog.Info("CombatTestHooks: " + TrollTaming.Tag(h) + " disarmed (" + n + " log item(s) removed, " + inv.GetAllItems().Count + " left)");
+            // D-172 (run 141510: a club troll had ONLY its two log swings - after the disarm it had nothing, not the slap a club-less troll farms with): give it the slap of
+            // its own default / random item sets, so "unarmed" means what a Spencer is - slap only.
+            bool slap = false;
+            foreach (var it in inv.GetAllItems()) if (it.m_shared.m_name.ToLowerInvariant().Contains("slap")) slap = true;
+            if (!slap)
+            {
+                var all = new System.Collections.Generic.List<GameObject>();
+                if (h.m_defaultItems != null) all.AddRange(h.m_defaultItems);
+                if (h.m_randomWeapon != null) all.AddRange(h.m_randomWeapon);
+                if (h.m_randomSets != null) foreach (var set in h.m_randomSets) if (set != null && set.m_items != null) all.AddRange(set.m_items);
+                foreach (var g in all)
+                {
+                    var drop = g != null ? g.GetComponent<ItemDrop>() : null;
+                    if (drop == null || !drop.m_itemData.m_shared.m_name.ToLowerInvariant().Contains("slap")) continue;
+                    inv.AddItem(g, 1); slap = true; break;
+                }
+            }
+            ModLog.Info("CombatTestHooks: " + TrollTaming.Tag(h) + " disarmed (" + n + " log item(s) removed, " + inv.GetAllItems().Count + " left, slap " + slap + ")");
             return n;
         }
 

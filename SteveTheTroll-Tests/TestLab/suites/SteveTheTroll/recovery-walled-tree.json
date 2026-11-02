@@ -23,7 +23,7 @@
       "args": {
         "dx": 0,
         "dz": 30,
-        "radius": 6
+        "radius": 10
       },
       "as": "tree"
     },
@@ -34,7 +34,7 @@
     {
       "do": "hook",
       "name": "stt.wallsAlive",
-      "min": 12,
+      "min": 20,
       "label": "the whole ring stands"
     },
     {

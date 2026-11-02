@@ -34,6 +34,14 @@
       }
     },
     {
+      "do": "hook",
+      "name": "stt.clearAround",
+      "args": {
+        "radius": 30
+      },
+      "label": "no world tree / bush between the player and the target (D-172)"
+    },
+    {
       "do": "wait",
       "seconds": 1
     },
