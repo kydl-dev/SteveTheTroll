@@ -15,6 +15,11 @@ namespace SteveTheTroll.Trolls.Combat.Domain
         /// D-124: Ashlands fortress wall pieces a 2-star tamed troll may break (WearNTear). The Troll Club never damages them.
         public static readonly string[] FortressWallPrefixes = { "Ashlands_Wall", "Ashlands_WallBlock", "Ashlands_Fortress_Wall" };
 
+        /// D-172 (user 2026-11-02: "Protect player pieces" - run 151111: rage swings at world objects next to a player-built wall ring damaged 5 walls by 38-48 %):
+        /// a tamed troll's hit never damages a piece a player built (Ashlands fortress walls are not player-built, so a 2-star troll still breaks those, D-124).
+        /// Expected outcome: false = the hit is dropped.
+        public static bool TrollHitDamagesPiece(bool attackerIsTamedTroll, bool placedByPlayer) { return !(attackerIsTamedTroll && placedByPlayer); }
+
         /// The prefab part of an instance name ("YggaShoot1(Clone)" -> "YggaShoot1"). Expected outcome: never null.
         public static string PrefabName(string name)
         {
