@@ -9,10 +9,14 @@
     },
     {
       "do": "hook",
+      "name": "stt.clearTrolls"
+    },
+    {
+      "do": "hook",
       "name": "stt.spawnTroll",
       "args": {
-        "dz": 16,
-        "dx": 0
+        "dx": 0,
+        "dz": 60
       },
       "as": "troll"
     },

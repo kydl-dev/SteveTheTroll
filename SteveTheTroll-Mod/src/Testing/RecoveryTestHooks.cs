@@ -58,6 +58,10 @@ namespace SteveTheTroll.Testing
                 if (view == null || !view.IsValid()) ModLog.Warn("RecoveryTestHooks: wall " + i + " has no valid ZNetView - creator not set in the ZDO");
                 else view.GetZDO().Set(ZDOVars.s_creator, creator);
                 if (piece != null) CreatorField(piece) = creator;
+                // D-172 (run 143014: 5 of 24 walls lost health with no troll swing at a wall in the log - the second layer wore for lack of support): the ring tests the
+                // troll, not the game's building physics, so the test walls do not wear from missing support / rain
+                var wnt = wall.GetComponent<WearNTear>();
+                if (wnt != null) { wnt.m_noSupportWear = false; wnt.m_noRoofWear = false; }
                 if (k == 0)      // one line is enough, they are all built the same way
                     ModLog.Info("RecoveryTestHooks: wall 0 creator in ZDO " + (view != null && view.IsValid() ? view.GetZDO().GetLong(ZDOVars.s_creator, 0L).ToString() : "no valid ZDO")
                         + ", Piece found " + (piece != null) + ", GetCreator " + (piece != null ? piece.GetCreator().ToString() : "-") + ", IsPlacedByPlayer " + (piece != null && piece.IsPlacedByPlayer()));
@@ -115,12 +119,16 @@ namespace SteveTheTroll.Testing
         static int WallsHit()
         {
             int hit = 0;
-            foreach (var w in Walls)
+            var detail = new System.Text.StringBuilder();
+            for (int k = 0; k < Walls.Count; k++)
             {
-                if (w == null) { hit++; continue; }
+                var w = Walls[k];
+                int layer = k < Walls.Count / 2 ? 0 : 1;
+                if (w == null) { hit++; detail.Append(" #" + k + " (layer " + layer + ") gone;"); continue; }
                 var wnt = w.GetComponent<WearNTear>();
-                if (wnt != null && wnt.GetHealthPercentage() < 0.999f) hit++;
+                if (wnt != null && wnt.GetHealthPercentage() < 0.999f) { hit++; detail.Append(" #" + k + " (layer " + layer + ") " + (wnt.GetHealthPercentage() * 100f).ToString("F0") + "%;"); }
             }
+            ModLog.Info("RecoveryTestHooks: " + hit + " of " + Walls.Count + " ring walls damaged or gone" + (hit > 0 ? ":" + detail : ""));
             return hit;
         }
 

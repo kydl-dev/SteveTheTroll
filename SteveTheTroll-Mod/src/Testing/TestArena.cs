@@ -69,6 +69,19 @@ namespace SteveTheTroll.Testing
             return n;
         }
 
+        /// D-172 (run 143014: the lab's face step looks at the tree's ROOT; the real camera ray grazed the ground and the attack key found nothing): the player looks at the
+        /// target `height` m above its root - a person aims at the trunk. Only the look direction is set; the attack key stays the real one. Expected outcome: the pitch in degrees.
+        [TestHook("stt.lookAt")]
+        static float LookAt(GameObject target, float height)
+        {
+            var p = Player.m_localPlayer;
+            var dir = (target.transform.position + Vector3.up * height) - p.GetEyePoint();
+            p.SetLookDir(dir.normalized);
+            float pitch = Mathf.Asin(Mathf.Clamp(dir.normalized.y, -1f, 1f)) * Mathf.Rad2Deg;
+            ModLog.Info("TestArena: player looks at " + target.name + " " + height.ToString("F1") + " m above its root, " + dir.magnitude.ToString("F1") + " m from the eyes, pitch " + pitch.ToString("F0"));
+            return pitch;
+        }
+
         /// D-172 (user: god mode + the player died at stt.arenaFurther): god mode for the test player, on or off (defend-rage switches it off around stt.hitPlayer).
         /// Expected outcome: the god mode afterwards.
         [TestHook("stt.godMode")]

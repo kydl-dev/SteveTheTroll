@@ -198,7 +198,12 @@ namespace SteveTheTroll.Testing
         static int BackpackSlots(GameObject troll) { int used, slots; BackpackStore.Fill(TrollTaming.Zdo(troll.GetComponent<Character>()), out used, out slots); return slots; }
 
         [TestHook("stt.backpackAllUsed")]
-        static bool BackpackAllUsed(GameObject troll) { int used, slots; BackpackStore.Fill(TrollTaming.Zdo(troll.GetComponent<Character>()), out used, out slots); return slots > 0 && used == slots; }
+        static bool BackpackAllUsed(GameObject troll)
+        {
+            int used, slots; BackpackStore.Fill(TrollTaming.Zdo(troll.GetComponent<Character>()), out used, out slots);
+            ModLog.Info("TestHooks: backpack of " + troll.name + " - " + used + " of " + slots + " slot(s) used");      // D-172: the failing run said only 'False'
+            return slots > 0 && used == slots;
+        }
 
         /// Total quantity of an item over all four chests, read back from the ZDO.
         [TestHook("stt.backpackCount")]

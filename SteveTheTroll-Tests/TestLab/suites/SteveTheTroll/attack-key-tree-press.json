@@ -72,6 +72,15 @@
       "target": "tree"
     },
     {
+      "do": "hook",
+      "name": "stt.lookAt",
+      "args": {
+        "target": "tree",
+        "height": 1.5
+      },
+      "label": "look at the trunk, not the root (D-172)"
+    },
+    {
       "do": "wait",
       "seconds": 0.5
     },
