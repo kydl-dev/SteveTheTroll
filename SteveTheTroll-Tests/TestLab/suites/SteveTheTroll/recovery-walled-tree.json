@@ -28,6 +28,16 @@
       "as": "tree"
     },
     {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "hook",
+      "name": "stt.wallsAlive",
+      "min": 12,
+      "label": "the whole ring stands"
+    },
+    {
       "do": "hook",
       "name": "stt.spawnTroll",
       "args": {
@@ -54,6 +64,11 @@
       },
       "expect": true,
       "label": "the troll is ordered to farm the walled tree"
+    },
+    {
+      "do": "hook",
+      "name": "stt.wallsAlive",
+      "label": "walls still standing (diagnosis)"
     },
     {
       "do": "wait",

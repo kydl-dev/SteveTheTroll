@@ -47,6 +47,16 @@ namespace SteveTheTroll.Testing
             return tree;
         }
 
+        /// D-171: how many walls of the ring still stand (diagnosis of the flaky runs where the troll walked straight through the ring). Expected outcome: 12 right after walledTree.
+        [TestHook("stt.wallsAlive")]
+        static int WallsAlive()
+        {
+            int n = 0;
+            foreach (var w in Walls) if (w != null && w.activeInHierarchy) n++;
+            ModLog.Info("RecoveryTestHooks: " + n + " of " + Walls.Count + " ring walls stand");
+            return n;
+        }
+
         /// Removes the tree and the walls of walledTree. Expected outcome: how many objects were removed.
         [TestHook("stt.clearWalled")]
         internal static int ClearWalled()

@@ -1,6 +1,6 @@
 {
   "name": "attack-key-tree-press",
-  "description": "D-171 P4/P8: the player looks at a tree and presses the attack key (the lab's own fake key press, Mouse3) - the troll breaks THAT tree (the player is teleported 6 m from the tree and faces it: from the start spot an arena collider 17 m out stood in the line of sight; the tree stays outside the bed's 15 m no-hit ring; runs at the end of the suite) (stt.aimAt points the attack-key ray at the target: the lab's face turns the player, not the camera pitch)",
+  "description": "D-171 P4/P8: the player looks at a tree and presses the attack key (user idea 2026-11-02: the player stands 100 m from the bed / hub on open ground and the target is 15 m in front - no no-hit ring, no arena colliders in the ray; the lab's own key press and the real camera ray, no aim help; teleports, so it runs at the end)",
   "timeout": 90,
   "steps": [
     {
@@ -27,11 +27,20 @@
       }
     },
     {
+      "do": "teleport",
+      "dx": 100,
+      "dz": 0
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
       "do": "hook",
       "name": "stt.plantTree",
       "args": {
         "dx": 0,
-        "dz": 20
+        "dz": 15
       },
       "as": "tree"
     },
@@ -39,31 +48,18 @@
       "do": "hook",
       "name": "stt.spawnTroll",
       "args": {
-        "dx": 8,
-        "dz": 30
+        "dx": -10,
+        "dz": -6
       },
       "as": "troll"
     },
     {
       "do": "wait",
-      "seconds": 1
-    },
-    {
-      "do": "teleport",
-      "to": "tree",
-      "distance": 6
+      "seconds": 1.5
     },
     {
       "do": "face",
       "target": "tree"
-    },
-    {
-      "do": "hook",
-      "name": "stt.aimAt",
-      "args": {
-        "target": "tree"
-      },
-      "expect": true
     },
     {
       "do": "wait",
