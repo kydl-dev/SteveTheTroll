@@ -8,6 +8,7 @@ using SteveTheTroll.Trolls.Combat.Infrastructure;
 using SteveTheTroll.Trolls.Farming.Infrastructure;
 using SteveTheTroll.Trolls.Home.Infrastructure;
 using SteveTheTroll.Trolls.Orders.Commands;
+using SteveTheTroll.Trolls.Registry.Infrastructure;
 using SteveTheTroll.Trolls.Taming.Infrastructure;
 using UnityEngine;
 
@@ -202,6 +203,24 @@ namespace SteveTheTroll.Testing
         /// and fills the pack again, so "exactly 0" is a race; "emptied to a few stacks" is what the scenario means.
         [TestHook("stt.backpackAtMost")]
         static bool BackpackAtMost(GameObject troll, int stacks) { return BackpackStacks(troll) <= stacks; }
+
+        // D-173 (run 160340: far-troll-goes-home - the troll walking 400 m home crosses zones TrollZones keeps, its GameObject is re-created on the way and the lab's 'troll'
+        // binding dies with the old one; the troll itself walked on and unloaded): the test follows it by its permanent registry id instead.
+        static string _followId = "";
+
+        /// Remembers the troll's registry id for stt.followedBackpackAtMost. Expected outcome: the id.
+        [TestHook("stt.followTroll")]
+        static string FollowTroll(GameObject troll) { _followId = TrollRegistry.IdOf(troll.GetComponent<Character>()); return _followId; }
+
+        /// The followed troll (by id, whichever GameObject it has now) holds at most `stacks` stacks. Expected outcome: false while it is not loaded.
+        [TestHook("stt.followedBackpackAtMost")]
+        static bool FollowedBackpackAtMost(int stacks)
+        {
+            var c = _followId.Length > 0 ? TrollRegistry.FindLoaded(_followId) : null;
+            if (c == null) return c != null;
+            int used, slots; BackpackStore.Fill(TrollTaming.Zdo(c), out used, out slots);
+            return used <= stacks;
+        }
 
         [TestHook("stt.backpackSlots")]
         static int BackpackSlots(GameObject troll) { int used, slots; BackpackStore.Fill(TrollTaming.Zdo(troll.GetComponent<Character>()), out used, out slots); return slots; }

@@ -80,6 +80,14 @@
       }
     },
     {
+      "do": "hook",
+      "name": "stt.followTroll",
+      "args": {
+        "troll": "troll"
+      },
+      "label": "follow the troll by its id (its GameObject is re-created while it crosses kept zones)"
+    },
+    {
       "do": "wait",
       "until": {
         "check": "hook",
@@ -108,9 +116,8 @@
       "do": "wait",
       "until": {
         "check": "hook",
-        "name": "stt.backpackAtMost",
+        "name": "stt.followedBackpackAtMost",
         "args": {
-          "troll": "troll",
           "stacks": 20
         },
         "expect": true
@@ -120,17 +127,17 @@
   ],
   "asserts": [
     {
-      "check": "hook",
-      "name": "stt.backpackAtMost",
-      "args": {
-        "troll": "troll",
-        "stacks": 20
-      },
-      "expect": true
-    },
-    {
       "check": "noErrors",
       "source": "SteveTheTroll"
+    },
+    {
+      "check": "hook",
+      "name": "stt.followedBackpackAtMost",
+      "args": {
+        "stacks": 20
+      },
+      "expect": true,
+      "label": "it reached home and unloaded"
     }
   ]
 }

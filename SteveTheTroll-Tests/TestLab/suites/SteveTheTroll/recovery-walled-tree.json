@@ -116,17 +116,18 @@
   "asserts": [
     {
       "check": "hook",
+      "name": "stt.wallsHitByTroll",
+      "expect": 0,
+      "label": "no hit of a tamed troll reached a player-built wall (falling logs may, user D-173)"
+    },
+    {
+      "check": "hook",
       "name": "stt.blacklisted",
       "args": {
         "troll": "troll",
         "source": "tree"
       },
       "expect": true
-    },
-    {
-      "check": "hook",
-      "name": "stt.wallsHit",
-      "expect": 0
     },
     {
       "check": "hook",
