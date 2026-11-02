@@ -17,12 +17,30 @@ namespace SteveTheTroll.Testing
             {
                 if (r.name != "SlipperSkin" || r.sharedMesh == null) continue;
                 n++; bones = r.bones.Length;
-                var b = r.bounds; lo = Mathf.Min(lo, b.min.y); hi = Mathf.Max(hi, b.max.y);
+                float l, h; MeshSpan(r, out l, out h); lo = Mathf.Min(lo, l); hi = Mathf.Max(hi, h);
             }
             return n == 0 ? "no slipper skin" : n + " skin(s), " + bones + " bones, " + (hi - lo).ToString("F3") + " m high, bottom " + (lo - p.transform.position.y).ToString("F3") + " m above the feet";
         }
 
-        /// Exactly one slipper skin on the player, all its bones exist, it is about 0.3 - 0.5 m high and stands on the player's feet (not under them).
+        /// World-space lowest / highest point of the skinned mesh AS POSED NOW (BakeMesh without scale, then the renderer's position + rotation).
+        /// Not `r.bounds`: for a SkinnedMeshRenderer that is the mesh's stored local box around the root bone, not the skinned vertices - the
+        /// 2026-11-02 lab run read 0.46 m 'above the feet' from it while the screenshot showed the slippers on the feet (Claude-Agent-19).
+        static void MeshSpan(SkinnedMeshRenderer r, out float lo, out float hi)
+        {
+            lo = float.MaxValue; hi = float.MinValue;
+            var baked = new Mesh();
+            try
+            {
+                r.BakeMesh(baked);      // useScale false = world-SIZED vertices in the renderer's rotated / translated frame (MISTAKES 2026-10-27); true scaled them again (0.004 m)
+                var t = r.transform;
+                foreach (var v in baked.vertices) { float y = (t.position + t.rotation * v).y; if (y < lo) lo = y; if (y > hi) hi = y; }
+                var b = r.bounds;
+                ModLog.Verbose("TestHooks: slipper skin baked y " + lo.ToString("F3") + " .. " + hi.ToString("F3") + " m (" + baked.vertexCount + " verts, renderer lossyScale " + t.lossyScale.ToString("F3") + "); renderer bounds y " + b.min.y.ToString("F3") + " .. " + b.max.y.ToString("F3") + " m (not used)");
+            }
+            finally { Object.Destroy(baked); }
+        }
+
+        /// Exactly one slipper skin on the player, all its bones exist, it is 0.2 - 0.8 m high (slippers plus the baked trolls) and stands on the player's feet (not under them).
         [TestHook("stt.slipperSkinsOk")]
         static bool SlipperSkinsOk()
         {
@@ -34,10 +52,11 @@ namespace SteveTheTroll.Testing
                 if (r.name != "SlipperSkin" || r.sharedMesh == null) continue;
                 n++;
                 foreach (var b in r.bones) if (b == null) ok = false;
-                var bb = r.bounds; float h = bb.size.y, bottom = bb.min.y - p.transform.position.y;
-                ModLog.Check("TestHooks: slipper skin height", h, 0.4, 0.15, "m");
+                float lo, hi; MeshSpan(r, out lo, out hi);
+                float h = hi - lo, bottom = lo - p.transform.position.y;
+                ModLog.Check("TestHooks: slipper skin height (slippers + baked trolls)", h, 0.5, 0.3, "m");
                 ModLog.Check("TestHooks: slipper skin bottom above the feet", bottom, 0.0, 0.08, "m");
-                if (h < 0.25f || h > 0.55f || Mathf.Abs(bottom) > 0.1f || !r.enabled || !r.gameObject.activeInHierarchy) ok = false;
+                if (h < 0.2f || h > 0.8f || Mathf.Abs(bottom) > 0.1f || !r.enabled || !r.gameObject.activeInHierarchy) ok = false;
             }
             return n == 1 && ok;
         }
