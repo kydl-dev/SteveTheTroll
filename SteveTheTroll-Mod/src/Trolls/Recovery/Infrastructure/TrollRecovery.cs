@@ -340,18 +340,25 @@ namespace SteveTheTroll.Trolls.Recovery.Infrastructure
         // point within its body): the ground under `p` is the highest solid hit that is not part of this troll; no hit -> the game's solid height, else p.y.
         static readonly RaycastHit[] DownHits = new RaycastHit[16];
         static int _groundMask;
-        float GroundY(Vector3 p)
+        // D-175 (run 175732: still "height change 13.4 m at 1 m" in 6 of 10 directions next to trees - the highest hit was a tree crown / something overhead): the ground a
+        // troll can step on is the highest hit at most WalkUp metres above `refY` (the height of the previous step); anything higher is overhead and the chest-height line
+        // test decides whether it blocks. Only when nothing is that low the lowest hit counts.
+        const float WalkUp = 2.5f;
+        float GroundY(Vector3 p, float refY)
         {
             if (_groundMask == 0) _groundMask = LayerMask.GetMask("Default", "static_solid", "Default_small", "piece", "terrain", "vehicle");
-            int n = Physics.RaycastNonAlloc(new Vector3(p.x, p.y + 30f, p.z), Vector3.down, DownHits, 80f, _groundMask, QueryTriggerInteraction.Ignore);
-            float best = float.MinValue;
+            int n = Physics.RaycastNonAlloc(new Vector3(p.x, refY + 30f, p.z), Vector3.down, DownHits, 80f, _groundMask, QueryTriggerInteraction.Ignore);
+            float best = float.MinValue, lowest = float.MaxValue;
             for (int i = 0; i < n; i++)
             {
                 var c = DownHits[i].collider;
                 if (c == null || c.transform.IsChildOf(transform)) continue;
-                if (DownHits[i].point.y > best) best = DownHits[i].point.y;
+                float y = DownHits[i].point.y;
+                if (y < lowest) lowest = y;
+                if (y <= refY + WalkUp && y > best) best = y;
             }
             if (best > float.MinValue) return best;
+            if (lowest < float.MaxValue) return lowest;
             float h;
             return ZoneSystem.instance != null && ZoneSystem.instance.GetSolidHeight(p, out h) ? h : p.y;
         }
@@ -369,11 +376,11 @@ namespace SteveTheTroll.Trolls.Recovery.Infrastructure
             if (_blockMask == 0) _blockMask = LayerMask.GetMask("Default", "static_solid", "Default_small", "piece", "vehicle");
             var steps = new List<bool>();
             Vector3 prev = from;
-            float prevH = GroundY(from);
+            float prevH = GroundY(from, from.y);
             for (int i = 1; i <= (int)max; i++)
             {
                 var p = from + dir * i;
-                float h = GroundY(p);
+                float h = GroundY(p, prevH);
                 float depth = Mathf.Max(0f, Floating.GetLiquidLevel(new Vector3(p.x, h, p.z)) - h);
                 bool blocked = Physics.Linecast(prev + Vector3.up * ChestHeight, p + Vector3.up * ChestHeight, _blockMask, QueryTriggerInteraction.Ignore);
                 bool ok = StuckRules.StepOk(h - prevH, depth, blocked);

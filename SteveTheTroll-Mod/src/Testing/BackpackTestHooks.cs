@@ -26,6 +26,22 @@ namespace SteveTheTroll.Testing
         }
 
         /// The troll dies (the game's own damage, so BackpackDeath runs). Expected outcome: whether it is dead.
+        /// D-175 (run 175732: the troll near its hub unloaded into a depot 4 m away between stt.fillBackpack and stt.killTroll - plugin correct, the test raced it): fills the
+        /// backpack and kills the troll IN ONE FRAME. Expected outcome: the stacks that were in the backpack when it died (0 = it was not filled).
+        [TestHook("stt.fillAndKill")]
+        static int FillAndKill(GameObject troll)
+        {
+            var c = troll.GetComponent<Character>();
+            var z = SteveTheTroll.Trolls.Taming.Infrastructure.TrollTaming.Zdo(c);
+            int added = 0;
+            var stone = ObjectDB.instance.GetItemPrefab("Stone").GetComponent<ItemDrop>().m_itemData;
+            while (added < 500) { var it = stone.Clone(); it.m_stack = 20; it.m_dropPrefab = ObjectDB.instance.GetItemPrefab("Stone"); if (SteveTheTroll.Backpack.Infrastructure.BackpackStore.TryAdd(z, it, null) < 0) break; added++; }
+            int used, slots; SteveTheTroll.Backpack.Infrastructure.BackpackStore.Fill(z, out used, out slots);
+            KillTroll(troll);
+            ModLog.Info("BackpackTestHooks: filled (" + added + " stack(s) added, " + used + " of " + slots + " slots) and killed " + troll.name + " in one frame");
+            return used;
+        }
+
         [TestHook("stt.killTroll")]
         static bool KillTroll(GameObject troll)
         {

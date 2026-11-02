@@ -61,6 +61,15 @@
       }
     },
     {
+      "do": "hook",
+      "name": "stt.stepAside",
+      "args": {
+        "dx": -40,
+        "dz": -40
+      },
+      "label": "the player steps out of the troll's way to its spot (TrollHold froze it in front of the player, D-175)"
+    },
+    {
       "do": "wait",
       "until": {
         "check": "hook",

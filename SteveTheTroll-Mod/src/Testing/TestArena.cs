@@ -70,6 +70,19 @@ namespace SteveTheTroll.Testing
             return n;
         }
 
+        /// D-175 (run 175732: in spot-return the troll's way from the depot to its remembered spot went through the player, TrollHold froze it - "Bjorn looks at it, 2 m away"
+        /// - for minutes): the player steps `dx`,`dz` m aside at once (still facing +z). Expected outcome: the new position.
+        [TestHook("stt.stepAside")]
+        static Vector3 StepAside(float dx, float dz)
+        {
+            var p = Player.m_localPlayer;
+            var to = p.transform.position + new Vector3(dx, 0f, dz);
+            to.y = ZoneSystem.instance.GetGroundHeight(to) + 0.2f;
+            Place(p, to, Quaternion.identity);
+            ModLog.Info("TestArena: player stepped aside to " + to.ToString("F0"));
+            return to;
+        }
+
         /// D-174 (review: "a 400-metre return test should not depend on randomly generated terrain being passable"): of 16 directions from the arena spot, the one whose straight
         /// line of `metres` has the gentlest terrain and no water (WorldGenerator heights - valid where nothing is loaded; sampled every 10 m), and teleports the player to its end
         /// (the game's distant teleport finds the floor). Expected outcome: a description; throws when no direction is dry.
