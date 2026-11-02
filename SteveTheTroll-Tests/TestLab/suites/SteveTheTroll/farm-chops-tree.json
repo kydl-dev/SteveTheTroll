@@ -9,10 +9,10 @@
     { "do": "hook", "name": "stt.plantTree", "args": { "dx": -14, "dz": -14 }, "as": "tree" },
     { "do": "hook", "name": "stt.spawnTroll", "args": { "dx": -8, "dz": -8 }, "as": "troll" },
     { "do": "hook", "name": "stt.farmOn", "args": { "troll": "troll", "source": "tree" }, "expect": true, "label": "the break order was taken" },
-    { "do": "wait", "until": { "check": "hook", "name": "stt.treeStands", "args": { "tree": "tree" }, "expect": 0 }, "timeout": 60 }
+    { "do": "wait", "until": { "check": "hook", "name": "stt.plantedUntouched", "expect": 0 }, "timeout": 60 }
   ],
   "asserts": [
-    { "check": "hook", "name": "stt.treeStands", "args": { "tree": "tree" }, "expect": 0, "label": "the tree was hit" },
+    { "check": "hook", "name": "stt.plantedUntouched", "expect": 0, "label": "the tree was hit (damaged or felled)" },
     { "check": "hook", "name": "stt.farmAttacks", "args": { "troll": "troll" }, "min": 1, "label": "the farmer swung" },
     { "check": "noErrors", "source": "SteveTheTroll" }
   ]

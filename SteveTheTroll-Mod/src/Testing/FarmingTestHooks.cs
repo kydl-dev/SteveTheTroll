@@ -28,6 +28,22 @@ namespace SteveTheTroll.Testing
             return tree;
         }
 
+        /// Planted trees still standing untouched (a felled tree is destroyed, so the lab cannot name it any more - this hook needs no tree argument). Expected outcome: 0 once hit.
+        [TestHook("stt.plantedUntouched")]
+        static int PlantedUntouched()
+        {
+            int n = 0;
+            foreach (var g in Planted)
+            {
+                if (g == null) continue;
+                var t = g.GetComponent<TreeBase>();
+                var v = g.GetComponent<ZNetView>();
+                bool full = t == null || v == null || !v.IsValid() || v.GetZDO().GetFloat(ZDOVars.s_health, t.m_health) >= t.m_health - 0.01f;
+                if (full) n++;
+            }
+            return n;
+        }
+
         /// Swings the troll's farmer started (StartAttack accepted). Expected outcome: -1 without a farmer.
         [TestHook("stt.farmAttacks")]
         static int FarmAttacks(GameObject troll)
