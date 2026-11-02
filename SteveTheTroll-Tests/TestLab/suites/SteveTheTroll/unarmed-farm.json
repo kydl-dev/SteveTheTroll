@@ -1,6 +1,6 @@
 {
   "name": "unarmed-farm",
-  "description": "D-171: an unarmed troll (no log, D-121) still farms with its own body attacks",
+  "description": "D-171: an unarmed troll (no log, D-121) still farms with its own body attacks (disarmed 1.5 s after the spawn: the game gives a new troll its default items in Start)",
   "timeout": 90,
   "steps": [
     {
@@ -43,6 +43,10 @@
       },
       "contains": "slap",
       "label": "swings its slap"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.5
     },
     {
       "do": "hook",

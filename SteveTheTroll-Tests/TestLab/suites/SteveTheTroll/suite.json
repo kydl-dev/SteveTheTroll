@@ -1,6 +1,6 @@
 {
   "name": "SteveTheTroll",
-  "description": "SteveTheTroll (Architecture V2, D-169 - architecture-v2 runs first): depot lifecycle, backpack storage, hub choice, full-backpack unload, slipper figures, ownership (D-160)",
+  "description": "SteveTheTroll (Architecture V2, D-169 - architecture-v2 runs first): depot lifecycle, backpack storage, hub choice, full-backpack unload, slipper figures, ownership (D-160) - attack-key-tree runs LAST: it teleports the player, and every later test would start (bed, walls, spawns) on other ground",
   "requireMods": [
     {
       "guid": "com.kydldev.SteveTheTroll"
@@ -67,7 +67,6 @@
     "nohit-zone",
     "walls-two-star",
     "attack-key-tree-press",
-    "attack-key-tree",
     "attack-key-creature",
     "attack-key-nothing",
     "unarmed-farm",
@@ -76,6 +75,7 @@
     "backpack-death-crates",
     "bed-heal",
     "hold-look",
-    "recovery-walled-tree"
+    "recovery-walled-tree",
+    "attack-key-tree"
   ]
 }

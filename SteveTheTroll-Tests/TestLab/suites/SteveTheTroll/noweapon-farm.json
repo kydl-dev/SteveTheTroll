@@ -36,6 +36,10 @@
       "as": "troll"
     },
     {
+      "do": "wait",
+      "seconds": 1.5
+    },
+    {
       "do": "hook",
       "name": "stt.stripWeapons",
       "args": {
