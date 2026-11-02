@@ -68,11 +68,11 @@
       "do": "wait",
       "until": {
         "check": "hook",
-        "name": "stt.backpackStacks",
+        "name": "stt.followedBackpackAtMost",
         "args": {
-          "troll": "troll"
+          "stacks": 20
         },
-        "expect": 0
+        "expect": true
       },
       "timeout": 150
     },
@@ -105,11 +105,12 @@
     },
     {
       "check": "hook",
-      "name": "stt.backpackStacks",
+      "name": "stt.followedBackpackAtMost",
       "args": {
-        "troll": "troll"
+        "stacks": 20
       },
-      "expect": 0
+      "expect": true,
+      "label": "unloaded (a farming troll picks up drops again a moment after the unload - the Stone count proves the delivery)"
     },
     {
       "check": "hook",
