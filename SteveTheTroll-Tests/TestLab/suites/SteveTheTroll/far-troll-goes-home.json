@@ -36,6 +36,14 @@
     },
     {
       "do": "hook",
+      "name": "stt.clearMobs",
+      "args": {
+        "radius": 80
+      },
+      "label": "no wild creature for the troll to fight (fighting wins over unloading, D-149)"
+    },
+    {
+      "do": "hook",
       "name": "stt.spawnTroll",
       "args": {
         "dz": 16,

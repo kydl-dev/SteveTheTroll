@@ -70,6 +70,25 @@ namespace SteveTheTroll.Testing
             return n;
         }
 
+        /// D-173 (run 155357: far-troll-goes-home, 400 m out, the full troll was "not sent to the depot: fighting" - a wild creature there; fighting wins over unloading by
+        /// design, D-149): removes wild creatures (not tamed, not players) within `radius` m of the player. Expected outcome: how many were removed.
+        [TestHook("stt.clearMobs")]
+        static int ClearMobs(float radius)
+        {
+            var p = Player.m_localPlayer;
+            int n = 0;
+            foreach (var c in new System.Collections.Generic.List<Character>(Character.GetAllCharacters()))
+            {
+                if (c == null || c.IsPlayer() || c.IsTamed() || c.IsDead()) continue;
+                if (Flat(c.transform.position - p.transform.position) > radius) continue;
+                var v = c.GetComponent<ZNetView>();
+                if (v == null || !v.IsValid()) continue;
+                v.ClaimOwnership(); ZNetScene.instance.Destroy(c.gameObject); n++;
+            }
+            ModLog.Info("TestArena: " + n + " wild creature(s) removed within " + radius.ToString("F0") + " m of the player");
+            return n;
+        }
+
         /// D-172 (run 143014: the lab's face step looks at the tree's ROOT; the real camera ray grazed the ground and the attack key found nothing): the player looks at the
         /// target `height` m above its root - a person aims at the trunk. Only the look direction is set; the attack key stays the real one. Expected outcome: the pitch in degrees.
         [TestHook("stt.lookAt")]
