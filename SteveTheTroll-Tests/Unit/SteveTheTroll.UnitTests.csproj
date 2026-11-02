@@ -57,6 +57,7 @@
     <Compile Include="..\..\SteveTheTroll-Mod\src\Trolls\Combat\Domain\*.cs" Link="Mod\Combat\%(Filename)%(Extension)" />
     <Compile Include="..\..\SteveTheTroll-Mod\src\Backpack\Domain\BackpackRules.cs" Link="Mod\Backpack\BackpackRules.cs" />
     <Compile Include="..\..\SteveTheTroll-Mod\src\Backpack\Domain\PickupRules.cs" Link="Mod\Backpack\PickupRules.cs" />
+    <Compile Include="..\..\SteveTheTroll-Mod\src\Backpack\Domain\DepotPlanner.cs" Link="Mod\Backpack\DepotPlanner.cs" />
     <Compile Include="..\..\SteveTheTroll-Mod\src\Backpack\Application\*.cs" Link="Mod\Backpack\%(Filename)%(Extension)" />
     <Compile Include="..\..\SteveTheTroll-Mod\src\Backpack\Execution\*.cs" Link="Mod\Backpack\%(Filename)%(Extension)" />
     <Compile Include="..\..\SteveTheTroll-Mod\src\Trolls\Contracts\ITrollInventory.cs" Link="Mod\ITrollInventory.cs" />

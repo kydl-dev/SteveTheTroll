@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using HarmonyLib;
 using Kydl.Common;
+using SteveTheTroll.Backpack.Application;
 using SteveTheTroll.Backpack.Domain;
 using SteveTheTroll.Hubs.Domain;
 using SteveTheTroll.Hubs.Infrastructure;
@@ -66,24 +67,34 @@ namespace SteveTheTroll.Backpack.Infrastructure
         /// Where the troll walks to unload. Expected outcome: true with a target (a depot chest with room, or a depot built now).
         internal static bool Plan(Character troll, Vector3 bed, long owner, out Vector3 target)
         {
+            // D-173 (Architecture V2, P6): this reads the chests, DepotPlanner chooses (nearest with room, nobody else at / walking to it - D-107 / D-149)
             target = bed;
-            float best = float.MaxValue;
-            int busy = 0;
-            Container chosen = null;
+            PlanChests.Clear(); PlanFacts.Clear();
             foreach (var c in Chests(bed, owner))
             {
-                if (!c.GetInventory().HaveEmptySlot()) continue;
-                // D-107 (user: "if another troll is close to a depot, have them reroute to another depot, or start a new one")
-                if (Busy(c.transform.position, troll)) { busy++; continue; }
-                if (ReservedByOther(c, troll)) { busy++; continue; }      // D-149: another troll already walks to this chest
-                float d = Vector3.Distance(c.transform.position, troll.transform.position);
-                if (d < best) { best = d; target = c.transform.position; chosen = c; }
+                PlanChests.Add(c);
+                bool room = c.GetInventory().HaveEmptySlot();
+                PlanFacts.Add(new DepotCandidate(room, room && Busy(c.transform.position, troll), room && ReservedByOther(c, troll), Vector3.Distance(c.transform.position, troll.transform.position)));
             }
-            if (chosen != null) Reserve(chosen, troll);
-            if (best < float.MaxValue) { ModLog.Info("TrollDepot: " + TrollTaming.Tag(troll) + " unloads at the depot chest " + best.ToString("F1") + " m away" + (busy > 0 ? " (" + busy + " chest(s) skipped: another troll there)" : "")); return true; }
+            var plan = DepotPlanner.Choose(PlanFacts);
+            int busy = plan.Skipped;
+            if (!plan.BuildNew)
+            {
+                var chosen = PlanChests[plan.Chosen];
+                float best = PlanFacts[plan.Chosen].Distance;
+                target = chosen.transform.position;
+                Reserve(chosen, troll);
+                PlanChests.Clear();
+                ModLog.Info("TrollDepot: " + TrollTaming.Tag(troll) + " unloads at the depot chest " + best.ToString("F1") + " m away" + (busy > 0 ? " (" + busy + " chest(s) skipped: another troll there)" : ""));
+                return true;
+            }
+            PlanChests.Clear();
             if (busy > 0) ModLog.Info("TrollDepot: " + TrollTaming.Tag(troll) + " - every depot with room has another troll at it (" + busy + " chest(s)) - a new stack");
-            return Build(troll, bed, owner, out target, busy > 0);
+            return Build(troll, bed, owner, out target, plan.AvoidBusy);
         }
+        static readonly List<Container> PlanChests = new List<Container>();
+        static readonly List<DepotCandidate> PlanFacts = new List<DepotCandidate>();
+        static readonly UnloadPipeline Unloads = new UnloadPipeline();
 
         /// D-107: another tamed troll stands within BusyRadius of the point (flat). Expected outcome: false when only `me` is there.
         internal static bool Busy(Vector3 at, Character me)
@@ -127,8 +138,12 @@ namespace SteveTheTroll.Backpack.Infrastructure
         internal static int Unload(Character troll, Vector3 bed, long owner, out int left)
         {
             var zdo = TrollTaming.Zdo(troll);
+            var view = troll != null ? troll.GetComponent<ZNetView>() : null;
+            bool trollOwner = view != null && view.IsValid() && view.IsOwner();
             left = 0;
-            if (zdo == null) return 0;
+            // D-173 (Architecture V2, P6): UnloadPipeline decides per stack (owner / data checks, then Put / BuildDepot / Leave); this class reads and moves the items
+            var gate = Unloads.Evaluate(new UnloadInput(trollOwner, zdo != null, true, 0, MaxNewDepots));
+            if (!gate.IsSuccess) { ModLog.Info("TrollDepot: " + TrollTaming.Tag(troll) + " unload not done - " + gate.Reason); return 0; }
             int moved = 0, built = 0;
             for (int i = 0; i < BackpackStore.ChestCount; i++)
             {
@@ -136,14 +151,16 @@ namespace SteveTheTroll.Backpack.Infrastructure
                 foreach (var item in new List<ItemDrop.ItemData>(inv.GetAllItems()))
                 {
                     var into = Room(bed, owner, item, troll.transform.position);
-                    while (into == null && built < MaxNewDepots)
+                    var step = Unloads.Evaluate(new UnloadInput(trollOwner, true, into != null, built, MaxNewDepots)).Value;
+                    while (step == UnloadStep.BuildDepot)
                     {
                         Vector3 at;
-                        if (!Build(troll, bed, owner, out at)) break;
+                        if (!Build(troll, bed, owner, out at)) { step = UnloadStep.Leave; break; }
                         built++;
                         into = Room(bed, owner, item, troll.transform.position);
+                        step = Unloads.Evaluate(new UnloadInput(trollOwner, true, into != null, built, MaxNewDepots)).Value;
                     }
-                    if (into == null) { left++; continue; }
+                    if (step != UnloadStep.Put) { left++; continue; }
                     into.GetInventory().AddItem(item.Clone());
                     inv.RemoveItem(item);
                     moved++;
