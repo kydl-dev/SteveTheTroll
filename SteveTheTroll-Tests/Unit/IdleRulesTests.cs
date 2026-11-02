@@ -7,6 +7,19 @@ namespace SteveTheTroll.Tests.Unit
     [TestFixture]
     public class IdleRulesTests
     {
+        // D-172: busy-reason order (run 151111: slippers off + a TrollFarmer walking home -> "farm job" -> a full troll was sent to unload, against D-149)
+        [Test] public void NoSlippers_BeatsTheFarmJob() { Assert.That(IdleRules.BusyReason(true, false, false, false, false, false), Is.EqualTo(IdleRules.NoSlippersReason)); }
+        [Test] public void NoSlippers_FullTroll_IsNotSentToTheDepot() { Assert.That(IdleRules.Gate(IdleRules.BusyReason(true, false, false, false, false, false), true, false), Is.EqualTo(IdleGate.Skip)); }
+        [Test] public void NoSlippers_FullTrollWithoutFarmer_IsNotSentToTheDepot() { Assert.That(IdleRules.Gate(IdleRules.BusyReason(false, false, false, false, false, false), true, false), Is.EqualTo(IdleGate.Skip)); }
+        [Test] public void UnloadInProgress_StaysFirst_EvenWithoutSlippers() { Assert.That(IdleRules.BusyReason(true, true, false, false, false, false), Is.EqualTo(IdleRules.UnloadingReason)); }
+        [Test] public void SlippersOn_FarmJob_FullTroll_StillGoesToTheDepot() { Assert.That(IdleRules.Gate(IdleRules.BusyReason(true, false, false, true, false, false), true, false), Is.EqualTo(IdleGate.Unload)); }
+        [TestCase(false, false, true, true, false, false, "still walking to its tamer (TrollArrival)")]
+        [TestCase(false, false, false, true, true, false, "has a follow target")]
+        [TestCase(false, false, false, true, false, true, "fighting")]
+        [TestCase(false, false, false, true, false, false, null)]
+        public void BusyReason_Order(bool farmer, bool unloading, bool arriving, bool wears, bool follow, bool fighting, string expected)
+        { Assert.That(IdleRules.BusyReason(farmer, unloading, arriving, wears, follow, fighting), Is.EqualTo(expected)); }
+
         [Test] public void FullTroll_WithoutAnyJob_GoesToTheDepot() { Assert.That(IdleRules.Gate(null, true, false), Is.EqualTo(IdleGate.Unload)); }
         [Test] public void FullTroll_SentJustBefore_IsNotSentAgain() { Assert.That(IdleRules.Gate(null, true, true), Is.EqualTo(IdleGate.Skip)); }
         [Test] public void FullTroll_WithAFarmJob_GoesToTheDepotAnyway() { Assert.That(IdleRules.Gate(IdleRules.FarmReason, true, false), Is.EqualTo(IdleGate.Unload)); }

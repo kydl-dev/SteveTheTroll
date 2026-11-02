@@ -125,12 +125,8 @@ namespace SteveTheTroll.Trolls.Home.Infrastructure
             var ai = c.GetComponent<MonsterAI>();
             if (ai == null) return "no MonsterAI";
             var farmer = c.GetComponent<TrollFarmer>();
-            if (farmer != null) return farmer.Unloading ? "TrollFarmer is unloading" : IdleRules.FarmReason;      // D-159: a farm job gives way to a full backpack, an unload in progress does not restart
-            if (c.GetComponent<TrollArrival>() != null) return "still walking to its tamer (TrollArrival)";
-            if (!TrollHome.OwnerWears(c)) return "owner does not wear the slippers";
-            if (ai.GetFollowTarget() != null) return IdleRules.FollowReason;
-            if (ai.GetTargetCreature() != null) return "fighting";
-            return null;
+            // D-172: the order is game-free (IdleRules.BusyReason) - no slippers is asked BEFORE the farm job (D-149)
+            return IdleRules.BusyReason(farmer != null, farmer != null && farmer.Unloading, c.GetComponent<TrollArrival>() != null, TrollHome.OwnerWears(c), ai.GetFollowTarget() != null, ai.GetTargetCreature() != null);
         }
     }
 }
