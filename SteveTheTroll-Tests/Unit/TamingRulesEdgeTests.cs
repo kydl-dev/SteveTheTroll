@@ -1,15 +1,16 @@
 
+
 namespace SteveTheTroll.Tests.Unit
 {
     /// <summary>
-    /// D-086: boundary cases of SteveTheTroll.Taming.TamingRules found by Stryker.NET (mutants that survived TamingRulesTests): exact
+    /// D-086: boundary cases of TamingRules found by Stryker.NET (mutants that survived TamingRulesTests): exact
     /// range edges, zero distances and arithmetic that a "nice" input could not tell apart. Mutants left alive on purpose are equivalent
     /// (e.g. "dt &lt;= 0" vs "dt &lt; 0" in BedHeal: both give 0 HP).
     /// </summary>
     [TestFixture]
     public class TamingRulesEdgeTests
     {
-        const string T = "SteveTheTroll.Taming.TamingRules";
+        const string T = "SteveTheTroll.Trolls.Taming.Domain.TamingRules";
 
         static object Call(string m, params object[] a) { return ModAssembly.Call(T, m, a); }
 

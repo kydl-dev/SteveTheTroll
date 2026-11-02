@@ -1,7 +1,11 @@
 using System.Collections.Generic;
 using Kydl.Common;
-using SteveTheTroll.Taming;
+using SteveTheTroll.Backpack.Infrastructure;
+using SteveTheTroll.Hubs.Domain;
+using SteveTheTroll.Hubs.Infrastructure;
 using SteveTheTroll.Trolls.Farming.Infrastructure;
+using SteveTheTroll.Trolls.Taming.Domain;
+using SteveTheTroll.Trolls.Taming.Infrastructure;
 using UnityEngine;
 
 namespace SteveTheTroll.Testing
@@ -42,22 +46,22 @@ namespace SteveTheTroll.Testing
                 int id = c.GetInstanceID();
                 var ai = c.GetComponent<MonsterAI>();
                 var farmer = c.GetComponent<TrollFarmer>();
-                bool full = Backpack.BackpackStore.IsFullCached(zdo);
+                bool full = BackpackStore.IsFullCached(zdo);
                 bool fighting = ai != null && ai.GetTargetCreature() != null;
                 bool following = ai != null && ai.GetFollowTarget() != null;
                 float since;
                 if (full) { if (!FullSince.TryGetValue(id, out since)) { since = Time.time; FullSince[id] = since; } }
                 else { FullSince.Remove(id); since = Time.time; }
-                var hub = Hub.HubRegistry.For(c);
+                var hub = HubRegistry.For(c);
                 if (HealthRules.FullNotUnloading(full, farmer != null && farmer.Unloading, fighting, Time.time - since))
                     problems += Report(c, "full-not-unloading", "backpack full for " + (Time.time - since).ToString("F0") + " s but not unloading (" + (farmer != null ? "farming" : "no job") + ", follow " + following + ", hub " + (hub != null ? hub.Name : "none") + ")", text);
-                if (hub != null && HealthRules.FarmingBeyondLeash(farmer != null && !farmer.Unloading, following, true, Hub.HubRules.Flat(hub.Pos - c.transform.position), Hub.HubRules.FarmLeash))
-                    problems += Report(c, "farm-leash", "farming " + Hub.HubRules.Flat(hub.Pos - c.transform.position).ToString("F0") + " m from " + hub.Name + " (leash " + Hub.HubRules.FarmLeash.ToString("F0") + " m)", text);
-                int assigned = zdo.GetInt(Hub.HubRegistry.AssignKey, 0);
-                if (assigned > 0 && HealthRules.StaleAssignment(assigned, Hub.HubRegistry.Find(me, assigned) != null))
+                if (hub != null && HealthRules.FarmingBeyondLeash(farmer != null && !farmer.Unloading, following, true, HubGeometry.Flat(hub.Pos - c.transform.position), HubRules.FarmLeash))
+                    problems += Report(c, "farm-leash", "farming " + HubGeometry.Flat(hub.Pos - c.transform.position).ToString("F0") + " m from " + hub.Name + " (leash " + HubRules.FarmLeash.ToString("F0") + " m)", text);
+                int assigned = zdo.GetInt(HubRegistry.AssignKey, 0);
+                if (assigned > 0 && HealthRules.StaleAssignment(assigned, HubRegistry.Find(me, assigned) != null))
                     problems += Report(c, "stale-hub", "assigned to hub " + assigned + " which does not exist", text);
             }
-            float wait = Backpack.TrollDepot.LongestWait();
+            float wait = TrollDepot.LongestWait();
             if (HealthRules.DepotStuck(wait) && Time.time - _depotSaid > RepeatSeconds)
             {
                 _depotSaid = Time.time; problems++;

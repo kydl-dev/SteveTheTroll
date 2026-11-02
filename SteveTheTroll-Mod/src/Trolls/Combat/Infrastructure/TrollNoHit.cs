@@ -1,7 +1,7 @@
 using HarmonyLib;
 using Kydl.Common;
-using SteveTheTroll.Taming;
 using SteveTheTroll.Trolls.Combat.Domain;
+using SteveTheTroll.Trolls.Taming.Infrastructure;
 using UnityEngine;
 
 namespace SteveTheTroll.Trolls.Combat.Infrastructure

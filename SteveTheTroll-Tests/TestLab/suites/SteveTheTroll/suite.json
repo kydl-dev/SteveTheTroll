@@ -72,6 +72,10 @@
     "attack-key-nothing",
     "unarmed-farm",
     "noweapon-farm",
+    "backpack-pickup",
+    "backpack-death-crates",
+    "bed-heal",
+    "hold-look",
     "recovery-walled-tree"
   ]
 }

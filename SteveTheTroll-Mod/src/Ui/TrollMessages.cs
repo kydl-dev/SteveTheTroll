@@ -1,5 +1,6 @@
 using HarmonyLib;
 using Kydl.Common;
+using SteveTheTroll.Trolls.Taming.Infrastructure;
 
 namespace SteveTheTroll.Ui
 {
@@ -13,8 +14,8 @@ namespace SteveTheTroll.Ui
         static int _scope;
         internal static bool Passing;           // Notify's own messages: already left + coloured
 
-        static void Enter(Tameable t) { if (Taming.TrollTaming.IsTroll(t)) _scope++; }
-        static void Leave(Tameable t) { if (Taming.TrollTaming.IsTroll(t) && _scope > 0) _scope--; }
+        static void Enter(Tameable t) { if (TrollTaming.IsTroll(t)) _scope++; }
+        static void Leave(Tameable t) { if (TrollTaming.IsTroll(t) && _scope > 0) _scope--; }
 
         [HarmonyPatch(typeof(Tameable), "RPC_Command")]
         static class Command { static void Prefix(Tameable __instance) { Enter(__instance); } static void Finalizer(Tameable __instance) { Leave(__instance); } }

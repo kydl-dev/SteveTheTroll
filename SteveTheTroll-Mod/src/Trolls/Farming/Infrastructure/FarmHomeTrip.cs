@@ -1,6 +1,11 @@
 using Kydl.Common;
-using SteveTheTroll.Taming;
+using SteveTheTroll.Backpack.Infrastructure;
+using SteveTheTroll.Hubs.Domain;
+using SteveTheTroll.Hubs.Infrastructure;
+using SteveTheTroll.Trolls.Home.Infrastructure;
 using SteveTheTroll.Trolls.Recovery.Infrastructure;
+using SteveTheTroll.Trolls.Registry.Infrastructure;
+using SteveTheTroll.Trolls.Taming.Infrastructure;
 using UnityEngine;
 
 namespace SteveTheTroll.Trolls.Farming.Infrastructure
@@ -40,7 +45,7 @@ namespace SteveTheTroll.Trolls.Farming.Infrastructure
             bool hasBed = profile != null && profile.HaveCustomSpawnPoint();
             // D-135: a Troll Hub (its owner's, chosen by hand or the nearest) replaces the bed as the place to go to, unload and rest
             Vector3 bed;
-            bool atHub = Hub.HubRegistry.Anchor(me, hasBed ? profile.GetCustomSpawnPoint() : Vector3.zero, out bed);
+            bool atHub = HubRegistry.Anchor(me, hasBed ? profile.GetCustomSpawnPoint() : Vector3.zero, out bed);
             if (!hasBed && !atHub)
             {
                 ModLog.Info("TrollFarmer: " + TrollTaming.Tag(_f) + " has no bed or Troll Hub to go to - stays here");
@@ -53,10 +58,10 @@ namespace SteveTheTroll.Trolls.Farming.Infrastructure
             // D-095 (user: "5-25m from the bed ... don't just keep walking trying to get closer without being able to do so"): a full troll unloads as soon as it is within the depot
             // ring (25 m); any troll counts as home once within 25 m when it stops getting closer (bed inside a house it cannot enter) for StuckHomeSeconds.
             if (d < _homeBest - 0.5f) { _homeBest = d; _homeBestAt = Time.time; }
-            bool stuck = d <= Backpack.TrollDepot.MaxFromBed && Time.time - _homeBestAt > StuckHomeSeconds;
+            bool stuck = d <= TrollDepot.MaxFromBed && Time.time - _homeBestAt > StuckHomeSeconds;
             // D-097 (user: "as close as 15m from the bed, not right on top of the bed"): home = within HomeRadius, it waits there
             float home = ModSettings.HomeRadius.Value;
-            bool there = d <= home + 1f || (_f.IsFull && d <= Backpack.TrollDepot.MaxFromBed) || stuck;
+            bool there = d <= home + 1f || (_f.IsFull && d <= TrollDepot.MaxFromBed) || stuck;
             if (!there)
             {
                 // a far walk goes to a point 30 m ahead, renewed every step, and runs (D-164); D-167: stuck detection, rage and detours are TrollRecovery, a hub is never abandoned
@@ -74,14 +79,14 @@ namespace SteveTheTroll.Trolls.Farming.Infrastructure
             {
                 // D-064: at the bed with a full backpack -> to a troll depot with room (built now when there is none)
                 Vector3 at;
-                if (Backpack.TrollDepot.Plan(me, bed, TrollTaming.Owner(me), out at)) { _unloading = true; _unloadAt = at; _unloadStart = Time.time; return _unloading; }
+                if (TrollDepot.Plan(me, bed, TrollTaming.Owner(me), out at)) { _unloading = true; _unloadAt = at; _unloadStart = Time.time; return _unloading; }
                 TrollIdle.RetrySoon(me);
-                if (_f.IsMine()) Ui.Notify.Show(Loc.T("stevethetroll_depot_nospot", _f.Shown(), Hub.HubRegistry.DestinationName(me)), Ui.Notify.Kind.Warn);
+                if (_f.IsMine()) Ui.Notify.Show(Loc.T("stevethetroll_depot_nospot", _f.Shown(), HubRegistry.DestinationName(me)), Ui.Notify.Kind.Warn);
             }
             mv.Stop();
             ai.SetPatrolPoint();
-            ModLog.Info("TrollFarmer: " + TrollTaming.Tag(_f) + " is at its destination (" + Hub.HubRegistry.DestinationName(me) + ", " + d.ToString("F1") + " m) - waits");
-            if (!_f.Auto) Ui.Notify.Show(Loc.T("stevethetroll_farm_home", _f.Shown(), Hub.HubRegistry.DestinationName(me)), Ui.Notify.Kind.Farm);
+            ModLog.Info("TrollFarmer: " + TrollTaming.Tag(_f) + " is at its destination (" + HubRegistry.DestinationName(me) + ", " + d.ToString("F1") + " m) - waits");
+            if (!_f.Auto) Ui.Notify.Show(Loc.T("stevethetroll_farm_home", _f.Shown(), HubRegistry.DestinationName(me)), Ui.Notify.Kind.Farm);
             _f.Remove();
             return there;
         }
@@ -98,7 +103,7 @@ namespace SteveTheTroll.Trolls.Farming.Infrastructure
             ai.SetPatrolPoint();
             var me = _f.GetComponent<Character>();
             int left;
-            int moved = Backpack.TrollDepot.Unload(me, bed, TrollTaming.Owner(me), out left);
+            int moved = TrollDepot.Unload(me, bed, TrollTaming.Owner(me), out left);
             ModLog.Info("TrollFarmer: " + TrollTaming.Tag(_f) + " unloaded " + moved + " stack(s) at the depot (" + flat.magnitude.ToString("F1") + " m" + (late ? ", walked too long" : "") + "), " + left + " left");
             if (_f.IsMine()) Ui.Notify.Show(left > 0 ? Loc.T("stevethetroll_depot_full", _f.Shown(), left.ToString()) : Loc.T("stevethetroll_depot_done", _f.Shown(), moved.ToString()), left > 0 ? Ui.Notify.Kind.Warn : Ui.Notify.Kind.Farm);
             if (left == 0 && ResumeAtSpot()) return left == 0;
@@ -115,8 +120,8 @@ namespace SteveTheTroll.Trolls.Farming.Infrastructure
             var away = spot - _f.transform.position; away.y = 0f;
             if (away.magnitude < SpotMinMetres) return away.magnitude >= SpotMinMetres;
             var me = _f.GetComponent<Character>();
-            var hub = Hub.HubRegistry.For(me);
-            if (hub != null && !Hub.HubRules.FarmAllowed(true, Hub.HubRules.Flat(spot - hub.Pos))) return hub == null;
+            var hub = HubRegistry.For(me);
+            if (hub != null && !HubRules.FarmAllowed(true, HubGeometry.Flat(spot - hub.Pos))) return hub == null;
             var z = TrollTaming.Zdo(me);
             string focus = z != null ? Ui.TrollFocus.Normalize(z.GetString(TrollRegistry.FocusKey, "")) : "";
             _f.Setup(focus, spot, false);

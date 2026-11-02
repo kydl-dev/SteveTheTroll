@@ -2,7 +2,8 @@ using System.Collections.Generic;
 using System.Reflection;
 using HarmonyLib;
 using Kydl.Common;
-using SteveTheTroll.Taming;
+using SteveTheTroll.Trolls.Taming.Domain;
+using SteveTheTroll.Trolls.Taming.Infrastructure;
 
 namespace SteveTheTroll.Trolls.Combat.Infrastructure
 {

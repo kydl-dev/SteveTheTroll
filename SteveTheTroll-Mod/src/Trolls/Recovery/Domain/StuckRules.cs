@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System;
-using SteveTheTroll.Taming;
 using SteveTheTroll.Trolls.Farming.Domain;
 
 namespace SteveTheTroll.Trolls.Recovery.Domain

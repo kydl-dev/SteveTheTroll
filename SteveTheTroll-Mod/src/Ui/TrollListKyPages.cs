@@ -3,6 +3,7 @@ using System;
 using Kydl.Common;
 using KydlCore;
 using SteveTheTroll.Trolls.Combat.Infrastructure;
+using SteveTheTroll.Trolls.Registry.Infrastructure;
 
 namespace SteveTheTroll.Ui
 {
@@ -30,7 +31,7 @@ namespace SteveTheTroll.Ui
         internal static KyPage MyTrolls()
         {
             Func<string, string> text = k => Loc.T(k);
-            var trolls = Taming.TrollRegistry.Trolls();
+            var trolls = TrollRegistry.Trolls();
             if (!AnyLiving(trolls)) return None(text);
             var actions = TrollCommands.Actions();
             var page = new KyPage();
@@ -63,7 +64,7 @@ namespace SteveTheTroll.Ui
         internal static KyPage Work()
         {
             Func<string, string> text = k => Loc.T(k);
-            var trolls = Taming.TrollRegistry.Trolls();
+            var trolls = TrollRegistry.Trolls();
             if (!AnyLiving(trolls)) return None(text);
             var page = new KyPage();
             var s = page.Section(text("stevethetroll_focus_heading"));

@@ -1,6 +1,12 @@
 using Kydl.Common;
+using SteveTheTroll.Backpack.Infrastructure;
+using SteveTheTroll.Items.Costume;
+using SteveTheTroll.Items.Slippers;
 using SteveTheTroll.Trolls.Combat.Infrastructure;
 using SteveTheTroll.Trolls.Farming.Infrastructure;
+using SteveTheTroll.Trolls.Taming.Infrastructure;
+using SteveTheTroll.Trolls.Water.Infrastructure;
+using SteveTheTroll.World.Zones;
 using UnityEngine;
 
 namespace SteveTheTroll.Testing
@@ -27,7 +33,7 @@ namespace SteveTheTroll.Testing
             var parts = BundleAssets.Load<GameObject>(BundleAssets.SlipperSkinParts);
             var skin = parts != null ? parts.transform.Find("attach_skin/SlipperSkin") : null;
             var smr = skin != null ? skin.GetComponent<SkinnedMeshRenderer>() : null;
-            var prefab = ObjectDB.instance != null ? ObjectDB.instance.GetItemPrefab(Item.SlipperItem.PrefabName) : null;
+            var prefab = ObjectDB.instance != null ? ObjectDB.instance.GetItemPrefab(SlipperItem.PrefabName) : null;
             var onItem = prefab != null ? prefab.transform.Find("attach_skin/SlipperSkin") : null;
             int verts = smr != null && smr.sharedMesh != null ? smr.sharedMesh.vertexCount : 0, mats = smr != null ? smr.sharedMaterials.Length : 0, bones = smr != null ? smr.bones.Length : 0;
             string detail = "prefab " + (parts != null) + ", skinned mesh " + (smr != null) + " (" + verts + " verts, " + mats + " materials, " + bones + " bones), on the item " + (onItem != null);
@@ -37,9 +43,9 @@ namespace SteveTheTroll.Testing
         /// T-007: the slipper item exists with its stats (armor 5, max quality 4, utility, frost resistant) and has a recipe.
         static string World_SlipperItem()
         {
-            var prefab = ObjectDB.instance != null ? ObjectDB.instance.GetItemPrefab(Item.SlipperItem.PrefabName) : null;
+            var prefab = ObjectDB.instance != null ? ObjectDB.instance.GetItemPrefab(SlipperItem.PrefabName) : null;
             var drop = prefab != null ? prefab.GetComponent<ItemDrop>() : null;
-            if (drop == null) return "FAIL: " + Item.SlipperItem.PrefabName + " not in ObjectDB";
+            if (drop == null) return "FAIL: " + SlipperItem.PrefabName + " not in ObjectDB";
             var s = drop.m_itemData.m_shared;
             bool frost = s.m_damageModifiers != null && s.m_damageModifiers.Exists(m => m.m_type == HitData.DamageType.Frost && m.m_modifier == HitData.DamageModifier.Resistant);
             var recipe = ObjectDB.instance.GetRecipe(drop.m_itemData);
@@ -49,9 +55,9 @@ namespace SteveTheTroll.Testing
             int hide = TrollHideAmount(recipe);
             string upgrades = UpgradeAmounts(recipe, out bool upgradesOk);
             string shown = Localization.instance != null ? Localization.instance.Localize(s.m_name) : s.m_name;
-            string detail = "ground slippers " + slippers + ", ground collider " + groundCol + ", worn skin attach_skin " + (prefab.transform.Find("attach_skin") != null) + ", type " + s.m_itemType + ", armor " + s.m_armor + " +" + s.m_armorPerLevel + "/q, max quality " + s.m_maxQuality + ", frost resistant " + frost + ", recipe " + (recipe != null) + ", TrollHide " + hide + " (expected " + Item.SlipperItem.TrollHideCost + "), upgrades q2/q3/q4 " + upgrades + " (expected " + Item.SlipperItem.UpgradeCostPerItem + " each), name " + s.m_name + " = '" + shown + "' (expected '" + ExpectedName + "')";
+            string detail = "ground slippers " + slippers + ", ground collider " + groundCol + ", worn skin attach_skin " + (prefab.transform.Find("attach_skin") != null) + ", type " + s.m_itemType + ", armor " + s.m_armor + " +" + s.m_armorPerLevel + "/q, max quality " + s.m_maxQuality + ", frost resistant " + frost + ", recipe " + (recipe != null) + ", TrollHide " + hide + " (expected " + SlipperItem.TrollHideCost + "), upgrades q2/q3/q4 " + upgrades + " (expected " + SlipperItem.UpgradeCostPerItem + " each), name " + s.m_name + " = '" + shown + "' (expected '" + ExpectedName + "')";
             ModLog.Verbose("InGameTests: World_SlipperItem " + detail);
-            bool ok = s.m_itemType == ItemDrop.ItemData.ItemType.Utility && Mathf.Approximately(s.m_armor, Item.SlipperItem.BaseArmor) && s.m_maxQuality == Item.SlipperItem.MaxQuality && frost && recipe != null && hide == Item.SlipperItem.TrollHideCost && upgradesOk && shown == ExpectedName && slippers == 2 && groundCol && prefab.transform.Find("attach_skin") != null;   // D-168: the worn slippers (with the baked trolls) ARE the attach_skin mesh
+            bool ok = s.m_itemType == ItemDrop.ItemData.ItemType.Utility && Mathf.Approximately(s.m_armor, SlipperItem.BaseArmor) && s.m_maxQuality == SlipperItem.MaxQuality && frost && recipe != null && hide == SlipperItem.TrollHideCost && upgradesOk && shown == ExpectedName && slippers == 2 && groundCol && prefab.transform.Find("attach_skin") != null;   // D-168: the worn slippers (with the baked trolls) ARE the attach_skin mesh
             return (ok ? "PASS: " : "FAIL: ") + detail;
         }
 
@@ -62,27 +68,27 @@ namespace SteveTheTroll.Testing
             if (db == null) return "SKIP: no ObjectDB";
             var sb = new System.Text.StringBuilder();
             bool ok = true;
-            foreach (var n in new[] { Item.CostumeItems.HelmetName, Item.CostumeItems.ChestName, Item.CostumeItems.LegsName })
+            foreach (var n in new[] { CostumeItems.HelmetName, CostumeItems.ChestName, CostumeItems.LegsName })
             {
                 var drop = db.GetItemPrefab(n) != null ? db.GetItemPrefab(n).GetComponent<ItemDrop>() : null;
                 if (drop == null) { sb.Append(n + " missing; "); ok = false; continue; }
                 var sh = drop.m_itemData.m_shared;
                 bool recipe = db.GetRecipe(drop.m_itemData) != null;
                 bool col = drop.GetComponent<BoxCollider>() != null;
-                bool good = Mathf.Approximately(sh.m_armor, Item.CostumeItems.Armor) && Mathf.Approximately(sh.m_armorPerLevel, Item.CostumeItems.ArmorPerLevel) && sh.m_maxQuality == Item.CostumeItems.MaxQuality
-                    && sh.m_setName == Item.CostumeItems.SetName && sh.m_setSize == Item.CostumeItems.SetSize && sh.m_setStatusEffect != null && recipe && col && sh.m_icons != null && sh.m_icons.Length > 0;
-                if (n == Item.CostumeItems.LegsName) { var skin = drop.transform.Find("attach_skin/CostumeFeet"); good &= skin != null && skin.GetComponent<Item.CostumeFeet>() != null; }
+                bool good = Mathf.Approximately(sh.m_armor, CostumeItems.Armor) && Mathf.Approximately(sh.m_armorPerLevel, CostumeItems.ArmorPerLevel) && sh.m_maxQuality == CostumeItems.MaxQuality
+                    && sh.m_setName == CostumeItems.SetName && sh.m_setSize == CostumeItems.SetSize && sh.m_setStatusEffect != null && recipe && col && sh.m_icons != null && sh.m_icons.Length > 0;
+                if (n == CostumeItems.LegsName) { var skin = drop.transform.Find("attach_skin/CostumeFeet"); good &= skin != null && skin.GetComponent<CostumeFeet>() != null; }
                 sb.Append(n + " armor " + sh.m_armor + " +" + sh.m_armorPerLevel + " q" + sh.m_maxQuality + " set '" + sh.m_setName + "' " + sh.m_setSize + " recipe " + recipe + " ground collider " + col + (good ? " ok; " : " WRONG; "));
                 ok &= good;
             }
-            bool slippersInSet = Item.SlipperItem.Shared != null && Item.SlipperItem.Shared.m_setName == Item.CostumeItems.SetName;
-            var club = db.GetItemPrefab(Item.CostumeItems.ClubName) != null ? db.GetItemPrefab(Item.CostumeItems.ClubName).GetComponent<ItemDrop>() : null;
-            bool clubOk = club != null && Mathf.Approximately(club.m_itemData.m_shared.m_damages.m_blunt, Item.CostumeItems.ClubBlunt) && Mathf.Approximately(club.m_itemData.m_shared.m_damages.m_pickaxe, Item.CostumeItems.ClubPickaxe)
+            bool slippersInSet = SlipperItem.Shared != null && SlipperItem.Shared.m_setName == CostumeItems.SetName;
+            var club = db.GetItemPrefab(CostumeItems.ClubName) != null ? db.GetItemPrefab(CostumeItems.ClubName).GetComponent<ItemDrop>() : null;
+            bool clubOk = club != null && Mathf.Approximately(club.m_itemData.m_shared.m_damages.m_blunt, CostumeItems.ClubBlunt) && Mathf.Approximately(club.m_itemData.m_shared.m_damages.m_pickaxe, CostumeItems.ClubPickaxe)
                 && club.m_itemData.m_shared.m_itemType == ItemDrop.ItemData.ItemType.TwoHandedWeapon
-                && club.m_itemData.m_shared.m_secondaryAttack != null && club.m_itemData.m_shared.m_secondaryAttack.m_attackAnimation == Item.CostumeItems.ClubSecondaryAnimation
-                && Mathf.Approximately(club.m_itemData.m_shared.m_secondaryAttack.m_damageMultiplier, Item.CostumeItems.ClubSecondaryDamage) && club.transform.Find("attach/stt_club_model") != null && db.GetRecipe(club.m_itemData) != null;
-            var se = db.GetStatusEffect(Item.CostumeItems.SetEffectName.GetStableHashCode()) as SE_Stats;
-            bool seOk = se != null && se.m_icon != null && Mathf.Approximately(se.m_speedModifier, Item.CostumeItems.SetSpeed) && se.m_addMaxCarryWeight == 0f && Mathf.Approximately(se.m_runStaminaDrainModifier, Item.CostumeItems.SetStamina) && Mathf.Approximately(se.m_staggerModifier, -Item.CostumeItems.SetStaggerResistance);   // D-125
+                && club.m_itemData.m_shared.m_secondaryAttack != null && club.m_itemData.m_shared.m_secondaryAttack.m_attackAnimation == CostumeItems.ClubSecondaryAnimation
+                && Mathf.Approximately(club.m_itemData.m_shared.m_secondaryAttack.m_damageMultiplier, CostumeItems.ClubSecondaryDamage) && club.transform.Find("attach/stt_club_model") != null && db.GetRecipe(club.m_itemData) != null;
+            var se = db.GetStatusEffect(CostumeItems.SetEffectName.GetStableHashCode()) as SE_Stats;
+            bool seOk = se != null && se.m_icon != null && Mathf.Approximately(se.m_speedModifier, CostumeItems.SetSpeed) && se.m_addMaxCarryWeight == 0f && Mathf.Approximately(se.m_runStaminaDrainModifier, CostumeItems.SetStamina) && Mathf.Approximately(se.m_staggerModifier, -CostumeItems.SetStaggerResistance);   // D-125
             sb.Append("slippers in the set " + slippersInSet + ", club " + clubOk + ", set effect " + seOk);
             ModLog.Verbose("InGameTests: World_CostumeItems " + sb);
             return (ok && slippersInSet && clubOk && seOk ? "PASS: " : "FAIL: ") + sb;
@@ -91,8 +97,8 @@ namespace SteveTheTroll.Testing
         // D-076: our five recipes show once the player knows ANY of their materials (the pure rule + the local player's known recipes).
         static string World_RecipeUnlock()
         {
-            bool rule = Item.RecipeUnlockPatch.AnyKnown(new[] { "$item_trollhide", "$item_deerhide" }, new System.Collections.Generic.HashSet<string> { "$item_deerhide" })
-                && !Item.RecipeUnlockPatch.AnyKnown(new[] { "$item_trollhide" }, new System.Collections.Generic.HashSet<string> { "$item_wood" });
+            bool rule = RecipeUnlockPatch.AnyKnown(new[] { "$item_trollhide", "$item_deerhide" }, new System.Collections.Generic.HashSet<string> { "$item_deerhide" })
+                && !RecipeUnlockPatch.AnyKnown(new[] { "$item_trollhide" }, new System.Collections.Generic.HashSet<string> { "$item_wood" });
             var p = Player.m_localPlayer;
             var db = ObjectDB.instance;
             if (p == null || db == null) return (rule ? "SKIP: " : "FAIL: ") + "rule " + rule + ", no player / ObjectDB for the known recipes";
@@ -100,14 +106,14 @@ namespace SteveTheTroll.Testing
             bool station = (bool)HarmonyLib.AccessTools.Method(typeof(Player), "KnowStationLevel").Invoke(p, new object[] { "$piece_workbench", 1 });   // private in 1.0.20
             var sb = new System.Text.StringBuilder("rule " + rule + ", workbench known " + station + "; ");
             bool ok = rule;
-            foreach (var n in new[] { Item.SlipperItem.PrefabName, Item.CostumeItems.HelmetName, Item.CostumeItems.ChestName, Item.CostumeItems.LegsName, Item.CostumeItems.ClubName })
+            foreach (var n in new[] { SlipperItem.PrefabName, CostumeItems.HelmetName, CostumeItems.ChestName, CostumeItems.LegsName, CostumeItems.ClubName })
             {
                 var drop = db.GetItemPrefab(n) != null ? db.GetItemPrefab(n).GetComponent<ItemDrop>() : null;
                 var recipe = drop != null ? db.GetRecipe(drop.m_itemData) : null;
                 if (recipe == null) { sb.Append(n + " no recipe; "); ok = false; continue; }
                 var mats = new System.Collections.Generic.List<string>();
                 foreach (var r in recipe.m_resources) if (r != null && r.m_resItem != null) mats.Add(r.m_resItem.m_itemData.m_shared.m_name);
-                bool any = Item.RecipeUnlockPatch.AnyKnown(mats, known);
+                bool any = RecipeUnlockPatch.AnyKnown(mats, known);
                 bool isKnown = p.IsRecipeKnown(drop.m_itemData.m_shared.m_name);
                 bool good = !station || !any || isKnown;              // with the workbench known and a material known the recipe must be known
                 sb.Append(n + " material known " + any + ", recipe known " + isKnown + (good ? "; " : " WRONG; "));
@@ -121,9 +127,9 @@ namespace SteveTheTroll.Testing
         // 0.77 m): the game's level-ground op is found, the depot floors are lifted a few cm at most, the depot ring is 15 .. 50 m.
         static string World_DepotGround()
         {
-            bool level = Backpack.DepotGround.CanLevel;
-            float lift = Backpack.DepotPrefab.Lift;
-            float min = Backpack.TrollDepot.MinFromBed, max = Backpack.TrollDepot.MaxFromBed;
+            bool level = DepotGround.CanLevel;
+            float lift = DepotPrefab.Lift;
+            float min = TrollDepot.MinFromBed, max = TrollDepot.MaxFromBed;
             bool ok = level && lift >= 0f && lift <= 0.15f && min < max;
             string detail = "level op found " + level + ", floor lift " + lift.ToString("F3") + " m (max 0.15), depot ring " + min.ToString("0") + " .. " + max.ToString("0") + " m, home radius "
                 + ModSettings.HomeRadius.Value.ToString("0") + " m, no-hit radius " + ModSettings.NoHitRadius.Value.ToString("0") + " m";
@@ -135,7 +141,7 @@ namespace SteveTheTroll.Testing
         // the mod calls through reflection is called once here with the real argument types.
         static string World_ReflectionCalls()
         {
-            string zones = Taming.TrollZones.SelfCheck();
+            string zones = TrollZones.SelfCheck();
             bool pins = typeof(Minimap).GetMethod("AddPin") != null || HarmonyLib.AccessTools.Method(typeof(Minimap), "AddPin") != null;
             bool setCount = HarmonyLib.AccessTools.Method(typeof(Humanoid), "GetSetCount") != null;
             bool station = HarmonyLib.AccessTools.Method(typeof(Player), "KnowStationLevel") != null;
@@ -163,9 +169,9 @@ namespace SteveTheTroll.Testing
         {
             try
             {
-                string r = Taming.TrollTamingPatch.SelfCheck();
-                bool speed = Taming.TamedTrollSpeed.SelfCheck(), stats = Taming.TamedTrollStats.SelfCheck(), defend = TrollDefend.SelfCheck(), farm = TrollFarming.SelfCheck(), store = Backpack.BackpackStore.SelfCheck();
-                bool keep = Taming.TrollWaterKeep.SelfCheck();      // D-131
+                string r = TrollTamingPatch.SelfCheck();
+                bool speed = TamedTrollSpeed.SelfCheck(), stats = TamedTrollStats.SelfCheck(), defend = TrollDefend.SelfCheck(), farm = TrollFarming.SelfCheck(), store = BackpackStore.SelfCheck();
+                bool keep = TrollWaterKeep.SelfCheck();      // D-131
                 string more = ", TamedTrollSpeed " + speed + ", TamedTrollStats " + stats + ", TrollDefend " + defend + ", TrollFarming " + farm + ", BackpackStore " + store + ", TrollWaterKeep " + keep;
                 return r.StartsWith("PASS") && speed && stats && defend && farm && store && keep ? r + more : "FAIL: " + r + more;
             }
@@ -208,9 +214,9 @@ namespace SteveTheTroll.Testing
         // T-008a: the game's Troll prefab carries a Tameable with the taming time and E commands (follow / stay).
         static string World_TrollTameable()
         {
-            var prefab = ZNetScene.instance != null ? ZNetScene.instance.GetPrefab(Taming.TrollTaming.TrollPrefab) : null;
+            var prefab = ZNetScene.instance != null ? ZNetScene.instance.GetPrefab(TrollTaming.TrollPrefab) : null;
             var t = prefab != null ? prefab.GetComponent<Tameable>() : null;
-            if (t == null) return "FAIL: " + Taming.TrollTaming.TrollPrefab + " " + (prefab != null ? "has no Tameable" : "not in ZNetScene");
+            if (t == null) return "FAIL: " + TrollTaming.TrollPrefab + " " + (prefab != null ? "has no Tameable" : "not in ZNetScene");
             bool effects = t.m_tamedEffect != null && t.m_petEffect != null && t.m_sootheEffect != null;
             string detail = "taming " + t.m_tamingTime + " s (expected " + ModSettings.TameSeconds.Value + "), commandable " + t.m_commandable + ", effects " + effects
                 + ", range " + ModSettings.TameRange.Value + " m, own troll limit " + ModSettings.OwnTrollRange.Value + " m";
@@ -229,11 +235,11 @@ namespace SteveTheTroll.Testing
             {
                 if (r == null || r.m_resItem == null || r.m_amountPerLevel <= 0) continue;
                 sb.Append(r.m_resItem.name).Append(' ');
-                for (int q = 2; q <= Item.SlipperItem.MaxQuality; q++)
+                for (int q = 2; q <= SlipperItem.MaxQuality; q++)
                 {
                     int a = r.GetAmount(q);
-                    sb.Append(a).Append(q < Item.SlipperItem.MaxQuality ? "/" : " ");
-                    ok &= a == Item.SlipperItem.UpgradeCostPerItem;
+                    sb.Append(a).Append(q < SlipperItem.MaxQuality ? "/" : " ");
+                    ok &= a == SlipperItem.UpgradeCostPerItem;
                 }
             }
             ModLog.Verbose("InGameTests: slipper upgrade amounts " + sb + "ok " + ok);

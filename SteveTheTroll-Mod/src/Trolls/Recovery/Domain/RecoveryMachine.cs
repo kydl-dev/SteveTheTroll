@@ -1,3 +1,5 @@
+using SteveTheTroll.Trolls.Taming.Domain;
+
 
 namespace SteveTheTroll.Trolls.Recovery.Domain
 {

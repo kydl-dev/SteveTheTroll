@@ -1,6 +1,6 @@
 using Kydl.Common;
-using SteveTheTroll.Taming;
 using SteveTheTroll.Trolls.Farming.Domain;
+using SteveTheTroll.Trolls.Taming.Infrastructure;
 using UnityEngine;
 
 namespace SteveTheTroll.Trolls.Farming.Infrastructure

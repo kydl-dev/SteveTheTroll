@@ -4,9 +4,18 @@ using BepInEx;
 using HarmonyLib;
 using Jotunn.Utils;
 using Kydl.Common;
+using SteveTheTroll.Backpack.Infrastructure;
+using SteveTheTroll.Hubs.Infrastructure;
+using SteveTheTroll.Items.Costume;
+using SteveTheTroll.Items.Slippers;
+using SteveTheTroll.Testing;
 using SteveTheTroll.Trolls.Combat.Infrastructure;
+using SteveTheTroll.Trolls.Home.Infrastructure;
 using SteveTheTroll.Trolls.Orders.Infrastructure;
+using SteveTheTroll.Trolls.Registry.Infrastructure;
+using SteveTheTroll.Trolls.Taming.Infrastructure;
 using SteveTheTroll.Ui;
+using SteveTheTroll.World.Zones;
 using UnityEngine;
 
 namespace SteveTheTroll
@@ -49,23 +58,23 @@ namespace SteveTheTroll
 
             // PROJECT_RULES 11: a switched-off part is not set up at all (restart the game after changing a switch)
             Bundle = LoadBundle();
-            if (ModSettings.SlippersOn) Item.SlipperItem.Install();             // T-007: needs the bundle (icon) and the vanilla prefabs (added later by Jotunn)
-            if (ModSettings.CostumeOn) Item.CostumeItems.Install();            // T-009d: costume helmet / chest / legs + Troll Club (bundle parts, vanilla prefabs)
+            if (ModSettings.SlippersOn) SlipperItem.Install();             // T-007: needs the bundle (icon) and the vanilla prefabs (added later by Jotunn)
+            if (ModSettings.CostumeOn) CostumeItems.Install();            // T-009d: costume helmet / chest / legs + Troll Club (bundle parts, vanilla prefabs)
             if (ModSettings.TrollsOn)
             {
-                Backpack.DepotPrefab.Install();     // D-064: troll depot frame prefab (vanilla prefabs)
-                Backpack.DepotGround.Install();     // D-103: own level-ground terrain op for the depot spots
-                Taming.TrollTaming.Install();       // T-008a: the game's Troll becomes tameable (vanilla prefabs, added later by Jotunn)
-                if (ModSettings.HubsOn) Hub.HubPrefab.Install();   // D-135: the Troll Hub piece (needs the level op above)
+                DepotPrefab.Install();     // D-064: troll depot frame prefab (vanilla prefabs)
+                DepotGround.Install();     // D-103: own level-ground terrain op for the depot spots
+                TrollTaming.Install();       // T-008a: the game's Troll becomes tameable (vanilla prefabs, added later by Jotunn)
+                if (ModSettings.HubsOn) HubPrefab.Install();   // D-135: the Troll Hub piece (needs the level op above)
             }
             ModLog.Verbose("Plugin: set up slippers " + ModSettings.SlippersOn + ", costume " + ModSettings.CostumeOn + ", trolls " + ModSettings.TrollsOn);
             new Harmony(ModGuid).PatchAll(Assembly.GetExecutingAssembly());
-            Jotunn.Managers.CommandManager.Instance.AddConsoleCommand(new Backpack.BuildDumpCommand());   // T-008b: stt_dumpbuild (backpack model)
+            Jotunn.Managers.CommandManager.Instance.AddConsoleCommand(new BuildDumpCommand());   // T-008b: stt_dumpbuild (backpack model)
             Jotunn.Managers.CommandManager.Instance.AddConsoleCommand(new Testing.ClearCommand());        // D-093: stt_clear (clean test area)
             Jotunn.Managers.CommandManager.Instance.AddConsoleCommand(new Testing.ClearDepotsCommand());  // D-104: stt_cleardepots (start clean)
             Jotunn.Managers.CommandManager.Instance.AddConsoleCommand(new Testing.LevelGroundCommand());   // D-105: stt_levelground (repair)
             Jotunn.Managers.CommandManager.Instance.AddConsoleCommand(new Ui.ComingPreviewCommand());     // D-058 preview: stt_coming [name]
-            Jotunn.Managers.CommandManager.Instance.AddConsoleCommand(new Backpack.FillBackpackCommand());  // D-064 test: stt_fillbackpack [item]
+            Jotunn.Managers.CommandManager.Instance.AddConsoleCommand(new FillBackpackCommand());  // D-064 test: stt_fillbackpack [item]
             ModLog.Verbose("Plugin: console commands stt_dumpbuild, stt_clear, stt_cleardepots, stt_levelground, stt_coming, stt_fillbackpack registered");
             ModLog.Verbose("Plugin: Awake finished (Harmony patches applied)");
         }
@@ -141,23 +150,23 @@ namespace SteveTheTroll
             if (_cfgWatcher != null) _cfgWatcher.Tick();
             if (!ModSettings.On) return;
             if (!ModSettings.TrollsOn) return;       // every tick below belongs to the trolls (taming, farming, backpack, orders, map pins)
-            Run("TrollRegistry", () => Taming.TrollRegistry.Tick());
-            Run("TrollZones", () => Taming.TrollZones.Tick());               // D-084: zones around far own trolls stay loaded (they keep farming)
-            Run("TrollCensus", () => Taming.TrollCensus.Tick());             // D-085: trolls within 500 m of the bed (spawn cap)
+            Run("TrollRegistry", () => TrollRegistry.Tick());
+            Run("TrollZones", () => TrollZones.Tick());               // D-084: zones around far own trolls stay loaded (they keep farming)
+            Run("TrollCensus", () => TrollCensus.Tick());             // D-085: trolls within 500 m of the bed (spawn cap)
             Run("TrollMapPins", () => Ui.TrollMapPins.Tick());               // D-081: a map pin (costume head icon) per own tamed troll
-            Run("TrollBedHeal", () => Taming.TrollBedHeal.Tick());           // D-085: +50 HP/s within 50 m of the bed
-            Run("TrollDepot", () => Backpack.TrollDepot.Tick());              // D-159: retry removing empty depots
+            Run("TrollBedHeal", () => TrollBedHeal.Tick());           // D-085: +50 HP/s within 50 m of the bed
+            Run("TrollDepot", () => TrollDepot.Tick());              // D-159: retry removing empty depots
             Run("RuntimeHealth", () => Testing.RuntimeHealth.Tick());          // D-160: read-only health report (full backpacks, hub leash, stale hubs, stuck depots)
-            Run("BackpackVisual", () => Backpack.BackpackVisual.Tick());
-            Run("BackpackPickup", () => Backpack.BackpackPickup.Tick());     // T-008c: wood / ores / scrap within 50 m into the backpack
+            Run("BackpackVisual", () => BackpackVisual.Tick());
+            Run("BackpackPickup", () => BackpackPickup.Tick());     // T-008c: wood / ores / scrap within 50 m into the backpack
             Run("TrollOrders", () => TrollOrders.Tick());             // D-065: attack key (Mouse 4)
             Run("TrollCommands", () => Ui.TrollCommands.Tick());             // D-119: far trolls sent to die from the My trolls tab
             Run("TrollGuard", () => TrollGuard.Tick());               // D-065 / D-084: creatures going for the player near a troll
-            Run("TrollHome", () => Taming.TrollHome.Tick());                 // T-008e: slippers off -> own trolls wait at the bed
-            Run("HubPlacement", () => Hub.HubPlacement.Tick());               // D-135: set bonus active once -> Troll Hub unlocked
-            Run("HubSpeed", () => Hub.HubSpeed.Tick());                       // D-135: half-speed notice
-            Run("HubSignMenu", () => Hub.HubSignMenu.Tick());                 // D-135: Escape closes the sign editor
-            Run("TrollIdle", () => Taming.TrollIdle.Tick());                 // D-062: no job for 2 min -> farms on its own
+            Run("TrollHome", () => TrollHome.Tick());                 // T-008e: slippers off -> own trolls wait at the bed
+            Run("HubPlacement", () => HubPlacement.Tick());               // D-135: set bonus active once -> Troll Hub unlocked
+            Run("HubSpeed", () => HubSpeed.Tick());                       // D-135: half-speed notice
+            Run("HubSignMenu", () => HubSignMenu.Tick());                 // D-135: Escape closes the sign editor
+            Run("TrollIdle", () => TrollIdle.Tick());                 // D-062: no job for 2 min -> farms on its own
         }
 
         void OnDestroy()

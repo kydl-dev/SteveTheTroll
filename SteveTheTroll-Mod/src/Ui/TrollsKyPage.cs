@@ -3,6 +3,7 @@ using System;
 using Kydl.Common;
 using KydlCore;
 using SteveTheTroll.Trolls.Combat.Infrastructure;
+using SteveTheTroll.Trolls.Registry.Infrastructure;
 
 namespace SteveTheTroll.Ui
 {
@@ -18,7 +19,7 @@ namespace SteveTheTroll.Ui
         internal static KyPage Build()
         {
             var page = new KyPage();
-            var trolls = Taming.TrollRegistry.Trolls();
+            var trolls = TrollRegistry.Trolls();
             bool any = false;
             if (trolls != null) foreach (var t in trolls) if (t.DiedTicks <= 0) { any = true; break; }
             if (!any)

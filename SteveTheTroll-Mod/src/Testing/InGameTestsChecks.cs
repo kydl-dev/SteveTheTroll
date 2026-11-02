@@ -3,6 +3,8 @@ using System.Reflection;
 using HarmonyLib;
 using Kydl.Common;
 using SteveTheTroll.Trolls.Combat.Infrastructure;
+using SteveTheTroll.Trolls.Home.Infrastructure;
+using SteveTheTroll.Trolls.Taming.Infrastructure;
 using UnityEngine;
 
 namespace SteveTheTroll.Testing
@@ -84,7 +86,7 @@ namespace SteveTheTroll.Testing
             bool loaded = ZoneSystem.instance != null && ZoneSystem.instance.IsZoneLoaded(bed);
             for (int i = 0; i < 6; i++)
             {
-                var s = Taming.TrollHomeSpot.Spot(bed, i);
+                var s = TrollHomeSpot.Spot(bed, i);
                 float d = new Vector2(s.x - bed.x, s.z - bed.z).magnitude;
                 bool apart = spots.TrueForAll(o => Vector3.Distance(o, s) >= 2f);
                 bool roof = loaded && Physics.Raycast(s + Vector3.up, Vector3.up, 40f, roofMask);
@@ -112,7 +114,7 @@ namespace SteveTheTroll.Testing
             int own = 0, ownInside = 0;
             var p = Player.m_localPlayer;
             foreach (var c in Character.GetAllCharacters())
-                if (c != null && c.IsTamed() && Taming.TrollTaming.IsTroll(c) && p != null && Taming.TrollTaming.Owner(c) == p.GetPlayerID())
+                if (c != null && c.IsTamed() && TrollTaming.IsTroll(c) && p != null && TrollTaming.Owner(c) == p.GetPlayerID())
                 { own++; if (TrollNoHit.InZone(c.transform.position)) ownInside++; }
             string detail = "radius " + r.ToString("0") + " m: inside " + inside + ", outside " + outside + ", swing patch " + patched + "; own trolls loaded " + own + ", in the zone now " + ownInside;
             ModLog.Verbose("InGameTests: World_NoHitZone " + detail);
@@ -126,9 +128,9 @@ namespace SteveTheTroll.Testing
             var sb = new System.Text.StringBuilder();
             foreach (var c in Character.GetAllCharacters())
             {
-                if (!Taming.TamedTrollStats.IsTamedTroll(c)) continue;
+                if (!TamedTrollStats.IsTamedTroll(c)) continue;
                 var m = c.GetDamageModifiers();
-                int immune = Taming.TamedTrollStats.Immune(m);
+                int immune = TamedTrollStats.Immune(m);
                 bool tough = m.m_pierce != HitData.DamageModifier.Normal && m.m_slash != HitData.DamageModifier.Normal;
                 n++;
                 if (immune != 5 || !tough) { bad++; sb.Append(c.name + ": immune " + immune + "/5, pierce " + m.m_pierce + ", slash " + m.m_slash + "; "); }

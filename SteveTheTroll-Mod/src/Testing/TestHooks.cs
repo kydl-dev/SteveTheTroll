@@ -1,8 +1,13 @@
 using System.Collections.Generic;
 using Kydl.Common;
-using SteveTheTroll.Taming;
+using SteveTheTroll.Backpack.Domain;
+using SteveTheTroll.Backpack.Infrastructure;
+using SteveTheTroll.Hubs.Domain;
+using SteveTheTroll.Hubs.Infrastructure;
 using SteveTheTroll.Trolls.Combat.Infrastructure;
 using SteveTheTroll.Trolls.Farming.Infrastructure;
+using SteveTheTroll.Trolls.Home.Infrastructure;
+using SteveTheTroll.Trolls.Taming.Infrastructure;
 using UnityEngine;
 
 namespace SteveTheTroll.Testing
@@ -34,7 +39,7 @@ namespace SteveTheTroll.Testing
             {
                 if (v == null || !v.IsValid()) continue;
                 string n = Utils.GetPrefabName(v.gameObject);
-                bool depot = n == Backpack.DepotPrefab.Name || (n == Backpack.DepotData.ChestPrefab && v.GetZDO().GetBool(Backpack.TrollDepot.FlagKey));
+                bool depot = n == DepotPrefab.Name || (n == DepotData.ChestPrefab && v.GetZDO().GetBool(TrollDepot.FlagKey));
                 if (depot) { v.ClaimOwnership(); ZNetScene.instance.Destroy(v.gameObject); gone++; }
             }
             return "bed at " + p.transform.position.ToString("F0") + ", " + gone + " depot piece(s) removed";
@@ -99,16 +104,16 @@ namespace SteveTheTroll.Testing
         {
             Vector3 was;
             if (!Marks.TryGetValue(troll.GetInstanceID(), out was)) throw new System.Exception("stt.mark was not called");
-            return Mathf.RoundToInt(Hub.HubRules.Flat(troll.transform.position - was));
+            return Mathf.RoundToInt(HubGeometry.Flat(troll.transform.position - was));
         }
 
         /// Flat metres from the troll to the hub it would use (-1 = none).
         [TestHook("stt.hubDistance")]
         static int HubDistance(GameObject troll)
         {
-            Hub.HubRegistry.All(true);
-            var hub = Hub.HubRegistry.For(troll.GetComponent<Character>());
-            return hub != null ? Mathf.RoundToInt(Hub.HubRules.Flat(hub.Pos - troll.transform.position)) : -1;
+            HubRegistry.All(true);
+            var hub = HubRegistry.For(troll.GetComponent<Character>());
+            return hub != null ? Mathf.RoundToInt(HubGeometry.Flat(hub.Pos - troll.transform.position)) : -1;
         }
 
         /// The "walk to the owner's bed" order (the Trolls page / E menu command).
@@ -140,7 +145,7 @@ namespace SteveTheTroll.Testing
         static int Pack(GameObject troll, string prefab, int count)
         {
             var z = TrollTaming.Zdo(troll.GetComponent<Character>());
-            return Backpack.BackpackStore.TryAdd(z, Item(prefab, count), null);
+            return BackpackStore.TryAdd(z, Item(prefab, count), null);
         }
 
         /// Fills every slot of the backpack with Stone stacks. Returns the number of stacks.
@@ -149,12 +154,12 @@ namespace SteveTheTroll.Testing
         {
             var z = TrollTaming.Zdo(troll.GetComponent<Character>());
             int n = 0;
-            while (n < 500 && Backpack.BackpackStore.TryAdd(z, Item("Stone", 20), null) >= 0) n++;
+            while (n < 500 && BackpackStore.TryAdd(z, Item("Stone", 20), null) >= 0) n++;
             return n;
         }
 
         [TestHook("stt.backpackStacks")]
-        static int BackpackStacks(GameObject troll) { int used, slots; Backpack.BackpackStore.Fill(TrollTaming.Zdo(troll.GetComponent<Character>()), out used, out slots); return used; }
+        static int BackpackStacks(GameObject troll) { int used, slots; BackpackStore.Fill(TrollTaming.Zdo(troll.GetComponent<Character>()), out used, out slots); return used; }
 
         /// True when the backpack holds at most the given number of stacks. A troll that has unloaded goes back to farming
         /// and fills the pack again, so "exactly 0" is a race; "emptied to a few stacks" is what the scenario means.
@@ -162,10 +167,10 @@ namespace SteveTheTroll.Testing
         static bool BackpackAtMost(GameObject troll, int stacks) { return BackpackStacks(troll) <= stacks; }
 
         [TestHook("stt.backpackSlots")]
-        static int BackpackSlots(GameObject troll) { int used, slots; Backpack.BackpackStore.Fill(TrollTaming.Zdo(troll.GetComponent<Character>()), out used, out slots); return slots; }
+        static int BackpackSlots(GameObject troll) { int used, slots; BackpackStore.Fill(TrollTaming.Zdo(troll.GetComponent<Character>()), out used, out slots); return slots; }
 
         [TestHook("stt.backpackAllUsed")]
-        static bool BackpackAllUsed(GameObject troll) { int used, slots; Backpack.BackpackStore.Fill(TrollTaming.Zdo(troll.GetComponent<Character>()), out used, out slots); return slots > 0 && used == slots; }
+        static bool BackpackAllUsed(GameObject troll) { int used, slots; BackpackStore.Fill(TrollTaming.Zdo(troll.GetComponent<Character>()), out used, out slots); return slots > 0 && used == slots; }
 
         /// Total quantity of an item over all four chests, read back from the ZDO.
         [TestHook("stt.backpackCount")]
@@ -174,27 +179,27 @@ namespace SteveTheTroll.Testing
             var z = TrollTaming.Zdo(troll.GetComponent<Character>());
             string shared = ObjectDB.instance.GetItemPrefab(prefab).GetComponent<ItemDrop>().m_itemData.m_shared.m_name;
             int n = 0;
-            for (int i = 0; i < Backpack.BackpackStore.ChestCount; i++)
-                foreach (var it in Backpack.BackpackStore.Read(z, i).GetAllItems()) if (it.m_shared.m_name == shared) n += it.m_stack;
+            for (int i = 0; i < BackpackStore.ChestCount; i++)
+                foreach (var it in BackpackStore.Read(z, i).GetAllItems()) if (it.m_shared.m_name == shared) n += it.m_stack;
             return n;
         }
 
         /// The (uncached) full state and the cached one - they must agree right after a change.
         [TestHook("stt.backpackFull")]
-        static bool BackpackFull(GameObject troll) { return Backpack.BackpackStore.IsFull(TrollTaming.Zdo(troll.GetComponent<Character>())); }
+        static bool BackpackFull(GameObject troll) { return BackpackStore.IsFull(TrollTaming.Zdo(troll.GetComponent<Character>())); }
 
         [TestHook("stt.backpackFullCached")]
-        static bool BackpackFullCached(GameObject troll) { return Backpack.BackpackStore.IsFullCached(TrollTaming.Zdo(troll.GetComponent<Character>())); }
+        static bool BackpackFullCached(GameObject troll) { return BackpackStore.IsFullCached(TrollTaming.Zdo(troll.GetComponent<Character>())); }
 
         /// Takes everything out of chest 0 through the real store (Read / Write).
         [TestHook("stt.unpackChest0")]
         static int UnpackChest0(GameObject troll)
         {
             var z = TrollTaming.Zdo(troll.GetComponent<Character>());
-            var inv = Backpack.BackpackStore.Read(z, 0);
+            var inv = BackpackStore.Read(z, 0);
             int n = inv.NrOfItems();
             foreach (var it in new List<ItemDrop.ItemData>(inv.GetAllItems())) inv.RemoveItem(it);
-            Backpack.BackpackStore.Write(z, 0, inv);
+            BackpackStore.Write(z, 0, inv);
             return n;
         }
 
@@ -204,9 +209,9 @@ namespace SteveTheTroll.Testing
         {
             var c = troll.GetComponent<Character>();
             var f = troll.GetComponent<TrollFarmer>();
-            var hub = Hub.HubRegistry.For(c);
+            var hub = HubRegistry.For(c);
             return (f == null ? "free" : f.Unloading ? "unloading" : "farming") + ", hub " + (hub != null ? hub.Number.ToString() : "none")
-                + (hub != null ? " " + Hub.HubRules.Flat(hub.Pos - troll.transform.position).ToString("F0") + " m" : "") + ", full " + Backpack.BackpackStore.IsFull(TrollTaming.Zdo(c));
+                + (hub != null ? " " + HubGeometry.Flat(hub.Pos - troll.transform.position).ToString("F0") + " m" : "") + ", full " + BackpackStore.IsFull(TrollTaming.Zdo(c));
         }
 
         /// The troll starts farming on its own (an active TrollFarmer: with nothing to farm it stays active and waits).
@@ -252,7 +257,7 @@ namespace SteveTheTroll.Testing
             Vector3 pos; string item;
             bool found = TrollFarming.FindFar(p.transform.position, ModSettings.FarmLongRange.Value, ModSettings.FarmMaxRange.Value, 10,
                 new[] { new Ui.TrollFocus.Goal("Wood") }, null, out pos, out item);
-            return found ? Mathf.RoundToInt(Hub.HubRules.Flat(pos - p.transform.position)) + " m " + item : "none";
+            return found ? Mathf.RoundToInt(HubGeometry.Flat(pos - p.transform.position)) + " m " + item : "none";
         }
 
         /// Flat metres to the nearest long-range wood source (-1 = none). The lab world has real trees, so suites assert limits, not exact values.
@@ -263,7 +268,7 @@ namespace SteveTheTroll.Testing
             Vector3 pos; string item;
             bool found = TrollFarming.FindFar(p.transform.position, ModSettings.FarmLongRange.Value, ModSettings.FarmMaxRange.Value, 10,
                 new[] { new Ui.TrollFocus.Goal("Wood") }, null, out pos, out item);
-            return found ? Mathf.RoundToInt(Hub.HubRules.Flat(pos - p.transform.position)) : -1;
+            return found ? Mathf.RoundToInt(HubGeometry.Flat(pos - p.transform.position)) : -1;
         }
 
         /// The troll remembers a farm spot `dx`,`dz` metres from the player, as if it had broken a tree there.
@@ -296,19 +301,19 @@ namespace SteveTheTroll.Testing
         [TestHook("stt.spawnDepot")]
         static GameObject SpawnDepot(Vector3 position)
         {
-            var frame = Backpack.TrollDepot.Place(position, Quaternion.identity, Me);
+            var frame = TrollDepot.Place(position, Quaternion.identity, Me);
             if (frame == null) throw new System.Exception("depot prefab missing");
             return frame;
         }
 
         [TestHook("stt.depotChests")]
-        static int DepotChests(GameObject frame) { return Backpack.TrollDepot.ChestsOf(frame).Count; }
+        static int DepotChests(GameObject frame) { return TrollDepot.ChestsOf(frame).Count; }
 
         /// Items in chest `index` of the depot (the chests are the real Containers).
         [TestHook("stt.depotPut")]
         static bool DepotPut(GameObject frame, int index, string prefab, int count)
         {
-            var c = Backpack.TrollDepot.ChestsOf(frame);
+            var c = TrollDepot.ChestsOf(frame);
             return index < c.Count && c[index].GetInventory().AddItem(Item(prefab, count));
         }
 
@@ -316,7 +321,7 @@ namespace SteveTheTroll.Testing
         static int DepotTake(GameObject frame, int index = -1)
         {
             int n = 0, i = -1;
-            foreach (var c in Backpack.TrollDepot.ChestsOf(frame))
+            foreach (var c in TrollDepot.ChestsOf(frame))
             {
                 i++;
                 if (index >= 0 && i != index) continue;
@@ -327,13 +332,13 @@ namespace SteveTheTroll.Testing
         }
 
         [TestHook("stt.depotItems")]
-        static int DepotItems(GameObject frame) { int n = 0; foreach (var c in Backpack.TrollDepot.ChestsOf(frame)) n += c.GetInventory().NrOfItems(); return n; }
+        static int DepotItems(GameObject frame) { int n = 0; foreach (var c in TrollDepot.ChestsOf(frame)) n += c.GetInventory().NrOfItems(); return n; }
 
         /// A player's chest window opening / closing (Container.SetInUse, the same call the game makes).
         [TestHook("stt.depotWindow")]
         static string DepotWindow(GameObject frame, bool open)
         {
-            var c = Backpack.TrollDepot.ChestsOf(frame);
+            var c = TrollDepot.ChestsOf(frame);
             if (c.Count == 0) throw new System.Exception("no chests");
             HarmonyLib.AccessTools.Method(typeof(Container), "SetInUse").Invoke(c[0], new object[] { open });
             return open ? "open" : "closed";
@@ -342,7 +347,7 @@ namespace SteveTheTroll.Testing
         [TestHook("stt.depotReserve")]
         static string DepotReserve(GameObject frame)
         {
-            foreach (var c in Backpack.TrollDepot.ChestsOf(frame)) Backpack.TrollDepot.ReserveForTest(c);
+            foreach (var c in TrollDepot.ChestsOf(frame)) TrollDepot.ReserveForTest(c);
             return "reserved";
         }
 
@@ -355,7 +360,7 @@ namespace SteveTheTroll.Testing
         {
             int n = 0;
             foreach (var v in Object.FindObjectsByType<ZNetView>(FindObjectsSortMode.None))
-                if (v != null && v.IsValid() && Utils.GetPrefabName(v.gameObject) == Backpack.DepotPrefab.Name) n++;
+                if (v != null && v.IsValid() && Utils.GetPrefabName(v.gameObject) == DepotPrefab.Name) n++;
             return n;
         }
 
@@ -367,17 +372,17 @@ namespace SteveTheTroll.Testing
         {
             var p = Player.m_localPlayer;
             long who = owner == "other" ? Me + 777 : Me;
-            var z = ZDOMan.instance.CreateNewZDO(p.transform.position + new Vector3(dx, 0f, dz), Hub.HubData.PrefabName.GetStableHashCode());
-            z.SetPrefab(Hub.HubData.PrefabName.GetStableHashCode());      // CreateNewZDO ignores its prefab argument in this game version
-            z.Set(Hub.HubRegistry.OwnerKey, who);
-            z.Set(Hub.HubRegistry.OwnerNameKey, owner == "other" ? "Other" : p.GetPlayerName());
-            z.Set(Hub.HubRegistry.NumberKey, number);
+            var z = ZDOMan.instance.CreateNewZDO(p.transform.position + new Vector3(dx, 0f, dz), HubData.PrefabName.GetStableHashCode());
+            z.SetPrefab(HubData.PrefabName.GetStableHashCode());      // CreateNewZDO ignores its prefab argument in this game version
+            z.Set(HubRegistry.OwnerKey, who);
+            z.Set(HubRegistry.OwnerNameKey, owner == "other" ? "Other" : p.GetPlayerName());
+            z.Set(HubRegistry.NumberKey, number);
             z.Persistent = false;
             FakeHubs.Add(z);
-            int known = Hub.HubRegistry.All(true).Count;
+            int known = HubRegistry.All(true).Count;
             var scan = new List<ZDO>(); int idx = 0, guard = 0;
-            while (!ZDOMan.instance.GetAllZDOsWithPrefabIterative(Hub.HubData.PrefabName, scan, ref idx) && guard++ < 10000) { }
-            ModLog.Info("TestHooks: addHub " + number + " owner " + who + " prefab " + z.GetPrefab() + " (want " + Hub.HubData.PrefabName.GetStableHashCode() + "), no " + z.GetInt(Hub.HubRegistry.NumberKey, -1) + ", sector " + z.GetSector() + ", registry knows " + known + ", raw scan finds " + scan.Count + ", ZDOMan.GetZDO " + (ZDOMan.instance.GetZDO(z.m_uid) != null));
+            while (!ZDOMan.instance.GetAllZDOsWithPrefabIterative(HubData.PrefabName, scan, ref idx) && guard++ < 10000) { }
+            ModLog.Info("TestHooks: addHub " + number + " owner " + who + " prefab " + z.GetPrefab() + " (want " + HubData.PrefabName.GetStableHashCode() + "), no " + z.GetInt(HubRegistry.NumberKey, -1) + ", sector " + z.GetSector() + ", registry knows " + known + ", raw scan finds " + scan.Count + ", ZDOMan.GetZDO " + (ZDOMan.instance.GetZDO(z.m_uid) != null));
             return known;
         }
 
@@ -387,7 +392,7 @@ namespace SteveTheTroll.Testing
             int n = FakeHubs.Count;
             foreach (var z in FakeHubs) { z.SetOwner(ZDOMan.GetSessionID()); ZDOMan.instance.DestroyZDO(z); }
             FakeHubs.Clear();
-            Hub.HubRegistry.All(true);
+            HubRegistry.All(true);
             return n;
         }
 
@@ -395,8 +400,8 @@ namespace SteveTheTroll.Testing
         [TestHook("stt.hubFor")]
         static int HubFor(GameObject troll)
         {
-            Hub.HubRegistry.All(true);
-            var h = Hub.HubRegistry.For(troll.GetComponent<Character>());
+            HubRegistry.All(true);
+            var h = HubRegistry.For(troll.GetComponent<Character>());
             return h != null ? h.Number : 0;
         }
 
@@ -406,7 +411,7 @@ namespace SteveTheTroll.Testing
         [TestHook("stt.returnCheck")]
         static int ReturnCheck(GameObject troll)
         {
-            Hub.HubRegistry.All(true);
+            HubRegistry.All(true);
             var c = troll.GetComponent<Character>();
             return TrollReturn.Check(c, troll.GetComponent<MonsterAI>()) ? 1 : 0;
         }
@@ -419,7 +424,7 @@ namespace SteveTheTroll.Testing
         static int ReturnDistance(GameObject troll)
         {
             float d;
-            Hub.HubRegistry.All(true);
+            HubRegistry.All(true);
             return TrollReturn.Target(troll.GetComponent<Character>(), out d) != null ? Mathf.RoundToInt(d) : -1;
         }
 

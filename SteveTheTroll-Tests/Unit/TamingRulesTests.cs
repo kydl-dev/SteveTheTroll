@@ -1,13 +1,13 @@
 namespace SteveTheTroll.Tests.Unit
 {
     /// <summary>
-    /// SteveTheTroll.Taming.TamingRules (T-008a, D-037 / D-038): a wild troll counts down only with a slipper wearer within the taming
+    /// TamingRules (T-008a, D-037 / D-038): a wild troll counts down only with a slipper wearer within the taming
     /// range (150 m) and no own tamed troll of that wearer within 300 m; with one, the own troll is called instead. 60 s in total.
     /// </summary>
     [TestFixture]
     public class TamingRulesTests
     {
-        const string T = "SteveTheTroll.Taming.TamingRules";
+        const string T = "SteveTheTroll.Trolls.Taming.Domain.TamingRules";
 
         static string Decide(float wearer, float own)
         {

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using HarmonyLib;
 using Kydl.Common;
+using SteveTheTroll.Trolls.Registry.Infrastructure;
 using UnityEngine;
 
 namespace SteveTheTroll.Ui
@@ -31,7 +32,7 @@ namespace SteveTheTroll.Ui
             if (map == null || Player.m_localPlayer == null || !ModSettings.On || !ModSettings.TrollMapPins.Value) { Clear(); return 0; }
             var icon = Icon();
             var alive = new HashSet<string>();
-            foreach (var t in Taming.TrollRegistry.Peek())
+            foreach (var t in TrollRegistry.Peek())
             {
                 if (t.DiedTicks > 0) continue;
                 alive.Add(t.Id);

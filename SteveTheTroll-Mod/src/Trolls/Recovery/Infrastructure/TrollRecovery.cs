@@ -1,13 +1,15 @@
 using System.Collections.Generic;
 using Kydl.Common;
+using SteveTheTroll.Backpack.Domain;
 using SteveTheTroll.Core.Results;
-using SteveTheTroll.Taming;
 using SteveTheTroll.Trolls.Contracts;
 using SteveTheTroll.Trolls.Core;
 using SteveTheTroll.Trolls.Farming.Infrastructure;
 using SteveTheTroll.Trolls.Recovery.Application;
 using SteveTheTroll.Trolls.Recovery.Domain;
 using SteveTheTroll.Trolls.Recovery.Execution;
+using SteveTheTroll.Trolls.Registry.Infrastructure;
+using SteveTheTroll.Trolls.Taming.Infrastructure;
 using UnityEngine;
 
 namespace SteveTheTroll.Trolls.Recovery.Infrastructure

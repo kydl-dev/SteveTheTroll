@@ -1,5 +1,6 @@
 using Jotunn.Entities;
 using Kydl.Common;
+using SteveTheTroll.Backpack.Infrastructure;
 using UnityEngine;
 
 namespace SteveTheTroll.Testing
@@ -26,17 +27,17 @@ namespace SteveTheTroll.Testing
             float best = DepotSearch;
             foreach (var v in Object.FindObjectsByType<ZNetView>(FindObjectsSortMode.None))
             {
-                if (v == null || !v.IsValid() || Utils.GetPrefabName(v.gameObject) != Backpack.DepotPrefab.Name) continue;
+                if (v == null || !v.IsValid() || Utils.GetPrefabName(v.gameObject) != DepotPrefab.Name) continue;
                 float d = Vector3.Distance(v.transform.position, p.transform.position);
                 if (d > best) continue;
                 // the lowest frame of that stack is the one standing on the ground
                 best = d; centre = v.transform.position; height = v.transform.position.y; where = "at the troll depot " + d.ToString("0") + " m away";
             }
             foreach (var v in Object.FindObjectsByType<ZNetView>(FindObjectsSortMode.None))
-                if (v != null && v.IsValid() && Utils.GetPrefabName(v.gameObject) == Backpack.DepotPrefab.Name && new Vector2(v.transform.position.x - centre.x, v.transform.position.z - centre.z).magnitude < 0.5f)
+                if (v != null && v.IsValid() && Utils.GetPrefabName(v.gameObject) == DepotPrefab.Name && new Vector2(v.transform.position.x - centre.x, v.transform.position.z - centre.z).magnitude < 0.5f)
                     height = Mathf.Min(height, v.transform.position.y);
-            bool ok = Backpack.DepotGround.Repair(centre, height);
-            string msg = ok ? "stt_levelground: levelled " + (2f * Backpack.DepotGround.RepairRadius).ToString("0") + " x " + (2f * Backpack.DepotGround.RepairRadius).ToString("0") + " m " + where + " at height " + height.ToString("F1")
+            bool ok = DepotGround.Repair(centre, height);
+            string msg = ok ? "stt_levelground: levelled " + (2f * DepotGround.RepairRadius).ToString("0") + " x " + (2f * DepotGround.RepairRadius).ToString("0") + " m " + where + " at height " + height.ToString("F1")
                             : "stt_levelground: the level op is not available";
             Console.instance.Print(msg);
             ModLog.Info("LevelGroundCommand: " + msg);

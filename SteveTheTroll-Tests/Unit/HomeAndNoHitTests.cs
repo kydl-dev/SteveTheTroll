@@ -7,7 +7,7 @@ namespace SteveTheTroll.Tests.Unit
     [TestFixture]
     public class HomeAndNoHitTests
     {
-        const string Spot = "SteveTheTroll.Taming.TrollHomeSpot", NoHit = "SteveTheTroll.Trolls.Combat.Infrastructure.TrollNoHit";
+        const string Spot = "SteveTheTroll.Trolls.Home.Infrastructure.TrollHomeSpot", NoHit = "SteveTheTroll.Trolls.Combat.Infrastructure.TrollNoHit";
 
         static Vector3 Candidate(int n, float r) { return (Vector3)ModAssembly.Call(Spot, "Candidate", n, r); }
 
@@ -38,32 +38,32 @@ namespace SteveTheTroll.Tests.Unit
         [TestCase(50f, true)]
         [TestCase(50.5f, false)]
         [TestCase(-1f, false)]
-        public void DepotRing(float toBed, bool expected) { Assert.That((bool)ModAssembly.Call("SteveTheTroll.Backpack.DepotRules", "InRing", toBed, 15f, 50f), Is.EqualTo(expected)); }
+        public void DepotRing(float toBed, bool expected) { Assert.That((bool)ModAssembly.Call("SteveTheTroll.Backpack.Domain.DepotRules", "InRing", toBed, 15f, 50f), Is.EqualTo(expected)); }
 
         [TestCase(11.9f, false)]
         [TestCase(12f, true)]
-        public void DepotSpacing(float d, bool expected) { Assert.That((bool)ModAssembly.Call("SteveTheTroll.Backpack.DepotRules", "FarEnough", d, 12f), Is.EqualTo(expected)); }
+        public void DepotSpacing(float d, bool expected) { Assert.That((bool)ModAssembly.Call("SteveTheTroll.Backpack.Domain.DepotRules", "FarEnough", d, 12f), Is.EqualTo(expected)); }
 
         // D-107: another troll within 10 m makes a depot busy
         [TestCase(10f, true)]
         [TestCase(3f, true)]
         [TestCase(10.1f, false)]
         [TestCase(-1f, false)]
-        public void DepotBusy(float d, bool expected) { Assert.That((bool)ModAssembly.Call("SteveTheTroll.Backpack.DepotRules", "Crowded", d, 10f), Is.EqualTo(expected)); }
+        public void DepotBusy(float d, bool expected) { Assert.That((bool)ModAssembly.Call("SteveTheTroll.Backpack.Domain.DepotRules", "Crowded", d, 10f), Is.EqualTo(expected)); }
 
         [Test]
         public void DepotSpacing_MoreThanTheBusyRing()
         {
-            float spacing = (float)ModAssembly.GetStatic("SteveTheTroll.Backpack.DepotRules", "StackSpacing");
+            float spacing = (float)ModAssembly.GetStatic("SteveTheTroll.Backpack.Domain.DepotRules", "StackSpacing");
             Assert.That(spacing, Is.GreaterThan(10f), "a troll unloading at one stack does not block the next one");
         }
 
         [Test]
         public void DepotSpacing_FitsTheFootprintAndTheGap()
         {
-            float halfX = (float)ModAssembly.GetStatic("SteveTheTroll.Backpack.DepotData", "HalfX");
-            float gap = (float)ModAssembly.GetStatic("SteveTheTroll.Backpack.DepotRules", "Gap");
-            float spacing = (float)ModAssembly.GetStatic("SteveTheTroll.Backpack.DepotRules", "StackSpacing");
+            float halfX = (float)ModAssembly.GetStatic("SteveTheTroll.Backpack.Domain.DepotData", "HalfX");
+            float gap = (float)ModAssembly.GetStatic("SteveTheTroll.Backpack.Domain.DepotRules", "Gap");
+            float spacing = (float)ModAssembly.GetStatic("SteveTheTroll.Backpack.Domain.DepotRules", "StackSpacing");
             Assert.That(spacing, Is.GreaterThanOrEqualTo(2f * halfX + gap), "two stacks side by side keep the walking gap");
         }
 
@@ -83,7 +83,7 @@ namespace SteveTheTroll.Tests.Unit
         [TestCase(7, 0f, 5, 10f, true)]        // another troll, fresh
         [TestCase(5, 0f, 5, 10f, false)]       // my own reservation
         [TestCase(7, 0f, 5, 200f, false)]      // expired
-        public void DepotReserved(int holder, float at, int me, float now, bool expected) { Assert.That((bool)ModAssembly.Call("SteveTheTroll.Backpack.DepotRules", "ReservedByOther", holder, at, me, now, 90f), Is.EqualTo(expected)); }
+        public void DepotReserved(int holder, float at, int me, float now, bool expected) { Assert.That((bool)ModAssembly.Call("SteveTheTroll.Backpack.Domain.DepotRules", "ReservedByOther", holder, at, me, now, 90f), Is.EqualTo(expected)); }
 
         [TestCase(4, 4, false, false, false, true)]     // all empty
         [TestCase(4, 3, false, false, false, false)]    // one chest still has items
@@ -91,6 +91,6 @@ namespace SteveTheTroll.Tests.Unit
         [TestCase(4, 4, false, true, false, false)]     // a troll is on its way
         [TestCase(4, 4, false, false, true, false)]     // another structure stands on it
         [TestCase(0, 0, false, false, false, false)]    // no chest found
-        public void DepotDismantle(int chests, int empty, bool inUse, bool reserved, bool above, bool expected) { Assert.That((bool)ModAssembly.Call("SteveTheTroll.Backpack.DepotRules", "Dismantle", chests, empty, inUse, reserved, above), Is.EqualTo(expected)); }
+        public void DepotDismantle(int chests, int empty, bool inUse, bool reserved, bool above, bool expected) { Assert.That((bool)ModAssembly.Call("SteveTheTroll.Backpack.Domain.DepotRules", "Dismantle", chests, empty, inUse, reserved, above), Is.EqualTo(expected)); }
     }
 }

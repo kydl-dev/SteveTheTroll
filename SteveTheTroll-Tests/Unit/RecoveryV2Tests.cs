@@ -5,6 +5,7 @@ using SteveTheTroll.Trolls.Contracts;
 using SteveTheTroll.Trolls.Recovery.Application;
 using SteveTheTroll.Trolls.Recovery.Domain;
 using SteveTheTroll.Trolls.Recovery.Execution;
+using SteveTheTroll.Trolls.Taming.Domain;
 
 namespace SteveTheTroll.Tests.Unit
 {

@@ -1,9 +1,11 @@
 using HarmonyLib;
 using Kydl.Common;
-using SteveTheTroll.Taming;
 using SteveTheTroll.Trolls.Combat.Domain;
 using SteveTheTroll.Trolls.Farming.Infrastructure;
 using SteveTheTroll.Trolls.Orders.Infrastructure;
+using SteveTheTroll.Trolls.Registry.Infrastructure;
+using SteveTheTroll.Trolls.Taming.Domain;
+using SteveTheTroll.Trolls.Taming.Infrastructure;
 using UnityEngine;
 
 namespace SteveTheTroll.Trolls.Combat.Infrastructure

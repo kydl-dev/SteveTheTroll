@@ -1,5 +1,7 @@
 using System.Collections.Generic;
 using Kydl.Common;
+using SteveTheTroll.Trolls.Registry.Infrastructure;
+using SteveTheTroll.Trolls.Taming.Infrastructure;
 using UnityEngine;
 
 namespace SteveTheTroll.Ui
@@ -26,7 +28,7 @@ namespace SteveTheTroll.Ui
 
         static string Shown(string id)
         {
-            var info = Taming.TrollRegistry.Peek().Find(t => t.Id == id);
+            var info = TrollRegistry.Peek().Find(t => t.Id == id);
             return info != null ? info.Shown(k => Loc.T(k)) : id;
         }
 
@@ -36,7 +38,7 @@ namespace SteveTheTroll.Ui
             var p = Player.m_localPlayer;
             if (p == null) return false;
             string shown = Shown(id);
-            var troll = Taming.TrollRegistry.FindLoaded(id);
+            var troll = TrollRegistry.FindLoaded(id);
             if (troll != null && ZNetScene.InActiveArea(troll.transform.position, p.transform.position))
             {
                 var ai = troll.GetComponent<MonsterAI>();
@@ -59,7 +61,7 @@ namespace SteveTheTroll.Ui
             var p = Player.m_localPlayer;
             if (p == null) return false;
             string shown = Shown(id);
-            var troll = Taming.TrollRegistry.FindLoaded(id);
+            var troll = TrollRegistry.FindLoaded(id);
             if (troll != null) return Die(troll, shown);
             if (!Bring(id, p, shown, false)) return false;
             PendingKill[id] = Time.time + PendingSeconds;
@@ -83,7 +85,7 @@ namespace SteveTheTroll.Ui
         static bool Bring(string id, Player p, string shown, bool follow)
         {
             var spot = Spot(p);
-            var troll = Taming.TrollRegistry.FindLoaded(id);
+            var troll = TrollRegistry.FindLoaded(id);
             if (troll != null)
             {
                 var view = troll.GetComponent<ZNetView>();
@@ -94,7 +96,7 @@ namespace SteveTheTroll.Ui
                 view.GetZDO().SetPosition(spot);
                 var ai = troll.GetComponent<MonsterAI>();
                 if (follow && ai != null) ai.SetFollowTarget(p.gameObject);
-                Taming.TrollRegistry.MovedTo(id, spot);
+                TrollRegistry.MovedTo(id, spot);
                 ModLog.Info("TrollCommands: " + shown + " (loaded, outside the player's area) moved from " + was.ToString("F0") + " to " + spot.ToString("F1") + (follow ? ", follows" : ", to die"));
                 return true;
             }
@@ -106,7 +108,7 @@ namespace SteveTheTroll.Ui
             z.Set(ZDOVars.s_follow, follow ? p.GetPlayerName() : "");
             z.Set(ZDOVars.s_patrol, !follow);
             if (!follow) z.Set(ZDOVars.s_patrolPoint, spot);
-            Taming.TrollRegistry.MovedTo(id, spot);
+            TrollRegistry.MovedTo(id, spot);
             ModLog.Info("TrollCommands: " + shown + " (not loaded) moved from " + from.ToString("F0") + " (" + Vector3.Distance(from, p.transform.position).ToString("F0") + " m) to " + spot.ToString("F1")
                 + (follow ? ", follow target '" + p.GetPlayerName() + "'" : ", to die when loaded"));
             return true;
@@ -135,8 +137,8 @@ namespace SteveTheTroll.Ui
             if (zm == null) return null;
             var list = new List<ZDO>();
             int index = 0, guard = 0;
-            while (!zm.GetAllZDOsWithPrefabIterative(Taming.TrollTaming.TrollPrefab, list, ref index) && guard++ < 10000) { }
-            foreach (var z in list) if (z != null && z.GetString(Taming.TrollRegistry.IdKey, "") == id) return z;
+            while (!zm.GetAllZDOsWithPrefabIterative(TrollTaming.TrollPrefab, list, ref index) && guard++ < 10000) { }
+            foreach (var z in list) if (z != null && z.GetString(TrollRegistry.IdKey, "") == id) return z;
             return null;
         }
 
@@ -145,9 +147,9 @@ namespace SteveTheTroll.Ui
         {
             var p = Player.m_localPlayer;
             if (p == null) return -1f;
-            var troll = Taming.TrollRegistry.FindLoaded(id);
+            var troll = TrollRegistry.FindLoaded(id);
             if (troll != null) return Vector3.Distance(troll.transform.position, p.transform.position);
-            var info = Taming.TrollRegistry.Peek().Find(t => t.Id == id);
+            var info = TrollRegistry.Peek().Find(t => t.Id == id);
             return info != null ? Vector3.Distance(new Vector3(info.X, info.Y, info.Z), p.transform.position) : -1f;
         }
 
@@ -158,7 +160,7 @@ namespace SteveTheTroll.Ui
             var done = new List<string>();
             foreach (var kv in PendingKill)
             {
-                var troll = Taming.TrollRegistry.FindLoaded(kv.Key);
+                var troll = TrollRegistry.FindLoaded(kv.Key);
                 if (troll != null) { if (!troll.IsDead()) Die(troll, Shown(kv.Key)); done.Add(kv.Key); continue; }
                 if (Time.time > kv.Value) { ModLog.Warn("TrollCommands: " + Shown(kv.Key) + " was not loaded within " + PendingSeconds + " s - not killed"); done.Add(kv.Key); }
             }

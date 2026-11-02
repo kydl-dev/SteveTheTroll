@@ -1,7 +1,9 @@
 using System.Collections.Generic;
 using Kydl.Common;
-using SteveTheTroll.Taming;
+using SteveTheTroll.Hubs.Domain;
+using SteveTheTroll.Hubs.Infrastructure;
 using SteveTheTroll.Trolls.Combat.Infrastructure;
+using SteveTheTroll.Trolls.Taming.Infrastructure;
 using UnityEngine;
 
 namespace SteveTheTroll.Trolls.Farming.Infrastructure
@@ -54,14 +56,14 @@ namespace SteveTheTroll.Trolls.Farming.Infrastructure
 
         /// D-163: the nearest source beyond FarmMaxRange (up to FarmLongRange) the game knows of, outside the bed's no-hit ring, inside the hub's farm leash, not a given-up place.
         /// Expected outcome: true with its position and item when one exists.
-        internal bool FindFar(Vector3 from, int tier, IList<Ui.TrollFocus.Goal> goals, Hub.HubInfo hub, out Vector3 pos, out string item)
+        internal bool FindFar(Vector3 from, int tier, IList<Ui.TrollFocus.Goal> goals, HubInfo hub, out Vector3 pos, out string item)
         {
             Vector3 bedPos;
             bool hasBedPos = TrollNoHit.Bed(out bedPos);
             float noHitR = ModSettings.NoHitRadius.Value;
             System.Func<Vector3, bool> farSkip = p => IsBad(p)
                 || (ModSettings.On && hasBedPos && noHitR > 0f && TrollNoHit.Inside(bedPos, p, noHitR))
-                || (hub != null && !Hub.HubRules.FarmAllowed(true, Hub.HubRules.Flat(p - hub.Pos)));
+                || (hub != null && !HubRules.FarmAllowed(true, HubGeometry.Flat(p - hub.Pos)));
             bool found = TrollFarming.FindFar(from, ModSettings.FarmLongRange.Value, ModSettings.FarmMaxRange.Value, tier, goals, farSkip, out pos, out item);
             ModLog.Verbose("TrollFarmer: " + TrollTaming.Tag(_troll) + " long-range search: " + TrollFarming.LastFar);
             return found;

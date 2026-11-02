@@ -1,11 +1,12 @@
 
+
 namespace SteveTheTroll.Tests.Unit
 {
     /// <summary>T-012 (user 2026-10-28): tamed troll speed (D-111), set carry weight as a percentage (D-112).</summary>
     [TestFixture]
     public class PreReleaseChangesTests
     {
-        const string Rules = "SteveTheTroll.Taming.TamingRules";
+        const string Rules = "SteveTheTroll.Trolls.Taming.Domain.TamingRules";
 
         static float Free(float game, float factor) { return (float)ModAssembly.Call(Rules, "FreeAnimSpeed", game, factor); }
         static float Attack(float scale, float factor) { return (float)ModAssembly.Call(Rules, "AttackAnimSpeed", scale, factor); }
@@ -20,7 +21,7 @@ namespace SteveTheTroll.Tests.Unit
         [Test] public void AttackAnim_ScaleTimesFactor() { Assert.That(Attack(1.6f, 1.25f), Is.EqualTo(2f).Within(1e-5)); }
         [Test] public void AttackAnim_NoFactor_ClipScale() { Assert.That(Attack(1.6f, 0f), Is.EqualTo(1.6f)); }
 
-        static float Carry(float limit, float percent) { return (float)ModAssembly.Call("SteveTheTroll.Item.SetCarryPatch", "WithSet", limit, percent); }
+        static float Carry(float limit, float percent) { return (float)ModAssembly.Call("SteveTheTroll.Items.Costume.SetCarryPatch", "WithSet", limit, percent); }
 
         [Test] public void Carry_Base300_Plus25Percent_Is375() { Assert.That(Carry(300f, 0.25f), Is.EqualTo(375f).Within(1e-3)); }
 
@@ -36,14 +37,14 @@ namespace SteveTheTroll.Tests.Unit
         [Test]
         public void Tooltip_GetsTheCarryLine()
         {
-            var r = (string)ModAssembly.Call("SteveTheTroll.Item.SetTooltipPatch", "WithPercent", "line one\n", "$stevethetroll_se_carry", 0.25f);
+            var r = (string)ModAssembly.Call("SteveTheTroll.Items.Costume.SetTooltipPatch", "WithPercent", "line one\n", "$stevethetroll_se_carry", 0.25f);
             Assert.That(r, Is.EqualTo("line one\n$stevethetroll_se_carry: <color=orange>+25%</color>"));
         }
 
         [Test]
         public void Tooltip_Empty_IsOnlyTheLine()
         {
-            var r = (string)ModAssembly.Call("SteveTheTroll.Item.SetTooltipPatch", "WithPercent", "", "X", 0.25f);
+            var r = (string)ModAssembly.Call("SteveTheTroll.Items.Costume.SetTooltipPatch", "WithPercent", "", "X", 0.25f);
             Assert.That(r, Is.EqualTo("X: <color=orange>+25%</color>"));
         }
     }

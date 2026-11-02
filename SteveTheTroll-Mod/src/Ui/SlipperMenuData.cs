@@ -1,5 +1,9 @@
 using Kydl.Common;
+using SteveTheTroll.Items.Slippers;
 using SteveTheTroll.Trolls.Farming.Infrastructure;
+using SteveTheTroll.Trolls.Orders.Commands;
+using SteveTheTroll.Trolls.Registry.Infrastructure;
+using SteveTheTroll.Trolls.Taming.Infrastructure;
 using UnityEngine;
 
 namespace SteveTheTroll.Ui
@@ -15,7 +19,7 @@ namespace SteveTheTroll.Ui
         internal static SlipperData Read()
         {
             var db = ObjectDB.instance;
-            var prefab = db != null ? db.GetItemPrefab(Item.SlipperItem.PrefabName) : null;
+            var prefab = db != null ? db.GetItemPrefab(SlipperItem.PrefabName) : null;
             var drop = prefab != null ? prefab.GetComponent<ItemDrop>() : null;
             if (drop == null) { ModLog.Verbose("SlipperMenuData: no ObjectDB / item yet (db " + (db != null) + ", prefab " + (prefab != null) + ") - no details"); return null; }
             var s = drop.m_itemData.m_shared;
@@ -26,7 +30,7 @@ namespace SteveTheTroll.Ui
                 BaseArmor = s.m_armor,
                 ArmorPerLevel = s.m_armorPerLevel,
                 MaxQuality = s.m_maxQuality,
-                FrostResistant = Item.SlipperStatsPatch.FrostResistant(s),
+                FrostResistant = SlipperStatsPatch.FrostResistant(s),
             };
             var recipe = db.GetRecipe(drop.m_itemData);
             if (recipe != null)
@@ -39,7 +43,7 @@ namespace SteveTheTroll.Ui
                     d.Recipe.Add(new SlipperData.Ingredient(Localization.instance.Localize(r.m_resItem.m_itemData.m_shared.m_name), r.GetAmount(1), r.GetAmount(2)));
                 }
             }
-            var worn = Item.SlipperStatsPatch.Worn(Player.m_localPlayer);
+            var worn = SlipperStatsPatch.Worn(Player.m_localPlayer);
             d.WornQuality = worn != null ? worn.m_quality : 0;
             ModLog.Verbose("SlipperMenuData: " + d + " (recipe " + (recipe != null) + ")");
             return d;
@@ -49,9 +53,9 @@ namespace SteveTheTroll.Ui
         internal static GameObject MakeModel(string id)
         {
             if (id != MainMenuView.SlippersModel) { ModLog.Warn("SlipperMenuData: unknown viewer model '" + id + "'"); return null; }
-            var prefab = ObjectDB.instance != null ? ObjectDB.instance.GetItemPrefab(Item.SlipperItem.PrefabName) : null;
+            var prefab = ObjectDB.instance != null ? ObjectDB.instance.GetItemPrefab(SlipperItem.PrefabName) : null;
             var attach = prefab != null ? prefab.transform.Find("attach") : null;
-            if (attach == null) { ModLog.Warn("SlipperMenuData: no ground model 'attach' on " + Item.SlipperItem.PrefabName + " (prefab " + (prefab != null) + ")"); return null; }
+            if (attach == null) { ModLog.Warn("SlipperMenuData: no ground model 'attach' on " + SlipperItem.PrefabName + " (prefab " + (prefab != null) + ")"); return null; }
             if (TamedOnce())
             {
                 // D-166: once a troll was tamed the viewer shows the real worn look: the baked skin (slippers with their trolls) in its rest pose
@@ -80,22 +84,22 @@ namespace SteveTheTroll.Ui
         static bool TamedOnce()
         {
             var p = Player.m_localPlayer;
-            if (p != null && p.m_customData.ContainsKey(Taming.TrollTamingPatch.FirstTameKey)) return true;
-            return Taming.TrollRegistry.Trolls().Count > 0;
+            if (p != null && p.m_customData.ContainsKey(TrollTamingPatch.FirstTameKey)) return true;
+            return TrollRegistry.Trolls().Count > 0;
         }
 
         /// D-044 "Go farm": the troll leaves follow / stay and farms its focus (or the D-038 priority). Only a troll that is near and simulated
         /// here can get the order; otherwise the player is told. Expected outcome: returns whether the troll now farms.
         internal static bool GoFarm(string id)
         {
-            var troll = Taming.TrollRegistry.FindLoaded(id);
-            var info = Taming.TrollRegistry.Trolls().Find(t => t.Id == id);
+            var troll = TrollRegistry.FindLoaded(id);
+            var info = TrollRegistry.Trolls().Find(t => t.Id == id);
             string shown = info != null ? info.Shown(k => Loc.T(k)) : id;
             if (troll == null) { Tell(Loc.T("stevethetroll_gofarm_far", shown), Notify.Kind.Warn); ModLog.Info("SlipperMenuData: Go farm for " + shown + " - not loaded"); return false; }
             string focus = info != null ? TrollFocus.Normalize(info.Focus) : "";
-            bool ok = TrollFarming.Begin(troll, focus);
+            bool ok = TrollOrderService.Send(new FarmFocusCommand(troll, focus));      // D-171 (P8): the F6 "Go farm" button sends the order command
             Tell(ok ? Loc.T("stevethetroll_gofarm_started", shown, Loc.T(TrollFocus.KeyOf(focus))) : Loc.T("stevethetroll_gofarm_far", shown), ok ? Notify.Kind.Farm : Notify.Kind.Warn);
-            Taming.TrollRegistry.Trolls();           // refresh now: the open menu shows "Farming" within a second (TEST-019)
+            TrollRegistry.Trolls();           // refresh now: the open menu shows "Farming" within a second (TEST-019)
             ModLog.Info("SlipperMenuData: Go farm for " + shown + " focus '" + focus + "' -> " + ok);
             return ok;
         }
@@ -107,8 +111,8 @@ namespace SteveTheTroll.Ui
         internal static bool FocusChosen(string id, string value)
         {
             string v = TrollFocus.Normalize(value);
-            Taming.TrollRegistry.SetFocus(id, v);
-            var troll = Taming.TrollRegistry.FindLoaded(id);
+            TrollRegistry.SetFocus(id, v);
+            var troll = TrollRegistry.FindLoaded(id);
             var ai = troll != null ? troll.GetComponent<MonsterAI>() : null;
             bool following = ai != null && ai.GetFollowTarget() != null;
             ModLog.Verbose("SlipperMenuData: troll [" + id + "] " + (troll != null ? "loaded, following " + following : "not loaded") + ", focus '" + v + "'");

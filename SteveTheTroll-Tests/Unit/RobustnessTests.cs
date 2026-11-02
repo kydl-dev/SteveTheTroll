@@ -12,7 +12,7 @@ namespace SteveTheTroll.Tests.Unit
     [TestFixture]
     public class RobustnessTests
     {
-        const string Rules = "SteveTheTroll.Taming.TamingRules";
+        const string Rules = "SteveTheTroll.Trolls.Taming.Domain.TamingRules";
         static string K(string key) { return key; }
 
         [Test]

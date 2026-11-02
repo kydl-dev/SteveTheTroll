@@ -1,9 +1,10 @@
 using Kydl.Common;
 using SteveTheTroll.Core.Commands;
 using SteveTheTroll.Core.Results;
-using SteveTheTroll.Taming;
 using SteveTheTroll.Trolls.Combat.Infrastructure;
 using SteveTheTroll.Trolls.Farming.Infrastructure;
+using SteveTheTroll.Trolls.Home.Infrastructure;
+using SteveTheTroll.Trolls.Taming.Infrastructure;
 using UnityEngine;
 
 namespace SteveTheTroll.Trolls.Orders.Commands

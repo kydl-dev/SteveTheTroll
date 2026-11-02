@@ -1,8 +1,9 @@
 using Kydl.Common;
-using SteveTheTroll.Taming;
 using SteveTheTroll.Trolls.Combat.Infrastructure;
 using SteveTheTroll.Trolls.Contracts;
 using SteveTheTroll.Trolls.Movement.Infrastructure;
+using SteveTheTroll.Trolls.Registry.Infrastructure;
+using SteveTheTroll.Trolls.Taming.Infrastructure;
 using UnityEngine;
 
 namespace SteveTheTroll.Trolls.Core

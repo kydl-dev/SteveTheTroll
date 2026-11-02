@@ -29,10 +29,10 @@
     <!-- which functionalities are on (PROJECT_RULES 11) -->
     <Compile Include="..\..\SteveTheTroll-Mod\src\Functions.cs" Link="Mod\Functions.cs" />
     <!-- D-135 Troll Hub: pure rules + the building's data -->
-    <Compile Include="..\..\SteveTheTroll-Mod\src\Hub\HubRules.cs" Link="Mod\HubRules.cs" />
+    <Compile Include="..\..\SteveTheTroll-Mod\src\Hubs\Domain\HubRules.cs" Link="Mod\HubRules.cs" />
     <Compile Include="..\..\SteveTheTroll-Mod\src\Trolls\Farming\Domain\IdleRules.cs" Link="Mod\IdleRules.cs" />
-    <Compile Include="..\..\SteveTheTroll-Mod\src\Backpack\DepotRules.cs" Link="Mod\DepotRules.cs" />
-    <Compile Include="..\..\SteveTheTroll-Mod\src\Taming\HealthRules.cs" Link="Mod\HealthRules.cs" />
+    <Compile Include="..\..\SteveTheTroll-Mod\src\Backpack\Domain\DepotRules.cs" Link="Mod\DepotRules.cs" />
+    <Compile Include="..\..\SteveTheTroll-Mod\src\Trolls\Taming\Domain\HealthRules.cs" Link="Mod\HealthRules.cs" />
     <!-- D-167 stuck detection and recovery: pure rules, the escalation ladder, the per troll + resource failure book (TargetRules: head-on test) -->
     <Compile Include="..\..\SteveTheTroll-Mod\src\Trolls\Recovery\Domain\StuckRules.cs" Link="Mod\StuckRules.cs" />
     <Compile Include="..\..\SteveTheTroll-Mod\src\Trolls\Recovery\Domain\RecoveryMachine.cs" Link="Mod\RecoveryMachine.cs" />
@@ -55,8 +55,11 @@
     <Compile Include="..\..\SteveTheTroll-Mod\src\Trolls\Orders\Application\*.cs" Link="Mod\Orders\%(Filename)%(Extension)" />
     <!-- D-171 P5..P8: the game-free rules of combat, backpack, hubs / home, taming -->
     <Compile Include="..\..\SteveTheTroll-Mod\src\Trolls\Combat\Domain\*.cs" Link="Mod\Combat\%(Filename)%(Extension)" />
+    <Compile Include="..\..\SteveTheTroll-Mod\src\Backpack\Domain\BackpackRules.cs" Link="Mod\Backpack\BackpackRules.cs" />
+    <Compile Include="..\..\SteveTheTroll-Mod\src\Hubs\Infrastructure\HubGeometry.cs" Link="Mod\Hubs\HubGeometry.cs" />
+    <Compile Include="..\..\SteveTheTroll-Mod\src\Trolls\Home\Domain\*.cs" Link="Mod\Home\%(Filename)%(Extension)" />
     <Compile Include="..\..\SteveTheTroll-Mod\src\Trolls\Farming\Domain\TargetRules.cs" Link="Mod\TargetRules.cs" />
-    <Compile Include="..\..\SteveTheTroll-Mod\src\Hub\HubData.cs" Link="Mod\HubData.cs" />
+    <Compile Include="..\..\SteveTheTroll-Mod\src\Hubs\Domain\HubData.cs" Link="Mod\HubData.cs" />
     <!-- D-169 Architecture V2: the game-free foundation (typed responses, validation, commands, pipeline) -->
     <Compile Include="..\..\SteveTheTroll-Mod\src\Core\**\*.cs" Link="Mod\Core\%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>

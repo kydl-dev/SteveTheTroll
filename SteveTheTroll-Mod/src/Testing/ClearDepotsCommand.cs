@@ -3,6 +3,8 @@ using System.Globalization;
 using HarmonyLib;
 using Jotunn.Entities;
 using Kydl.Common;
+using SteveTheTroll.Backpack.Domain;
+using SteveTheTroll.Backpack.Infrastructure;
 using UnityEngine;
 
 namespace SteveTheTroll.Testing
@@ -28,14 +30,14 @@ namespace SteveTheTroll.Testing
             var p = Player.m_localPlayer;
             if (p == null || ZNetScene.instance == null || ZDOMan.instance == null) { Console.instance.Print("stt_cleardepots: no player / world"); return; }
             if (!Terminal.m_cheat) { Console.instance.Print("stt_cleardepots: needs devcommands"); return; }
-            int frameHash = Backpack.DepotPrefab.Name.GetStableHashCode(), chestHash = Backpack.DepotData.ChestPrefab.GetStableHashCode();
+            int frameHash = DepotPrefab.Name.GetStableHashCode(), chestHash = DepotData.ChestPrefab.GetStableHashCode();
             Vector3 at = p.transform.position;
             var gone = new List<ZDO>();
             foreach (var z in Objects(ZDOMan.instance).Values)
             {
                 if (z == null) continue;
                 int h = z.GetPrefab();
-                bool ours = h == frameHash || (h == chestHash && z.GetBool(Backpack.TrollDepot.FlagKey));
+                bool ours = h == frameHash || (h == chestHash && z.GetBool(TrollDepot.FlagKey));
                 if (ours && ClearCommand.Within(at, z.GetPosition(), radius)) gone.Add(z);
             }
             int frames = 0, chests = 0, loaded = 0;

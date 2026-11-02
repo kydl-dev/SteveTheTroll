@@ -1,4 +1,5 @@
 
+using SteveTheTroll.Trolls.Taming.Domain;
 using UnityEngine;
 
 namespace SteveTheTroll.Tests.Unit

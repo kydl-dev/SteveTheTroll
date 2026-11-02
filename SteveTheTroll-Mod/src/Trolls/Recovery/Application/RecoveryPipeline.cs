@@ -2,6 +2,7 @@ using System;
 using SteveTheTroll.Core.Pipeline;
 using SteveTheTroll.Core.Results;
 using SteveTheTroll.Trolls.Recovery.Domain;
+using SteveTheTroll.Trolls.Taming.Domain;
 
 namespace SteveTheTroll.Trolls.Recovery.Application
 {

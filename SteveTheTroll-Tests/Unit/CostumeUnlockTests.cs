@@ -6,7 +6,7 @@ namespace SteveTheTroll.Tests.Unit
     [TestFixture]
     public class CostumeUnlockTests
     {
-        const string R = "SteveTheTroll.Item.RecipeUnlockPatch", F = "SteveTheTroll.Item.CostumeBareFeet";
+        const string R = "SteveTheTroll.Items.Costume.RecipeUnlockPatch", F = "SteveTheTroll.Items.Costume.CostumeBareFeet";
         static readonly string[] Four = { "$h", "$c", "$l", "$club" };
 
         static bool All(ICollection<string> items, ICollection<string> known) { return (bool)ModAssembly.Call(R, "AllKnown", items, known); }

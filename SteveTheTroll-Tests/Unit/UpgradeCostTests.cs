@@ -1,13 +1,13 @@
 namespace SteveTheTroll.Tests.Unit
 {
     /// <summary>
-    /// SteveTheTroll.Item.UpgradeCost (D-035): every upgrade of the slippers costs the same per resource (2), unlike vanilla
+    /// UpgradeCost (D-035): every upgrade of the slippers costs the same per resource (2), unlike vanilla
     /// Piece.Requirement.GetAmount (1.0.20), which asked 2 / 4 / 8 at quality 2 / 3 / 4 for 2 per level (the user's TEST-010 report).
     /// </summary>
     [TestFixture]
     public class UpgradeCostTests
     {
-        const string T = "SteveTheTroll.Item.UpgradeCost";
+        const string T = "SteveTheTroll.Items.Slippers.UpgradeCost";
 
         static int Amount(int quality, int baseAmount, int perLevel, bool upgrader)
         {

@@ -1,0 +1,73 @@
+{
+  "name": "backpack-death-crates",
+  "description": "D-171 P6: a tamed troll with items in its backpack dies - the items drop in cargo crates (BackpackDeath, T-008c)",
+  "timeout": 60,
+  "steps": [
+    {
+      "do": "hook",
+      "name": "stt.reset"
+    },
+    {
+      "do": "give",
+      "prefab": "STT_TrollSlippers",
+      "count": 1,
+      "equip": true
+    },
+    {
+      "do": "hook",
+      "name": "stt.addHub",
+      "args": {
+        "number": 1,
+        "dx": 0,
+        "dz": 25
+      }
+    },
+    {
+      "do": "hook",
+      "name": "stt.spawnTroll",
+      "args": {
+        "dx": -8,
+        "dz": -8
+      },
+      "as": "troll"
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "hook",
+      "name": "stt.fillBackpack",
+      "args": {
+        "troll": "troll"
+      }
+    },
+    {
+      "do": "hook",
+      "name": "stt.killTroll",
+      "args": {
+        "troll": "troll"
+      },
+      "expect": true
+    },
+    {
+      "do": "wait",
+      "seconds": 3
+    }
+  ],
+  "asserts": [
+    {
+      "check": "hook",
+      "name": "stt.cratesNear",
+      "args": {
+        "radius": 30
+      },
+      "min": 1,
+      "label": "crates dropped"
+    },
+    {
+      "check": "noErrors",
+      "source": "SteveTheTroll"
+    }
+  ]
+}

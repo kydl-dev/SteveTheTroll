@@ -1,4 +1,7 @@
 using Kydl.Common;
+using SteveTheTroll.Backpack.Domain;
+using SteveTheTroll.Items.Costume;
+using SteveTheTroll.Items.Slippers;
 using UnityEngine;
 
 namespace SteveTheTroll.Ui
@@ -16,26 +19,26 @@ namespace SteveTheTroll.Ui
         {
             var db = ObjectDB.instance;
             if (db == null) { ModLog.Verbose("CostumeMenuData: no ObjectDB yet - no Costume tab"); return null; }
-            if (!Item.RecipeUnlockPatch.CostumeComplete(Player.m_localPlayer, db)) { ModLog.Verbose("CostumeMenuData: not all 4 costume items crafted yet - no Costume tab (D-088)"); return null; }
+            if (!RecipeUnlockPatch.CostumeComplete(Player.m_localPlayer, db)) { ModLog.Verbose("CostumeMenuData: not all 4 costume items crafted yet - no Costume tab (D-088)"); return null; }
             var d = new CostumeData
             {
                 SetName = Loc.T("stevethetroll_se_set"),
                 SetDescription = Loc.T("stevethetroll_se_set_tooltip"),
-                SetSize = Item.CostumeItems.SetSize,
+                SetSize = CostumeItems.SetSize,
             };
             var p = Player.m_localPlayer;
-            AddPiece(d, db, p, Item.CostumeItems.HelmetName, "stevethetroll_details_slot_helmet");
-            AddPiece(d, db, p, Item.CostumeItems.ChestName, "stevethetroll_details_slot_chest");
-            AddPiece(d, db, p, Item.CostumeItems.LegsName, "stevethetroll_details_slot_legs");
+            AddPiece(d, db, p, CostumeItems.HelmetName, "stevethetroll_details_slot_helmet");
+            AddPiece(d, db, p, CostumeItems.ChestName, "stevethetroll_details_slot_chest");
+            AddPiece(d, db, p, CostumeItems.LegsName, "stevethetroll_details_slot_legs");
             if (d.Pieces.Count == 0) { ModLog.Warn("CostumeMenuData: no costume item in ObjectDB - no Costume tab"); return null; }
-            d.SetWorn = p != null ? (int)HarmonyLib.AccessTools.Method(typeof(Humanoid), "GetSetCount").Invoke(p, new object[] { Item.CostumeItems.SetName }) : 0;   // private in 1.0.20
-            d.SetEffects.Add(string.Format(Loc.T("stevethetroll_set_move"), (Item.CostumeItems.SetSpeed * 100f).ToString("0")));
-            d.SetEffects.Add(string.Format(Loc.T("stevethetroll_set_carry"), (Item.CostumeItems.SetCarryPercent * 100f).ToString("0")));
-            d.SetEffects.Add(string.Format(Loc.T("stevethetroll_set_stamina"), (Item.CostumeItems.SetStamina * 100f).ToString("0")));
-            d.SetEffects.Add(string.Format(Loc.T("stevethetroll_set_trolls"), Item.CostumeItems.SetTrollLimit));
-            d.SetEffects.Add(string.Format(Loc.T("stevethetroll_set_stagger"), (Item.CostumeItems.SetStaggerResistance * 100f).ToString("0")));   // D-125
+            d.SetWorn = p != null ? (int)HarmonyLib.AccessTools.Method(typeof(Humanoid), "GetSetCount").Invoke(p, new object[] { CostumeItems.SetName }) : 0;   // private in 1.0.20
+            d.SetEffects.Add(string.Format(Loc.T("stevethetroll_set_move"), (CostumeItems.SetSpeed * 100f).ToString("0")));
+            d.SetEffects.Add(string.Format(Loc.T("stevethetroll_set_carry"), (CostumeItems.SetCarryPercent * 100f).ToString("0")));
+            d.SetEffects.Add(string.Format(Loc.T("stevethetroll_set_stamina"), (CostumeItems.SetStamina * 100f).ToString("0")));
+            d.SetEffects.Add(string.Format(Loc.T("stevethetroll_set_trolls"), CostumeItems.SetTrollLimit));
+            d.SetEffects.Add(string.Format(Loc.T("stevethetroll_set_stagger"), (CostumeItems.SetStaggerResistance * 100f).ToString("0")));   // D-125
 
-            var club = Drop(db, Item.CostumeItems.ClubName);
+            var club = Drop(db, CostumeItems.ClubName);
             if (club != null)
             {
                 var s = club.m_itemData.m_shared;

@@ -1,13 +1,17 @@
 using System.Collections.Generic;
 using Kydl.Common;
+using SteveTheTroll.Backpack.Infrastructure;
 using SteveTheTroll.Core.Results;
-using SteveTheTroll.Taming;
+using SteveTheTroll.Hubs.Domain;
+using SteveTheTroll.Hubs.Infrastructure;
 using SteveTheTroll.Trolls.Contracts;
 using SteveTheTroll.Trolls.Core;
 using SteveTheTroll.Trolls.Farming.Application;
 using SteveTheTroll.Trolls.Farming.Domain;
 using SteveTheTroll.Trolls.Farming.Execution;
 using SteveTheTroll.Trolls.Recovery.Infrastructure;
+using SteveTheTroll.Trolls.Taming.Domain;
+using SteveTheTroll.Trolls.Taming.Infrastructure;
 using UnityEngine;
 
 namespace SteveTheTroll.Trolls.Farming.Infrastructure
@@ -350,8 +354,8 @@ namespace SteveTheTroll.Trolls.Farming.Infrastructure
             var goals = Ui.TrollFocus.SearchOrder(_focus);         // D-058: focus item first, then the default priority
             TrollFarming.Gather(transform.position, ModSettings.FarmMaxRange.Value, _cands);   // D-084: one pass over the scene per search
             // D-159: a troll with a hub does not farm further than HubRules.FarmLeash (950 m) from it
-            var hub = Hub.HubRegistry.For(GetComponent<Character>());
-            System.Func<GameObject, bool> skip = hub == null ? (System.Func<GameObject, bool>)IsBad : (g => IsBad(g) || !Hub.HubRules.FarmAllowed(true, Hub.HubRules.Flat(g.transform.position - hub.Pos)));
+            var hub = HubRegistry.For(GetComponent<Character>());
+            System.Func<GameObject, bool> skip = hub == null ? (System.Func<GameObject, bool>)IsBad : (g => IsBad(g) || !HubRules.FarmAllowed(true, HubGeometry.Flat(g.transform.position - hub.Pos)));
             var ranges = new[] { ModSettings.FarmQuickRange.Value, ModSettings.FarmRange.Value, ModSettings.FarmMaxRange.Value };
             var hit = TargetSelection.FirstHit(ranges, goals, (range, goal) =>
             {
@@ -395,7 +399,7 @@ namespace SteveTheTroll.Trolls.Farming.Infrastructure
         }
 
         // D-163: the long-range search. Expected outcome: true = the troll now walks to a far source.
-        bool SearchFar(int tier, IList<Ui.TrollFocus.Goal> goals, Hub.HubInfo hub)
+        bool SearchFar(int tier, IList<Ui.TrollFocus.Goal> goals, HubInfo hub)
         {
             float longRange = ModSettings.FarmLongRange.Value;
             if (longRange <= ModSettings.FarmMaxRange.Value) return longRange > ModSettings.FarmMaxRange.Value;
@@ -416,10 +420,10 @@ namespace SteveTheTroll.Trolls.Farming.Infrastructure
         {
             _nextFullCheck = Time.time + FullCheckSeconds;
             var view = GetComponent<ZNetView>();
-            if (view == null || !view.IsValid() || !Backpack.BackpackStore.IsFull(view.GetZDO())) return IsFull;
-            ModLog.Info("TrollFarmer: " + TrollTaming.Tag(this) + " backpack is full - goes to " + Hub.HubRegistry.DestinationName(GetComponent<Character>()));
+            if (view == null || !view.IsValid() || !BackpackStore.IsFull(view.GetZDO())) return IsFull;
+            ModLog.Info("TrollFarmer: " + TrollTaming.Tag(this) + " backpack is full - goes to " + HubRegistry.DestinationName(GetComponent<Character>()));
             _home = true; Auto = true; IsFull = true; _target = null; _hit = null; CurrentItem = ""; _travelling = false;
-            if (IsMine()) Ui.Notify.Show(Loc.T("stevethetroll_backpack_full", Shown(), Hub.HubRegistry.DestinationName(GetComponent<Character>())), Ui.Notify.Kind.Farm);
+            if (IsMine()) Ui.Notify.Show(Loc.T("stevethetroll_backpack_full", Shown(), HubRegistry.DestinationName(GetComponent<Character>())), Ui.Notify.Kind.Farm);
             return IsFull;
         }
 

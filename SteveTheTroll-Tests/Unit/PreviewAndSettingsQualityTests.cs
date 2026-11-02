@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Globalization;
+using SteveTheTroll.Backpack.Domain;
 using SteveTheTroll.Ui;
 
 namespace SteveTheTroll.Tests.Unit
@@ -95,7 +96,7 @@ namespace SteveTheTroll.Tests.Unit
 
         // ---- CostumeData (the Unity preview sample = the game's items) ----
 
-        const string Items = "SteveTheTroll.Item.CostumeItems";
+        const string Items = "SteveTheTroll.Items.Costume.CostumeItems";
 
         static float Const(string name) { return System.Convert.ToSingle(ModAssembly.GetStatic(Items, name)); }
 

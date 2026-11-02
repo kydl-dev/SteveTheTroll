@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using NUnit.Framework;
-using SteveTheTroll.Hub;
+using SteveTheTroll.Hubs.Domain;
 
 namespace SteveTheTroll.Tests.Unit
 {

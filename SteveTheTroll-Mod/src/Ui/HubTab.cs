@@ -2,9 +2,10 @@ using System.Collections.Generic;
 using Kydl.Common;
 using Kydl.Ui;
 using KydlCore;
-using SteveTheTroll.Hub;
-using SteveTheTroll.Taming;
+using SteveTheTroll.Hubs.Domain;
+using SteveTheTroll.Hubs.Infrastructure;
 using SteveTheTroll.Trolls.Combat.Infrastructure;
+using SteveTheTroll.Trolls.Registry.Infrastructure;
 using UnityEngine;
 
 namespace SteveTheTroll.Ui
@@ -57,7 +58,7 @@ namespace SteveTheTroll.Ui
                     new List<KyCell>
                     {
                         KyCell.Rich(styled),
-                        KyCell.Label(Loc.T("stevethetroll_hub_tab_where", HubRules.Flat(hub.Pos - p.transform.position).ToString("0"))),
+                        KyCell.Label(Loc.T("stevethetroll_hub_tab_where", HubGeometry.Flat(hub.Pos - p.transform.position).ToString("0"))),
                         KyCell.Button("✎", () => HubSignMenu.Open(hub)),
                     }
                 };

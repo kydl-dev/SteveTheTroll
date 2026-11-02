@@ -1,0 +1,84 @@
+{
+  "name": "hold-look",
+  "description": "D-171 P7: a troll walking off stands still while the player within 4 m looks at it (D-063 / D-077, HomeRules.Holds)",
+  "timeout": 40,
+  "steps": [
+    {
+      "do": "hook",
+      "name": "stt.reset"
+    },
+    {
+      "do": "give",
+      "prefab": "STT_TrollSlippers",
+      "count": 1,
+      "equip": true
+    },
+    {
+      "do": "hook",
+      "name": "stt.addHub",
+      "args": {
+        "number": 1,
+        "dx": 0,
+        "dz": 25
+      }
+    },
+    {
+      "do": "hook",
+      "name": "stt.spawnTroll",
+      "args": {
+        "dx": 0,
+        "dz": 3
+      },
+      "as": "troll"
+    },
+    {
+      "do": "face",
+      "target": "troll"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "hook",
+      "name": "stt.startFarm",
+      "args": {
+        "troll": "troll"
+      }
+    },
+    {
+      "do": "face",
+      "target": "troll"
+    },
+    {
+      "do": "hook",
+      "name": "stt.mark",
+      "args": {
+        "troll": "troll"
+      }
+    },
+    {
+      "do": "face",
+      "target": "troll"
+    },
+    {
+      "do": "wait",
+      "seconds": 2
+    }
+  ],
+  "asserts": [
+    {
+      "check": "hook",
+      "name": "stt.moved",
+      "args": {
+        "troll": "troll"
+      },
+      "max": 1,
+      "label": "stood still"
+    },
+    {
+      "check": "noErrors",
+      "source": "SteveTheTroll"
+    }
+  ]
+}

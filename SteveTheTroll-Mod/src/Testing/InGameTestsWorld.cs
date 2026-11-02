@@ -1,5 +1,10 @@
 using HarmonyLib;
 using Kydl.Common;
+using SteveTheTroll.Backpack.Domain;
+using SteveTheTroll.Backpack.Infrastructure;
+using SteveTheTroll.Hubs.Domain;
+using SteveTheTroll.Hubs.Infrastructure;
+using SteveTheTroll.Trolls.Taming.Infrastructure;
 using UnityEngine;
 
 namespace SteveTheTroll.Testing
@@ -35,7 +40,7 @@ namespace SteveTheTroll.Testing
             if (zs == null) return "SKIP: no ZNetScene";
             var sb = new System.Text.StringBuilder();
             bool ok = true;
-            foreach (var n in new[] { Backpack.DepotPrefab.Name, Backpack.DepotData.ChestPrefab, Hub.HubData.PrefabName })
+            foreach (var n in new[] { DepotPrefab.Name, DepotData.ChestPrefab, HubData.PrefabName })
             {
                 var p = zs.GetPrefab(n);
                 bool good = p != null && p.GetComponent<ZNetView>() != null;
@@ -56,7 +61,7 @@ namespace SteveTheTroll.Testing
             var sb = new System.Text.StringBuilder();
             foreach (var c in Character.GetAllCharacters())
             {
-                if (c == null || !c.IsTamed() || !Taming.TrollTaming.IsTroll(c) || Taming.TrollTaming.Owner(c) != me) continue;
+                if (c == null || !c.IsTamed() || !TrollTaming.IsTroll(c) || TrollTaming.Owner(c) != me) continue;
                 n++;
                 var view = c.GetComponent<ZNetView>();
                 string why = null;
@@ -65,10 +70,10 @@ namespace SteveTheTroll.Testing
                 else if (view == null || !view.IsValid()) why = "no valid ZNetView";
                 else
                 {
-                    int assigned = view.GetZDO().GetInt(Hub.HubRegistry.AssignKey, 0);
-                    if (assigned > 0 && Hub.HubRegistry.Find(me, assigned) == null) why = "assigned to hub " + assigned + " which does not exist";
+                    int assigned = view.GetZDO().GetInt(HubRegistry.AssignKey, 0);
+                    if (assigned > 0 && HubRegistry.Find(me, assigned) == null) why = "assigned to hub " + assigned + " which does not exist";
                 }
-                if (why != null) { bad++; sb.Append(Taming.TrollTaming.Tag(c) + ": " + why + "; "); }
+                if (why != null) { bad++; sb.Append(TrollTaming.Tag(c) + ": " + why + "; "); }
             }
             if (n == 0) return "SKIP: no own tamed troll loaded";
             string detail = n + " own troll(s) checked, " + bad + " wrong " + sb;
