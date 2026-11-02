@@ -81,6 +81,9 @@ namespace SteveTheTroll.Trolls.Orders.Infrastructure
             }
         }
 
+        /// D-171: TestLab only (hook stt.aimAt) - the next attack-key ray aims from the camera at this object's centre; used up by one press. null in normal play.
+        internal static GameObject AimOverride;
+
         /// D-171: TestLab only (hook stt.attackKeyPress) - presses of the attack key queued by a test, used up one per frame. 0 in normal play.
         internal static int FakePresses;
 
@@ -112,7 +115,16 @@ namespace SteveTheTroll.Trolls.Orders.Infrastructure
             if (_mask == 0) _mask = LayerMask.GetMask("Default", "static_solid", "Default_small", "piece", "piece_nonsolid", "terrain", "character", "character_net", "character_noenv", "hitbox", "vehicle");
             var cam = GameCamera.instance != null ? GameCamera.instance.transform : null;
             if (cam == null) return null;
-            int n = Physics.RaycastNonAlloc(cam.position, cam.forward, Hits, RayMetres, _mask);
+            var dir = cam.forward;
+            if (AimOverride != null)
+            {
+                var col = AimOverride.GetComponentInChildren<Collider>();
+                var at = col != null ? col.bounds.center : AimOverride.transform.position;
+                dir = (at - cam.position).normalized;
+                ModLog.Info("TrollOrders: attack-key ray aimed at " + AimOverride.name + " by a test (" + Vector3.Distance(cam.position, at).ToString("F1") + " m)");
+                AimOverride = null;
+            }
+            int n = Physics.RaycastNonAlloc(cam.position, dir, Hits, RayMetres, _mask);
             System.Array.Sort(Hits, 0, n, Comparer.Instance);
             for (int i = 0; i < n; i++)
             {

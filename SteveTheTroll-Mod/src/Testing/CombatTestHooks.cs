@@ -55,7 +55,18 @@ namespace SteveTheTroll.Testing
             var ai = mob.GetComponent<MonsterAI>();
             if (ai == null) return ai != null;
             SetTarget(ai, Player.m_localPlayer);
+            if (TargetOf(ai) != Player.m_localPlayer) TargetOf(ai) = Player.m_localPlayer;      // the game's SetTarget may refuse (alerted state / sight); the field is what TrollGuard reads
+            ai.Alert();
             return TargetOf(ai) == Player.m_localPlayer;
+        }
+
+        /// The attack key's ray goes from the camera towards this object's collider centre instead of along the camera's forward axis (TrollOrders.AimOverride, one press).
+        /// The lab's `face` turns the player but not the 3rd-person camera's pitch, so the ray missed small targets. Expected outcome: whether an aim was set.
+        [TestHook("stt.aimAt")]
+        static bool AimAt(GameObject target)
+        {
+            TrollOrders.AimOverride = target;
+            return TrollOrders.AimOverride != null;
         }
 
         /// The prefab name of the creature the troll's AI targets ("" = none).

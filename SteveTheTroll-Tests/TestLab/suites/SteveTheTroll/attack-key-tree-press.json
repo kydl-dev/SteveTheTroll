@@ -1,6 +1,6 @@
 {
   "name": "attack-key-tree-press",
-  "description": "D-171 P4/P8: the player looks at a tree and presses the attack key (the lab's own fake key press, Mouse3) - the troll breaks THAT tree (the player is teleported 6 m from the tree and faces it: from the start spot an arena collider 17 m out stood in the line of sight; the tree stays outside the bed's 15 m no-hit ring; runs at the end of the suite)",
+  "description": "D-171 P4/P8: the player looks at a tree and presses the attack key (the lab's own fake key press, Mouse3) - the troll breaks THAT tree (the player is teleported 6 m from the tree and faces it: from the start spot an arena collider 17 m out stood in the line of sight; the tree stays outside the bed's 15 m no-hit ring; runs at the end of the suite) (stt.aimAt points the attack-key ray at the target: the lab's face turns the player, not the camera pitch)",
   "timeout": 90,
   "steps": [
     {
@@ -56,6 +56,14 @@
     {
       "do": "face",
       "target": "tree"
+    },
+    {
+      "do": "hook",
+      "name": "stt.aimAt",
+      "args": {
+        "target": "tree"
+      },
+      "expect": true
     },
     {
       "do": "wait",

@@ -1,6 +1,6 @@
 {
   "name": "attack-key-tree",
-  "description": "D-171: the player walks (teleports) to a tree, looks at it and presses the attack key (queued through stt.attackKeyPress, read by the real TrollOrders.Tick) - the troll breaks it",
+  "description": "D-171: the player walks (teleports) to a tree, looks at it and presses the attack key (queued through stt.attackKeyPress, read by the real TrollOrders.Tick) - the troll breaks it (stt.aimAt points the attack-key ray at the target: the lab's face turns the player, not the camera pitch)",
   "timeout": 90,
   "steps": [
     {
@@ -52,6 +52,14 @@
     {
       "do": "face",
       "target": "tree"
+    },
+    {
+      "do": "hook",
+      "name": "stt.aimAt",
+      "args": {
+        "target": "tree"
+      },
+      "expect": true
     },
     {
       "do": "wait",
