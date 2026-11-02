@@ -27,6 +27,7 @@ namespace SteveTheTroll.Testing
             ClearHubs();
             ClearFarTrees();
             RecoveryTestHooks.ClearWalled();           // D-167: the walled tree of the recovery scenario
+            FarmingTestHooks.ClearPlanted();           // D-170: the trees of farm-chops-tree
             int gone = 0;
             foreach (var v in Object.FindObjectsByType<ZNetView>(FindObjectsSortMode.None))
             {

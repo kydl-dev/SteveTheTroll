@@ -1,0 +1,19 @@
+{
+  "name": "farm-chops-tree",
+  "description": "D-170: the farming slice end to end - the troll walks to a tree (approach), swings (swing ladder through FarmingExecutor) and fells it",
+  "timeout": 90,
+  "steps": [
+    { "do": "hook", "name": "stt.reset" },
+    { "do": "give", "prefab": "STT_TrollSlippers", "count": 1, "equip": true },
+    { "do": "hook", "name": "stt.addHub", "args": { "number": 1, "dx": 0, "dz": 25 } },
+    { "do": "hook", "name": "stt.plantTree", "args": { "dx": -14, "dz": -14 }, "as": "tree" },
+    { "do": "hook", "name": "stt.spawnTroll", "args": { "dx": -8, "dz": -8 }, "as": "troll" },
+    { "do": "hook", "name": "stt.farmOn", "args": { "troll": "troll", "source": "tree" }, "expect": true, "label": "the break order was taken" },
+    { "do": "wait", "until": { "check": "hook", "name": "stt.treeStands", "args": { "tree": "tree" }, "expect": 0 }, "timeout": 60 }
+  ],
+  "asserts": [
+    { "check": "hook", "name": "stt.treeStands", "args": { "tree": "tree" }, "expect": 0, "label": "the tree was hit" },
+    { "check": "hook", "name": "stt.farmAttacks", "args": { "troll": "troll" }, "min": 1, "label": "the farmer swung" },
+    { "check": "noErrors", "source": "SteveTheTroll" }
+  ]
+}

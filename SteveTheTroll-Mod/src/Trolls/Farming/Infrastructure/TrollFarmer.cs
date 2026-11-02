@@ -65,6 +65,8 @@ namespace SteveTheTroll.Trolls.Farming.Infrastructure
         /// D-159: on its way to unload (hub / bed -> depot).
         internal bool Unloading { get { return _home && IsFull; } }
         internal string CurrentItem { get; private set; } = "";
+        /// Swings started since this farmer exists (TestLab hook stt.farmAttacks).
+        internal int Attacks { get { return _attacks; } }
 
         void Awake()
         {
