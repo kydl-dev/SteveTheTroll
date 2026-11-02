@@ -1,7 +1,9 @@
 using Kydl.Common;
+using SteveTheTroll.Taming;
+using SteveTheTroll.Trolls.Farming.Infrastructure;
 using UnityEngine;
 
-namespace SteveTheTroll.Taming
+namespace SteveTheTroll.Trolls.Orders.Infrastructure
 {
     /// <summary>
     /// T-008d / D-065: the attack key ([Controls] AttackKey, Mouse 4 = the mouse's back button): the player looks at something and presses

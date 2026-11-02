@@ -1,5 +1,6 @@
 using HarmonyLib;
 using SteveTheTroll.Trolls.Contracts;
+using SteveTheTroll.Trolls.Farming.Infrastructure;
 using UnityEngine;
 
 namespace SteveTheTroll.Trolls.Movement.Infrastructure

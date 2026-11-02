@@ -1,4 +1,5 @@
-namespace SteveTheTroll.Taming
+
+namespace SteveTheTroll.Trolls.Farming.Domain
 {
     internal enum IdleGate { Skip, Unload, Continue }
 

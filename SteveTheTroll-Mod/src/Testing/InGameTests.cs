@@ -1,4 +1,5 @@
 using Kydl.Common;
+using SteveTheTroll.Trolls.Farming.Infrastructure;
 using UnityEngine;
 
 namespace SteveTheTroll.Testing
@@ -162,7 +163,7 @@ namespace SteveTheTroll.Testing
             try
             {
                 string r = Taming.TrollTamingPatch.SelfCheck();
-                bool speed = Taming.TamedTrollSpeed.SelfCheck(), stats = Taming.TamedTrollStats.SelfCheck(), defend = Taming.TrollDefend.SelfCheck(), farm = Taming.TrollFarming.SelfCheck(), store = Backpack.BackpackStore.SelfCheck();
+                bool speed = Taming.TamedTrollSpeed.SelfCheck(), stats = Taming.TamedTrollStats.SelfCheck(), defend = Taming.TrollDefend.SelfCheck(), farm = TrollFarming.SelfCheck(), store = Backpack.BackpackStore.SelfCheck();
                 bool keep = Taming.TrollWaterKeep.SelfCheck();      // D-131
                 string more = ", TamedTrollSpeed " + speed + ", TamedTrollStats " + stats + ", TrollDefend " + defend + ", TrollFarming " + farm + ", BackpackStore " + store + ", TrollWaterKeep " + keep;
                 return r.StartsWith("PASS") && speed && stats && defend && farm && store && keep ? r + more : "FAIL: " + r + more;
@@ -176,10 +177,10 @@ namespace SteveTheTroll.Testing
             var p = Player.m_localPlayer;
             if (p == null) return "SKIP: no local player";
             Collider hit;
-            var best = Taming.TrollFarming.Find(p.transform.position, p.transform.position, new Ui.TrollFocus.Goal("Wood"), 10, ModSettings.FarmRange.Value, out hit);
-            string detail = "Wood within " + ModSettings.FarmRange.Value + " m: " + Taming.TrollFarming.LastScan;
+            var best = TrollFarming.Find(p.transform.position, p.transform.position, new Ui.TrollFocus.Goal("Wood"), 10, ModSettings.FarmRange.Value, out hit);
+            string detail = "Wood within " + ModSettings.FarmRange.Value + " m: " + TrollFarming.LastScan;
             ModLog.Verbose("InGameTests: World_FarmScan " + detail);
-            if (Taming.TrollFarming.LastScanFull) return "FAIL: " + detail;
+            if (TrollFarming.LastScanFull) return "FAIL: " + detail;
             return (best == null ? "SKIP: " : "PASS: ") + detail;
         }
 
@@ -191,12 +192,12 @@ namespace SteveTheTroll.Testing
             if (p == null) return "SKIP: no local player";
             Vector3 pos; string item;
             long t0 = System.Diagnostics.Stopwatch.GetTimestamp();
-            bool found = Taming.TrollFarming.FindFar(p.transform.position, ModSettings.FarmLongRange.Value, ModSettings.FarmMaxRange.Value, 10,
+            bool found = TrollFarming.FindFar(p.transform.position, ModSettings.FarmLongRange.Value, ModSettings.FarmMaxRange.Value, 10,
                 new[] { new Ui.TrollFocus.Goal("Wood") }, null, out pos, out item);
             double ms = (System.Diagnostics.Stopwatch.GetTimestamp() - t0) * 1000.0 / System.Diagnostics.Stopwatch.Frequency;
-            string detail = "Wood between " + ModSettings.FarmMaxRange.Value.ToString("0") + " and " + ModSettings.FarmLongRange.Value.ToString("0") + " m: " + Taming.TrollFarming.LastFar + "; " + ms.ToString("0.0") + " ms (max 250)";
+            string detail = "Wood between " + ModSettings.FarmMaxRange.Value.ToString("0") + " and " + ModSettings.FarmLongRange.Value.ToString("0") + " m: " + TrollFarming.LastFar + "; " + ms.ToString("0.0") + " ms (max 250)";
             ModLog.Verbose("InGameTests: World_FarmFar " + detail);
-            if (ms > 250.0 || (Taming.TrollFarming.LastFar ?? "").StartsWith("FAILED")) return "FAIL: " + detail;
+            if (ms > 250.0 || (TrollFarming.LastFar ?? "").StartsWith("FAILED")) return "FAIL: " + detail;
             if (!found) return "SKIP: " + detail;
             float d = Vector2.Distance(new Vector2(pos.x, pos.z), new Vector2(p.transform.position.x, p.transform.position.z));
             bool inRange = d >= ModSettings.FarmMaxRange.Value - 1f && d <= ModSettings.FarmLongRange.Value + 1f;

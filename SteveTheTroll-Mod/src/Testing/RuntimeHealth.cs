@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Kydl.Common;
 using SteveTheTroll.Taming;
+using SteveTheTroll.Trolls.Farming.Infrastructure;
 using UnityEngine;
 
 namespace SteveTheTroll.Testing

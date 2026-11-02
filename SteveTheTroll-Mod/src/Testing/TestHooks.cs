@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Kydl.Common;
 using SteveTheTroll.Taming;
+using SteveTheTroll.Trolls.Farming.Infrastructure;
 using UnityEngine;
 
 namespace SteveTheTroll.Testing
@@ -270,13 +271,20 @@ namespace SteveTheTroll.Testing
             var f = troll.GetComponent<TrollFarmer>();
             if (f == null) return false;
             var at = Player.m_localPlayer.transform.position + new Vector3(dx, 0f, dz);
-            f.RememberSpotForTest(at);
-            return true;
+            return f.Spots.Remember(at);
         }
 
         /// Flat metres from the troll to its remembered spot (-1 = none).
         [TestHook("stt.spotDistance")]
-        static int SpotDistance(GameObject troll) { var f = troll.GetComponent<TrollFarmer>(); return f != null ? f.SpotDistance : -2; }
+        static int SpotDistance(GameObject troll)
+        {
+            var f = troll.GetComponent<TrollFarmer>();
+            if (f == null) return -2;
+            Vector3 s;
+            if (!f.Spots.Spot(out s)) return -1;
+            s.y = troll.transform.position.y;
+            return Mathf.RoundToInt(Vector3.Distance(s, troll.transform.position));
+        }
 
         [TestHook("stt.travelling")]
         static bool Travelling(GameObject troll) { var f = troll.GetComponent<TrollFarmer>(); return f != null && f.Travelling; }

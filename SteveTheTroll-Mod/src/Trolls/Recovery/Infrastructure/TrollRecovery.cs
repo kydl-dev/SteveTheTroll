@@ -4,6 +4,7 @@ using SteveTheTroll.Core.Results;
 using SteveTheTroll.Taming;
 using SteveTheTroll.Trolls.Contracts;
 using SteveTheTroll.Trolls.Core;
+using SteveTheTroll.Trolls.Farming.Infrastructure;
 using SteveTheTroll.Trolls.Recovery.Application;
 using SteveTheTroll.Trolls.Recovery.Domain;
 using SteveTheTroll.Trolls.Recovery.Execution;

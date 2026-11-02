@@ -1,9 +1,10 @@
 using System.Collections.Generic;
 using HarmonyLib;
 using Kydl.Common;
+using SteveTheTroll.Taming;
 using UnityEngine;
 
-namespace SteveTheTroll.Taming
+namespace SteveTheTroll.Trolls.Farming.Infrastructure
 {
     /// <summary>
     /// T-008d step 1 (D-038 / D-044, "Go farm"): a tamed troll gathers its focus item. It looks for the nearest source within FarmRange of
@@ -418,7 +419,7 @@ namespace SteveTheTroll.Taming
                 if (f == null) return true;
                 var view = __instance.GetComponent<ZNetView>();
                 if (view == null || !view.IsValid() || !view.IsOwner()) return true;
-                bool drove = f.Step(__instance, dt, MoveTo, LookAt);
+                bool drove = f.Step(__instance, dt);       // D-170: the farmer moves through its TrollContext capability
                 if (drove) __result = true;
                 return !drove;
             }

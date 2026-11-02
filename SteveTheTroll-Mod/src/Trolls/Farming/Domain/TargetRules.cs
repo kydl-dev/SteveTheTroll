@@ -1,4 +1,5 @@
-namespace SteveTheTroll.Taming
+
+namespace SteveTheTroll.Trolls.Farming.Domain
 {
     /// <summary>
     /// D-151 (user 2026-10-31): two trolls must not go for the same tree (one waiting behind the other), and a troll with a friendly troll right in front of it steps around it
