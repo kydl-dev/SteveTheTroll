@@ -1,3 +1,4 @@
+using HarmonyLib;
 using Kydl.Common;
 using UnityEngine;
 
@@ -14,6 +15,7 @@ namespace SteveTheTroll.Testing
         const float ArenaMetres = 70f, AreaHalf = 20f, MaxWater = 0.1f;
         static bool _known;
         static Vector3 _start, _spot;
+        static readonly AccessTools.FieldRef<Character, float> MaxAirAltitude = AccessTools.FieldRefAccess<Character, float>("m_maxAirAltitude");
 
         /// Moves the player to the arena spot (chosen on the first call). Expected outcome: the spot (the player stands there).
         internal static Vector3 MovePlayer(Player p)
@@ -25,9 +27,9 @@ namespace SteveTheTroll.Testing
                 _spot = Choose(_start);
                 ModLog.Info("TestArena: lab start " + _start.ToString("F0") + " -> test spot " + _spot.ToString("F0") + " (" + Flat(_spot - _start).ToString("F0") + " m away, flattest dry area of 16 directions)");
             }
-            p.TeleportTo(_spot, p.transform.rotation, false);
-            p.transform.position = _spot;
-            ModLog.Verbose("TestArena: player moved to " + _spot.ToString("F0"));
+            Place(p, _spot, p.transform.rotation);
+            if (!p.InGodMode()) p.SetGodMode(true);      // D-172 (user): god mode on, fly off - creatures still target the player, but no test dies by accident
+            ModLog.Verbose("TestArena: player moved to " + _spot.ToString("F0") + ", god mode " + p.InGodMode());
             return _spot;
         }
 
@@ -41,11 +43,33 @@ namespace SteveTheTroll.Testing
             var dir = _spot - _start; dir.y = 0f; dir.Normalize();
             var to = _spot + dir * metres;
             to.y = ZoneSystem.instance.GetGroundHeight(to) + 0.2f;
-            p.TeleportTo(to, Quaternion.LookRotation(dir), false);
+            Place(p, to, Quaternion.LookRotation(dir));
+            ModLog.Info("TestArena: player " + metres.ToString("F0") + " m further out at " + to.ToString("F0") + " (stands at " + p.transform.position.ToString("F0") + "), facing away from the lab start");
+            return p.transform.position;
+        }
+
+        /// D-172 (user: god mode + the player died at stt.arenaFurther): god mode for the test player, on or off (defend-rage switches it off around stt.hitPlayer).
+        /// Expected outcome: the god mode afterwards.
+        [TestHook("stt.godMode")]
+        static bool GodMode(bool on)
+        {
+            var p = Player.m_localPlayer;
+            if (p.InGodMode() != on) p.SetGodMode(on);
+            ModLog.Info("TestArena: god mode " + p.InGodMode());
+            return p.InGodMode();
+        }
+
+        /// D-172: puts the player there AT ONCE. TeleportTo was the bug: its move finishes frames later (after the area loads), so the reset's teleport to the spot landed AFTER
+        /// stt.arenaFurther and the tree / troll of the attack-key tests appeared at the bed; and setting the position by hand next to it kept the fall height, so a 9 m step
+        /// down counted as a fall (the player died, 2026-11-02). The test spots are near the loaded area, so a direct move is safe; velocity and fall height are reset.
+        static void Place(Player p, Vector3 to, Quaternion rot)
+        {
+            var body = p.GetComponent<Rigidbody>();
+            if (body != null) { body.linearVelocity = Vector3.zero; body.position = to; body.rotation = rot; }
             p.transform.position = to;
-            p.transform.rotation = Quaternion.LookRotation(dir);
-            ModLog.Info("TestArena: player " + metres.ToString("F0") + " m further out at " + to.ToString("F0") + ", facing away from the lab start");
-            return to;
+            p.transform.rotation = rot;
+            MaxAirAltitude(p) = to.y;
+            ZNet.instance.SetReferencePosition(to);
         }
 
         static float Flat(Vector3 v) { v.y = 0f; return v.magnitude; }

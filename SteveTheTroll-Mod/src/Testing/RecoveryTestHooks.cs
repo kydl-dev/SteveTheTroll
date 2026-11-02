@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using HarmonyLib;
 using Kydl.Common;
 using SteveTheTroll.Trolls.Farming.Infrastructure;
 using SteveTheTroll.Trolls.Orders.Commands;
@@ -16,6 +17,10 @@ namespace SteveTheTroll.Testing
     {
         static readonly List<GameObject> Built = new List<GameObject>();
         static readonly List<GameObject> Walls = new List<GameObject>();
+        static GameObject _tree;
+        // D-172: Piece.IsPlacedByPlayer() reads the creator the Piece cached in Awake (m_creator), not the ZDO - writing only the ZDO left the ring walls "not player-built",
+        // the troll raged at them and felled the walled tree (recovery-walled-tree, 2026-11-02). Both are set now.
+        static readonly AccessTools.FieldRef<Piece, long> CreatorField = AccessTools.FieldRefAccess<Piece, long>("m_creator");
         static long Me { get { return Player.m_localPlayer != null ? Player.m_localPlayer.GetPlayerID() : 0L; } }
 
         /// A Beech tree `dx`,`dz` metres from the player inside a closed ring of player-built stone walls of the given radius. Expected outcome: the tree (bind it with "as").
@@ -31,6 +36,7 @@ namespace SteveTheTroll.Testing
             if (treePrefab == null || wallPrefab == null) throw new System.Exception("Beech1 or stone_wall_4x2 prefab missing");
             var tree = Object.Instantiate(treePrefab, centre, Quaternion.identity);
             Built.Add(tree);
+            _tree = tree;
             int n = Mathf.CeilToInt(2f * Mathf.PI * radius / 3.2f);      // the wall is 4 m long along its local X: forward = radial puts that axis along the tangent
             for (int i = 0; i < n; i++)
             {
@@ -39,8 +45,15 @@ namespace SteveTheTroll.Testing
                 var at = centre + radial * radius;
                 at.y = ZoneSystem.instance.GetGroundHeight(at) - 0.3f;
                 var wall = Object.Instantiate(wallPrefab, at, Quaternion.LookRotation(radial));
-                var view = wall.GetComponent<ZNetView>();      // Piece.SetCreator needs the Splatform reference; the creator is just a ZDO long (what IsPlacedByPlayer reads)
-                if (view != null && view.IsValid()) view.GetZDO().Set(ZDOVars.s_creator, Me != 0L ? Me : 4711L);      // 0 would mean "not built by a player"
+                var view = wall.GetComponent<ZNetView>();
+                var piece = wall.GetComponent<Piece>();
+                long creator = Me != 0L ? Me : 4711L;      // 0 would mean "not built by a player"
+                if (view == null || !view.IsValid()) ModLog.Warn("RecoveryTestHooks: wall " + i + " has no valid ZNetView - creator not set in the ZDO");
+                else view.GetZDO().Set(ZDOVars.s_creator, creator);
+                if (piece != null) CreatorField(piece) = creator;
+                if (i == 0)      // one line is enough, they are all built the same way
+                    ModLog.Info("RecoveryTestHooks: wall 0 creator in ZDO " + (view != null && view.IsValid() ? view.GetZDO().GetLong(ZDOVars.s_creator, 0L).ToString() : "no valid ZDO")
+                        + ", Piece found " + (piece != null) + ", GetCreator " + (piece != null ? piece.GetCreator().ToString() : "-") + ", IsPlacedByPlayer " + (piece != null && piece.IsPlacedByPlayer()));
                 Walls.Add(wall); Built.Add(wall);
             }
             ModLog.Info("RecoveryTestHooks: tree at " + centre.ToString("F0") + " inside a ring of " + n + " player-built walls, radius " + radius.ToString("F0") + " m, creator " + (Me != 0L ? Me : 4711L));
@@ -70,7 +83,7 @@ namespace SteveTheTroll.Testing
                 else Object.Destroy(g);
                 n++;
             }
-            Built.Clear(); Walls.Clear();
+            Built.Clear(); Walls.Clear(); _tree = null;
             return n;
         }
 
@@ -102,6 +115,25 @@ namespace SteveTheTroll.Testing
                 if (wnt != null && wnt.GetHealthPercentage() < 0.999f) hit++;
             }
             return hit;
+        }
+
+        /// D-172: true once the walled-tree scenario has an outcome - the troll blacklisted the tree (the expected end) OR the tree is gone (felled: the troll broke in). Lets the
+        /// test stop at once instead of waiting out 360 s on a tree that no longer exists. Reads the tree walledTree built (the lab's 'tree' binding dies with the tree).
+        [TestHook("stt.walledDone")]
+        static bool WalledDone(GameObject troll) { return WalledOutcome(troll) != "waiting"; }
+
+        /// D-172: "blacklisted" (expected), "waiting", or what went wrong: "tree felled, walls standing N of M, walls hit K, stage S".
+        [TestHook("stt.walledOutcome")]
+        static string WalledOutcome(GameObject troll)
+        {
+            var ch = troll != null ? troll.GetComponent<Character>() : null;
+            if (_tree != null && _tree.activeInHierarchy && ch != null && TrollRecovery.IsBlacklisted(ch, _tree)) return "blacklisted";
+            if (_tree != null && _tree.activeInHierarchy) return "waiting";
+            int alive = 0; foreach (var w in Walls) if (w != null && w.activeInHierarchy) alive++;
+            var r = troll != null ? troll.GetComponent<TrollRecovery>() : null;
+            string why = "tree felled, walls standing " + alive + " of " + Walls.Count + ", walls hit " + WallsHit() + ", stage " + (r == null ? "none" : r.Stage.ToString());
+            ModLog.Info("RecoveryTestHooks: walled tree outcome - " + why);
+            return why;
         }
 
         /// 1 while the tree still stands untouched.

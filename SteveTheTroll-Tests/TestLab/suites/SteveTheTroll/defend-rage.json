@@ -28,7 +28,7 @@
     },
     {
       "do": "hook",
-      "name": "stt.spawnTroll",
+      "name": "stt.spawnTrollNear",
       "args": {
         "dx": -6,
         "dz": -2
@@ -48,11 +48,29 @@
     },
     {
       "do": "hook",
+      "name": "stt.godMode",
+      "args": {
+        "on": false
+      },
+      "expect": false,
+      "label": "god mode off for the hit (D-172)"
+    },
+    {
+      "do": "hook",
       "name": "stt.hitPlayer",
       "args": {
         "attacker": "mob",
         "damage": 1
       }
+    },
+    {
+      "do": "hook",
+      "name": "stt.godMode",
+      "args": {
+        "on": true
+      },
+      "expect": true,
+      "label": "god mode back on"
     },
     {
       "do": "wait",

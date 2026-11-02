@@ -28,6 +28,7 @@ namespace SteveTheTroll.Trolls.Recovery.Infrastructure
     {
         /// Per troll + resource failure counters and blacklists.
         internal static readonly RecoveryBook Book = new RecoveryBook();
+        static readonly HashSet<int> LoggedPieces = new HashSet<int>();      // D-172: the Destructible-piece line once per piece, not every probe
         const float ProbeRadius = 0.6f, ProbeDistance = 3f, ChestHeight = 1f, StaleSeconds = 2f, LogSeconds = 3f, SwingGap = 0.3f, RageReach = 2.8f, PruneSeconds = 60f;
         static int _mask, _blockMask;
         static float _nextPrune;
@@ -267,6 +268,13 @@ namespace SteveTheTroll.Trolls.Recovery.Infrastructure
             var root = ch != null ? ch.gameObject : (piece != null ? piece.gameObject : c.gameObject);
             _obstacleName = root.name + " (" + c.name + ", " + bestD.ToString("F1") + " m)";
             rageable = StuckRules.Rageable(_kind);
+            if (piece != null && _kind == Obstruction.Destructible && LoggedPieces.Add(piece.GetInstanceID()))
+            {
+                // D-172 (user): a fortress wall / world piece as Destructible is normal; a wall a player built as Destructible (placedByPlayer false) is the anomaly
+                var pv = piece.GetComponent<ZNetView>();
+                ModLog.Info("TrollRecovery: " + TrollTaming.Tag(this) + " treats piece " + piece.name + " as destructible: placedByPlayer " + piece.IsPlacedByPlayer() + ", GetCreator " + piece.GetCreator()
+                    + ", ZDO creator " + (pv != null && pv.IsValid() ? pv.GetZDO().GetLong(ZDOVars.s_creator, 0L).ToString() : "no valid ZDO") + ", layer " + LayerMask.LayerToName(c.gameObject.layer));
+            }
             if (rageable) _rageTarget = ch != null ? ch.gameObject : c.gameObject;
             if (ch != null && ch.IsTamed() && TrollTaming.IsTroll(ch))
             {

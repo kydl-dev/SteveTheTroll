@@ -36,17 +36,8 @@
       "as": "troll"
     },
     {
-      "do": "hook",
-      "name": "stt.weaponOf",
-      "args": {
-        "troll": "troll"
-      },
-      "contains": "slap",
-      "label": "swings its slap"
-    },
-    {
       "do": "wait",
-      "seconds": 1.5
+      "seconds": 3
     },
     {
       "do": "hook",
@@ -54,6 +45,30 @@
       "args": {
         "troll": "troll"
       }
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "hook",
+      "name": "stt.disarm",
+      "args": {
+        "troll": "troll"
+      }
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "hook",
+      "name": "stt.weaponOf",
+      "args": {
+        "troll": "troll"
+      },
+      "contains": "slap",
+      "label": "swings its slap"
     },
     {
       "do": "hook",

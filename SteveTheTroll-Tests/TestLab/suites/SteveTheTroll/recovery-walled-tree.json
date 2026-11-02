@@ -74,14 +74,28 @@
       "do": "wait",
       "until": {
         "check": "hook",
-        "name": "stt.blacklisted",
+        "name": "stt.walledDone",
         "args": {
-          "troll": "troll",
-          "source": "tree"
+          "troll": "troll"
         },
         "expect": true
       },
       "timeout": 360
+    },
+    {
+      "do": "hook",
+      "name": "stt.walledOutcome",
+      "args": {
+        "troll": "troll"
+      },
+      "expect": "blacklisted",
+      "label": "the troll gave the walled tree up (D-167) - not broken in"
+    },
+    {
+      "do": "hook",
+      "name": "stt.wallsHit",
+      "expect": 0,
+      "label": "no player-built wall was hit"
     }
   ],
   "asserts": [
