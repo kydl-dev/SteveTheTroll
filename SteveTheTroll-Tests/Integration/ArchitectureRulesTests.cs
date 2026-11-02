@@ -33,7 +33,7 @@ namespace SteveTheTroll.Tests.Integration
             return files.Distinct();
         }
 
-        [Test] public void PureLayersExist() { Assert.That(PureFiles().Count(), Is.GreaterThanOrEqualTo(15), "src/Core + Trolls/Recovery/{Domain,Application,Execution}"); }
+        [Test] public void PureLayersExist() { Assert.That(PureFiles().Count(), Is.GreaterThanOrEqualTo(25), "src/Core + Trolls/{Recovery,Farming,Orders}/{Domain,Application,Execution}"); }
 
         [Test] public void PureLayers_ReferenceNoGameOrEngine()
         {
@@ -67,6 +67,21 @@ namespace SteveTheTroll.Tests.Integration
             var first = Regex.Match(suite, @"""tests""\s*:\s*\[\s*""([^""]+)""");
             Assert.That(first.Groups[1].Value, Is.EqualTo("architecture-v2"));
             Assert.That(File.Exists(Path.Combine(TestPaths.ProjectRoot, "SteveTheTroll-Tests", "TestLab", "suites", "SteveTheTroll", "architecture-v2.json")), Is.True);
+        }
+
+        // D-170: every order command has exactly one handler (the dispatcher would answer Failed for a command without one)
+        [Test] public void EveryOrderCommand_HasAHandler()
+        {
+            System.Type[] types;
+            try { types = ModAssembly.Load().GetTypes(); }
+            catch (System.Reflection.ReflectionTypeLoadException e) { types = e.Types.Where(t => t != null).ToArray(); }
+            var commands = types.Where(t => t.Namespace == "SteveTheTroll.Trolls.Orders.Commands" && t.Name.EndsWith("Command") && !t.IsInterface).ToList();
+            Assert.That(commands.Count, Is.EqualTo(6));
+            foreach (var c in commands)
+            {
+                int handlers = types.Count(h => h.GetInterfaces().Any(i => i.IsGenericType && i.Name.StartsWith("ICommandHandler") && i.GetGenericArguments()[0] == c));
+                Assert.That(handlers, Is.EqualTo(1), c.Name);
+            }
         }
 
         static string Rel(string f) { return f.Substring(Src.Length + 1); }

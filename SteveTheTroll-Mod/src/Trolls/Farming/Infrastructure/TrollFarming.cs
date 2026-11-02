@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using HarmonyLib;
 using Kydl.Common;
 using SteveTheTroll.Taming;
+using SteveTheTroll.Trolls.Orders.Commands;
 using UnityEngine;
 
 namespace SteveTheTroll.Trolls.Farming.Infrastructure
@@ -27,59 +28,19 @@ namespace SteveTheTroll.Trolls.Farming.Infrastructure
         /// In-game test Startup_TamingReflection. Expected outcome: whether both delegates were found.
         internal static bool SelfCheck() { return MoveTo != null && LookAt != null; }
 
-        /// "Go farm" (owner of the troll's ZDO only). Expected outcome: returns whether the troll now farms.
-        internal static bool Begin(Character troll, string focus, bool announce = false)
-        {
-            var view = troll != null ? troll.GetComponent<ZNetView>() : null;
-            var ai = troll != null ? troll.GetComponent<MonsterAI>() : null;
-            if (ai == null || view == null || !view.IsValid() || !view.IsOwner()) { ModLog.Warn("TrollFarming: cannot send " + (troll != null ? TrollTaming.Tag(troll) : "?") + " (ai " + (ai != null) + ", owner " + (view != null && view.IsOwner()) + ")"); return false; }
-            TrollTaming.StopFollow(ai);
-            ai.SetPatrolPoint();
-            var arrival = troll.GetComponent<TrollArrival>();
-            if (arrival != null) Object.Destroy(arrival);
-            var f = troll.GetComponent<TrollFarmer>();
-            if (f == null) f = troll.gameObject.AddComponent<TrollFarmer>();
-            f.Setup(focus, troll.transform.position, announce);
-            ModLog.Info("TrollFarming: " + TrollTaming.Tag(troll) + " farms '" + (focus.Length > 0 ? focus : "default priority") + (announce ? " (no orders for a while)" : "") + "' around " + troll.transform.position.ToString("F0"));
-            return troll.GetComponent<TrollFarmer>() != null;
-        }
+        // D-170: the four orders below are a facade over the order commands (Trolls/Orders/Commands, one CommandDispatcher); every caller keeps working unchanged.
 
-        /// T-008d / D-065 attack key on a tree / log / rock: farm THIS source first, then go on with the focus / default priority.
-        /// Expected outcome: whether the troll now farms it.
-        internal static bool BeginOn(Character troll, GameObject source, string focus)
-        {
-            if (!Begin(troll, focus)) return false;
-            var f = troll.GetComponent<TrollFarmer>();
-            return f != null && f.Force(source);
-        }
+        /// "Go farm" (owner of the troll's ZDO only). Expected outcome: returns whether the troll now farms.
+        internal static bool Begin(Character troll, string focus, bool announce = false) { return TrollOrderService.Send(new FarmFocusCommand(troll, focus ?? "", announce)); }
+
+        /// T-008d / D-065 attack key on a tree / log / rock: farm THIS source first, then go on with the focus / default priority. Expected outcome: whether the troll now farms it.
+        internal static bool BeginOn(Character troll, GameObject source, string focus) { return TrollOrderService.Send(new BreakSourceCommand(troll, source, focus)); }
 
         /// T-008e: walk to the owner's bed and wait there (silent). Expected outcome: whether the troll now walks home.
-        internal static bool SendHome(Character troll)
-        {
-            var view = troll != null ? troll.GetComponent<ZNetView>() : null;
-            if (view == null || !view.IsValid() || !view.IsOwner()) return false;
-            var arrival = troll.GetComponent<TrollArrival>();
-            if (arrival != null) Object.Destroy(arrival);
-            var f = troll.GetComponent<TrollFarmer>();
-            if (f == null) f = troll.gameObject.AddComponent<TrollFarmer>();
-            f.SetupHome();
-            ModLog.Info("TrollFarming: " + TrollTaming.Tag(troll) + " walks to the owner's bed and waits");
-            return true;
-        }
+        internal static bool SendHome(Character troll) { return TrollOrderService.Send(new SendHomeCommand(troll)); }
 
         /// D-143: walk to the hub / bed and empty the backpack into the depot. Expected outcome: whether the troll now goes.
-        internal static bool BeginUnload(Character troll)
-        {
-            var view = troll != null ? troll.GetComponent<ZNetView>() : null;
-            if (view == null || !view.IsValid() || !view.IsOwner()) return false;
-            var arrival = troll.GetComponent<TrollArrival>();
-            if (arrival != null) Object.Destroy(arrival);
-            var f = troll.GetComponent<TrollFarmer>();
-            if (f == null) f = troll.gameObject.AddComponent<TrollFarmer>();
-            f.SetupUnload();
-            ModLog.Info("TrollFarming: " + TrollTaming.Tag(troll) + " goes to empty its backpack at the depot");
-            return true;
-        }
+        internal static bool BeginUnload(Character troll) { return TrollOrderService.Send(new UnloadCommand(troll)); }
 
         /// The item the troll farms now ("" = not farming).
         internal static string Farming(Character troll)

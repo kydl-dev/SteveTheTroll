@@ -1,6 +1,9 @@
 using Kydl.Common;
 using SteveTheTroll.Taming;
 using SteveTheTroll.Trolls.Farming.Infrastructure;
+using SteveTheTroll.Trolls.Orders.Application;
+using SteveTheTroll.Trolls.Orders.Commands;
+using SteveTheTroll.Trolls.Orders.Domain;
 using UnityEngine;
 
 namespace SteveTheTroll.Trolls.Orders.Infrastructure
@@ -9,6 +12,8 @@ namespace SteveTheTroll.Trolls.Orders.Infrastructure
     /// T-008d / D-065: the attack key ([Controls] AttackKey, Mouse 4 = the mouse's back button): the player looks at something and presses
     /// it - his nearest own tamed troll (within OrderRange) attacks that creature, or breaks that tree / log / rock / vein (then goes on
     /// farming), or, looking at nothing of that kind, farms its focus / the default priority. Not while a menu, chat or the console is open.
+    /// D-170 (Architecture V2, orders slice): the Infrastructure adapter - key, raycast and ownership take-over here; OrderPipeline / OrderRules decide; the order is a command
+    /// handled by TrollOrderService.
     /// </summary>
     internal static class TrollOrders
     {
@@ -16,44 +21,62 @@ namespace SteveTheTroll.Trolls.Orders.Infrastructure
         static int _mask;
         static readonly RaycastHit[] Hits = new RaycastHit[32];
 
+        static readonly OrderPipeline Pipeline = new OrderPipeline();
+
         /// Plugin.Update. Expected outcome: whether an order was given this frame.
+        /// D-170: reads the facts into an OrderInput (the raycast only once a steerable troll exists, as before), OrderPipeline decides, the order goes out as a command.
         internal static bool Tick()
         {
             var key = ModSettings.AttackKey != null ? ModSettings.AttackKey.Value : KeyCode.None;
-            if (key == KeyCode.None || !Pressed(key)) return false;
+            bool pressed = key != KeyCode.None && Pressed(key);
             var p = Player.m_localPlayer;
-            if (p == null || p.IsDead() || KydlCore.KyHub.IsOpen || InventoryGui.IsVisible() || Menu.IsVisible() || global::Console.IsVisible()
-                || (Chat.instance != null && Chat.instance.HasFocus()) || TextInput.IsVisible()) return false;
-            var troll = Nearest(p);
-            if (troll == null) { ModLog.Info("TrollOrders: attack key - no own tamed troll within " + OrderRange + " m"); return false; }
-            var view = troll.GetComponent<ZNetView>();
-            if (view != null && view.IsValid() && !view.IsOwner())
+            bool alive = pressed && p != null && !p.IsDead();
+            bool blocked = alive && (KydlCore.KyHub.IsOpen || InventoryGui.IsVisible() || Menu.IsVisible() || global::Console.IsVisible() || (Chat.instance != null && Chat.instance.HasFocus()) || TextInput.IsVisible());
+            Character troll = null, creature = null;
+            GameObject source = null;
+            ZNetView view = null;
+            bool steer = false;
+            if (alive && !blocked)
             {
-                // D-066 (TEST-029: "steered by another client" twice): the owner of the troll gives an order -> takes over its steering
-                ModLog.Info("TrollOrders: " + TrollTaming.Tag(troll) + " was steered by client " + view.GetZDO().GetOwner() + " - " + p.GetPlayerName() + " takes it over");
-                view.ClaimOwnership();
+                troll = Nearest(p);
+                view = troll != null ? troll.GetComponent<ZNetView>() : null;
+                if (view != null && view.IsValid() && !view.IsOwner())
+                {
+                    // D-066 (TEST-029: "steered by another client" twice): the owner of the troll gives an order -> takes over its steering
+                    ModLog.Info("TrollOrders: " + TrollTaming.Tag(troll) + " was steered by client " + view.GetZDO().GetOwner() + " - " + p.GetPlayerName() + " takes it over");
+                    view.ClaimOwnership();
+                }
+                steer = view != null && view.IsValid() && view.IsOwner();
+                if (steer) creature = Look(p, out source);
             }
-            if (view == null || !view.IsValid() || !view.IsOwner()) { ModLog.Warn("TrollOrders: " + TrollTaming.Tag(troll) + " cannot be steered here (valid " + (view != null && view.IsValid()) + ")"); return false; }
-            GameObject source;
-            var creature = Look(p, out source);
+            var decision = Pipeline.Evaluate(new OrderInput(pressed, alive, blocked, troll != null, steer, creature != null, source != null, source != null && TrollWalls.IsWall(source)));
+            if (!decision.IsSuccess)
+            {
+                if (decision.Reason == OrderPipeline.NoTroll) ModLog.Info("TrollOrders: attack key - no own tamed troll within " + OrderRange + " m");
+                else if (decision.Reason == OrderPipeline.NoSteer) ModLog.Warn("TrollOrders: " + TrollTaming.Tag(troll) + " cannot be steered here (valid " + (view != null && view.IsValid()) + ")");
+                return decision.IsSuccess;
+            }
             string shown = Shown(troll);
-            if (creature != null)
-            {
-                TrollGuard.Order(troll, creature);
-                Ui.Notify.Show(Loc.T("stevethetroll_order_attack", shown, creature.GetHoverName()), Ui.Notify.Kind.Attack);
-                return true;
-            }
             string focus = Ui.TrollFocus.Normalize(view.GetZDO().GetString(TrollRegistry.FocusKey, ""));
-            if (source != null)
+            ModLog.Verbose("TrollOrders: " + TrollTaming.Tag(troll) + " order " + decision.Value);
+            switch (decision.Value)
             {
-                bool ok = TrollWalls.IsWall(source) ? TrollWalls.Order(troll, source, focus) : TrollFarming.BeginOn(troll, source, focus);   // D-124: walls only for 2-star trolls
-                if (ok) Ui.Notify.Show(Loc.T("stevethetroll_order_break", shown, Localization.instance.Localize(Name(source))), Ui.Notify.Kind.Farm);
-                return ok;
+                case OrderKind.Attack:
+                    TrollOrderService.Send(new AttackTargetCommand(troll, creature));
+                    Ui.Notify.Show(Loc.T("stevethetroll_order_attack", shown, creature.GetHoverName()), Ui.Notify.Kind.Attack);
+                    return decision.Value == OrderKind.Attack;
+                case OrderKind.BreakWall:
+                case OrderKind.BreakSource:
+                    // D-124: walls only for 2-star trolls (TrollWalls decides)
+                    bool ok = decision.Value == OrderKind.BreakWall ? TrollOrderService.Send(new BreakWallCommand(troll, source, focus)) : TrollOrderService.Send(new BreakSourceCommand(troll, source, focus));
+                    if (ok) Ui.Notify.Show(Loc.T("stevethetroll_order_break", shown, Localization.instance.Localize(Name(source))), Ui.Notify.Kind.Farm);
+                    return ok;
+                default:
+                    bool started = TrollOrderService.Send(new FarmFocusCommand(troll, focus));
+                    if (started) Ui.Notify.Show(Loc.T("stevethetroll_gofarm_started", shown, Loc.T(Ui.TrollFocus.KeyOf(focus))), Ui.Notify.Kind.Farm);
+                    ModLog.Info("TrollOrders: attack key on nothing - " + TrollTaming.Tag(troll) + " farms (focus '" + focus + "') " + started);
+                    return started;
             }
-            bool started = TrollFarming.Begin(troll, focus);
-            if (started) Ui.Notify.Show(Loc.T("stevethetroll_gofarm_started", shown, Loc.T(Ui.TrollFocus.KeyOf(focus))), Ui.Notify.Kind.Farm);
-            ModLog.Info("TrollOrders: attack key on nothing - " + TrollTaming.Tag(troll) + " farms (focus '" + focus + "') " + started);
-            return started;
         }
 
         // ZInput first (the game's input), the plain Unity input as a fallback for the extra mouse buttons.
