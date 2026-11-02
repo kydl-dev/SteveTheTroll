@@ -7,7 +7,7 @@ namespace SteveTheTroll.Tests.Unit
     [TestFixture]
     public class SpotTravelTests
     {
-        [TestCase(true, 160f, false)] [TestCase(true, 31f, false)] [TestCase(true, 30f, true)] [TestCase(true, 5f, true)] [TestCase(false, 160f, true)] [TestCase(false, 5f, true)]
+        [TestCase(true, 160f, false)] [TestCase(true, 30f, false)] [TestCase(true, 12.1f, false)] [TestCase(true, 12f, true)] [TestCase(true, 5f, true)] [TestCase(false, 160f, true)] [TestCase(false, 5f, true)]
         public void NearSearchWhileTravelling(bool toSpot, float metres, bool expected) { Assert.That(TargetRules.NearSearchWhileTravelling(toSpot, metres), Is.EqualTo(expected)); }
     }
 }
