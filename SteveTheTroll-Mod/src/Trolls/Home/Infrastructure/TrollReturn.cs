@@ -1,5 +1,7 @@
 using Kydl.Common;
+using SteveTheTroll.Core.Results;
 using SteveTheTroll.Backpack.Infrastructure;
+using SteveTheTroll.Hubs.Application;
 using SteveTheTroll.Hubs.Domain;
 using SteveTheTroll.Hubs.Infrastructure;
 using SteveTheTroll.Trolls.Combat.Infrastructure;
@@ -42,6 +44,8 @@ namespace SteveTheTroll.Trolls.Home.Infrastructure
         }
 
         /// Called once a second for each own troll (TrollIdle). Expected outcome: true = the troll walks back (already, or it starts now) and must not be given another job.
+        static readonly HubReturnPipeline Returns = new HubReturnPipeline();
+
         internal static bool Check(Character c, MonsterAI ai)
         {
             if (c == null || ai == null) return false;
@@ -53,11 +57,13 @@ namespace SteveTheTroll.Trolls.Home.Infrastructure
                 running._hub = hub;
                 return true;
             }
+            // D-173 (Architecture V2, P7): HubReturnPipeline.Start decides (owner, then HubRules.ShouldStartReturn); the cheap distance test first keeps the component reads off most trolls
             if (!HubRules.ShouldReturn(hub != null, d, false)) return false;
-            if (ai.GetFollowTarget() != null || c.GetComponent<TrollArrival>() != null || !TrollHome.OwnerWears(c)) return false;
-            if (ai.GetTargetCreature() != null || c.GetComponent<TrollRage>() != null) return false;
             var farmer = c.GetComponent<TrollFarmer>();
-            if (farmer != null && farmer.Unloading) return false;
+            var view = c.GetComponent<ZNetView>();
+            var start = Returns.Start(new HubReturnInput(view != null && view.IsValid() && view.IsOwner(), hub != null, d, ai.GetFollowTarget() != null, c.GetComponent<TrollArrival>() != null,
+                TrollHome.OwnerWears(c), ai.GetTargetCreature() != null || c.GetComponent<TrollRage>() != null, farmer != null && farmer.Unloading));
+            if (!start.IsSuccess || !start.Value) return false;
             if (farmer != null) Destroy(farmer);
             var r = c.gameObject.AddComponent<TrollReturn>();
             r._hub = hub; r._start = Time.time;
@@ -76,9 +82,13 @@ namespace SteveTheTroll.Trolls.Home.Infrastructure
             var rec = TrollRecovery.Of(this);                                                  // D-167: a running rage / detour drives first
             if (rec.Busy && rec.Continue(dt)) return true;
             float d = _hub != null ? HubGeometry.Flat(_hub.Pos - transform.position) : -1f;
-            if (_hub == null) { ModLog.Info("TrollReturn: " + TrollTaming.Tag(c) + " lost its hub - stops walking back"); Destroy(this); return false; }
             bool fighting = ai.GetTargetCreature() != null || GetComponent<TrollRage>() != null || GetComponent<TrollChase>() != null || GetComponent<TrollSlam>() != null;
-            switch (HubRules.ReturnNext(ai.GetFollowTarget() != null, fighting, d))
+            var view = GetComponent<ZNetView>();
+            // D-173 (Architecture V2, P7): HubReturnPipeline.Step decides (owner, hub, then HubRules.ReturnNext)
+            var step = Returns.Step(new HubReturnInput(view != null && view.IsValid() && view.IsOwner(), _hub != null, d, ai.GetFollowTarget() != null, false, true, fighting, false));
+            if (step.Status == ResponseStatus.Rejected) return false;                                  // another client owns the troll: its AI runs there
+            if (!step.IsSuccess) { ModLog.Info("TrollReturn: " + TrollTaming.Tag(c) + " lost its hub - stops walking back"); Destroy(this); return false; }
+            switch (step.Value)
             {
                 case HubRules.ReturnStep.Cancel:
                     ModLog.Info("TrollReturn: " + TrollTaming.Tag(c) + " got a follow order - stops walking back");

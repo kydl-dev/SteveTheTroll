@@ -30,6 +30,7 @@
     <Compile Include="..\..\SteveTheTroll-Mod\src\Functions.cs" Link="Mod\Functions.cs" />
     <!-- D-135 Troll Hub: pure rules + the building's data -->
     <Compile Include="..\..\SteveTheTroll-Mod\src\Hubs\Domain\HubRules.cs" Link="Mod\HubRules.cs" />
+    <Compile Include="..\..\SteveTheTroll-Mod\src\Hubs\Application\*.cs" Link="Mod\Hubs\%(Filename)%(Extension)" />
     <Compile Include="..\..\SteveTheTroll-Mod\src\Trolls\Farming\Domain\IdleRules.cs" Link="Mod\IdleRules.cs" />
     <Compile Include="..\..\SteveTheTroll-Mod\src\Backpack\Domain\DepotRules.cs" Link="Mod\DepotRules.cs" />
     <Compile Include="..\..\SteveTheTroll-Mod\src\Trolls\Taming\Domain\HealthRules.cs" Link="Mod\HealthRules.cs" />

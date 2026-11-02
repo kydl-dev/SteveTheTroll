@@ -84,6 +84,14 @@ namespace SteveTheTroll.Hubs.Domain
             return returning ? distance > FarmLeash : distance > AutoReach;
         }
 
+        /// D-173 (P7): a troll STARTS walking back when ShouldReturn says so and nothing else has it: no follow order, not arriving at its tamer, the owner wears the slippers,
+        /// not fighting / raging, not on its way to unload (the old checks of TrollReturn.Check, in their order). Expected outcome: true = start now.
+        internal static bool ShouldStartReturn(bool hasHub, float distance, bool followOrder, bool arriving, bool ownerWears, bool fighting, bool unloading)
+        {
+            if (!ShouldReturn(hasHub, distance, false)) return false;
+            return !followOrder && !arriving && ownerWears && !fighting && !unloading;
+        }
+
         /// D-162: what a walking-back troll does this step. A new follow order ends the job (Cancel); a fight - the troll or the player (in range) under attack - gives the
         /// control to the combat / rage code (Yield, the job stays); inside FarmLeash it is Done (it farms again); else Walk.
         internal static ReturnStep ReturnNext(bool followOrder, bool underAttack, float distance)

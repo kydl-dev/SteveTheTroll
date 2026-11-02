@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Kydl.Common;
 using SteveTheTroll.Backpack.Domain;
+using SteveTheTroll.Hubs.Application;
 using SteveTheTroll.Hubs.Domain;
 using SteveTheTroll.Trolls.Taming.Infrastructure;
 using UnityEngine;
@@ -102,13 +103,16 @@ namespace SteveTheTroll.Hubs.Infrastructure
         /// The hub a troll uses, or null (use the bed): `owner`'s hub chosen by hand while it is within reach, else the nearest when AutoAssign is on.
         internal static HubInfo For(long owner, Vector3 trollPos, int manual)
         {
-            if (!ModSettings.HubsOn || owner == 0L) return null;
+            // D-173 (Architecture V2, P7): HubAssignmentPipeline decides (hubs on / owner, then HubRules.Pick); this reads the registry
+            if (!ModSettings.HubsOn || owner == 0L) return null;          // cheap exit before the registry scan; the pipeline repeats it for the record
             float nearestDist;
             var nearest = Nearest(owner, trollPos, out nearestDist);
             var chosen = manual > 0 ? Find(owner, manual) : null;
-            int pick = HubRules.Pick(manual, chosen != null ? HubGeometry.Flat(chosen.Pos - trollPos) : -1f, nearest != null ? nearest.Number : 0, nearestDist, ModSettings.HubAuto);
-            return pick > 0 ? Find(owner, pick) : null;
+            var pick = Assignment.Evaluate(new HubAssignmentInput(ModSettings.HubsOn, owner, manual, chosen != null ? HubGeometry.Flat(chosen.Pos - trollPos) : -1f, nearest != null ? nearest.Number : 0, nearestDist, ModSettings.HubAuto));
+            return pick.IsSuccess && pick.Value > 0 ? Find(owner, pick.Value) : null;
         }
+
+        static readonly HubAssignmentPipeline Assignment = new HubAssignmentPipeline();
 
         internal static HubInfo For(Character troll)
         {
