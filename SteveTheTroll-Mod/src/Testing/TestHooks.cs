@@ -47,8 +47,29 @@ namespace SteveTheTroll.Testing
             return "bed at " + p.transform.position.ToString("F0") + ", " + gone + " depot piece(s) removed";
         }
 
+        /// D-171 (user: "sometimes troll walks into me ... spawn him further from player"): a tamed troll `dx`,`dz` metres from the player AS IT STANDS NOW (the lab's own
+        /// position argument was relative to the test's start, so after stt.arenaFurther the troll appeared 100 m back at the bed), pushed out to at least MinFromPlayer m.
         [TestHook("stt.spawnTroll")]
-        static GameObject SpawnTroll(Vector3 position)
+        static GameObject SpawnTroll(float dx, float dz) { return Spawn(dx, dz, MinFromPlayer); }
+
+        /// Like stt.spawnTroll but as close as asked (only for tests about a troll right next to the player, e.g. hold-look).
+        [TestHook("stt.spawnTrollNear")]
+        static GameObject SpawnTrollNear(float dx, float dz) { return Spawn(dx, dz, 0f); }
+
+        const float MinFromPlayer = 12f;
+
+        static GameObject Spawn(float dx, float dz, float minMetres)
+        {
+            var p = Player.m_localPlayer;
+            var off = new Vector3(dx, 0f, dz);
+            if (off.magnitude < minMetres) off = (off.sqrMagnitude > 0.01f ? off.normalized : -p.transform.forward) * minMetres;
+            var at = p.transform.position + off;
+            at.y = ZoneSystem.instance.GetGroundHeight(at) + 0.3f;
+            ModLog.Info("TestHooks: troll spawned " + off.magnitude.ToString("F1") + " m from the player at " + at.ToString("F0") + (off.magnitude > new Vector2(dx, dz).magnitude + 0.1f ? " (pushed out to " + minMetres + " m)" : ""));
+            return SpawnTrollAt(at);
+        }
+
+        static GameObject SpawnTrollAt(Vector3 position)
         {
             var prefab = ZNetScene.instance.GetPrefab(TrollTaming.TrollPrefab);
             if (prefab == null) throw new System.Exception("Troll prefab missing");
@@ -68,7 +89,7 @@ namespace SteveTheTroll.Testing
             var p = Player.m_localPlayer;
             var at = p.transform.position + new Vector3(dx, 0f, dz);
             at.y = ZoneSystem.instance.GetGroundHeight(at) + 0.5f;
-            return SpawnTroll(at);
+            return SpawnTrollAt(at);
         }
 
         /// Moves a troll `dx`,`dz` metres from the player onto the ground there (a troll made far away is removed by the game at once; one that is moved there is kept by TrollZones, like a real one).

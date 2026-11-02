@@ -3,17 +3,79 @@
   "description": "A second player takes the network ownership of the troll (the mod claims it back near its owner): its backpack data survives both ways",
   "timeout": 90,
   "steps": [
-    { "do": "hook", "name": "stt.reset" },
-    { "do": "hook", "name": "stt.spawnTroll", "args": { "dz": 4 }, "as": "troll" },
-    { "do": "hook", "name": "stt.pack", "args": { "troll": "troll", "prefab": "Stone", "count": 7 }, "expect": 0 },
-    { "do": "peerJoin" },
-    { "do": "peerOwn", "target": "troll" },
-    { "do": "wait", "seconds": 1 },
-    { "do": "hook", "name": "stt.backpackCount", "args": { "troll": "troll", "prefab": "Stone" }, "expect": 7, "label": "the backpack data is intact while the other player may own it" },
-    { "do": "wait", "seconds": 8 },
-    { "do": "check", "check": "zdoOwner", "target": "troll", "expect": "me", "label": "the mod claimed the troll back for its owner" },
-    { "do": "hook", "name": "stt.backpackCount", "args": { "troll": "troll", "prefab": "Stone" }, "expect": 7, "label": "the backpack data is intact after the claim" },
-    { "do": "peerLeave" }
+    {
+      "do": "hook",
+      "name": "stt.reset"
+    },
+    {
+      "do": "hook",
+      "name": "stt.spawnTroll",
+      "args": {
+        "dz": 4,
+        "dx": 0
+      },
+      "as": "troll"
+    },
+    {
+      "do": "hook",
+      "name": "stt.pack",
+      "args": {
+        "troll": "troll",
+        "prefab": "Stone",
+        "count": 7
+      },
+      "expect": 0
+    },
+    {
+      "do": "peerJoin"
+    },
+    {
+      "do": "peerOwn",
+      "target": "troll"
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "hook",
+      "name": "stt.backpackCount",
+      "args": {
+        "troll": "troll",
+        "prefab": "Stone"
+      },
+      "expect": 7,
+      "label": "the backpack data is intact while the other player may own it"
+    },
+    {
+      "do": "wait",
+      "seconds": 8
+    },
+    {
+      "do": "check",
+      "check": "zdoOwner",
+      "target": "troll",
+      "expect": "me",
+      "label": "the mod claimed the troll back for its owner"
+    },
+    {
+      "do": "hook",
+      "name": "stt.backpackCount",
+      "args": {
+        "troll": "troll",
+        "prefab": "Stone"
+      },
+      "expect": 7,
+      "label": "the backpack data is intact after the claim"
+    },
+    {
+      "do": "peerLeave"
+    }
   ],
-  "asserts": [ { "check": "noErrors", "source": "SteveTheTroll" } ]
+  "asserts": [
+    {
+      "check": "noErrors",
+      "source": "SteveTheTroll"
+    }
+  ]
 }

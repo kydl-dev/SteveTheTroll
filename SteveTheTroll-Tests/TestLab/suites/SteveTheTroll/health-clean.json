@@ -3,14 +3,49 @@
   "description": "With a tame troll, a hub and slippers, the runtime health monitor finds nothing wrong",
   "timeout": 60,
   "steps": [
-    { "do": "hook", "name": "stt.reset" },
-    { "do": "give", "prefab": "STT_TrollSlippers", "count": 1, "equip": true },
-    { "do": "hook", "name": "stt.addHub", "args": { "number": 1, "dx": 0, "dz": 25 } },
-    { "do": "hook", "name": "stt.spawnTroll", "args": { "dz": 4 }, "as": "troll" },
-    { "do": "wait", "seconds": 8 }
+    {
+      "do": "hook",
+      "name": "stt.reset"
+    },
+    {
+      "do": "give",
+      "prefab": "STT_TrollSlippers",
+      "count": 1,
+      "equip": true
+    },
+    {
+      "do": "hook",
+      "name": "stt.addHub",
+      "args": {
+        "number": 1,
+        "dx": 0,
+        "dz": 25
+      }
+    },
+    {
+      "do": "hook",
+      "name": "stt.spawnTroll",
+      "args": {
+        "dz": 4,
+        "dx": 0
+      },
+      "as": "troll"
+    },
+    {
+      "do": "wait",
+      "seconds": 8
+    }
   ],
   "asserts": [
-    { "check": "hook", "name": "stt.health", "expect": 0, "label": "no problems found" },
-    { "check": "noErrors", "source": "SteveTheTroll" }
+    {
+      "check": "hook",
+      "name": "stt.health",
+      "expect": 0,
+      "label": "no problems found"
+    },
+    {
+      "check": "noErrors",
+      "source": "SteveTheTroll"
+    }
   ]
 }

@@ -3,21 +3,120 @@
   "description": "A troll with a full backpack unloads at home, then walks back to the spot where it farmed (user request 2026-10-31)",
   "timeout": 300,
   "steps": [
-    { "do": "hook", "name": "stt.reset" },
-    { "do": "give", "prefab": "STT_TrollSlippers", "count": 1, "equip": true },
-    { "do": "hook", "name": "stt.addHub", "args": { "number": 1, "dx": 0, "dz": 25 } },
-    { "do": "hook", "name": "stt.spawnTroll", "args": { "dz": -15 }, "as": "troll" },
-    { "do": "hook", "name": "stt.startFarm", "args": { "troll": "troll" } },
-    { "do": "wait", "seconds": 3 },
-    { "do": "hook", "name": "stt.rememberSpot", "args": { "troll": "troll", "dx": 150, "dz": 0 }, "expect": true, "label": "spot 150 m away remembered" },
-    { "do": "hook", "name": "stt.fillBackpack", "args": { "troll": "troll" } },
-    { "do": "wait", "until": { "check": "hook", "name": "stt.unloading", "args": { "troll": "troll" }, "expect": true }, "timeout": 30 },
-    { "do": "wait", "until": { "check": "hook", "name": "stt.backpackStacks", "args": { "troll": "troll" }, "expect": 0 }, "timeout": 150 },
-    { "do": "wait", "until": { "check": "hook", "name": "stt.travelling", "args": { "troll": "troll" }, "expect": true }, "timeout": 60 }
+    {
+      "do": "hook",
+      "name": "stt.reset"
+    },
+    {
+      "do": "give",
+      "prefab": "STT_TrollSlippers",
+      "count": 1,
+      "equip": true
+    },
+    {
+      "do": "hook",
+      "name": "stt.addHub",
+      "args": {
+        "number": 1,
+        "dx": 0,
+        "dz": 25
+      }
+    },
+    {
+      "do": "hook",
+      "name": "stt.spawnTroll",
+      "args": {
+        "dz": -15,
+        "dx": 0
+      },
+      "as": "troll"
+    },
+    {
+      "do": "hook",
+      "name": "stt.startFarm",
+      "args": {
+        "troll": "troll"
+      }
+    },
+    {
+      "do": "wait",
+      "seconds": 3
+    },
+    {
+      "do": "hook",
+      "name": "stt.rememberSpot",
+      "args": {
+        "troll": "troll",
+        "dx": 150,
+        "dz": 0
+      },
+      "expect": true,
+      "label": "spot 150 m away remembered"
+    },
+    {
+      "do": "hook",
+      "name": "stt.fillBackpack",
+      "args": {
+        "troll": "troll"
+      }
+    },
+    {
+      "do": "wait",
+      "until": {
+        "check": "hook",
+        "name": "stt.unloading",
+        "args": {
+          "troll": "troll"
+        },
+        "expect": true
+      },
+      "timeout": 30
+    },
+    {
+      "do": "wait",
+      "until": {
+        "check": "hook",
+        "name": "stt.backpackStacks",
+        "args": {
+          "troll": "troll"
+        },
+        "expect": 0
+      },
+      "timeout": 150
+    },
+    {
+      "do": "wait",
+      "until": {
+        "check": "hook",
+        "name": "stt.travelling",
+        "args": {
+          "troll": "troll"
+        },
+        "expect": true
+      },
+      "timeout": 60
+    }
   ],
   "asserts": [
-    { "check": "hook", "name": "stt.backpackStacks", "args": { "troll": "troll" }, "expect": 0 },
-    { "check": "hook", "name": "stt.spotDistance", "args": { "troll": "troll" }, "min": 40 },
-    { "check": "noErrors", "source": "SteveTheTroll" }
+    {
+      "check": "hook",
+      "name": "stt.backpackStacks",
+      "args": {
+        "troll": "troll"
+      },
+      "expect": 0
+    },
+    {
+      "check": "hook",
+      "name": "stt.spotDistance",
+      "args": {
+        "troll": "troll"
+      },
+      "min": 40
+    },
+    {
+      "check": "noErrors",
+      "source": "SteveTheTroll"
+    }
   ]
 }

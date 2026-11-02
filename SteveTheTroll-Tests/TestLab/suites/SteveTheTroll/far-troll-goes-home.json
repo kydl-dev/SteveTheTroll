@@ -3,23 +3,126 @@
   "description": "A troll with a full backpack 400 m from its hub walks home, unloads and has an empty backpack (user: Steve 3, ~400 m away, did not move)",
   "timeout": 300,
   "steps": [
-    { "do": "hook", "name": "stt.reset" },
-    { "do": "give", "prefab": "STT_TrollSlippers", "count": 1, "equip": true },
-    { "do": "hook", "name": "stt.addHub", "args": { "number": 1, "dx": 0, "dz": 25 } },
-    { "do": "hook", "name": "stt.teleport", "args": { "dx": 0, "dz": -400 } },
-    { "do": "wait", "seconds": 12 },
-    { "do": "hook", "name": "stt.spawnTroll", "args": { "dz": -10 }, "as": "troll" },
-    { "do": "wait", "seconds": 2 },
-    { "do": "hook", "name": "stt.hubDistance", "args": { "troll": "troll" }, "min": 380, "max": 440, "label": "the troll stands about 400 m from its hub" },
-    { "do": "hook", "name": "stt.fillBackpack", "args": { "troll": "troll" } },
-    { "do": "hook", "name": "stt.mark", "args": { "troll": "troll" } },
-    { "do": "wait", "until": { "check": "hook", "name": "stt.unloading", "args": { "troll": "troll" }, "expect": true }, "timeout": 10 },
-    { "do": "wait", "seconds": 15 },
-    { "do": "hook", "name": "stt.moved", "args": { "troll": "troll" }, "min": 30, "label": "15 s later it has walked at least 30 m toward home" },
-    { "do": "wait", "until": { "check": "hook", "name": "stt.backpackAtMost", "args": { "troll": "troll", "stacks": 20 }, "expect": true }, "timeout": 200 }
+    {
+      "do": "hook",
+      "name": "stt.reset"
+    },
+    {
+      "do": "give",
+      "prefab": "STT_TrollSlippers",
+      "count": 1,
+      "equip": true
+    },
+    {
+      "do": "hook",
+      "name": "stt.addHub",
+      "args": {
+        "number": 1,
+        "dx": 0,
+        "dz": 25
+      }
+    },
+    {
+      "do": "hook",
+      "name": "stt.teleport",
+      "args": {
+        "dx": 0,
+        "dz": -400
+      }
+    },
+    {
+      "do": "wait",
+      "seconds": 12
+    },
+    {
+      "do": "hook",
+      "name": "stt.spawnTroll",
+      "args": {
+        "dz": -10,
+        "dx": 0
+      },
+      "as": "troll"
+    },
+    {
+      "do": "wait",
+      "seconds": 2
+    },
+    {
+      "do": "hook",
+      "name": "stt.hubDistance",
+      "args": {
+        "troll": "troll"
+      },
+      "min": 380,
+      "max": 440,
+      "label": "the troll stands about 400 m from its hub"
+    },
+    {
+      "do": "hook",
+      "name": "stt.fillBackpack",
+      "args": {
+        "troll": "troll"
+      }
+    },
+    {
+      "do": "hook",
+      "name": "stt.mark",
+      "args": {
+        "troll": "troll"
+      }
+    },
+    {
+      "do": "wait",
+      "until": {
+        "check": "hook",
+        "name": "stt.unloading",
+        "args": {
+          "troll": "troll"
+        },
+        "expect": true
+      },
+      "timeout": 10
+    },
+    {
+      "do": "wait",
+      "seconds": 15
+    },
+    {
+      "do": "hook",
+      "name": "stt.moved",
+      "args": {
+        "troll": "troll"
+      },
+      "min": 30,
+      "label": "15 s later it has walked at least 30 m toward home"
+    },
+    {
+      "do": "wait",
+      "until": {
+        "check": "hook",
+        "name": "stt.backpackAtMost",
+        "args": {
+          "troll": "troll",
+          "stacks": 20
+        },
+        "expect": true
+      },
+      "timeout": 200
+    }
   ],
   "asserts": [
-    { "check": "hook", "name": "stt.backpackAtMost", "args": { "troll": "troll", "stacks": 20 }, "expect": true },
-    { "check": "noErrors", "source": "SteveTheTroll" }
+    {
+      "check": "hook",
+      "name": "stt.backpackAtMost",
+      "args": {
+        "troll": "troll",
+        "stacks": 20
+      },
+      "expect": true
+    },
+    {
+      "check": "noErrors",
+      "source": "SteveTheTroll"
+    }
   ]
 }

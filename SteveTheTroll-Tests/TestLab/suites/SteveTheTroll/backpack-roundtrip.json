@@ -3,17 +3,106 @@
   "description": "Items put into the troll's backpack come back from its ZDO unchanged; unpacking twice does not duplicate",
   "timeout": 60,
   "steps": [
-    { "do": "hook", "name": "stt.reset" },
-    { "do": "hook", "name": "stt.spawnTroll", "args": { "dz": 4 }, "as": "troll" },
-    { "do": "hook", "name": "stt.backpackStacks", "args": { "troll": "troll" }, "expect": 0, "label": "starts empty" },
-    { "do": "hook", "name": "stt.pack", "args": { "troll": "troll", "prefab": "Stone", "count": 7 }, "expect": 0, "label": "first chest" },
-    { "do": "hook", "name": "stt.pack", "args": { "troll": "troll", "prefab": "Wood", "count": 10 }, "expect": 0 },
-    { "do": "hook", "name": "stt.backpackStacks", "args": { "troll": "troll" }, "expect": 2 },
-    { "do": "hook", "name": "stt.backpackCount", "args": { "troll": "troll", "prefab": "Stone" }, "expect": 7 },
-    { "do": "hook", "name": "stt.backpackCount", "args": { "troll": "troll", "prefab": "Wood" }, "expect": 10 },
-    { "do": "hook", "name": "stt.unpackChest0", "args": { "troll": "troll" }, "expect": 2 },
-    { "do": "hook", "name": "stt.unpackChest0", "args": { "troll": "troll" }, "expect": 0, "label": "a repeated unpack moves nothing" },
-    { "do": "hook", "name": "stt.backpackCount", "args": { "troll": "troll", "prefab": "Stone" }, "expect": 0 }
+    {
+      "do": "hook",
+      "name": "stt.reset"
+    },
+    {
+      "do": "hook",
+      "name": "stt.spawnTroll",
+      "args": {
+        "dz": 4,
+        "dx": 0
+      },
+      "as": "troll"
+    },
+    {
+      "do": "hook",
+      "name": "stt.backpackStacks",
+      "args": {
+        "troll": "troll"
+      },
+      "expect": 0,
+      "label": "starts empty"
+    },
+    {
+      "do": "hook",
+      "name": "stt.pack",
+      "args": {
+        "troll": "troll",
+        "prefab": "Stone",
+        "count": 7
+      },
+      "expect": 0,
+      "label": "first chest"
+    },
+    {
+      "do": "hook",
+      "name": "stt.pack",
+      "args": {
+        "troll": "troll",
+        "prefab": "Wood",
+        "count": 10
+      },
+      "expect": 0
+    },
+    {
+      "do": "hook",
+      "name": "stt.backpackStacks",
+      "args": {
+        "troll": "troll"
+      },
+      "expect": 2
+    },
+    {
+      "do": "hook",
+      "name": "stt.backpackCount",
+      "args": {
+        "troll": "troll",
+        "prefab": "Stone"
+      },
+      "expect": 7
+    },
+    {
+      "do": "hook",
+      "name": "stt.backpackCount",
+      "args": {
+        "troll": "troll",
+        "prefab": "Wood"
+      },
+      "expect": 10
+    },
+    {
+      "do": "hook",
+      "name": "stt.unpackChest0",
+      "args": {
+        "troll": "troll"
+      },
+      "expect": 2
+    },
+    {
+      "do": "hook",
+      "name": "stt.unpackChest0",
+      "args": {
+        "troll": "troll"
+      },
+      "expect": 0,
+      "label": "a repeated unpack moves nothing"
+    },
+    {
+      "do": "hook",
+      "name": "stt.backpackCount",
+      "args": {
+        "troll": "troll",
+        "prefab": "Stone"
+      },
+      "expect": 0
+    }
   ],
-  "asserts": [ { "check": "noErrors", "source": "SteveTheTroll" } ]
+  "asserts": [
+    {
+      "check": "noErrors",
+      "source": "SteveTheTroll"
+    }
+  ]
 }

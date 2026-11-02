@@ -26,6 +26,18 @@ namespace SteveTheTroll.Testing
             return h;
         }
 
+        /// A wild creature `dx`,`dz` metres from the player AS IT STANDS NOW (the lab's own spawn step is relative to the test's start; after stt.arenaFurther that was 100 m back).
+        [TestHook("stt.spawnMob")]
+        static GameObject SpawnMob(string prefab, float dx, float dz)
+        {
+            var pf = ZNetScene.instance.GetPrefab(prefab);
+            if (pf == null) throw new System.Exception(prefab + " prefab missing");
+            var at = Player.m_localPlayer.transform.position + new Vector3(dx, 0f, dz);
+            at.y = ZoneSystem.instance.GetGroundHeight(at) + 0.3f;
+            ModLog.Info("CombatTestHooks: " + prefab + " spawned at " + at.ToString("F0"));
+            return Object.Instantiate(pf, at, Quaternion.identity);
+        }
+
         /// The creature `attacker` hits the local player for `damage` (blunt). Expected outcome: the player's health afterwards.
         [TestHook("stt.hitPlayer")]
         static float HitPlayer(GameObject attacker, float damage)

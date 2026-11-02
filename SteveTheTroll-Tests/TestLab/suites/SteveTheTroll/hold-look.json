@@ -28,7 +28,7 @@
     },
     {
       "do": "hook",
-      "name": "stt.spawnTroll",
+      "name": "stt.spawnTrollNear",
       "args": {
         "dx": 0,
         "dz": 3

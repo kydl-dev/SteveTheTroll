@@ -38,9 +38,13 @@
       "seconds": 1
     },
     {
-      "do": "spawn",
-      "prefab": "Greydwarf",
-      "dz": 15,
+      "do": "hook",
+      "name": "stt.spawnMob",
+      "args": {
+        "prefab": "Greydwarf",
+        "dx": 0,
+        "dz": 15
+      },
       "as": "mob"
     },
     {
