@@ -24,12 +24,13 @@ namespace SteveTheTroll.Testing
 
         // ---- world setup -------------------------------------------------------------------------------------------------------------------------------
 
-        /// The player's bed is where they stand (trolls and depots use it), hubs of earlier tests are gone.
+        /// The player is moved to the test spot (TestArena), the bed is put there (trolls and depots use it), hubs of earlier tests are gone.
         [TestHook("stt.reset")]
         static string Reset()
         {
             var p = Player.m_localPlayer;
             if (p == null) return "no player";
+            TestArena.MovePlayer(p);                   // D-171 (user): every test starts on the same open spot, 70 m from the lab start (trophy stones, house)
             Game.instance.GetPlayerProfile().SetCustomSpawnPoint(p.transform.position);
             ClearHubs();
             ClearFarTrees();
