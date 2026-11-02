@@ -1,6 +1,6 @@
 {
   "name": "attack-key-tree-press",
-  "description": "D-171 P4/P8: the player looks at a tree and presses the attack key (user idea 2026-11-02: the player stands 100 m from the bed / hub on open ground and the target is 15 m in front - no no-hit ring, no arena colliders in the ray; the lab's own key press and the real camera ray, no aim help; teleports, so it runs at the end)",
+  "description": "D-171 P4/P8: the player looks at a tree and presses the attack key (user idea 2026-11-02: the player goes 100 m further out from the test spot, away from the lab start (stt.arenaFurther; a plain dx teleport went back to the lab house) and the target is 15 m in front - no no-hit ring, no arena colliders in the ray; the lab's own key press and the real camera ray, no aim help; teleports, so it runs at the end)",
   "timeout": 90,
   "steps": [
     {
@@ -27,9 +27,11 @@
       }
     },
     {
-      "do": "teleport",
-      "dx": 100,
-      "dz": 0
+      "do": "hook",
+      "name": "stt.arenaFurther",
+      "args": {
+        "metres": 100
+      }
     },
     {
       "do": "wait",

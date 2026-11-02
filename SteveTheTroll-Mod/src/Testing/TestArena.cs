@@ -31,6 +31,23 @@ namespace SteveTheTroll.Testing
             return _spot;
         }
 
+        /// D-171: the player walks (teleports) `metres` further out, AWAY from the lab start along the start -> spot line (a plain dx teleport went back towards the lab house).
+        /// The bed stays at the spot. Expected outcome: the new position.
+        [TestHook("stt.arenaFurther")]
+        static Vector3 Further(float metres)
+        {
+            var p = Player.m_localPlayer;
+            if (!_known) MovePlayer(p);
+            var dir = _spot - _start; dir.y = 0f; dir.Normalize();
+            var to = _spot + dir * metres;
+            to.y = ZoneSystem.instance.GetGroundHeight(to) + 0.2f;
+            p.TeleportTo(to, Quaternion.LookRotation(dir), false);
+            p.transform.position = to;
+            p.transform.rotation = Quaternion.LookRotation(dir);
+            ModLog.Info("TestArena: player " + metres.ToString("F0") + " m further out at " + to.ToString("F0") + ", facing away from the lab start");
+            return to;
+        }
+
         static float Flat(Vector3 v) { v.y = 0f; return v.magnitude; }
 
         static Vector3 Choose(Vector3 start)
