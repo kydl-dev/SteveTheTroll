@@ -1,7 +1,7 @@
 {
-  "name": "far-troll-goes-home",
-  "description": "A troll with a full backpack 400 m from its hub walks home, unloads and has an empty backpack (user: Steve 3, ~400 m away, did not move)",
-  "timeout": 300,
+  "name": "far-troll-goes-home-clear-route",
+  "timeout": 420,
+  "description": "D-174 (review): a full troll ~400 m from its hub on a known-dry, gentle route (stt.clearRoute picks it from world-generator heights) walks home across kept zones, reaches its ACTUAL hub, unloads, and every item is conserved. Isolates long-distance travel / zone transitions from terrain recovery.",
   "steps": [
     {
       "do": "hook",
@@ -24,10 +24,9 @@
     },
     {
       "do": "hook",
-      "name": "stt.teleport",
+      "name": "stt.clearRoute",
       "args": {
-        "dx": 0,
-        "dz": -400
+        "metres": 400
       }
     },
     {
@@ -40,14 +39,14 @@
       "args": {
         "radius": 80
       },
-      "label": "no wild creature for the troll to fight (fighting wins over unloading, D-149)"
+      "label": "no wild creature to fight (fighting wins over unloading, D-149)"
     },
     {
       "do": "hook",
       "name": "stt.spawnTroll",
       "args": {
-        "dz": 16,
-        "dx": 0
+        "dx": 0,
+        "dz": 16
       },
       "as": "troll"
     },
@@ -57,13 +56,30 @@
     },
     {
       "do": "hook",
-      "name": "stt.hubDistance",
+      "name": "stt.hubFor",
       "args": {
         "troll": "troll"
       },
-      "min": 380,
-      "max": 440,
-      "label": "the troll stands about 400 m from its hub"
+      "expect": 1,
+      "label": "the test hub still exists and is the troll's"
+    },
+    {
+      "do": "hook",
+      "name": "stt.hubDistanceInRange",
+      "args": {
+        "troll": "troll",
+        "min": 360,
+        "max": 440
+      },
+      "expect": true,
+      "label": "the troll starts about 400 m from its hub"
+    },
+    {
+      "do": "hook",
+      "name": "stt.followTroll",
+      "args": {
+        "troll": "troll"
+      }
     },
     {
       "do": "hook",
@@ -80,18 +96,10 @@
       }
     },
     {
-      "do": "hook",
-      "name": "stt.followTroll",
-      "args": {
-        "troll": "troll"
-      },
-      "label": "follow the troll by its id (its GameObject is re-created while it crosses kept zones)"
-    },
-    {
       "do": "wait",
       "until": {
         "check": "hook",
-        "name": "stt.unloading",
+        "name": "stt.returningToUnload",
         "args": {
           "troll": "troll"
         },
@@ -118,26 +126,42 @@
         "check": "hook",
         "name": "stt.followedBackpackAtMost",
         "args": {
-          "stacks": 20
+          "stacks": 0
         },
         "expect": true
       },
-      "timeout": 200
+      "timeout": 300
+    },
+    {
+      "do": "hook",
+      "name": "stt.followedState",
+      "label": "followed troll (diagnosis)"
+    },
+    {
+      "do": "hook",
+      "name": "stt.followedConserved",
+      "expect": true,
+      "label": "every Stone put in is in the backpack or a depot - nothing lost or made"
     }
   ],
   "asserts": [
     {
-      "check": "noErrors",
-      "source": "SteveTheTroll"
-    },
-    {
       "check": "hook",
       "name": "stt.followedBackpackAtMost",
       "args": {
-        "stacks": 20
+        "stacks": 0
       },
       "expect": true,
-      "label": "it reached home and unloaded"
+      "label": "it reached its hub and unloaded everything"
+    },
+    {
+      "check": "hook",
+      "name": "stt.followedConserved",
+      "expect": true
+    },
+    {
+      "check": "noErrors",
+      "source": "SteveTheTroll"
     }
   ]
 }

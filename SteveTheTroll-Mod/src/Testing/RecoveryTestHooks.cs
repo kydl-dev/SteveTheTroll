@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using HarmonyLib;
 using Kydl.Common;
+using SteveTheTroll.Hubs.Infrastructure;
 using SteveTheTroll.Trolls.Farming.Infrastructure;
 using SteveTheTroll.Trolls.Orders.Commands;
 using SteveTheTroll.Trolls.Recovery.Infrastructure;
@@ -156,6 +157,37 @@ namespace SteveTheTroll.Testing
         /// D-172: the walled tree's health now (diagnosis step). Expected outcome: the TreeHealth text.
         [TestHook("stt.walledTreeHealth")]
         static string WalledTreeHealth() { string h = TreeHealth(_tree); ModLog.Info("RecoveryTestHooks: walled tree " + h); return h; }
+
+        /// D-174 (review: far-troll-goes-home-obstacle-route): a line of player-built stone walls (two high, `length` m long) across the troll's straight way to its hub,
+        /// `ahead` m in front of the troll - nothing a troll may break, so it must find a way round (D-174 candidate search). Expected outcome: how many walls.
+        [TestHook("stt.wallAcross")]
+        static int WallAcross(GameObject troll, float ahead, float length)
+        {
+            HubRegistry.All(true);
+            var hub = HubRegistry.For(troll.GetComponent<Character>());
+            if (hub == null) throw new System.Exception("the troll has no hub");
+            var to = hub.Pos - troll.transform.position; to.y = 0f;
+            var fwd = to.normalized; var side = new Vector3(fwd.z, 0f, -fwd.x);
+            var centre = troll.transform.position + fwd * ahead;
+            var wallPrefab = ZNetScene.instance.GetPrefab("stone_wall_4x2");
+            int n = Mathf.CeilToInt(length / 4f), made = 0;
+            long creator = Me != 0L ? Me : 4711L;
+            for (int layer = 0; layer < 2; layer++)
+                for (int i = 0; i < n; i++)
+                {
+                    var at = centre + side * ((i - (n - 1) * 0.5f) * 4f);
+                    float low = Mathf.Min(ZoneSystem.instance.GetGroundHeight(at), Mathf.Min(ZoneSystem.instance.GetGroundHeight(at + side * 2f), ZoneSystem.instance.GetGroundHeight(at - side * 2f)));
+                    at.y = low - 0.3f + layer * 2f;
+                    var wall = Object.Instantiate(wallPrefab, at, Quaternion.LookRotation(fwd));
+                    var view = wall.GetComponent<ZNetView>(); var piece = wall.GetComponent<Piece>(); var wnt = wall.GetComponent<WearNTear>();
+                    if (view != null && view.IsValid()) view.GetZDO().Set(ZDOVars.s_creator, creator);
+                    if (piece != null) CreatorField(piece) = creator;
+                    if (wnt != null) { wnt.m_noSupportWear = false; wnt.m_noRoofWear = false; }
+                    Walls.Add(wall); Built.Add(wall); WallIds.Add(wall.GetInstanceID()); made++;
+                }
+            ModLog.Info("RecoveryTestHooks: wall line of " + n + " x 2 player-built walls (" + length.ToString("F0") + " m) " + ahead.ToString("F0") + " m in front of " + TrollTaming.Tag(troll.GetComponent<Character>()) + ", across its way to " + hub.Name);
+            return made;
+        }
 
         /// D-172: true once the walled-tree scenario has an outcome - the troll blacklisted the tree (the expected end) OR the tree is gone (felled: the troll broke in). Lets the
         /// test stop at once instead of waiting out 360 s on a tree that no longer exists. Reads the tree walledTree built (the lab's 'tree' binding dies with the tree).

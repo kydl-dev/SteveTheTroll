@@ -1,0 +1,88 @@
+{
+  "name": "hub-manual-precedence",
+  "timeout": 40,
+  "description": "D-174 (review): a hub chosen by hand beats a nearer automatic one; when that hub is removed the troll falls back to the nearest one.",
+  "steps": [
+    {
+      "do": "hook",
+      "name": "stt.reset"
+    },
+    {
+      "do": "hook",
+      "name": "stt.spawnTroll",
+      "args": {
+        "dx": 0,
+        "dz": 16
+      },
+      "as": "troll"
+    },
+    {
+      "do": "hook",
+      "name": "stt.addHub",
+      "args": {
+        "number": 1,
+        "dx": 0,
+        "dz": 40
+      }
+    },
+    {
+      "do": "hook",
+      "name": "stt.addHub",
+      "args": {
+        "number": 2,
+        "dx": 300,
+        "dz": 0
+      }
+    },
+    {
+      "do": "hook",
+      "name": "stt.hubFor",
+      "args": {
+        "troll": "troll"
+      },
+      "expect": 1,
+      "label": "automatic: the nearest hub (1)"
+    },
+    {
+      "do": "hook",
+      "name": "stt.assignHub",
+      "args": {
+        "troll": "troll",
+        "number": 2
+      },
+      "expect": 2
+    },
+    {
+      "do": "hook",
+      "name": "stt.hubFor",
+      "args": {
+        "troll": "troll"
+      },
+      "expect": 2,
+      "label": "sent to hub 2 by hand: hub 2 although hub 1 is nearer"
+    },
+    {
+      "do": "hook",
+      "name": "stt.removeHub",
+      "args": {
+        "number": 2
+      },
+      "expect": 1
+    },
+    {
+      "do": "hook",
+      "name": "stt.hubFor",
+      "args": {
+        "troll": "troll"
+      },
+      "expect": 1,
+      "label": "hub 2 gone: back to the nearest (1)"
+    }
+  ],
+  "asserts": [
+    {
+      "check": "noErrors",
+      "source": "SteveTheTroll"
+    }
+  ]
+}

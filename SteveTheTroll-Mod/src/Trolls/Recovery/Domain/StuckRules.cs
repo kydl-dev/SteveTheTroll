@@ -63,6 +63,44 @@ namespace SteveTheTroll.Trolls.Recovery.Domain
         internal static Side Opposite(Side s) { return s == Side.Right ? Side.Left : Side.Right; }
 
         /// One step of a detour (a point one metre further along the leg) is valid: not blocked, the ground does not jump (cliff / wall), the liquid is shallow.
+        /// D-174 (review of far-troll-goes-home: 116 m from home every detour found "right 0 m / left 0 m" - only 90 degrees, 10 m, was ever tried): the first leg of a detour
+        /// searches these angles from the intended direction (degrees, preferred side first, then the other side), each up to CandidateMetres.
+        internal static readonly float[] CandidateAngles = { 70f, 90f, 45f, 110f, 135f };
+        /// Walking speed a leg is given time for (m/s): a long candidate leg must not be cut by LegMaxSeconds.
+        internal const float MinLegSpeed = 2.5f;
+
+        /// How far a candidate leg at `angleDeg` may go: 20 m up to 70 degrees, 30 m wider (around a long obstacle). Expected outcome: 20 or 30.
+        internal static float CandidateMetres(float angleDeg) { return angleDeg <= 70f ? 20f : 30f; }
+
+        /// `side` of the intended direction turned by `angleDeg` (90 = Direction). Expected outcome: a unit vector (0,0 for a zero input).
+        internal static void Rotate(float ix, float iz, Side side, float angleDeg, out float dx, out float dz)
+        {
+            float len = (float)Math.Sqrt(ix * ix + iz * iz);
+            if (len < 1e-5f) { dx = 0f; dz = 0f; return; }
+            ix /= len; iz /= len;
+            double a = (side == Side.Right ? angleDeg : -angleDeg) * Math.PI / 180.0;
+            float c = (float)Math.Cos(a), sn = (float)Math.Sin(a);
+            dx = ix * c + iz * sn;
+            dz = -ix * sn + iz * c;
+        }
+
+        /// D-174: which candidate leg to walk. `metres[i]` = valid metres of candidate i (in search order). The first one with GoodLegMetres wins (search order = preference:
+        /// the preferred side's angles nearest to the goal first); else the longest one with at least MinLegMetres. Expected outcome: the index, -1 = none walkable.
+        internal static int PickCandidate(IList<float> metres)
+        {
+            if (metres == null) return -1;
+            int best = -1; float bestM = MinLegMetres - 0.001f;
+            for (int i = 0; i < metres.Count; i++)
+            {
+                if (metres[i] >= GoodLegMetres) return i;
+                if (metres[i] > bestM) { bestM = metres[i]; best = i; }
+            }
+            return best;
+        }
+
+        /// D-174: time a leg of `planned` metres is given before it counts as done. Expected outcome: LegMaxSeconds, or more for a long leg.
+        internal static float LegSeconds(float planned) { return Math.Max(LegMaxSeconds, planned / MinLegSpeed); }
+
         internal static bool StepOk(float rise, float waterDepth, bool blocked)
         {
             return !blocked && Math.Abs(rise) <= StepMaxRise && waterDepth <= MaxWaterDepth;
@@ -89,7 +127,7 @@ namespace SteveTheTroll.Trolls.Recovery.Domain
         /// A detour leg is over: nothing to walk, walked far enough, took too long, or stalled (moved less than LegStallMetres for LegStallSeconds).
         internal static bool LegDone(float walked, float planned, float legSeconds, float stalledSeconds)
         {
-            return planned < MinLegMetres || walked >= planned - 0.5f || legSeconds >= LegMaxSeconds || stalledSeconds >= LegStallSeconds;
+            return planned < MinLegMetres || walked >= planned - 0.5f || legSeconds >= LegSeconds(planned) || stalledSeconds >= LegStallSeconds;
         }
 
         /// Spec 4: two trolls blocked head on. `other` stands in front of me, close, and its facing (odx, odz) points against mine (mdx, mdz; unit vectors).

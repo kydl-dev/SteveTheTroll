@@ -1,7 +1,7 @@
 {
   "name": "spot-return",
   "description": "A troll with a full backpack unloads at home, then walks back to the spot where it farmed (user request 2026-10-31)",
-  "timeout": 300,
+  "timeout": 330,
   "steps": [
     {
       "do": "hook",
@@ -64,7 +64,7 @@
       "do": "wait",
       "until": {
         "check": "hook",
-        "name": "stt.unloading",
+        "name": "stt.returningToUnload",
         "args": {
           "troll": "troll"
         },
@@ -95,6 +95,32 @@
         "expect": true
       },
       "timeout": 60
+    },
+    {
+      "do": "wait",
+      "until": {
+        "check": "hook",
+        "name": "stt.reachedSpot",
+        "args": {
+          "troll": "troll",
+          "metres": 15
+        },
+        "expect": true
+      },
+      "timeout": 90
+    },
+    {
+      "do": "wait",
+      "seconds": 3
+    },
+    {
+      "do": "hook",
+      "name": "stt.state",
+      "args": {
+        "troll": "troll"
+      },
+      "contains": "farming",
+      "label": "it farms again at the remembered spot"
     }
   ],
   "asserts": [
@@ -107,16 +133,17 @@
       "expect": 0
     },
     {
-      "check": "hook",
-      "name": "stt.spotDistance",
-      "args": {
-        "troll": "troll"
-      },
-      "min": 40
-    },
-    {
       "check": "noErrors",
       "source": "SteveTheTroll"
+    },
+    {
+      "check": "hook",
+      "name": "stt.reachedSpot",
+      "args": {
+        "troll": "troll",
+        "metres": 15
+      },
+      "expect": true
     }
   ]
 }

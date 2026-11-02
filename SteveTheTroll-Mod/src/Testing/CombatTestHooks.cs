@@ -188,7 +188,7 @@ namespace SteveTheTroll.Testing
 
         /// Removes every tamed troll (tests leave farming trolls behind; a stray one can chop the next test's tree). Expected outcome: how many were removed.
         [TestHook("stt.clearTrolls")]
-        static int ClearTrolls()
+        internal static int ClearTrolls()
         {
             // D-172 (review: "restrict it to the test arena or track test-created trolls"): only trolls a test hook made, or tamed trolls within ArenaClearMetres of the
             // test arena (stt.arenaFurther / stt.teleport places included) - never a player's trolls elsewhere in a normal save

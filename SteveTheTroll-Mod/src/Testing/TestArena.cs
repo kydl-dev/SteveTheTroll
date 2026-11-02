@@ -70,6 +70,42 @@ namespace SteveTheTroll.Testing
             return n;
         }
 
+        /// D-174 (review: "a 400-metre return test should not depend on randomly generated terrain being passable"): of 16 directions from the arena spot, the one whose straight
+        /// line of `metres` has the gentlest terrain and no water (WorldGenerator heights - valid where nothing is loaded; sampled every 10 m), and teleports the player to its end
+        /// (the game's distant teleport finds the floor). Expected outcome: a description; throws when no direction is dry.
+        [TestHook("stt.clearRoute")]
+        static string ClearRoute(float metres)
+        {
+            var p = Player.m_localPlayer;
+            if (!_known) MovePlayer(p);
+            var wg = WorldGenerator.instance;
+            float water = ZoneSystem.instance.m_waterLevel;
+            int best = -1; float bestSteep = float.MaxValue;
+            for (int k = 0; k < 16; k++)
+            {
+                float a = k * Mathf.PI * 2f / 16f;
+                var dir = new Vector3(Mathf.Cos(a), 0f, Mathf.Sin(a));
+                float steep = 0f, prev = wg.GetHeight(_spot.x, _spot.z); bool wet = false;
+                for (float d = 10f; d <= metres + 0.1f; d += 10f)
+                {
+                    var q = _spot + dir * d;
+                    float h = wg.GetHeight(q.x, q.z);
+                    if (h < water + 0.5f) { wet = true; break; }
+                    steep = Mathf.Max(steep, Mathf.Abs(h - prev)); prev = h;
+                }
+                if (!wet && steep < bestSteep) { bestSteep = steep; best = k; }
+            }
+            if (best < 0) throw new System.Exception("no dry direction of " + metres.ToString("F0") + " m from the arena spot");
+            float ang = best * Mathf.PI * 2f / 16f;
+            var to = _spot + new Vector3(Mathf.Cos(ang), 0f, Mathf.Sin(ang)) * metres;
+            to.y = wg.GetHeight(to.x, to.z) + 1f;
+            _further = true; _furtherSpot = to;
+            p.TeleportTo(to, Quaternion.identity, true);
+            string info = "clear route " + metres.ToString("F0") + " m, direction " + best + " of 16, steepest 10 m step " + bestSteep.ToString("F1") + " m, player to " + to.ToString("F0");
+            ModLog.Info("TestArena: " + info);
+            return info;
+        }
+
         /// D-173 (run 155357: far-troll-goes-home, 400 m out, the full troll was "not sent to the depot: fighting" - a wild creature there; fighting wins over unloading by
         /// design, D-149): removes wild creatures (not tamed, not players) within `radius` m of the player. Expected outcome: how many were removed.
         [TestHook("stt.clearMobs")]

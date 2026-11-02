@@ -1,0 +1,39 @@
+{
+  "name": "troll-elemental-immune",
+  "timeout": 30,
+  "description": "D-174 (review: World_TrollElementalImmune skips without a tamed troll): a tamed troll is immune to fire, frost, lightning, poison and spirit.",
+  "steps": [
+    {
+      "do": "hook",
+      "name": "stt.reset"
+    },
+    {
+      "do": "hook",
+      "name": "stt.spawnTroll",
+      "args": {
+        "dx": 0,
+        "dz": 16
+      },
+      "as": "troll"
+    },
+    {
+      "do": "wait",
+      "seconds": 2
+    },
+    {
+      "do": "hook",
+      "name": "stt.elementalImmune",
+      "args": {
+        "troll": "troll"
+      },
+      "expect": 5,
+      "label": "5 elements immune"
+    }
+  ],
+  "asserts": [
+    {
+      "check": "noErrors",
+      "source": "SteveTheTroll"
+    }
+  ]
+}

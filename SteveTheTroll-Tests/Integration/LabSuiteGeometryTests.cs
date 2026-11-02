@@ -42,6 +42,23 @@ namespace SteveTheTroll.Tests.Integration
             Assert.That(seen, Is.GreaterThan(20), "the suite spawns trolls in many tests");
         }
 
+        // D-174: every test in suite.json has its file and every test file is in the suite (a forgotten file never runs); renamed hooks are gone from the suite
+        [Test] public void Suite_ListsEveryTestFile_AndOnlyThose()
+        {
+            string suite = File.ReadAllText(Path.Combine(SuiteDir, "suite.json"));
+            var listed = Regex.Matches(Regex.Match(suite, @"""tests""\s*:\s*\[(?<t>[^\]]*)\]").Groups["t"].Value, @"""([^""]+)""").Cast<Match>().Select(m => m.Groups[1].Value).ToList();
+            var files = Directory.GetFiles(SuiteDir, "*.json").Select(Path.GetFileNameWithoutExtension).Where(n => n != "suite").ToList();
+            Assert.That(listed, Is.Unique);
+            Assert.That(files.Except(listed), Is.Empty, "test files not in suite.json");
+            Assert.That(listed.Except(files), Is.Empty, "suite.json names without a file");
+        }
+
+        [Test] public void Suite_UsesNoRenamedHooks()
+        {
+            foreach (var f in Directory.GetFiles(SuiteDir, "*.json"))
+                Assert.That(File.ReadAllText(f), Does.Not.Contain("\"stt.unloading\""), Path.GetFileName(f) + ": stt.unloading was renamed stt.returningToUnload (D-174)");
+        }
+
         [Test] public void TheHook_UsesTheSameMinimum()
         {
             string hooks = File.ReadAllText(Path.Combine(TestPaths.ProjectRoot, "SteveTheTroll-Mod", "src", "Testing", "TestHooks.cs"));

@@ -32,6 +32,8 @@ namespace SteveTheTroll.Testing
             var p = Player.m_localPlayer;
             if (p == null) return "no player";
             TestArena.MovePlayer(p);                   // D-171 (user): every test starts on the same open spot, 70 m from the lab start (trophy stones, house)
+            int trolls = CombatTestHooks.ClearTrolls();      // D-174 (review): every test starts without test / arena trolls (17 tests never called stt.clearTrolls)
+            Marks.Clear(); _spotTarget = Vector3.zero; _followId = ""; _follow = ZDOID.None; Filled.Clear(); _depotStoneAtFollow = 0;
             Game.instance.GetPlayerProfile().SetCustomSpawnPoint(p.transform.position);
             ClearHubs();
             ClearFarTrees();
@@ -45,7 +47,7 @@ namespace SteveTheTroll.Testing
                 bool depot = n == DepotPrefab.Name || (n == DepotData.ChestPrefab && v.GetZDO().GetBool(TrollDepot.FlagKey));
                 if (depot) { v.ClaimOwnership(); ZNetScene.instance.Destroy(v.gameObject); gone++; }
             }
-            return "bed at " + p.transform.position.ToString("F0") + ", " + gone + " depot piece(s) removed";
+            return "bed at " + p.transform.position.ToString("F0") + ", " + gone + " depot piece(s) removed, " + trolls + " troll(s) removed";
         }
 
         /// D-171 (user: "sometimes troll walks into me ... spawn him further from player"): a tamed troll `dx`,`dz` metres from the player AS IT STANDS NOW (the lab's own
@@ -193,6 +195,7 @@ namespace SteveTheTroll.Testing
             var z = TrollTaming.Zdo(troll.GetComponent<Character>());
             int n = 0;
             while (n < 500 && BackpackStore.TryAdd(z, Item("Stone", 20), null) >= 0) n++;
+            int had; Filled.TryGetValue(z.m_uid, out had); Filled[z.m_uid] = had + n * 20;      // D-174: item conservation (stt.followedConserved)
             return n;
         }
 
@@ -204,23 +207,165 @@ namespace SteveTheTroll.Testing
         [TestHook("stt.backpackAtMost")]
         static bool BackpackAtMost(GameObject troll, int stacks) { return BackpackStacks(troll) <= stacks; }
 
-        // D-173 (run 160340: far-troll-goes-home - the troll walking 400 m home crosses zones TrollZones keeps, its GameObject is re-created on the way and the lab's 'troll'
-        // binding dies with the old one; the troll itself walked on and unloaded): the test follows it by its permanent registry id instead.
+        // D-173 / D-174 (review): the far troll crosses zones TrollZones keeps; its GameObject is re-created on the way, so the test follows it by its ZDOID (stable while the
+        // object comes and goes) and reads its backpack from that ZDO - loaded or not. Item conservation: what the fill put in = what is still in the backpack + what the
+        // owner's depots gained since stt.followTroll (read from the depot chests' ZDOs, so it works with the depot area unloaded too).
         static string _followId = "";
+        static ZDOID _follow = ZDOID.None;
+        static int _depotStoneAtFollow;
+        static readonly Dictionary<ZDOID, int> Filled = new Dictionary<ZDOID, int>();
 
-        /// Remembers the troll's registry id for stt.followedBackpackAtMost. Expected outcome: the id.
+        /// Follows the troll by its ZDOID (and registry id for the log). Call it after stt.fillBackpack... or before - the depot baseline is taken here. Expected outcome: the id.
         [TestHook("stt.followTroll")]
-        static string FollowTroll(GameObject troll) { _followId = TrollRegistry.IdOf(troll.GetComponent<Character>()); return _followId; }
+        static string FollowTroll(GameObject troll)
+        {
+            var c = troll.GetComponent<Character>();
+            _followId = TrollRegistry.IdOf(c);
+            var z = TrollTaming.Zdo(c);
+            _follow = z != null ? z.m_uid : ZDOID.None;
+            _depotStoneAtFollow = DepotQuantity("Stone");
+            ModLog.Info("TestHooks: following troll " + _followId + " (ZDO " + _follow + "), depots hold " + _depotStoneAtFollow + " Stone now");
+            return _followId;
+        }
 
-        /// The followed troll (by id, whichever GameObject it has now) holds at most `stacks` stacks. Expected outcome: false while it is not loaded.
+        static ZDO FollowedZdo() { return _follow != ZDOID.None ? ZDOMan.instance.GetZDO(_follow) : null; }
+
+        /// The followed troll holds at most `stacks` stacks (read from its ZDO, whichever GameObject it has). Expected outcome: false when its ZDO is gone.
         [TestHook("stt.followedBackpackAtMost")]
         static bool FollowedBackpackAtMost(int stacks)
         {
-            var c = _followId.Length > 0 ? TrollRegistry.FindLoaded(_followId) : null;
-            if (c == null) return c != null;
-            int used, slots; BackpackStore.Fill(TrollTaming.Zdo(c), out used, out slots);
+            var z = FollowedZdo();
+            if (z == null) return z != null;
+            int used, slots; BackpackStore.Fill(z, out used, out slots);
             return used <= stacks;
         }
+
+        /// D-174: one line about the followed troll - loaded or not, ZDO there or not, stacks / slots, distance to its hub. Expected outcome: the text (diagnosis).
+        [TestHook("stt.followedState")]
+        static string FollowedState()
+        {
+            var z = FollowedZdo();
+            if (z == null) return "followed troll: ZDO gone (" + _follow + ")";
+            var c = _followId.Length > 0 ? TrollRegistry.FindLoaded(_followId) : null;
+            int used, slots; BackpackStore.Fill(z, out used, out slots);
+            var hub = c != null ? HubRegistry.For(c) : null;
+            string s = "followed troll " + _followId + ": " + (c != null ? "loaded" : "not loaded") + ", at " + z.GetPosition().ToString("F0") + ", backpack " + used + " of " + slots
+                + (hub != null ? ", " + HubGeometry.Flat(hub.Pos - z.GetPosition()).ToString("F0") + " m from " + hub.Name : "");
+            ModLog.Info("TestHooks: " + s);
+            return s;
+        }
+
+        /// D-174: nothing was lost or made: Stone put in by stt.fillBackpack = Stone still in the backpack + Stone the owner's depots gained since stt.followTroll.
+        /// Expected outcome: true when conserved (the numbers are logged either way).
+        [TestHook("stt.followedConserved")]
+        static bool FollowedConserved()
+        {
+            var z = FollowedZdo();
+            if (z == null) return z != null;
+            int filled; Filled.TryGetValue(_follow, out filled);
+            int inPack = 0;
+            for (int i = 0; i < BackpackStore.ChestCount; i++) foreach (var it in BackpackStore.Read(z, i).GetAllItems()) if (it.m_dropPrefab != null && it.m_dropPrefab.name == "Stone") inPack += it.m_stack;
+            int gained = DepotQuantity("Stone") - _depotStoneAtFollow;
+            ModLog.Info("TestHooks: conservation - filled " + filled + " Stone, backpack " + inPack + ", depots gained " + gained + (filled == inPack + gained ? " - conserved" : " - MISMATCH"));
+            return filled > 0 && filled == inPack + gained;
+        }
+
+        /// Quantity of `prefab` in every depot chest of this player (from the chests' ZDOs: works where the depot area is not loaded).
+        static int DepotQuantity(string prefab)
+        {
+            var list = new List<ZDO>(); int idx = 0, guard = 0;
+            while (!ZDOMan.instance.GetAllZDOsWithPrefabIterative(DepotData.ChestPrefab, list, ref idx) && guard++ < 10000) { }
+            var drop = ObjectDB.instance.GetItemPrefab(prefab);
+            string shared = drop != null ? drop.GetComponent<ItemDrop>().m_itemData.m_shared.m_name : prefab;
+            int n = 0;
+            foreach (var z in list)
+            {
+                if (!z.GetBool(TrollDepot.FlagKey) || z.GetLong(TrollDepot.OwnerKey) != Me) continue;
+                string data = z.GetString(ZDOVars.s_items, "");
+                if (data.Length == 0) continue;
+                var inv = new Inventory("depot", null, 8, 8);
+                inv.Load(new ZPackage(data));
+                foreach (var it in inv.GetAllItems()) if (it.m_shared.m_name == shared) n += it.m_stack;
+            }
+            return n;
+        }
+
+        /// D-174 (review): the hub exists and is the troll's, and the troll stands `min` .. `max` flat metres from it - a missing hub fails the setup at once.
+        [TestHook("stt.hubDistanceInRange")]
+        static bool HubDistanceInRange(GameObject troll, float min, float max)
+        {
+            HubRegistry.All(true);
+            var hub = HubRegistry.For(troll.GetComponent<Character>());
+            if (hub == null) { ModLog.Info("TestHooks: hubDistanceInRange - the troll has no hub"); return hub != null; }
+            float d = HubGeometry.Flat(hub.Pos - troll.transform.position);
+            ModLog.Info("TestHooks: hubDistanceInRange - " + d.ToString("F0") + " m from " + hub.Name + " (want " + min.ToString("F0") + " .. " + max.ToString("F0") + ")");
+            return d >= min && d <= max;
+        }
+
+        /// D-174 (review: manual hub precedence): the owner sends the troll to hub `number` (0 = automatic), as the Troll page does.
+        [TestHook("stt.assignHub")]
+        static int AssignHub(GameObject troll, int number)
+        {
+            var z = TrollTaming.Zdo(troll.GetComponent<Character>());
+            z.Set(HubRegistry.AssignKey, number);
+            return z.GetInt(HubRegistry.AssignKey, 0);
+        }
+
+        /// D-174: removes this player's test hub `number` (its ZDO). Expected outcome: how many were removed.
+        [TestHook("stt.removeHub")]
+        static int RemoveHub(int number)
+        {
+            int n = 0;
+            foreach (var z in new List<ZDO>(FakeHubs))
+            {
+                if (z == null || !z.IsValid() || z.GetInt(HubRegistry.NumberKey, 0) != number || z.GetLong(HubRegistry.OwnerKey, 0L) != Me) continue;
+                z.SetOwner(ZDOMan.GetSessionID()); ZDOMan.instance.DestroyZDO(z); FakeHubs.Remove(z); n++;
+            }
+            HubRegistry.All(true);
+            return n;
+        }
+
+        /// D-174 (review: far-search can pass on a nearer real tree): the long-range search finds THIS synthetic tree - every other source is skipped, so a hit is the ZDO-only
+        /// tree `dx`,`dz` from the player. Expected outcome: its flat distance, -1 when the search did not find it.
+        [TestHook("stt.farFindsSynthetic")]
+        static int FarFindsSynthetic(float dx, float dz)
+        {
+            var p = Player.m_localPlayer;
+            var at = p.transform.position + new Vector3(dx, 0f, dz);
+            Vector3 pos; string item;
+            bool found = TrollFarming.FindFar(p.transform.position, ModSettings.FarmLongRange.Value, ModSettings.FarmMaxRange.Value, 10,
+                new[] { new Ui.TrollFocus.Goal("Wood") }, q => HubGeometry.Flat(q - at) > 3f, out pos, out item);
+            int d = found ? Mathf.RoundToInt(HubGeometry.Flat(pos - p.transform.position)) : -1;
+            ModLog.Info("TestHooks: far search for the synthetic tree at " + at.ToString("F0") + " - " + (found ? "found " + item + " at " + d + " m" : "not found"));
+            return d;
+        }
+
+        /// D-174: the elemental immunity of a tamed troll (TamedTrollStats): how many of fire / frost / lightning / poison / spirit are Immune. Expected outcome: 5.
+        [TestHook("stt.elementalImmune")]
+        static int ElementalImmune(GameObject troll)
+        {
+            var m = troll.GetComponent<Character>().GetDamageModifiers();
+            int n = 0;
+            if (m.m_fire == HitData.DamageModifier.Immune) n++;
+            if (m.m_frost == HitData.DamageModifier.Immune) n++;
+            if (m.m_lightning == HitData.DamageModifier.Immune) n++;
+            if (m.m_poison == HitData.DamageModifier.Immune) n++;
+            if (m.m_spirit == HitData.DamageModifier.Immune) n++;
+            return n;
+        }
+
+        /// D-174 (review: reset isolation): tamed trolls within `radius` m of the player right now (after stt.reset this must be 0).
+        [TestHook("stt.tamedTrollsNear")]
+        static int TamedTrollsNear(float radius)
+        {
+            var p = Player.m_localPlayer; int n = 0;
+            foreach (var c in Character.GetAllCharacters()) if (c != null && !c.IsDead() && c.IsTamed() && TrollTaming.IsTroll(c) && HubGeometry.Flat(c.transform.position - p.transform.position) <= radius) n++;
+            return n;
+        }
+
+        /// D-174: the static tracking state a test can leave behind (followed id, marks, fill counts) - "" after stt.reset.
+        [TestHook("stt.trackingState")]
+        static string TrackingState() { return (_followId.Length > 0 ? "follow " + _followId + " " : "") + (Marks.Count > 0 ? "marks " + Marks.Count + " " : "") + (Filled.Count > 0 ? "filled " + Filled.Count : ""); }
 
         [TestHook("stt.backpackSlots")]
         static int BackpackSlots(GameObject troll) { int used, slots; BackpackStore.Fill(TrollTaming.Zdo(troll.GetComponent<Character>()), out used, out slots); return slots; }
@@ -300,12 +445,14 @@ namespace SteveTheTroll.Testing
         [TestHook("stt.startFarm")]
         static bool StartFarm(GameObject troll) { return TrollOrderService.Send(new FarmFocusCommand(troll.GetComponent<Character>(), "", true)); }
 
-        [TestHook("stt.unloading")]
-        static bool Unloading(GameObject troll) { var f = troll.GetComponent<TrollFarmer>(); return f != null && f.Unloading; }
+        /// D-174 (review: "Unloading" = home trip because the backpack is full, NOT proof of an unload): the troll is on its way to unload.
+        [TestHook("stt.returningToUnload")]
+        static bool ReturningToUnload(GameObject troll) { var f = troll.GetComponent<TrollFarmer>(); return f != null && f.Unloading; }
 
         // ---- long-range farming and the remembered spot (user 2026-10-31) -------------------------------------------------------------------------------
 
         static readonly List<ZDO> FakeTrees = new List<ZDO>();
+        static Vector3 _spotTarget;
 
         /// A tree that exists only as a ZDO (like a source in a zone nobody loads) `dx`,`dz` metres from the player. Returns the number of fake trees.
         [TestHook("stt.addFarTree")]
@@ -360,6 +507,7 @@ namespace SteveTheTroll.Testing
             var f = troll.GetComponent<TrollFarmer>();
             if (f == null) return false;
             var at = Player.m_localPlayer.transform.position + new Vector3(dx, 0f, dz);
+            _spotTarget = at;
             return f.Spots.Remember(at);
         }
 
@@ -413,6 +561,29 @@ namespace SteveTheTroll.Testing
             return n;
         }
 
+        /// D-174 (review: depot fallback in a live world): every chest of the depot filled to the last slot with Wood. Expected outcome: stacks added.
+        [TestHook("stt.depotFill")]
+        static int DepotFill(GameObject frame)
+        {
+            int n = 0;
+            foreach (var c in TrollDepot.ChestsOf(frame))
+            {
+                var v = c.GetComponent<ZNetView>(); if (v != null && !v.IsOwner()) v.ClaimOwnership();
+                while (c.GetInventory().HaveEmptySlot() && n < 1000) { c.GetInventory().AddItem(Item("Wood", 50)); n++; }
+            }
+            return n;
+        }
+
+        /// D-174 (review: spot-return must COMPLETE): the troll stands within `metres` of its remembered farm spot. Expected outcome: false without a farmer / spot.
+        [TestHook("stt.reachedSpot")]
+        static bool ReachedSpot(GameObject troll, float metres)
+        {
+            if (_spotTarget == Vector3.zero) return _spotTarget != Vector3.zero;
+            float d = HubGeometry.Flat(_spotTarget - troll.transform.position);
+            if (d <= metres) ModLog.Info("TestHooks: the troll reached its remembered spot (" + d.ToString("F1") + " m)");
+            return d <= metres;
+        }
+
         [TestHook("stt.depotItems")]
         static int DepotItems(GameObject frame) { int n = 0; foreach (var c in TrollDepot.ChestsOf(frame)) n += c.GetInventory().NrOfItems(); return n; }
 
@@ -459,8 +630,7 @@ namespace SteveTheTroll.Testing
             z.Persistent = true;      // D-173 (run 161451): a raw ZDO is not persistent - when the player went 400 m away its zone unloaded and the game DELETED the test hub ("0 Troll Hub(s) known")
             z.Set(HubRegistry.OwnerKey, who);
             z.Set(HubRegistry.OwnerNameKey, owner == "other" ? "Other" : p.GetPlayerName());
-            z.Set(HubRegistry.NumberKey, number);
-            z.Persistent = false;
+            z.Set(HubRegistry.NumberKey, number);            // D-174 (review): the old "z.Persistent = false" here undid the line above - removed
             FakeHubs.Add(z);
             int known = HubRegistry.All(true).Count;
             var scan = new List<ZDO>(); int idx = 0, guard = 0;

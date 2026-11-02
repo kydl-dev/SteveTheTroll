@@ -295,17 +295,35 @@ namespace SteveTheTroll.Trolls.Recovery.Infrastructure
             Vector3 dir; float metres; Side side = decision.LegSide;
             if (decision.Leg == 0)
             {
-                float rightM = PlanMetres(from, LegDir(Side.Right)), leftM = PlanMetres(from, LegDir(Side.Left));
-                float prefM = side == Side.Right ? rightM : leftM, otherM = side == Side.Right ? leftM : rightM;
-                side = StuckRules.ChooseSide(side, prefM, otherM, out metres);
-                dir = LegDir(side);
-                ModLog.Info("TrollRecovery: " + tag + " detour " + decision.DetourNumber + (decision.HeadOn ? " (head on with " + (_other != null ? TrollTaming.Tag(_other) : "a troll") + ")" : "") + ", leg 1: turns " + side + " of its intended direction, valid ground right " + rightM.ToString("F0") + " m / left " + leftM.ToString("F0") + " m, walks " + metres.ToString("F0") + " m");
+                // D-174: a search over CandidateAngles on both sides (preferred side first), each candidate checked metre by metre and by the path search; the reason
+                // every rejected candidate failed is logged (the log of the far-troll run only said "right 0 m / left 0 m")
+                CandMetres.Clear(); CandDirs.Clear(); CandNames.Clear(); var why = new System.Text.StringBuilder();
+                for (int pass = 0; pass < 2; pass++)
+                {
+                    var sd = pass == 0 ? side : StuckRules.Opposite(side);
+                    foreach (float a in StuckRules.CandidateAngles)
+                    {
+                        float cx, cz; StuckRules.Rotate(_intended.x, _intended.z, sd, a, out cx, out cz);
+                        var cdir = new Vector3(cx, 0f, cz);
+                        string reason;
+                        float m = PlanMetres(from, cdir, StuckRules.CandidateMetres(a), out reason);
+                        CandMetres.Add(m); CandDirs.Add(cdir); CandNames.Add(sd + " " + a.ToString("0"));
+                        why.Append(" ").Append(sd == Side.Right ? "R" : "L").Append(a.ToString("0")).Append(" ").Append(m.ToString("0")).Append(" m");
+                        if (reason.Length > 0) why.Append(" (").Append(reason).Append(")");
+                        why.Append(";");
+                    }
+                }
+                int pick = StuckRules.PickCandidate(CandMetres);
+                if (pick >= 0) { metres = CandMetres[pick]; dir = CandDirs[pick]; side = pick < StuckRules.CandidateAngles.Length ? side : StuckRules.Opposite(side); }
+                else { metres = 0f; dir = LegDir(side); }
+                ModLog.Info("TrollRecovery: " + tag + " detour " + decision.DetourNumber + (decision.HeadOn ? " (head on with " + (_other != null ? TrollTaming.Tag(_other) : "a troll") + ")" : "") + ", leg 1: " + (pick >= 0 ? "turns " + CandNames[pick] + " degrees, walks " + metres.ToString("F0") + " m" : "no walkable candidate") + " - candidates:" + why);
             }
             else
             {
                 dir = _intended;       // the second leg of the L: turn back (90 degrees the other way) to the intended direction
-                metres = PlanMetres(from, dir);
-                ModLog.Info("TrollRecovery: " + tag + " detour 2, leg 2: turns back to its intended direction, valid ground " + metres.ToString("F0") + " m, walks it");
+                string reason2;
+                metres = PlanMetres(from, dir, StuckRules.LegMetres, out reason2);
+                ModLog.Info("TrollRecovery: " + tag + " detour 2, leg 2: turns back to its intended direction, valid ground " + metres.ToString("F0") + " m" + (reason2.Length > 0 ? " (" + reason2 + ")" : "") + ", walks it");
             }
             _legStart = from; _legLast = from; _legPlanned = metres; _legBegan = Time.time; _legStalled = 0f;
             _legTarget = from + dir * metres;
@@ -324,29 +342,44 @@ namespace SteveTheTroll.Trolls.Recovery.Infrastructure
             return ZoneSystem.instance != null && ZoneSystem.instance.GetSolidHeight(p, out h) ? h : p.y;
         }
 
-        // The valid metres of a leg from `from` along `dir`: every metre needs ground that does not jump, shallow liquid and a free line (StuckRules.StepOk), and the game's path search
-        // must find a way to the end (a point it cannot reach is shortened).
-        float PlanMetres(Vector3 from, Vector3 dir)
+        static readonly List<float> CandMetres = new List<float>();
+        static readonly List<Vector3> CandDirs = new List<Vector3>();
+        static readonly List<string> CandNames = new List<string>();
+
+        // The valid metres of a leg from `from` along `dir` (at most `max`): every metre needs ground that does not jump, shallow liquid and a free line (StuckRules.StepOk), and the
+        // game's path search must find a way to the end (a point it cannot reach is shortened). D-174: `reason` says why the leg stops short ("" = full length) - and when the path
+        // search fails even for the first metre that the ground probes accept, the area has no path data (far from the player): the ground result stands, said in `reason`.
+        float PlanMetres(Vector3 from, Vector3 dir, float max, out string reason)
         {
+            reason = "";
             if (_blockMask == 0) _blockMask = LayerMask.GetMask("Default", "static_solid", "Default_small", "piece", "vehicle");
             var steps = new List<bool>();
             Vector3 prev = from;
             float prevH = GroundY(from);
-            for (int i = 1; i <= (int)StuckRules.LegMetres; i++)
+            for (int i = 1; i <= (int)max; i++)
             {
                 var p = from + dir * i;
                 float h = GroundY(p);
                 float depth = Mathf.Max(0f, Floating.GetLiquidLevel(new Vector3(p.x, h, p.z)) - h);
                 bool blocked = Physics.Linecast(prev + Vector3.up * ChestHeight, p + Vector3.up * ChestHeight, _blockMask, QueryTriggerInteraction.Ignore);
-                steps.Add(StuckRules.StepOk(h - prevH, depth, blocked));
+                bool ok = StuckRules.StepOk(h - prevH, depth, blocked);
+                if (!ok && reason.Length == 0)
+                    reason = (blocked ? "blocked" : depth > StuckRules.MaxWaterDepth ? "water " + depth.ToString("F1") + " m" : "height change " + (h - prevH).ToString("F1") + " m") + " at " + i + " m";
+                steps.Add(ok);
                 prev = new Vector3(p.x, h, p.z); prevH = h;
             }
-            float metres = StuckRules.PlanMetres(steps, StuckRules.LegMetres);
+            float metres = StuckRules.PlanMetres(steps, max);
             var ai = GetComponent<BaseAI>();
+            if (metres < StuckRules.MinLegMetres || Pathfinding.instance == null || ai == null) return Mathf.Max(0f, metres);
             var path = new List<Vector3>();
-            while (metres >= StuckRules.MinLegMetres && Pathfinding.instance != null && ai != null
-                && !Pathfinding.instance.GetPath(from, from + dir * metres, path, ai.m_pathAgentType, false))
-                metres -= 2f;
+            float ground = metres;
+            while (metres >= StuckRules.MinLegMetres && !Pathfinding.instance.GetPath(from, from + dir * metres, path, ai.m_pathAgentType, false)) metres -= 2f;
+            if (metres < StuckRules.MinLegMetres)
+            {
+                if (!Pathfinding.instance.GetPath(from, from + dir * StuckRules.MinLegMetres, path, ai.m_pathAgentType, false)) { reason = "no path data here - ground probes used"; return ground; }
+                reason = "path search: no way";
+            }
+            else if (metres < ground - 0.01f) reason = "path search shortened it from " + ground.ToString("0") + " m";
             return Mathf.Max(0f, metres);
         }
 

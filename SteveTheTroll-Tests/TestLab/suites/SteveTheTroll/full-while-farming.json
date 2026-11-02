@@ -53,6 +53,13 @@
     },
     {
       "do": "hook",
+      "name": "stt.followTroll",
+      "args": {
+        "troll": "troll"
+      }
+    },
+    {
+      "do": "hook",
       "name": "stt.fillBackpack",
       "args": {
         "troll": "troll"
@@ -62,7 +69,7 @@
       "do": "wait",
       "until": {
         "check": "hook",
-        "name": "stt.unloading",
+        "name": "stt.returningToUnload",
         "args": {
           "troll": "troll"
         },
@@ -81,9 +88,30 @@
         "expect": 0
       },
       "timeout": 150
+    },
+    {
+      "do": "wait",
+      "seconds": 2
+    },
+    {
+      "do": "hook",
+      "name": "stt.followedState",
+      "label": "followed troll (diagnosis)"
+    },
+    {
+      "do": "hook",
+      "name": "stt.followedConserved",
+      "expect": true,
+      "label": "every Stone put in is in the backpack or a depot - nothing lost or made"
     }
   ],
   "asserts": [
+    {
+      "check": "hook",
+      "name": "stt.followedConserved",
+      "expect": true,
+      "label": "items conserved"
+    },
     {
       "check": "hook",
       "name": "stt.backpackStacks",
