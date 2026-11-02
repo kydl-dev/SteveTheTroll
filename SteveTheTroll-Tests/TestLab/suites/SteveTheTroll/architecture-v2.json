@@ -1,0 +1,14 @@
+{
+  "name": "architecture-v2",
+  "description": "D-169: the game runs the Architecture V2 build of SteveTheTroll, not the pre-refactor V1 DLL (V1 has no stt.architecture hook, so this test fails on it). Runs first.",
+  "timeout": 30,
+  "steps": [
+    { "do": "wait", "seconds": 1 }
+  ],
+  "asserts": [
+    { "check": "hook", "name": "stt.architecture", "expect": 2, "label": "architecture V2 is loaded" },
+    { "check": "hook", "name": "stt.architectureMarker", "expect": "STT-ARCH-V2", "label": "V2 marker" },
+    { "check": "logContains", "source": "SteveTheTroll", "text": "running DLL is architecture V2", "expect": true, "label": "the hook ran in the loaded DLL" },
+    { "check": "noErrors", "source": "SteveTheTroll" }
+  ]
+}

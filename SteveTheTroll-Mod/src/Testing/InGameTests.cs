@@ -147,6 +147,16 @@ namespace SteveTheTroll.Testing
         const string ExpectedName = "Fluffy Slippers";
 
         // TEST-012 lesson: the patch class's reflection lookups (static m_tameDeltaTime) must load without an exception.
+        /// D-169: the game runs the Architecture V2 build (not the pre-refactor DLL), and the V2 movement adapter found the game's private BaseAI.MoveTo / LookAt.
+        static string Startup_Architecture()
+        {
+            bool v2 = Core.Architecture.Version == 2 && Core.Architecture.Marker == "STT-ARCH-V2";
+            bool moves = Trolls.Movement.Infrastructure.ValheimTrollMovement.SelfCheck();
+            ModLog.Verbose("InGameTests: architecture V" + Core.Architecture.Version + " " + Core.Architecture.Marker + ", movement adapter delegates found " + moves);
+            if (!v2) return "FAIL: architecture marker V" + Core.Architecture.Version + " " + Core.Architecture.Marker + " (expected V2 STT-ARCH-V2)";
+            return moves ? "PASS: architecture V2 (" + Core.Architecture.Marker + "), movement adapter ok" : "FAIL: architecture V2 but ValheimTrollMovement did not find BaseAI.MoveTo / LookAt";
+        }
+
         static string Startup_TamingReflection()
         {
             try

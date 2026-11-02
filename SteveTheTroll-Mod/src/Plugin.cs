@@ -34,7 +34,7 @@ namespace SteveTheTroll
         {
             Instance = this;
             ModLog.Init(Logger, ModName, () => ModSettings.DebugLog != null && ModSettings.DebugLog.Value);
-            ModLog.Info(ModName + " " + ModVersion + " loaded (dll built " + File.GetLastWriteTime(Assembly.GetExecutingAssembly().Location).ToString("yyyy-MM-dd HH:mm:ss") + ")");
+            ModLog.Info(ModName + " " + ModVersion + " loaded (architecture V" + Core.Architecture.Version + " " + Core.Architecture.Marker + ", dll built " + File.GetLastWriteTime(Assembly.GetExecutingAssembly().Location).ToString("yyyy-MM-dd HH:mm:ss") + ")");
 
             // the UI kit, the input lock and the hub come from KydlCore (it logs through its own log)
 

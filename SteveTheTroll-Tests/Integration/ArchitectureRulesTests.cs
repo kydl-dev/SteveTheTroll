@@ -59,6 +59,16 @@ namespace SteveTheTroll.Tests.Integration
             Assert.That(File.ReadAllText(Path.Combine(Src, "Ui", "HubTabs.cs")), Does.Contain("KyHub"));
         }
 
+        // the V1 guard (D-169): the marker the lab wrapper searches for, and the lab suite proves V2 before anything else runs
+        [Test] public void V2Marker_AndTheLabTestThatRunsFirst()
+        {
+            Assert.That(File.ReadAllText(Path.Combine(Src, "Core", "Architecture.cs")), Does.Contain("Marker = \"STT-ARCH-V2\"").And.Contain("Version = 2"));
+            string suite = File.ReadAllText(Path.Combine(TestPaths.ProjectRoot, "SteveTheTroll-Tests", "TestLab", "suites", "SteveTheTroll", "suite.json"));
+            var first = Regex.Match(suite, @"""tests""\s*:\s*\[\s*""([^""]+)""");
+            Assert.That(first.Groups[1].Value, Is.EqualTo("architecture-v2"));
+            Assert.That(File.Exists(Path.Combine(TestPaths.ProjectRoot, "SteveTheTroll-Tests", "TestLab", "suites", "SteveTheTroll", "architecture-v2.json")), Is.True);
+        }
+
         static string Rel(string f) { return f.Substring(Src.Length + 1); }
     }
 }
