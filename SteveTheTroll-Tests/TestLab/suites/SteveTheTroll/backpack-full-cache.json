@@ -1,26 +1,11 @@
 {
   "name": "backpack-full-cache",
-  "description": "Full backpack: the cached answer follows a change at once (no stale 'full' after items are removed)",
+  "description": "D-144 full-backpack cache: filled, it is full and the cache says so, every slot is used, and a write through the real store drops the cache. D-173: the cycle runs in ONE frame (stt.backpackCacheCycle) - a full troll near home now unloads there by design, so separate steps raced the troll's own AI.",
   "timeout": 90,
   "steps": [
     {
       "do": "hook",
       "name": "stt.reset"
-    },
-    {
-      "do": "give",
-      "prefab": "STT_TrollSlippers",
-      "count": 1,
-      "equip": true
-    },
-    {
-      "do": "hook",
-      "name": "stt.slippers",
-      "args": {
-        "on": false
-      },
-      "expect": false,
-      "label": "slippers off: the plugin sends no full troll to a depot (D-149) - the chests stay as the test filled them"
     },
     {
       "do": "hook",
@@ -36,78 +21,17 @@
       "as": "troll"
     },
     {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
       "do": "hook",
-      "name": "stt.backpackFullCached",
+      "name": "stt.backpackCacheCycle",
       "args": {
         "troll": "troll"
       },
-      "expect": false
-    },
-    {
-      "do": "hook",
-      "name": "stt.fillBackpack",
-      "args": {
-        "troll": "troll"
-      }
-    },
-    {
-      "do": "hook",
-      "name": "stt.backpackFull",
-      "args": {
-        "troll": "troll"
-      },
-      "expect": true
-    },
-    {
-      "do": "hook",
-      "name": "stt.backpackFullCached",
-      "args": {
-        "troll": "troll"
-      },
-      "expect": true
-    },
-    {
-      "do": "hook",
-      "name": "stt.backpackAllUsed",
-      "args": {
-        "troll": "troll"
-      },
-      "expect": true,
-      "label": "every slot used"
-    },
-    {
-      "do": "hook",
-      "name": "stt.unpackChest0",
-      "args": {
-        "troll": "troll"
-      }
-    },
-    {
-      "do": "hook",
-      "name": "stt.backpackFullCached",
-      "args": {
-        "troll": "troll"
-      },
-      "expect": false,
-      "label": "cache dropped by the write"
-    },
-    {
-      "do": "hook",
-      "name": "stt.unloading",
-      "args": {
-        "troll": "troll"
-      },
-      "expect": false,
-      "label": "the troll never started an unload during the test"
-    },
-    {
-      "do": "hook",
-      "name": "stt.slippers",
-      "args": {
-        "on": true
-      },
-      "expect": true,
-      "label": "slippers back on for the next tests"
+      "expect": "ok",
+      "label": "fill -> full -> cached full -> every slot used -> write -> cache dropped, all in one frame (D-173)"
     }
   ],
   "asserts": [

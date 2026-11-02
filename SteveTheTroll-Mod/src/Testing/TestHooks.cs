@@ -121,8 +121,11 @@ namespace SteveTheTroll.Testing
         {
             var p = Player.m_localPlayer;
             var at = p.transform.position + new Vector3(dx, 0f, dz);
-            at.y = ZoneSystem.instance.GetGroundHeight(at) + 1f;
-            p.TeleportTo(at, p.transform.rotation, false);
+            at.y = Mathf.Max(ZoneSystem.instance.GetGroundHeight(at), p.transform.position.y) + 1f;
+            // D-173 (run 154147: far-troll-goes-home spawned its troll at the BED): the target 400 m away is not loaded, so its ground height read 0, the player arrived inside the
+            // ground and the game put it back at the spawn point. distantTeleport = true: the game finds the floor itself once the area is loaded.
+            p.TeleportTo(at, p.transform.rotation, true);
+            ModLog.Info("TestHooks: teleport " + dx.ToString("F0") + ", " + dz.ToString("F0") + " m to " + at.ToString("F0") + " (the game finds the floor there)");
             return at.ToString("F0");
         }
 
@@ -240,6 +243,27 @@ namespace SteveTheTroll.Testing
             foreach (var it in new List<ItemDrop.ItemData>(inv.GetAllItems())) inv.RemoveItem(it);
             BackpackStore.Write(z, 0, inv);
             return n;
+        }
+
+        /// D-173: the whole storage / cache cycle of backpack-full-cache IN ONE FRAME - fill, full, cached full, every slot used, a write through the real store, cache dropped.
+        /// Between separate lab steps the troll's own AI may unload (D-173: a full troll near home unloads there), which is the plugin working, not a storage fault - so the
+        /// storage test does not leave it a frame. Expected outcome: "ok", else the first check that failed with its numbers.
+        [TestHook("stt.backpackCacheCycle")]
+        static string BackpackCacheCycle(GameObject troll)
+        {
+            var z = TrollTaming.Zdo(troll.GetComponent<Character>());
+            if (z == null) return "no ZDO";
+            if (BackpackStore.IsFullCached(z)) return "cached full before the fill";
+            int added = FillBackpack(troll);
+            if (!BackpackStore.IsFull(z)) return "not full after " + added + " stack(s)";
+            if (!BackpackStore.IsFullCached(z)) return "cache says not full right after the fill";
+            int used, slots; BackpackStore.Fill(z, out used, out slots);
+            if (slots <= 0 || used != slots) return "slots used " + used + " of " + slots;
+            int moved = UnpackChest0(troll);
+            if (moved <= 0) return "chest 0 was empty";
+            if (BackpackStore.IsFullCached(z)) return "cache not dropped by the write";
+            ModLog.Info("TestHooks: backpack cache cycle ok - " + added + " stack(s) added, " + used + " of " + slots + " slots, " + moved + " taken out of chest 1, cache dropped");
+            return "ok";
         }
 
         /// What the troll is doing now: farming / unloading / free, its hub and the distance to it.
