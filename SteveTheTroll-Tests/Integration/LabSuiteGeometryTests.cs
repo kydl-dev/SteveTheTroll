@@ -53,6 +53,13 @@ namespace SteveTheTroll.Tests.Integration
             Assert.That(listed.Except(files), Is.Empty, "suite.json names without a file");
         }
 
+        // D-175 (DrakesTestLab authoring guide: "noErrors ... in every test"): every test asserts that SteveTheTroll logged no error
+        [Test] public void EveryTest_AssertsNoErrors()
+        {
+            foreach (var f in Directory.GetFiles(SuiteDir, "*.json").Where(x => Path.GetFileName(x) != "suite.json"))
+                Assert.That(Regex.IsMatch(File.ReadAllText(f), @"""check""\s*:\s*""noErrors""\s*,\s*""source""\s*:\s*""SteveTheTroll"""), Is.True, Path.GetFileName(f) + " has no noErrors assert for SteveTheTroll");
+        }
+
         [Test] public void Suite_UsesNoRenamedHooks()
         {
             foreach (var f in Directory.GetFiles(SuiteDir, "*.json"))
