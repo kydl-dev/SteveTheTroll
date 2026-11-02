@@ -1,6 +1,6 @@
 {
   "name": "attack-key-tree-press",
-  "description": "D-171 P4/P8: the player looks at a tree and presses the attack key (the lab's own fake key press, Mouse3) - the troll breaks THAT tree (tree 20 m out: outside the 15 m no-hit ring around the bed, D-097 - at 12 m the troll walked up and was not allowed to swing; troll behind the tree: its walk must not cross the player's view - TrollHold freezes a troll the player looks at within 4 m)",
+  "description": "D-171 P4/P8: the player looks at a tree and presses the attack key (the lab's own fake key press, Mouse3) - the troll breaks THAT tree (the player is teleported 6 m from the tree and faces it: from the start spot an arena collider 17 m out stood in the line of sight; the tree stays outside the bed's 15 m no-hit ring; runs at the end of the suite)",
   "timeout": 90,
   "steps": [
     {
@@ -47,6 +47,11 @@
     {
       "do": "wait",
       "seconds": 1
+    },
+    {
+      "do": "teleport",
+      "to": "tree",
+      "distance": 6
     },
     {
       "do": "face",

@@ -1,6 +1,6 @@
 {
   "name": "recovery-walled-tree",
-  "description": "D-167: a tree inside a closed ring of player-built walls. The troll gets stuck, never attacks a wall, walks around (detours), fails two complete recovery cycles and blacklists THAT tree for itself",
+  "description": "D-167: a tree inside a closed ring of player-built walls. The troll gets stuck, never attacks a wall, walks around (detours), fails two complete recovery cycles and blacklists THAT tree for itself (D-171: troll beside the player and the player looks away - after hold-look the player faced the troll's path and TrollHold froze it for the whole test)",
   "timeout": 420,
   "steps": [
     {
@@ -31,9 +31,15 @@
       "do": "hook",
       "name": "stt.spawnTroll",
       "args": {
-        "dz": -5
+        "dx": 10,
+        "dz": 5
       },
       "as": "troll"
+    },
+    {
+      "do": "face",
+      "dx": -30,
+      "dz": 0
     },
     {
       "do": "wait",

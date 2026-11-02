@@ -47,12 +47,16 @@
       "seconds": 1
     },
     {
-      "do": "hook",
-      "name": "stt.mobTargetsPlayer",
-      "args": {
-        "mob": "mob"
+      "do": "wait",
+      "until": {
+        "check": "hook",
+        "name": "stt.mobTargetsPlayer",
+        "args": {
+          "mob": "mob"
+        },
+        "expect": true
       },
-      "expect": true
+      "timeout": 5
     },
     {
       "do": "wait",

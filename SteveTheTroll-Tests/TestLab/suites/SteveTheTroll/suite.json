@@ -66,8 +66,6 @@
     "guard-mob",
     "nohit-zone",
     "walls-two-star",
-    "attack-key-tree-press",
-    "attack-key-creature",
     "attack-key-nothing",
     "unarmed-farm",
     "noweapon-farm",
@@ -76,6 +74,8 @@
     "bed-heal",
     "hold-look",
     "recovery-walled-tree",
+    "attack-key-tree-press",
+    "attack-key-creature",
     "attack-key-tree"
   ]
 }
