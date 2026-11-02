@@ -353,17 +353,17 @@ namespace SteveTheTroll.Trolls.Farming.Infrastructure
                 var view0 = __instance.GetComponent<ZNetView>();
                 if (view0 == null || !view0.IsValid() || !view0.IsOwner()) return true;
                 var slam = __instance.GetComponent<TrollSlam>();
-                if (slam != null && slam.Step(__instance, LookAt)) { __result = true; return false; }   // D-065: ground slams first
+                if (slam != null && slam.Step(__instance)) { __result = true; return false; }   // D-065: ground slams first
                 var rage = __instance.GetComponent<TrollRage>();
-                if (rage != null && rage.Step(__instance, dt, MoveTo, LookAt)) { __result = true; return false; }   // D-082: rage while the player is hit
+                if (rage != null && rage.Step(__instance, dt)) { __result = true; return false; }   // D-082: rage while the player is hit
                 var chase = __instance.GetComponent<TrollChase>();
-                if (chase != null && chase.Step(__instance, dt, MoveTo, LookAt)) { __result = true; return false; }   // D-084: goes for the one that hit it
+                if (chase != null && chase.Step(__instance, dt)) { __result = true; return false; }   // D-084: goes for the one that hit it
                 var self = __instance.GetComponent<Character>();
                 if (TrollCounter.Ignoring(self) && !TrollGuard.HasForced(self) && __instance.GetComponent<TrollFarmer>() != null) TrollGuard.ClearTarget(__instance);   // D-084: hits ignored, keeps farming
                 TrollGuard.Keep(__instance);                                                                     // D-066: the forced target stays
                 if (TrollHold.Holds(__instance)) { __instance.StopMoving(); __result = true; return false; }     // D-063
                 var back = __instance.GetComponent<TrollReturn>();
-                if (back != null && back.Step(__instance, dt, MoveTo, LookAt)) { __result = true; return false; }          // D-162: past the hub's reach, no follow order - walks back
+                if (back != null && back.Step(__instance, dt)) { __result = true; return false; }          // D-162: past the hub's reach, no follow order - walks back
                 var f = __instance.GetComponent<TrollFarmer>();
                 if (f == null) return true;
                 var view = __instance.GetComponent<ZNetView>();

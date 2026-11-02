@@ -4,6 +4,7 @@ using SteveTheTroll.Trolls.Combat.Domain;
 using SteveTheTroll.Trolls.Farming.Infrastructure;
 using SteveTheTroll.Trolls.Orders.Infrastructure;
 using SteveTheTroll.Trolls.Taming.Domain;
+using SteveTheTroll.Trolls.Core;
 using UnityEngine;
 
 namespace SteveTheTroll.Trolls.Combat.Infrastructure
@@ -106,7 +107,12 @@ namespace SteveTheTroll.Trolls.Combat.Infrastructure
         }
 
         /// One AI step. Expected outcome: true = the chase drove the troll (the game's AI is skipped).
-        internal bool Step(MonsterAI ai, float dt, System.Func<BaseAI, float, Vector3, float, bool, bool> moveTo, System.Action<BaseAI, Vector3> lookAt)
+        // D-175 (Architecture V2): the chase goes through the troll's movement capability (TrollContext), built once
+        TrollContext _ctx;
+
+        SteveTheTroll.Trolls.Contracts.ITrollMovement Mv() { if (_ctx == null) _ctx = new TrollContext(GetComponent<Character>()); return _ctx.Capabilities.Movement; }
+
+        internal bool Step(MonsterAI ai, float dt)
         {
             var me = GetComponent<Humanoid>();
             bool over = me == null || me.IsDead() || _target == null || _target.IsDead() || Time.time - _start > ModSettings.CounterChaseSeconds.Value
@@ -121,9 +127,9 @@ namespace SteveTheTroll.Trolls.Combat.Infrastructure
             var point = _target.transform.position;
             var flat = point - transform.position; flat.y = 0f;
             float reach = TrollRage.ReachTo(me, _target);
-            if (flat.magnitude > reach) moveTo(ai, dt, point, reach * 0.8f, true);
+            if (flat.magnitude > reach) Mv().MoveTo(dt, point, reach * 0.8f, true);
             else ai.StopMoving();
-            lookAt(ai, point);
+            Mv().LookAt(point);
             if (me.InAttack() || Time.time < _next || flat.magnitude > reach + 1f || !ai.IsLookingAt(point, LookAngle, false)) return true;
             var weapon = TrollWeapons.Pick(me, Attack.AttackType.Horizontal, false) ?? TrollWeapons.Pick(me, Attack.AttackType.Vertical, false);
             if (weapon == null) return true;

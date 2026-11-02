@@ -2,6 +2,7 @@ using Kydl.Common;
 using SteveTheTroll.Trolls.Combat.Domain;
 using SteveTheTroll.Trolls.Taming.Domain;
 using SteveTheTroll.Trolls.Taming.Infrastructure;
+using SteveTheTroll.Trolls.Core;
 using UnityEngine;
 
 namespace SteveTheTroll.Trolls.Combat.Infrastructure
@@ -38,7 +39,10 @@ namespace SteveTheTroll.Trolls.Combat.Infrastructure
         }
 
         /// One AI step. Expected outcome: true = the slam drove the troll (the game's AI is skipped).
-        internal bool Step(MonsterAI ai, System.Action<BaseAI, Vector3> lookAt)
+        // D-175 (Architecture V2): turning goes through the troll's movement capability (TrollContext), built once
+        TrollContext _ctx;
+
+        internal bool Step(MonsterAI ai)
         {
             var me = GetComponent<Humanoid>();
             if (me == null || me.IsDead()) { Destroy(this); return false; }
@@ -52,7 +56,9 @@ namespace SteveTheTroll.Trolls.Combat.Infrastructure
             }
             ai.StopMoving();
             var point = _towards != null ? _towards.transform.position : _aim;
-            lookAt(ai, point);
+            if (_ctx == null) _ctx = new TrollContext(GetComponent<Character>());
+            var mv = _ctx.Capabilities.Movement;
+            if (mv != null) mv.LookAt(point);
             if (!SlamRules.Ready(_left, me.InAttack(), Time.time >= _next, ai.IsLookingAt(point, LookAngle, false))) return true;
             var weapon = TrollWeapons.Pick(me, Attack.AttackType.Vertical, false);
             if (weapon == null) { ModLog.Warn("TrollSlam: " + TrollTaming.Tag(this) + " has no melee attack"); Destroy(this); return false; }

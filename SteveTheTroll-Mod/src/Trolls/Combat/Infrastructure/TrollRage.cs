@@ -5,6 +5,7 @@ using SteveTheTroll.Trolls.Farming.Infrastructure;
 using SteveTheTroll.Trolls.Orders.Infrastructure;
 using SteveTheTroll.Trolls.Taming.Domain;
 using SteveTheTroll.Trolls.Taming.Infrastructure;
+using SteveTheTroll.Trolls.Core;
 using UnityEngine;
 
 namespace SteveTheTroll.Trolls.Combat.Infrastructure
@@ -52,7 +53,11 @@ namespace SteveTheTroll.Trolls.Combat.Infrastructure
         }
 
         /// One AI step. Expected outcome: true = the rage drove the troll (the game's AI is skipped); false = it calmed down.
-        internal bool Step(MonsterAI ai, float dt, System.Func<BaseAI, float, Vector3, float, bool, bool> moveTo, System.Action<BaseAI, Vector3> lookAt)
+        // D-175 (Architecture V2): walking and turning go through the troll's movement capability (TrollContext), built once
+        TrollContext _ctx;
+        SteveTheTroll.Trolls.Contracts.ITrollMovement Mv() { if (_ctx == null) _ctx = new TrollContext(GetComponent<Character>()); return _ctx.Capabilities.Movement; }
+
+        internal bool Step(MonsterAI ai, float dt)
         {
             var me = GetComponent<Humanoid>();
             float hit;
@@ -76,9 +81,9 @@ namespace SteveTheTroll.Trolls.Combat.Infrastructure
             }
             // D-084 (TEST-036: 0 swings - a wild troll's centre stays 5-9 m away, the old 3.5 m reach was never met): reach = both body radii + the weapon
             float reach = target != null ? ReachTo(me, target) : 2.5f;
-            if (d > reach) moveTo(ai, dt, point, reach * 0.8f, true);
+            if (d > reach) Mv().MoveTo(dt, point, reach * 0.8f, true);
             else ai.StopMoving();
-            lookAt(ai, point);
+            Mv().LookAt(point);
             if (me.InAttack() || Time.time < _next || d > reach + 1f) return true;
             if (target != null && !ai.IsLookingAt(point, LookAngle, false)) return true;
             var weapon = TrollWeapons.Pick(me, Attack.AttackType.Horizontal, false) ?? TrollWeapons.Pick(me, Attack.AttackType.Vertical, false);

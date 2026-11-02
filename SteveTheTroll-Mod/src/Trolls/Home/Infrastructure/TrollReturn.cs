@@ -11,6 +11,7 @@ using SteveTheTroll.Trolls.Recovery.Infrastructure;
 using SteveTheTroll.Trolls.Registry.Infrastructure;
 using SteveTheTroll.Trolls.Taming.Domain;
 using SteveTheTroll.Trolls.Taming.Infrastructure;
+using SteveTheTroll.Trolls.Core;
 using UnityEngine;
 
 namespace SteveTheTroll.Trolls.Home.Infrastructure
@@ -75,7 +76,10 @@ namespace SteveTheTroll.Trolls.Home.Infrastructure
         }
 
         /// One AI step (MonsterAI.UpdateAI prefix). Expected outcome: true = the walk drove the troll this frame (the game's AI is skipped).
-        internal bool Step(MonsterAI ai, float dt, System.Func<BaseAI, float, Vector3, float, bool, bool> moveTo, System.Action<BaseAI, Vector3> lookAt)
+        // D-175 (Architecture V2, P3 leftover "TrollReturn still owns its walking"): the walk goes through the troll's movement capability (TrollContext), built once
+        TrollContext _ctx;
+
+        internal bool Step(MonsterAI ai, float dt)
         {
             var c = GetComponent<Character>();
             if (c == null || c.IsDead()) { Destroy(this); return false; }
@@ -112,7 +116,9 @@ namespace SteveTheTroll.Trolls.Home.Infrastructure
             long ka, kb;
             TrollRecovery.KeyOfHub(_hub.Pos, out ka, out kb);
             if (rec.Tick(dt, _hub.Pos, ka, kb, false, true, null)) return true;
-            moveTo(ai, dt, ahead, 0.5f, true);
+            if (_ctx == null) _ctx = new TrollContext(c);
+            var mv = _ctx.Capabilities.Movement;
+            if (mv != null) mv.MoveTo(dt, ahead, 0.5f, true);
             return true;
         }
 

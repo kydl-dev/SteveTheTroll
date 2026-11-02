@@ -92,6 +92,13 @@ namespace SteveTheTroll.Tests.Integration
             Assert.That(all.Count(t => Regex.IsMatch(t, @"TrollFarming\.(Begin|BeginOn|SendHome|BeginUnload)\(")), Is.EqualTo(0));
         }
 
+        // D-175: behaviour components walk / turn through the movement capability (TrollContext); no Step(...) takes the game's MoveTo / LookAt delegates as parameters any more
+        [Test] public void D175_NoStepTakesMoveDelegates()
+        {
+            foreach (var f in Directory.GetFiles(Src, "*.cs", SearchOption.AllDirectories))
+                Assert.That(Regex.IsMatch(File.ReadAllText(f), @"\bStep\([^)]*System\.(Func<BaseAI|Action<BaseAI)"), Is.False, Rel(f) + " still passes BaseAI move delegates into a Step");
+        }
+
         static string Rel(string f) { return f.Substring(Src.Length + 1); }
     }
 }
