@@ -1,4 +1,5 @@
 using Kydl.Common;
+using SteveTheTroll.Backpack.Infrastructure;
 using SteveTheTroll.Trolls.Combat.Infrastructure;
 using SteveTheTroll.Trolls.Contracts;
 using SteveTheTroll.Trolls.Movement.Infrastructure;
@@ -29,7 +30,8 @@ namespace SteveTheTroll.Trolls.Core
             Network = character != null ? character.GetComponent<ZNetView>() : null;
             Capabilities = new TrollCapabilities(
                 character != null && AI != null ? new ValheimTrollMovement(character, AI) : null,
-                Humanoid != null ? new ValheimTrollCombat(Humanoid) : null);
+                Humanoid != null ? new ValheimTrollCombat(Humanoid) : null,
+                Network != null ? new ValheimTrollInventory(Network) : null);
             ModLog.Verbose("TrollContext: built for " + Tag + " - ai " + (AI != null) + ", network " + (Network != null) + ", humanoid " + (Humanoid != null) + ", capabilities complete " + Capabilities.Complete);
         }
 

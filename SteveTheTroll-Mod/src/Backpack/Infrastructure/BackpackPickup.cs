@@ -1,7 +1,11 @@
 using System.Collections.Generic;
 using HarmonyLib;
 using Kydl.Common;
+using SteveTheTroll.Backpack.Application;
 using SteveTheTroll.Backpack.Domain;
+using SteveTheTroll.Backpack.Execution;
+using SteveTheTroll.Core.Results;
+using SteveTheTroll.Trolls.Contracts;
 using SteveTheTroll.Trolls.Farming.Infrastructure;
 using SteveTheTroll.Trolls.Taming.Infrastructure;
 using UnityEngine;
@@ -12,6 +16,7 @@ namespace SteveTheTroll.Backpack.Infrastructure
     /// T-008c (D-062, user spec): every second, on the client that owns the troll, items lying within PickupRange (50 m) of a tamed troll go
     /// into its backpack when they are wood, ores, scrap iron or black metal scrap (TrollFocus.PickupItems). Not while one of its chests is open. No room in
     /// any chest -> the backpack is full (TrollFarmer walks home, D-062).
+    /// D-173 (Architecture V2, P6): this class reads the game (trolls, drops, budget) and acts; PickupPipeline decides per drop, PickupExecutor performs (troll-owner gated).
     /// </summary>
     internal static class BackpackPickup
     {
@@ -23,6 +28,33 @@ namespace SteveTheTroll.Backpack.Infrastructure
         static readonly System.Diagnostics.Stopwatch Clock = new System.Diagnostics.Stopwatch();
         static float _next;
         static int _rotate;
+
+        // D-173: built once; the executor's delegates act on the drop / troll being worked on (no closure per item)
+        static readonly PickupPipeline Pipeline = new PickupPipeline();
+        static readonly PickupExecutor Executor = new PickupExecutor(RequestCurrent, TakeCurrent);
+        static readonly ViewOwnership TrollOwner = new ViewOwnership();
+        static ItemDrop _drop;
+        static ZDO _zdo;
+        static Container _store;
+        static int _chest;
+
+        /// ITrollOwnership over the ZNetView currently worked on (reused - no allocation per troll).
+        sealed class ViewOwnership : ITrollOwnership
+        {
+            internal ZNetView View;
+            public bool IsValid { get { return View != null && View.IsValid(); } }
+            public bool IsOwner { get { return IsValid && View.IsOwner(); } }
+        }
+
+        static void RequestCurrent() { if (_drop != null) _drop.RequestOwn(); }
+
+        static bool TakeCurrent()
+        {
+            _chest = BackpackStore.TryAdd(_zdo, _drop.m_itemData, _store);
+            if (_chest < 0) return _chest >= 0;
+            ZNetScene.instance.Destroy(_drop.gameObject);
+            return _chest >= 0;
+        }
 
         // D-142 (test run 235053: BackpackPickup took 64 - 102 ms in ONE frame, every few seconds): it walked every dropped item in the world once per troll, built each item's
         // prefab name as a string, and every pickup read and rewrote the troll's chest data. Now: one pass over the drops for all trolls, the prefab check cached per item,
@@ -47,7 +79,10 @@ namespace SteveTheTroll.Backpack.Infrastructure
             foreach (var t in Trolls)
             {
                 var view = t.GetComponent<ZNetView>();
-                if (view == null || !view.IsValid() || !view.IsOwner() || !BackpackRules.Collects(view.IsOwner(), BackpackStore.Busy(BackpackStore.Store(t)), BackpackStore.IsFullCached(view.GetZDO()))) continue;       // D-144: a full backpack takes nothing
+                if (view == null || !view.IsValid()) continue;
+                // D-173: the troll-level checks are the pipeline's validation (owner / chest open / full); a drop-less probe answers whether the troll collects at all
+                var probe = Pipeline.Evaluate(new PickupInput(view.IsOwner(), view.IsOwner() && BackpackStore.Busy(BackpackStore.Store(t)), view.IsOwner() && BackpackStore.IsFullCached(view.GetZDO()), false, false, false));
+                if (probe.Status != ResponseStatus.Success) continue;       // D-144: a full backpack takes nothing
                 Jobs.Add(new Job { Troll = t, At = t.transform.position });
             }
             if (Jobs.Count == 0) return 0;
@@ -94,23 +129,27 @@ namespace SteveTheTroll.Backpack.Infrastructure
             var troll = job.Troll;
             if (troll == null) return 0;
             var view = troll.GetComponent<ZNetView>();
-            var store = BackpackStore.Store(troll);
+            TrollOwner.View = view;
+            _store = BackpackStore.Store(troll);
+            _zdo = view != null && view.IsValid() ? view.GetZDO() : null;
             int picked = 0;
-            var zdo = view.GetZDO();
             foreach (var d in job.Near)
             {
-                if (d == null) continue;
-                if (Clock.Elapsed.TotalMilliseconds >= BudgetMs) break;
-                var nv = d.GetComponent<ZNetView>();
-                if (nv == null || !nv.IsValid()) continue;
-                if (!nv.IsOwner()) { d.RequestOwn(); continue; }
-                string what = d.m_itemData.m_shared.m_name + " x" + d.m_itemData.m_stack;
-                int chest = BackpackStore.TryAdd(zdo, d.m_itemData, store);
-                if (chest < 0) { ModLog.Verbose("BackpackPickup: " + TrollTaming.Tag(troll) + " backpack has no room for " + what); break; }
-                ZNetScene.instance.Destroy(d.gameObject);
+                var nv = d != null ? d.GetComponent<ZNetView>() : null;
+                bool valid = nv != null && nv.IsValid();
+                var input = new PickupInput(TrollOwner.IsOwner, BackpackStore.Busy(_store), false, Clock.Elapsed.TotalMilliseconds >= BudgetMs, valid, valid && nv.IsOwner());
+                var decision = Pipeline.Evaluate(input);
+                if (decision.Status != ResponseStatus.Success) break;          // not the owner any more / chest opened / budget used: the rest waits for the next tick
+                string what = valid ? d.m_itemData.m_shared.m_name + " x" + d.m_itemData.m_stack : "";
+                _drop = d;
+                var done = Executor.Execute(TrollOwner, decision.Value);
+                _drop = null;
+                if (decision.Value != PickupAction.Take) continue;
+                if (!done.IsSuccess) { ModLog.Verbose("BackpackPickup: " + TrollTaming.Tag(troll) + " backpack has no room for " + what); break; }
                 picked++;
-                ModLog.Verbose("BackpackPickup: " + TrollTaming.Tag(troll) + " picked up " + what + " into chest " + (chest + 1));
+                ModLog.Verbose("BackpackPickup: " + TrollTaming.Tag(troll) + " picked up " + what + " into chest " + (_chest + 1));
             }
+            TrollOwner.View = null; _zdo = null; _store = null;
             return picked;
         }
     }
