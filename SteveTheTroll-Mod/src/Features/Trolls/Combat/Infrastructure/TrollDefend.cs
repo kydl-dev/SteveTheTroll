@@ -24,10 +24,10 @@ namespace SteveTheTroll.Trolls.Combat.Infrastructure
         /// In-game test Startup_TamingReflection: runs this class's reflection lookup. Expected outcome: whether it was found.
         internal static bool SelfCheck() { return SetTarget != null; }
 
-        [HarmonyPatch(typeof(Character), nameof(Character.ApplyDamage))]
-        static class PlayerHit
+        // Harmony hook: src/Integrations/Harmony/TrollsCombatPatches.cs, TrollDefend_PlayerHit (MIGRATION_DECISIONS A5)
+        internal static class PlayerHit
         {
-            static void Postfix(Character __instance, HitData hit)
+            internal static void Postfix(Character __instance, HitData hit)
             {
                 var player = __instance as Player;
                 if (player == null || hit == null || !ModSettings.On) return;

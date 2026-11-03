@@ -8,7 +8,7 @@ namespace SteveTheTroll.Items.Costume
     /// increase by more than 75kg"): while the set effect "Steve The Troll" is on, the player's max carry weight is the game's total (base
     /// 300 + Megingjord + any other effect) x (1 + SetCarryPercent). Hook (1.0.21): Player.GetMaxCarryWeight (status effects already applied).
     /// </summary>
-    [HarmonyPatch(typeof(Player), nameof(Player.GetMaxCarryWeight))]
+    // Harmony hook: src/Integrations/Harmony/CostumePatches.cs, SetCarryPatchHook (MIGRATION_DECISIONS A5)
     internal static class SetCarryPatch
     {
         static float _lastLogged = -1f;
@@ -19,7 +19,7 @@ namespace SteveTheTroll.Items.Costume
             return percent > 0f ? limit * (1f + percent) : limit;
         }
 
-        static void Postfix(Player __instance, ref float __result)
+        internal static void Postfix(Player __instance, ref float __result)
         {
             int hash = CostumeItems.SetEffectHash;
             if (__instance == null || hash == 0 || !ModSettings.On) return;

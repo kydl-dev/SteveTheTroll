@@ -41,8 +41,9 @@ namespace SteveTheTroll.Tests.Integration
         static readonly Regex KeyLiteral = new Regex("\"\\$?(stevethetroll_[a-z0-9_]*[a-z0-9])\"");
 
         // ids that look like text keys but are not texts: the set id (CostumeItems.SetName), saved-data keys (TrollRegistry.DataKey,
-        // TrollTamingPatch.FirstTameKey). A new one goes here only with a comment saying what it is.
-        static readonly HashSet<string> NotTexts = new HashSet<string> { "stevethetroll_set", "stevethetroll_trolls", "stevethetroll_first_tame" };
+        // TrollTamingPatch.FirstTameKey), the Troll Hub icon's sprite name (T-200, EmbeddedImages: the resource name without .png). A new one goes here only
+        // with a comment saying what it is.
+        static readonly HashSet<string> NotTexts = new HashSet<string> { "stevethetroll_set", "stevethetroll_trolls", "stevethetroll_first_tame", "stevethetroll_hub_icon" };
 
         static SortedSet<string> UsedKeys(out Dictionary<string, string> where)
         {

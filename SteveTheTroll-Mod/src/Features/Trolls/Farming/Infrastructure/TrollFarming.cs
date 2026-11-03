@@ -342,12 +342,12 @@ namespace SteveTheTroll.Trolls.Farming.Infrastructure
             return best;
         }
 
-        [HarmonyPatch(typeof(MonsterAI), nameof(MonsterAI.UpdateAI))]
-        static class Steer
+        // Harmony hook: src/Integrations/Harmony/TrollsFarmingPatches.cs, TrollFarming_Steer (MIGRATION_DECISIONS A5)
+        internal static class Steer
         {
             // D-048: a PREFIX now - while the troll farms, the game's AI step (idle wandering, the feeding animation, its own attack timer) is
             // skipped completely; it runs again when farming hands back (fight, follow order, nothing to farm).
-            static bool Prefix(MonsterAI __instance, float dt, ref bool __result)
+            internal static bool Prefix(MonsterAI __instance, float dt, ref bool __result)
             {
                 if (__instance == null) return true;
                 var view0 = __instance.GetComponent<ZNetView>();

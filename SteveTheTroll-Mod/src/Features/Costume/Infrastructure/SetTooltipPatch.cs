@@ -10,12 +10,12 @@ namespace SteveTheTroll.Items.Costume
     /// D-091 (user: "could we not just say: stamina usage: -50%? there is a lot of text and font-size goes really small"): the set effect's
     /// tooltip shows ONE stamina line instead of the game's eight (run / jump / attack / block / dodge / swim / sneak / base item).
     /// </summary>
-    [HarmonyPatch(typeof(SE_Stats), nameof(SE_Stats.GetTooltipString))]
+    // Harmony hook: src/Integrations/Harmony/CostumePatches.cs, SetTooltipPatchHook (MIGRATION_DECISIONS A5)
     internal static class SetTooltipPatch
     {
         internal const string StaminaLabel = "$stevethetroll_se_stamina", CarryLabel = "$stevethetroll_se_carry";
 
-        static void Postfix(SE_Stats __instance, ref string __result)
+        internal static void Postfix(SE_Stats __instance, ref string __result)
         {
             if (__instance == null || !__instance.name.StartsWith(CostumeItems.SetEffectName, System.StringComparison.Ordinal)) return;   // also the active copy "(Clone)"
             __result = Compact(__result, StaminaLabel, CostumeItems.SetStamina);
@@ -58,12 +58,12 @@ namespace SteveTheTroll.Items.Costume
     /// D-092 (user: "not show the Steve The Troll set bonus ... in the slippers crafting page ... keeping stuff secret"): the slippers'
     /// tooltip (crafting page, inventory) leaves the set out until the character has crafted the whole costume (D-088 CostumeComplete).
     /// </summary>
-    [HarmonyPatch]
+    // Harmony hook: src/Integrations/Harmony/CostumePatches.cs, SlipperSetSecretPatchHook (MIGRATION_DECISIONS A5)
     internal static class SlipperSetSecretPatch
     {
         static readonly HashSet<string> Logged = new HashSet<string>();
 
-        static IEnumerable<MethodBase> TargetMethods()
+        internal static IEnumerable<MethodBase> TargetMethods()
         {
             foreach (var m in AccessTools.GetDeclaredMethods(typeof(ItemDrop.ItemData)))
             {
@@ -73,7 +73,7 @@ namespace SteveTheTroll.Items.Costume
             }
         }
 
-        static void Prefix(ItemDrop.ItemData item, out StatusEffect __state)
+        internal static void Prefix(ItemDrop.ItemData item, out StatusEffect __state)
         {
             __state = null;
             if (item == null || item.m_shared == null || item.m_shared != SlipperItem.Shared || item.m_shared.m_setStatusEffect == null) return;
@@ -83,7 +83,7 @@ namespace SteveTheTroll.Items.Costume
             if (Logged.Add("hidden")) ModLog.Verbose("SlipperSetSecretPatch: slippers tooltip without the set (costume not crafted yet)");
         }
 
-        static void Finalizer(ItemDrop.ItemData item, StatusEffect __state)
+        internal static void Finalizer(ItemDrop.ItemData item, StatusEffect __state)
         {
             if (__state != null && item != null && item.m_shared != null) item.m_shared.m_setStatusEffect = __state;
         }

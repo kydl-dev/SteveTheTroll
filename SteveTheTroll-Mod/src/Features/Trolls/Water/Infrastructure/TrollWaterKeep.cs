@@ -42,10 +42,10 @@ namespace SteveTheTroll.Trolls.Water.Infrastructure
             return p;
         }
 
-        [HarmonyPatch(typeof(BaseAI), "Follow")]
-        static class KeepAway
+        // Harmony hook: src/Integrations/Harmony/TrollsWaterPatches.cs, TrollWaterKeep_KeepAway (MIGRATION_DECISIONS A5)
+        internal static class KeepAway
         {
-            static bool Prefix(BaseAI __instance, GameObject go, float dt)
+            internal static bool Prefix(BaseAI __instance, GameObject go, float dt)
             {
                 if (go == null || MoveTo == null || go.GetComponent<Player>() == null) return true;
                 var c = __instance.GetComponent<Character>();
@@ -70,11 +70,10 @@ namespace SteveTheTroll.Trolls.Water.Infrastructure
             }
         }
 
-        [HarmonyPatch(typeof(WearNTear), nameof(WearNTear.Damage))]
-        static class NoShipDamage
+        // Harmony hook: src/Integrations/Harmony/TrollsWaterPatches.cs, TrollWaterKeep_NoShipDamage (MIGRATION_DECISIONS A5)
+        internal static class NoShipDamage
         {
-            [HarmonyPriority(Priority.First)]
-            static bool Prefix(WearNTear __instance, HitData hit)
+            internal static bool Prefix(WearNTear __instance, HitData hit)
             {
                 if (hit == null || __instance == null || !ModSettings.On) return true;
                 var a = hit.GetAttacker();

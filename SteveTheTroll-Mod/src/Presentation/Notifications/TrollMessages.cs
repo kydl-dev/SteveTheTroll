@@ -17,23 +17,23 @@ namespace SteveTheTroll.Ui
         static void Enter(Tameable t) { if (TrollTaming.IsTroll(t)) _scope++; }
         static void Leave(Tameable t) { if (TrollTaming.IsTroll(t) && _scope > 0) _scope--; }
 
-        [HarmonyPatch(typeof(Tameable), "RPC_Command")]
-        static class Command { static void Prefix(Tameable __instance) { Enter(__instance); } static void Finalizer(Tameable __instance) { Leave(__instance); } }
+        // Harmony hook: src/Integrations/Harmony/PresentationPatches.cs, TrollMessages_Command (MIGRATION_DECISIONS A5)
+        internal static class Command { internal static void Prefix(Tameable __instance) { Enter(__instance); } internal static void Finalizer(Tameable __instance) { Leave(__instance); } }
 
-        [HarmonyPatch(typeof(Tameable), nameof(Tameable.Interact))]
-        static class Interact { static void Prefix(Tameable __instance) { Enter(__instance); } static void Finalizer(Tameable __instance) { Leave(__instance); } }
+        // Harmony hook: src/Integrations/Harmony/PresentationPatches.cs, TrollMessages_Interact (MIGRATION_DECISIONS A5)
+        internal static class Interact { internal static void Prefix(Tameable __instance) { Enter(__instance); } internal static void Finalizer(Tameable __instance) { Leave(__instance); } }
 
-        [HarmonyPatch(typeof(Tameable), "Tame")]
-        static class Tame
+        // Harmony hook: src/Integrations/Harmony/PresentationPatches.cs, TrollMessages_Tame (MIGRATION_DECISIONS A5)
+        internal static class Tame
         {
-            static void Prefix(Tameable __instance) { Enter(__instance); }
-            static void Finalizer(Tameable __instance) { Leave(__instance); }
+            internal static void Prefix(Tameable __instance) { Enter(__instance); }
+            internal static void Finalizer(Tameable __instance) { Leave(__instance); }
         }
 
-        [HarmonyPatch(typeof(Player), nameof(Player.Message))]
-        static class ToLeft
+        // Harmony hook: src/Integrations/Harmony/PresentationPatches.cs, TrollMessages_ToLeft (MIGRATION_DECISIONS A5)
+        internal static class ToLeft
         {
-            static bool Prefix(ref MessageHud.MessageType type, ref string msg)
+            internal static bool Prefix(ref MessageHud.MessageType type, ref string msg)
             {
                 if (Passing || _scope <= 0) return true;
                 string before = msg;

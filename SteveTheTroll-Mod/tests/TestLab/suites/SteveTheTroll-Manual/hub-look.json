@@ -1,0 +1,20 @@
+{
+  "name": "hub-look",
+  "description": "The mod's hub page and the new Troll Hub icon look right (T-200), F6 / Esc open and close the hub with real keys, the costume unlock message reads well (T-201)",
+  "manualOnly": true,
+  "timeout": 600,
+  "steps": [
+    { "do": "hook", "name": "stt.arena", "contains": "arena at", "label": "start on the arena spot (MIGRATION_DECISIONS C26)" },
+    { "do": "checkpoint", "message": "Press F6, pick SteveTheTroll. Are all tabs there (Slippers, Costume, My trolls, Troll work, Trolls, Troll Hub, Settings) in the shared look (dark panel, gold accents, readable text, nothing cut off)?" },
+    { "do": "checkpoint", "message": "Press Esc. Is the hub closed and can you move / look around again (input released)?" },
+    { "do": "checkpoint", "message": "Take the hammer, open the KY-Items category. Does the Troll Hub show the HUB sign icon, readable at build-menu size? (Photos\\SteveTheTroll\\20261103_T-200_hub-icon_preview.png is the same image.)" },
+    { "do": "hook", "name": "stt.forgetCostume", "contains": "worn once False" },
+    { "do": "give", "prefab": "STT_TrollSlippers" },
+    { "do": "hook", "name": "stt.slippers", "args": { "on": true }, "expect": true },
+    { "do": "checkpoint", "message": "Did a message say the troll costume can now be crafted, and does the workbench list the costume pieces and the Troll Club now?" },
+    { "do": "hook", "name": "stt.slippers", "args": { "on": false }, "expect": false }
+  ],
+  "asserts": [
+    { "check": "noErrors", "source": "SteveTheTroll" }
+  ]
+}

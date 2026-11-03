@@ -31,7 +31,7 @@ namespace SteveTheTroll.Testing
         {
             var p = Player.m_localPlayer;
             if (p == null) return "no player";
-            TestArena.MovePlayer(p);                   // D-171 (user): every test starts on the same open spot, 70 m from the lab start (trophy stones, house)
+            ArenaTestHooks.MovePlayer(p);                   // D-171 (user): every test starts on the same open spot, 70 m from the lab start (trophy stones, house)
             int trolls = CombatTestHooks.ClearTrolls();      // D-174 (review): every test starts without test / arena trolls (17 tests never called stt.clearTrolls)
             Marks.Clear(); _spotTarget = Vector3.zero; _followId = ""; _follow = ZDOID.None; Filled.Clear(); _depotStoneAtFollow = 0;
             Game.instance.GetPlayerProfile().SetCustomSpawnPoint(p.transform.position);

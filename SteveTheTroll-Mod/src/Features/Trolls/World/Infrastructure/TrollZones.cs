@@ -280,8 +280,8 @@ namespace SteveTheTroll.World.Zones
         }
 
         /// The kept sectors' objects join the list the game creates / keeps (ZNetScene.CreateDestroyObjects passes the same list to RemoveObjects).
-        [HarmonyPatch(typeof(ZNetScene), "CreateObjects")]
-        static class Create
+        // Harmony hook: src/Integrations/Harmony/TrollsWorldPatches.cs, TrollZones_Create (MIGRATION_DECISIONS A5)
+        internal static class Create
         {
             // TEST-048 / TEST-049: 1.0.21 builds the near list from the player's SIMULATION distance (Settings > graphics; 18 000+ ZDOs in
             // TEST-049), which is larger than the active area the kept zones are chosen against. A kept zone inside that near distance is
@@ -292,7 +292,7 @@ namespace SteveTheTroll.World.Zones
             static long _started;
 
             // D-141 (review: "the timing covers only this mod's prefix"): the postfix closes the time of the WHOLE game method (prefix + the game's own creating / removing).
-            static void Postfix()
+            internal static void Postfix()
             {
                 if (_started == 0) return;
                 double ms = (System.Diagnostics.Stopwatch.GetTimestamp() - _started) * 1000.0 / System.Diagnostics.Stopwatch.Frequency;
@@ -300,7 +300,7 @@ namespace SteveTheTroll.World.Zones
                 _fullMs += ms; _fullCount++; if (ms > _fullMaxMs) _fullMaxMs = ms;
             }
 
-            static void Prefix(List<ZDO> currentNearObjects)
+            internal static void Prefix(List<ZDO> currentNearObjects)
             {
                 _started = System.Diagnostics.Stopwatch.GetTimestamp();
                 if (_broken || Cached.Count == 0 || currentNearObjects == null || ZNet.instance == null || ZoneSystem.instance == null) return;

@@ -11,12 +11,12 @@ namespace SteveTheTroll.Backpack.Infrastructure
     /// T-008c (D-062, user spec): when a tamed troll dies, everything in its backpack drops in the game's cargo crates (CargoCrate, as from
     /// a sunk ship) next to it - as many crates as needed; without that prefab the items drop on the ground. Runs on the troll's owner.
     /// </summary>
-    [HarmonyPatch(typeof(Tameable), "OnDeath")]
+    // Harmony hook: src/Integrations/Harmony/TrollsBackpackPatches.cs, BackpackDeathHook (MIGRATION_DECISIONS A5)
     internal static class BackpackDeath
     {
         const string CratePrefab = "CargoCrate";
 
-        static void Prefix(Tameable __instance)
+        internal static void Prefix(Tameable __instance)
         {
             var troll = __instance != null ? __instance.GetComponent<Character>() : null;
             if (troll == null || !troll.IsTamed() || !TrollTaming.IsTroll(troll)) return;

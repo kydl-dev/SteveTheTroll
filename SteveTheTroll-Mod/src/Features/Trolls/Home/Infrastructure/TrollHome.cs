@@ -100,10 +100,10 @@ namespace SteveTheTroll.Trolls.Home.Infrastructure
             return moved;
         }
 
-        [HarmonyPatch(typeof(Game), nameof(Game.Logout))]
-        static class Logout
+        // Harmony hook: src/Integrations/Harmony/TrollsHomePatches.cs, TrollHome_Logout (MIGRATION_DECISIONS A5)
+        internal static class Logout
         {
-            static void Prefix()
+            internal static void Prefix()
             {
                 var p = Player.m_localPlayer;
                 var profile = Game.instance != null ? Game.instance.GetPlayerProfile() : null;

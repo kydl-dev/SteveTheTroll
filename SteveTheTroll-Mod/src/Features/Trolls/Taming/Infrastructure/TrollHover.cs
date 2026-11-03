@@ -8,13 +8,13 @@ namespace SteveTheTroll.Trolls.Taming.Infrastructure
     /// like the name over its head) and what E does now - "Follow" while it stays, "Stay" while it follows (D-038: E = follow / stay).
     /// Postfix on Tameable.GetHoverText; other tameable creatures and wild trolls keep the game's text. The rename line stays.
     /// </summary>
-    [HarmonyPatch(typeof(Tameable), nameof(Tameable.GetHoverText))]
+    // Harmony hook: src/Integrations/Harmony/TrollsTamingPatches.cs, TrollHoverHook (MIGRATION_DECISIONS A5)
     internal static class TrollHover
     {
         static readonly AccessTools.FieldRef<Tameable, MonsterAI> TAI = AccessTools.FieldRefAccess<Tameable, MonsterAI>("m_monsterAI");
         static float _nextLog;
 
-        static void Postfix(Tameable __instance, ref string __result)
+        internal static void Postfix(Tameable __instance, ref string __result)
         {
             if (__instance == null || string.IsNullOrEmpty(__result) || !TrollTaming.IsTroll(__instance) || !__instance.IsTamed()) return;
             var lines = __result.Split('\n');

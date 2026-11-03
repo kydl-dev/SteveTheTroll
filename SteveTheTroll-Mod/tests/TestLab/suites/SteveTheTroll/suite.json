@@ -1,12 +1,41 @@
 {
   "name": "SteveTheTroll",
-  "description": "SteveTheTroll (Architecture V2, D-169 - architecture-v2 runs first): depot lifecycle, backpack storage, hub choice, full-backpack unload, slipper figures, ownership (D-160) - attack-key-tree runs LAST: it teleports the player, and every later test would start (bed, walls, spawns) on other ground",
+  "description": "SteveTheTroll 2.1.0 (KydlDev spec port T-210; Architecture V2, D-169 - architecture-v2 runs first): the spec features / hub tabs / KY-Items, costume after slippers (T-201), depot lifecycle, backpack storage, hub choice, full-backpack unload, slipper figures, ownership (D-160) - attack-key-tree runs LAST: it teleports the player, and every later test would start (bed, walls, spawns) on other ground",
   "requireMods": [
     {
-      "guid": "com.kydldev.SteveTheTroll"
+      "guid": "com.kydldev.SteveTheTroll",
+      "minVersion": "2.1.0"
+    },
+    {
+      "guid": "com.kydldev.KydlCore",
+      "minVersion": "0.1.0"
     }
   ],
   "configOverrides": [
+    {
+      "guid": "com.kydldev.SteveTheTroll",
+      "section": "General",
+      "key": "EnableAll",
+      "value": true
+    },
+    {
+      "guid": "com.kydldev.SteveTheTroll",
+      "section": "Slippers",
+      "key": "Enable",
+      "value": true
+    },
+    {
+      "guid": "com.kydldev.SteveTheTroll",
+      "section": "Costume",
+      "key": "Enable",
+      "value": true
+    },
+    {
+      "guid": "com.kydldev.SteveTheTroll",
+      "section": "Trolls",
+      "key": "AttackKey",
+      "value": "Mouse3"
+    },
     {
       "guid": "com.kydldev.SteveTheTroll",
       "section": "Trolls",
@@ -41,6 +70,10 @@
   "resetBetweenTests": true,
   "tests": [
     "architecture-v2",
+    "startup-clean",
+    "kydl-spec-port",
+    "feature-toggle",
+    "costume-after-slippers",
     "reset-isolation",
     "depot-empty-removes",
     "depot-window-open-waits",

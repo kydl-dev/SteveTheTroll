@@ -22,7 +22,8 @@ with up to 5 trolls at your side.
 - **Troll Club**: a whole tree trunk as a weapon.
 - **Troll Hub**: a big building made with the hammer (category KY-Items).
 
-The recipes show up as soon as you pick up one of their materials. Press **F6** for the KY hub, the one menu of all KydlDev mods.
+The slipper recipe shows up as soon as you pick up one of its materials. The costume and the club come after the slippers: their recipes
+appear once you have put the slippers on for the first time. Press **F6** for the KY hub, the one menu of all KydlDev mods.
 SteveTheTroll adds tabs to it: the slippers in 3D with their stats, the costume, your trolls, their work list, hubs and settings.
 Needs the **KydlCore** mod (installed automatically by the mod manager).
 
@@ -106,7 +107,7 @@ and Timberwood trees and breaks giant remains and petrified Gammeltrolls; fortre
 
 ## Troll Hubs
 A hub is a base for your trolls far from your bed. You can build one with the hammer once the Steve The Troll set bonus has been
-active (50 wood, 20 copper ore, 20 tin ore, 20 resin, 50 stone). Removing a hub with the hammer gives back what it cost.
+active (50 wood, 20 copper ore, 20 tin ore, 20 resin, 50 stone); look for the HUB sign icon in the KY-Items category. Removing a hub with the hammer gives back what it cost.
 
 - Up to 10 hubs per player, at least 1000 m apart. Each serves a 500 m circle.
 - Trolls go to their hub when you log out or take the slippers off, unload there and heal there like at the bed.
@@ -119,7 +120,7 @@ active (50 wood, 20 copper ore, 20 tin ore, 20 resin, 50 stone). Removing a hub 
   within 1250 m work at half speed.
 
 ## How to use
-- Craft the slippers at the workbench and put them on. Find a wild troll and stay near it for a minute.
+- Craft the slippers at the workbench and put them on (that also unlocks the costume recipes). Find a wild troll and stay near it for a minute.
 - **F6** opens / closes the KY hub (KydlCore), Esc closes it.
 - **Mouse 4** orders your nearest troll.
 
@@ -129,18 +130,18 @@ active (50 wood, 20 copper ore, 20 tin ore, 20 resin, 50 stone). Removing a hub 
 | Section | Setting | Default | What it does |
 |---------|---------|---------|--------------|
 | General | EnableAll | true | Switches the whole mod on / off while playing |
-| Slippers | Enable | true | The Fluffy Slippers and the mini trolls on the feet (off = not in the game, needs a restart) |
-| Costume | Enable | true | The Troll Mascot costume, club and set power (off = not in the game, needs a restart) |
-| Trolls | Enable | true | Taming and farming of real trolls, backpack, depots, map pins, extra trolls (off = not in the game, needs a restart) |
+| Slippers | Enable | true | The Fluffy Slippers and the mini trolls on the feet. Off: the Slippers tab goes away at once; the item is added at game start, so turning it on needs a restart |
+| Costume | Enable | true | The Troll Mascot costume, club and set power. Off: the Costume tab goes away at once; turning it on needs a restart |
+| Trolls | Enable | true | Taming and farming of real trolls, backpack, depots, map pins, extra trolls. Off: the troll tabs and the background troll work stop at once, the rest after a restart; turning it on needs a restart |
 | Trolls | AttackKey | Mouse 4 | Orders your nearest troll |
-| TrollHub | Enable | true | Troll hubs (off = not in the game, needs a restart) |
+| TrollHub | Enable | true | Troll hubs. Off: trolls use the bed and the Troll Hub tab goes away at once; turning it on needs a restart |
 | TrollHub | AutoAssign | true | A troll without a chosen hub uses the nearest one within 1000 m |
 | DebugLog | Enable | false | Detailed lines in the BepInEx log for bug reports |
 
 Edits to the file are picked up while the game runs.
 
 ## Multiplayer
-Every player needs the mod (same minor version). Each player's trolls belong to that player and work around that player's bed or hubs.
+Every player and the server need the mod, in exactly the same version (and the same KydlCore version); a different version is refused when joining. Each player's trolls belong to that player and work around that player's bed or hubs.
 
 ## Bug reports
 Turn on `[DebugLog] Enable`, reproduce the problem, and attach `BepInEx/LogOutput.log`.

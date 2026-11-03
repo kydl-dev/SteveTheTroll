@@ -134,10 +134,10 @@ namespace SteveTheTroll.Items.Slippers
 
     /// Every character (local and remote players) wearing the slippers in the utility slot is marked (the costume legs hide their plush feet then). The look itself is the game's:
     /// VisEquipment attaches the item's attach_skin on each wearer and syncs it over the network, so other players see it as long as they have the mod (D-007).
-    [HarmonyPatch(typeof(VisEquipment), "SetUtilityEquipped")]
+    // Harmony hook: src/Integrations/Harmony/SlippersPatches.cs, SlipperVisualPatchHook (MIGRATION_DECISIONS A5)
     internal static class SlipperVisualPatch
     {
-        static void Postfix(VisEquipment __instance, int hash)
+        internal static void Postfix(VisEquipment __instance, int hash)
         {
             if (__instance == null || SlipperItem.Hash == 0) return;
             bool wear = hash == SlipperItem.Hash && ModSettings.On;

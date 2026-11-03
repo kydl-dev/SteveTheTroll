@@ -164,10 +164,10 @@ namespace SteveTheTroll.Backpack.Infrastructure
         /// Someone has one of the troll's chests open (no pick-up into it meanwhile).
         internal static bool Busy(Container store) { return store != null && InUse(store); }
 
-        [HarmonyPatch(typeof(Container), "Load")]
-        static class LoadPatch
+        // Harmony hook: src/Integrations/Harmony/TrollsBackpackPatches.cs, BackpackStore_LoadPatch (MIGRATION_DECISIONS A5)
+        internal static class LoadPatch
         {
-            static bool Prefix(Container __instance, ref bool __result)
+            internal static bool Prefix(Container __instance, ref bool __result)
             {
                 int i;
                 if (!Active.TryGetValue(__instance, out i)) return true;
@@ -185,10 +185,10 @@ namespace SteveTheTroll.Backpack.Infrastructure
             }
         }
 
-        [HarmonyPatch(typeof(Container), "Save")]
-        static class SavePatch
+        // Harmony hook: src/Integrations/Harmony/TrollsBackpackPatches.cs, BackpackStore_SavePatch (MIGRATION_DECISIONS A5)
+        internal static class SavePatch
         {
-            static bool Prefix(Container __instance)
+            internal static bool Prefix(Container __instance)
             {
                 int i;
                 if (!Active.TryGetValue(__instance, out i)) return true;

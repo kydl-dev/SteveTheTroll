@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.1.0
+- Not tested in game yet.
+- Multiplayer: every player needs exactly the same SteveTheTroll version (2.1.0 joins only 2.1.0) and the same KydlCore version.
+- The feature switches now apply while you play: turning `[Slippers]`, `[Costume]`, `[Trolls]` or `[TrollHub]` `Enable` off removes their F6 tabs at once (and, for the trolls, the background troll work). Turning a part ON that was off when the game started still needs a restart.
+- The slippers, the costume pieces, the Troll Club and the Troll Hub are listed in KydlCore's KY-Items registry.
+- Troll Hub: new build menu icon (the word HUB on a wooden sign).
+- The troll costume recipes (head, suit, trousers, Troll Club) now appear only after you have put on the Fluffy Slippers once: craft the slippers, wear them, then the costume. Characters that already know a costume recipe keep it.
+- Inside: the mod's code was reorganised (KydlDev mod standard). Nothing else should change.
+
 ## 2.0.0
 - Breaking: SteveTheTroll now needs the KydlCore mod (hard dependency). Install KydlCore as well.
 - The menu is now tabs (Slippers, Costume, My trolls, Troll work, Trolls, Settings) in the KY hub window of KydlCore (F6); the own menu window and

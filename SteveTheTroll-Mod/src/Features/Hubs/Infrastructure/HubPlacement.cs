@@ -57,20 +57,20 @@ namespace SteveTheTroll.Hubs.Infrastructure
             return hi >= lo ? hi - lo : 0f;
         }
 
-        [HarmonyPatch(typeof(Player), nameof(Player.HaveRequirements), typeof(Piece), typeof(Player.RequirementMode))]
-        static class Visible
+        // Harmony hook: src/Integrations/Harmony/HubsPatches.cs, HubPlacement_Visible (MIGRATION_DECISIONS A5)
+        internal static class Visible
         {
-            static void Postfix(Player __instance, Piece piece, Player.RequirementMode mode, ref bool __result)
+            internal static void Postfix(Player __instance, Piece piece, Player.RequirementMode mode, ref bool __result)
             {
                 if (!IsHub(piece)) return;
                 if (mode == Player.RequirementMode.IsKnown) __result = true;      // known materials are not required to SEE the hub once unlocked
             }
         }
 
-        [HarmonyPatch(typeof(Player), "PlacePiece")]
-        static class Place
+        // Harmony hook: src/Integrations/Harmony/HubsPatches.cs, HubPlacement_Place (MIGRATION_DECISIONS A5)
+        internal static class Place
         {
-            static bool Prefix(Player __instance, Piece piece, Vector3 pos)
+            internal static bool Prefix(Player __instance, Piece piece, Vector3 pos)
             {
                 if (!IsHub(piece)) return true;
                 string refuse = null;

@@ -215,10 +215,10 @@ namespace SteveTheTroll.Testing
         static int _trollHits, _otherHits;
         static string _lastTrollHit = "";
 
-        [HarmonyPatch(typeof(WearNTear), "RPC_Damage")]
-        static class CountWallHits
+        // Harmony hook: src/Integrations/Harmony/TestingPatches.cs, RecoveryTestHooks_CountWallHits (MIGRATION_DECISIONS A5)
+        internal static class CountWallHits
         {
-            static void Prefix(WearNTear __instance, HitData hit)
+            internal static void Prefix(WearNTear __instance, HitData hit)
             {
                 if (__instance == null || hit == null || WallIds.Count == 0 || !WallIds.Contains(__instance.gameObject.GetInstanceID())) return;
                 var a = hit.GetAttacker();

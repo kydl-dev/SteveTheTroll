@@ -1,0 +1,32 @@
+{
+  "name": "feature-toggle",
+  "description": "MIGRATION_DECISIONS A4: a feature switched off in the config stops at once and leaves no stale hub tab or KY-Items entry; switched on it starts again. Slippers alone, then Trolls (the Troll Hub needs the trolls, so it stops too).",
+  "timeout": 90,
+  "steps": [
+    { "do": "hook", "name": "stt.arena", "contains": "arena at", "label": "start on the arena spot (MIGRATION_DECISIONS C26)" },
+    { "do": "hook", "name": "stt.featureRunning", "args": { "id": "slippers" }, "expect": true, "label": "slippers run at start" },
+    { "do": "setConfig", "values": { "Slippers/Enable": false } },
+    { "do": "wait", "until": { "check": "hook", "name": "stt.featureRunning", "args": { "id": "slippers" }, "expect": false }, "timeout": 5 },
+    { "do": "hook", "name": "stt.hasTab", "args": { "id": "slippers" }, "expect": false, "label": "Slippers tab removed while off" },
+    { "do": "hook", "name": "stt.kyItem", "args": { "item": "slippers" }, "expect": false, "label": "KY-Items entry withdrawn while off" },
+    { "do": "hook", "name": "stt.featureRunning", "args": { "id": "costume" }, "expect": true, "label": "the costume is not affected" },
+    { "do": "setConfig", "values": { "Slippers/Enable": true } },
+    { "do": "wait", "until": { "check": "hook", "name": "stt.featureRunning", "args": { "id": "slippers" }, "expect": true }, "timeout": 5 },
+    { "do": "hook", "name": "stt.hasTab", "args": { "id": "slippers" }, "expect": true, "label": "Slippers tab back" },
+    { "do": "hook", "name": "stt.kyItem", "args": { "item": "slippers" }, "expect": true, "label": "KY-Items entry back" },
+    { "do": "setConfig", "values": { "Trolls/Enable": false } },
+    { "do": "wait", "until": { "check": "hook", "name": "stt.featureRunning", "args": { "id": "trolls" }, "expect": false }, "timeout": 5 },
+    { "do": "hook", "name": "stt.featureRunning", "args": { "id": "hubs" }, "expect": false, "label": "hubs stop with the trolls" },
+    { "do": "hook", "name": "stt.hasTab", "args": { "id": "mytrolls" }, "expect": false, "label": "My trolls tab removed" },
+    { "do": "hook", "name": "stt.hasTab", "args": { "id": "trollhub" }, "expect": false, "label": "Troll Hub tab removed" },
+    { "do": "hook", "name": "stt.kyItem", "args": { "item": "hub" }, "expect": false, "label": "hub KY-Items entry withdrawn" },
+    { "do": "hook", "name": "stt.hasTab", "args": { "id": "settings" }, "expect": true, "label": "Settings tab stays" },
+    { "do": "setConfig", "values": { "Trolls/Enable": true } },
+    { "do": "wait", "until": { "check": "hook", "name": "stt.featureRunning", "args": { "id": "hubs" }, "expect": true }, "timeout": 5 },
+    { "do": "hook", "name": "stt.featureRunning", "args": { "id": "trolls" }, "expect": true, "label": "trolls back" },
+    { "do": "hook", "name": "stt.hasTab", "args": { "id": "trollhub" }, "expect": true, "label": "Troll Hub tab back" }
+  ],
+  "asserts": [
+    { "check": "noErrors", "source": "SteveTheTroll" }
+  ]
+}

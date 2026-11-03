@@ -25,6 +25,8 @@ namespace SteveTheTroll.Hubs.Infrastructure
             catch (System.Exception e) { ModLog.Error("HubPrefab: building the Troll Hub failed: " + e); }
         }
 
+        internal const string IconResource = "stevethetroll_hub_icon.png";
+
         static void Make()
         {
             var go = PrefabManager.Instance.CreateEmptyPrefab(HubData.PrefabName, false);
@@ -56,13 +58,16 @@ namespace SteveTheTroll.Hubs.Infrastructure
             piece.m_canBeRemoved = true;
             piece.m_groundOnly = true;
             piece.m_canRotate = true;
-            piece.m_icon = IconOf("stone_floor_2x2");
+            // T-200 (user 2026-11-03: "a better hub icon ... or simply the word HUB"): the word HUB on a wooden plaque, embedded in the DLL; the stone floor icon only as a fallback
+            var icon = EmbeddedImages.Sprite(IconResource);
+            piece.m_icon = icon != null ? icon : IconOf("stone_floor_2x2");
             var cfg = new PieceConfig
             {
                 Name = Loc.Token("stevethetroll_hub_piece"),
                 Description = Loc.Token("stevethetroll_hub_piece_desc"),
                 PieceTable = PieceTables.Hammer,
                 Category = KyCategory.For(HubData.PrefabName),
+                Icon = piece.m_icon,
             };
             var reqs = new RequirementConfig[HubData.Recipe.Length];
             for (int i = 0; i < reqs.Length; i++) reqs[i] = new RequirementConfig(HubData.Recipe[i].Item, HubData.Recipe[i].Amount, 0, true);

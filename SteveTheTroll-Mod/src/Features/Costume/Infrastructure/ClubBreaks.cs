@@ -16,13 +16,13 @@ namespace SteveTheTroll.Items.Club
     /// as chop and pickaxe. Every other target keeps the club's own tool tier (fortress walls stay out of its reach: WearNTear is not patched).
     /// Prefix on the receivers' Damage (runs on the attacking client before the hit is sent to the owner).
     /// </summary>
-    [HarmonyPatch]
+    // Harmony hook: src/Integrations/Harmony/CostumePatches.cs, ClubBreaksHook (MIGRATION_DECISIONS A5)
     internal static class ClubBreaks
     {
         static readonly Dictionary<string, bool> Timber = new Dictionary<string, bool>();   // prefab name -> drops timber (a few per session)
         static float _nextLog;
 
-        static IEnumerable<MethodBase> TargetMethods()
+        internal static IEnumerable<MethodBase> TargetMethods()
         {
             foreach (var t in new[] { typeof(TreeBase), typeof(TreeLog), typeof(MineRock), typeof(MineRock5), typeof(Destructible) })
             {
@@ -71,7 +71,7 @@ namespace SteveTheTroll.Items.Club
             return false;
         }
 
-        static void Prefix(object __instance, HitData hit)
+        internal static void Prefix(object __instance, HitData hit)
         {
             if (hit == null || !ModSettings.On) return;
             var attacker = hit.GetAttacker();

@@ -39,10 +39,10 @@ namespace SteveTheTroll.Trolls.Combat.Infrastructure
             return ModSettings.On && Bed(out bed) && Inside(bed, pos, ModSettings.NoHitRadius.Value);
         }
 
-        [HarmonyPatch(typeof(Humanoid), nameof(Humanoid.StartAttack))]
-        static class NoSwing
+        // Harmony hook: src/Integrations/Harmony/TrollsCombatPatches.cs, TrollNoHit_NoSwing (MIGRATION_DECISIONS A5)
+        internal static class NoSwing
         {
-            static bool Prefix(Humanoid __instance, ref bool __result)
+            internal static bool Prefix(Humanoid __instance, ref bool __result)
             {
                 if (__instance == null || !__instance.IsTamed() || !TrollTaming.IsTroll(__instance)) return true;
                 var p = Player.m_localPlayer;

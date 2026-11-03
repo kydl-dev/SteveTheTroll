@@ -1,0 +1,34 @@
+{
+  "name": "kydl-spec-port",
+  "description": "T-210 (KydlDev spec port): the four features run, every hub tab is declared, the six KY-Items entries are listed, the Troll Hub has the HUB icon (T-200), the hub opens on the mod",
+  "timeout": 60,
+  "steps": [
+    { "do": "hook", "name": "stt.arena", "contains": "arena at", "label": "start on the arena spot (MIGRATION_DECISIONS C26)" },
+    { "do": "wait", "seconds": 2 },
+    { "do": "hook", "name": "stt.featureRunning", "args": { "id": "slippers" }, "expect": true, "label": "slippers feature runs" },
+    { "do": "hook", "name": "stt.featureRunning", "args": { "id": "costume" }, "expect": true, "label": "costume feature runs" },
+    { "do": "hook", "name": "stt.featureRunning", "args": { "id": "trolls" }, "expect": true, "label": "trolls feature runs" },
+    { "do": "hook", "name": "stt.featureRunning", "args": { "id": "hubs" }, "expect": true, "label": "hubs feature runs" },
+    { "do": "hook", "name": "stt.hasTab", "args": { "id": "settings" }, "expect": true, "label": "Settings tab" },
+    { "do": "hook", "name": "stt.hasTab", "args": { "id": "slippers" }, "expect": true, "label": "Slippers tab" },
+    { "do": "hook", "name": "stt.hasTab", "args": { "id": "costume" }, "expect": true, "label": "Costume tab" },
+    { "do": "hook", "name": "stt.hasTab", "args": { "id": "mytrolls" }, "expect": true, "label": "My trolls tab" },
+    { "do": "hook", "name": "stt.hasTab", "args": { "id": "work" }, "expect": true, "label": "Troll work tab" },
+    { "do": "hook", "name": "stt.hasTab", "args": { "id": "trolls" }, "expect": true, "label": "Trolls tab" },
+    { "do": "hook", "name": "stt.hasTab", "args": { "id": "trollhub" }, "expect": true, "label": "Troll Hub tab" },
+    { "do": "hook", "name": "stt.kyItem", "args": { "item": "slippers" }, "expect": true, "label": "KY-Items stevethetroll:slippers" },
+    { "do": "hook", "name": "stt.kyItem", "args": { "item": "costume-helmet" }, "expect": true, "label": "KY-Items stevethetroll:costume-helmet" },
+    { "do": "hook", "name": "stt.kyItem", "args": { "item": "costume-chest" }, "expect": true, "label": "KY-Items stevethetroll:costume-chest" },
+    { "do": "hook", "name": "stt.kyItem", "args": { "item": "costume-legs" }, "expect": true, "label": "KY-Items stevethetroll:costume-legs" },
+    { "do": "hook", "name": "stt.kyItem", "args": { "item": "club" }, "expect": true, "label": "KY-Items stevethetroll:club" },
+    { "do": "hook", "name": "stt.kyItem", "args": { "item": "hub" }, "expect": true, "label": "KY-Items stevethetroll:hub" },
+    { "do": "hook", "name": "stt.hubIcon", "expect": "stevethetroll_hub_icon", "label": "T-200: the Troll Hub build icon is the HUB sign" },
+    { "do": "hook", "name": "kc.hubOpen", "args": { "mod": "com.kydldev.SteveTheTroll" }, "expect": true },
+    { "do": "wait", "seconds": 1 },
+    { "do": "hook", "name": "kc.hubTabCount", "args": { "mod": "com.kydldev.SteveTheTroll" }, "min": 7, "label": "7 tabs in the hub" },
+    { "do": "hook", "name": "kc.hubClose" }
+  ],
+  "asserts": [
+    { "check": "noErrors", "source": "SteveTheTroll" }
+  ]
+}

@@ -47,10 +47,10 @@ namespace SteveTheTroll.Trolls.Combat.Infrastructure
             return ok;
         }
 
-        [HarmonyPatch(typeof(WearNTear), nameof(WearNTear.Damage))]
-        static class WallHit
+        // Harmony hook: src/Integrations/Harmony/TrollsCombatPatches.cs, TrollWalls_WallHit (MIGRATION_DECISIONS A5)
+        internal static class WallHit
         {
-            static void Prefix(WearNTear __instance, HitData hit)
+            internal static void Prefix(WearNTear __instance, HitData hit)
             {
                 if (hit == null || __instance == null || !ModSettings.On || !BreakRules.FortressWall(__instance.name)) return;
                 var attacker = hit.GetAttacker();

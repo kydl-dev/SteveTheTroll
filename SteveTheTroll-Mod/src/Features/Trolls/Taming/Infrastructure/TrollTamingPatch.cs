@@ -58,10 +58,10 @@ namespace SteveTheTroll.Trolls.Taming.Infrastructure
             return (ok ? "PASS: " : "FAIL: ") + "tick " + dt + " s, GetRemainingTime " + (GetRemaining != null) + ", Tame " + (DoTame != null);
         }
 
-        [HarmonyPatch(typeof(Tameable), "TamingUpdate")]
-        static class TamingUpdate
+        // Harmony hook: src/Integrations/Harmony/TrollsTamingPatches.cs, TrollTamingPatch_TamingUpdate (MIGRATION_DECISIONS A5)
+        internal static class TamingUpdate
         {
-            static bool Prefix(Tameable __instance)
+            internal static bool Prefix(Tameable __instance)
             {
                 if (!TrollTaming.IsTroll(__instance)) return true;     // vanilla for every other creature
                 if (ModSettings.On) Tick(__instance);
@@ -69,10 +69,10 @@ namespace SteveTheTroll.Trolls.Taming.Infrastructure
             }
         }
 
-        [HarmonyPatch(typeof(Tameable), nameof(Tameable.GetStatusString))]
-        static class StatusString
+        // Harmony hook: src/Integrations/Harmony/TrollsTamingPatches.cs, TrollTamingPatch_StatusString (MIGRATION_DECISIONS A5)
+        internal static class StatusString
         {
-            static void Postfix(Tameable __instance, ref string __result)
+            internal static void Postfix(Tameable __instance, ref string __result)
             {
                 // our trolls never eat: no "hungry"; tamed = happy (TEST-015 showed "Tame, Acclimatizing"), wild = taming in progress
                 if (__result == "$hud_tamehungry" && TrollTaming.IsTroll(__instance)) __result = __instance.IsTamed() ? "$hud_tamehappy" : "$hud_tameinprogress";

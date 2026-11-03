@@ -198,7 +198,7 @@ namespace SteveTheTroll.Testing
                 if (c == null || !c.IsTamed() || !TrollTaming.IsTroll(c)) continue;
                 var v = c.GetComponent<ZNetView>();
                 if (v == null || !v.IsValid()) continue;
-                if (!TestHooks.MadeByTest(v.GetZDO().m_uid) && !TestArena.InArena(c.transform.position, ArenaClearMetres)) { kept++; continue; }
+                if (!TestHooks.MadeByTest(v.GetZDO().m_uid) && !ArenaTestHooks.InArena(c.transform.position, ArenaClearMetres)) { kept++; continue; }
                 v.ClaimOwnership(); ZNetScene.instance.Destroy(c.gameObject); n++;
             }
             ModLog.Info("CombatTestHooks: " + n + " tamed troll(s) removed before the test (test-made or within " + ArenaClearMetres + " m of the arena), " + kept + " kept");

@@ -130,19 +130,19 @@ namespace SteveTheTroll.Trolls.Taming.Infrastructure
 
         /// D-130: the dedicated swimming update. The game calls UpdateSwimming every physics tick while a character swims; the prefix sets the
         /// tamed troll's swim speed, acceleration and turn speed just before the game uses them (the animation callback no longer does this).
-        [HarmonyPatch(typeof(Character), "UpdateSwimming")]
-        static class SwimUpdate
+        // Harmony hook: src/Integrations/Harmony/TrollsTamingPatches.cs, TamedTrollSpeed_SwimUpdate (MIGRATION_DECISIONS A5)
+        internal static class SwimUpdate
         {
-            static void Prefix(Character __instance)
+            internal static void Prefix(Character __instance)
             {
                 if (TamedTrollStats.IsTamedTroll(__instance)) Swim(__instance, true);
             }
         }
 
-        [HarmonyPatch(typeof(CharacterAnimEvent), nameof(CharacterAnimEvent.CustomFixedUpdate))]
-        static class Free
+        // Harmony hook: src/Integrations/Harmony/TrollsTamingPatches.cs, TamedTrollSpeed_Free (MIGRATION_DECISIONS A5)
+        internal static class Free
         {
-            static void Postfix(CharacterAnimEvent __instance)
+            internal static void Postfix(CharacterAnimEvent __instance)
             {
                 var c = EventCharacter(__instance);
                 if (c == null) return;
@@ -167,10 +167,10 @@ namespace SteveTheTroll.Trolls.Taming.Infrastructure
             }
         }
 
-        [HarmonyPatch(typeof(CharacterAnimEvent), nameof(CharacterAnimEvent.Speed))]
-        static class AttackClip
+        // Harmony hook: src/Integrations/Harmony/TrollsTamingPatches.cs, TamedTrollSpeed_AttackClip (MIGRATION_DECISIONS A5)
+        internal static class AttackClip
         {
-            static void Postfix(CharacterAnimEvent __instance, float speedScale)
+            internal static void Postfix(CharacterAnimEvent __instance, float speedScale)
             {
                 var c = EventCharacter(__instance);
                 if (!TamedTrollStats.IsTamedTroll(c)) return;

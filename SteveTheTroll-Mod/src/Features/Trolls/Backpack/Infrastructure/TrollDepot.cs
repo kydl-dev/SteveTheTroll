@@ -383,10 +383,10 @@ namespace SteveTheTroll.Backpack.Infrastructure
             ZNetScene.instance.Destroy(go);
         }
 
-        [HarmonyPatch(typeof(Container), "Save")]
-        static class EmptyCheck
+        // Harmony hook: src/Integrations/Harmony/TrollsBackpackPatches.cs, TrollDepot_EmptyCheck (MIGRATION_DECISIONS A5)
+        internal static class EmptyCheck
         {
-            static void Postfix(Container __instance)
+            internal static void Postfix(Container __instance)
             {
                 try { RemoveIfEmpty(__instance); }
                 catch (System.Exception e) { ModLog.Warn("TrollDepot: empty check failed: " + e.GetType().Name + ": " + e.Message); }
@@ -394,10 +394,10 @@ namespace SteveTheTroll.Backpack.Infrastructure
         }
 
         // D-159: Save runs while the chest window is still open (IsInUse), so the check is repeated when the window closes
-        [HarmonyPatch(typeof(Container), "SetInUse")]
-        static class CloseCheck
+        // Harmony hook: src/Integrations/Harmony/TrollsBackpackPatches.cs, TrollDepot_CloseCheck (MIGRATION_DECISIONS A5)
+        internal static class CloseCheck
         {
-            static void Postfix(Container __instance, bool inUse)
+            internal static void Postfix(Container __instance, bool inUse)
             {
                 if (inUse) return;
                 try { RemoveIfEmpty(__instance); }
@@ -405,10 +405,10 @@ namespace SteveTheTroll.Backpack.Infrastructure
             }
         }
 
-        [HarmonyPatch(typeof(WearNTear), "Awake")]
-        static class ChestFlags
+        // Harmony hook: src/Integrations/Harmony/TrollsBackpackPatches.cs, TrollDepot_ChestFlags (MIGRATION_DECISIONS A5)
+        internal static class ChestFlags
         {
-            static void Postfix(WearNTear __instance)
+            internal static void Postfix(WearNTear __instance)
             {
                 var v = __instance.GetComponent<ZNetView>();
                 if (v == null || !v.IsValid() || !v.GetZDO().GetBool(FlagKey)) return;

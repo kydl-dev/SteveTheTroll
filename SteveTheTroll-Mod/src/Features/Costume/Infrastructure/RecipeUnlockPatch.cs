@@ -11,7 +11,7 @@ namespace SteveTheTroll.Items.Costume
     /// 1.0.20). For our items (Fluffy Slippers, the three costume pieces, the Troll Club) knowing ANY one of their materials is enough.
     /// The crafting station rule stays the game's (a workbench must be known). Paying for the item is unchanged (discover = false).
     /// </summary>
-    [HarmonyPatch(typeof(Player), "HaveRequirementItems")]
+    // Harmony hook: src/Integrations/Harmony/CostumePatches.cs, RecipeUnlockPatchHook (MIGRATION_DECISIONS A5)
     internal static class RecipeUnlockPatch
     {
         // made on first use, not in the type initializer: the pure rules below must work without the game (G14 coverage run: the field
@@ -69,15 +69,30 @@ namespace SteveTheTroll.Items.Costume
             return false;
         }
 
-        static void Postfix(Player __instance, Recipe piece, bool discover, ref bool __result)
+        // T-201: the costume pieces (not the slippers) are shown only after the slippers were equipped once (CostumeUnlockRules)
+        static readonly HashSet<string> CostumePieces = new HashSet<string> { CostumeItems.HelmetName, CostumeItems.ChestName, CostumeItems.LegsName, CostumeItems.ClubName };
+        static readonly HashSet<string> Held = new HashSet<string>();
+
+        internal static void Postfix(Player __instance, Recipe piece, bool discover, ref bool __result)
         {
-            if (!discover || __result || piece == null || piece.m_item == null || !Ours.Contains(piece.m_item.name) || piece.m_resources == null) return;
+            if (!discover || piece == null || piece.m_item == null || !Ours.Contains(piece.m_item.name) || piece.m_resources == null) return;
+            bool costume = CostumePieces.Contains(piece.m_item.name);
+            if (__result && !costume) return;
             var known = Known(__instance);
             var names = new List<string>();
             foreach (var r in piece.m_resources) if (r != null && r.m_resItem != null) names.Add(r.m_resItem.m_itemData.m_shared.m_name);
-            if (!AnyKnown(names, known)) return;
-            __result = true;
-            if (Logged.Add(piece.m_item.name))
+            bool any = AnyKnown(names, known);
+            bool before = __result;
+            if (costume)
+            {
+                bool worn = CostumeUnlock.WornOnce(__instance);
+                __result = CostumeUnlockRules.Discoverable(before, any, worn);
+                if (!__result && (before || any) && Held.Add(piece.m_item.name))
+                    ModLog.Verbose("RecipeUnlockPatch: " + piece.m_item.name + " held back for " + __instance.GetPlayerName() + " - the slippers were never equipped (T-201; game " + before + ", a material known " + any + ")");
+                if (__result) Held.Remove(piece.m_item.name);
+            }
+            else if (any) __result = true;
+            if (__result && !before && Logged.Add(piece.m_item.name))
                 ModLog.Verbose("RecipeUnlockPatch: " + piece.m_item.name + " discovered by " + __instance.GetPlayerName() + " (knows " + string.Join(", ", names.FindAll(known.Contains)) + " of " + string.Join(", ", names) + ")");
         }
     }

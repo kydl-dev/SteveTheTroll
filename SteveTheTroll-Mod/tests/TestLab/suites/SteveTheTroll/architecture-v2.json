@@ -3,6 +3,7 @@
   "description": "D-169: the game runs the Architecture V2 build of SteveTheTroll, not the pre-refactor V1 DLL (V1 has no stt.architecture hook, so this test fails on it). Runs first.",
   "timeout": 30,
   "steps": [
+    { "do": "hook", "name": "stt.arena", "contains": "arena at", "label": "start on the arena spot (MIGRATION_DECISIONS C26)" },
     { "do": "wait", "seconds": 1 }
   ],
   "asserts": [

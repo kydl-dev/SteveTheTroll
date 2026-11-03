@@ -13,12 +13,12 @@ namespace SteveTheTroll.Trolls.Combat.Infrastructure
     /// damage as both, so Yggdrasil shoots, ancient trees, silver veins and the like take its full damage. Prefix on the receivers' Damage
     /// (runs on the attacking client, before the hit is sent to the object's owner). Wild trolls and players are not touched.
     /// </summary>
-    [HarmonyPatch]
+    // Harmony hook: src/Integrations/Harmony/TrollsCombatPatches.cs, TrollFarmHitsHook (MIGRATION_DECISIONS A5)
     internal static class TrollFarmHits
     {
         static float _nextLog;
 
-        static IEnumerable<MethodBase> TargetMethods()
+        internal static IEnumerable<MethodBase> TargetMethods()
         {
             foreach (var t in new[] { typeof(TreeBase), typeof(TreeLog), typeof(MineRock), typeof(MineRock5), typeof(Destructible) })
             {
@@ -28,7 +28,7 @@ namespace SteveTheTroll.Trolls.Combat.Infrastructure
             }
         }
 
-        static void Prefix(object __instance, HitData hit)
+        internal static void Prefix(object __instance, HitData hit)
         {
             if (hit == null) return;
             var attacker = hit.GetAttacker();

@@ -16,10 +16,10 @@ namespace SteveTheTroll.Trolls.Combat.Infrastructure
     {
         static readonly HashSet<int> Said = new HashSet<int>();
 
-        [HarmonyPatch(typeof(WearNTear), nameof(WearNTear.Damage))]
-        static class GuardDamage
+        // Harmony hook: src/Integrations/Harmony/TrollsCombatPatches.cs, PlayerPieceGuard_GuardDamage (MIGRATION_DECISIONS A5)
+        internal static class GuardDamage
         {
-            static bool Prefix(WearNTear __instance, HitData hit)
+            internal static bool Prefix(WearNTear __instance, HitData hit)
             {
                 if (hit == null || __instance == null || !ModSettings.On) return true;
                 var attacker = hit.GetAttacker();

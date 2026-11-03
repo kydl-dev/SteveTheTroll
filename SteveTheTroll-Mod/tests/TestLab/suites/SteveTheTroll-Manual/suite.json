@@ -1,0 +1,7 @@
+{
+  "name": "SteveTheTroll-Manual",
+  "description": "What needs a person (spec 8.13): looks, real key presses, feel. Skipped in unattended runs - an automated PASS never covers these.",
+  "include": [ "../SteveTheTroll/suite.json" ],
+  "resetBetweenTests": true,
+  "tests": [ "hub-look" ]
+}

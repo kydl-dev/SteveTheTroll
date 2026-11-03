@@ -44,10 +44,10 @@ namespace SteveTheTroll.Trolls.Taming.Infrastructure
             return max;
         }
 
-        [HarmonyPatch(typeof(Character), nameof(Character.GetMaxHealthBase))]
-        static class MaxHealthBase
+        // Harmony hook: src/Integrations/Harmony/TrollsTamingPatches.cs, TamedTrollStats_MaxHealthBase (MIGRATION_DECISIONS A5)
+        internal static class MaxHealthBase
         {
-            static void Postfix(Character __instance, ref float __result)
+            internal static void Postfix(Character __instance, ref float __result)
             {
                 if (!IsTamedTroll(__instance)) return;
                 float before = __result;
@@ -61,10 +61,10 @@ namespace SteveTheTroll.Trolls.Taming.Infrastructure
         // D-128 (TEST-052, user: "2 trolls took lava damage in ashlands, one actually died. They should be immune to fire"): the game's lava
         // damage is untyped true damage (HitType.AshlandsLava) that no fire immunity reduces. Tamed trolls skip it (and the burning status
         // it adds); wild trolls and players keep the game's heat damage.
-        [HarmonyPatch(typeof(Character), "UpdateHeatDamage")]
-        static class NoLava
+        // Harmony hook: src/Integrations/Harmony/TrollsTamingPatches.cs, TamedTrollStats_NoLava (MIGRATION_DECISIONS A5)
+        internal static class NoLava
         {
-            static bool Prefix(Character __instance)
+            internal static bool Prefix(Character __instance)
             {
                 if (!IsTamedTroll(__instance)) return true;
                 if (__instance.InLava() && Time.time >= _nextLavaLog)
@@ -78,10 +78,10 @@ namespace SteveTheTroll.Trolls.Taming.Infrastructure
 
         // TEST-017 / TEST-018: two tamed trolls died 5-7 s after the world loaded with nothing in the log. Every hit on a tamed troll is logged
         // (type, damage, attacker, health after) so the next death shows its cause.
-        [HarmonyPatch(typeof(Character), nameof(Character.ApplyDamage))]
-        static class HitLog
+        // Harmony hook: src/Integrations/Harmony/TrollsTamingPatches.cs, TamedTrollStats_HitLog (MIGRATION_DECISIONS A5)
+        internal static class HitLog
         {
-            static void Postfix(Character __instance, HitData hit)
+            internal static void Postfix(Character __instance, HitData hit)
             {
                 if (hit == null || !IsTamedTroll(__instance)) return;
                 var a = hit.GetAttacker();
@@ -100,10 +100,10 @@ namespace SteveTheTroll.Trolls.Taming.Infrastructure
             }
         }
 
-        [HarmonyPatch(typeof(Attack), "GetLevelDamageFactor")]
-        static class DamageFactor
+        // Harmony hook: src/Integrations/Harmony/TrollsTamingPatches.cs, TamedTrollStats_DamageFactor (MIGRATION_DECISIONS A5)
+        internal static class DamageFactor
         {
-            static void Postfix(Attack __instance, ref float __result)
+            internal static void Postfix(Attack __instance, ref float __result)
             {
                 var owner = __instance != null ? AttackOwner(__instance) : null;
                 if (!IsTamedTroll(owner)) return;
@@ -115,10 +115,10 @@ namespace SteveTheTroll.Trolls.Taming.Infrastructure
 
         // D-118 (user 2026-10-28: "immune to fire / lightning and any other elemental type of dmg, poison included"): fire, frost, lightning,
         // poison and spirit (the game's elemental types) are Immune; pierce and slash stay at least Resistant (D-042).
-        [HarmonyPatch(typeof(Character), nameof(Character.GetDamageModifiers))]
-        static class Resistances
+        // Harmony hook: src/Integrations/Harmony/TrollsTamingPatches.cs, TamedTrollStats_Resistances (MIGRATION_DECISIONS A5)
+        internal static class Resistances
         {
-            static void Postfix(Character __instance, ref HitData.DamageModifiers __result)
+            internal static void Postfix(Character __instance, ref HitData.DamageModifiers __result)
             {
                 if (!IsTamedTroll(__instance)) return;
                 var r = __result;
@@ -149,11 +149,11 @@ namespace SteveTheTroll.Trolls.Taming.Infrastructure
             return n;
         }
 
-        [HarmonyPatch(typeof(Character), "AddStaggerDamage")]
-        static class NoStagger
+        // Harmony hook: src/Integrations/Harmony/TrollsTamingPatches.cs, TamedTrollStats_NoStagger (MIGRATION_DECISIONS A5)
+        internal static class NoStagger
         {
             // Prefix false = the game's stagger code does not run; __result false = "did not stagger".
-            static bool Prefix(Character __instance, float damage, ref bool __result)
+            internal static bool Prefix(Character __instance, float damage, ref bool __result)
             {
                 bool tamed = IsTamedTroll(__instance);
                 if (!tamed) return !tamed;

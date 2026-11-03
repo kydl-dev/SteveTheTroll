@@ -47,10 +47,10 @@ namespace SteveTheTroll.Items.Slippers
             return Ours.Count;
         }
 
-        [HarmonyPatch(typeof(Piece.Requirement), nameof(Piece.Requirement.GetAmount))]
-        static class GetAmount
+        // Harmony hook: src/Integrations/Harmony/SlippersPatches.cs, SlipperUpgradeCostPatch_GetAmount (MIGRATION_DECISIONS A5)
+        internal static class GetAmount
         {
-            static void Postfix(Piece.Requirement __instance, int qualityLevel, ref int __result)
+            internal static void Postfix(Piece.Requirement __instance, int qualityLevel, ref int __result)
             {
                 if (qualityLevel <= 1 || __instance == null) return;
                 if (Refresh() == 0 || !Ours.Contains(__instance)) return;

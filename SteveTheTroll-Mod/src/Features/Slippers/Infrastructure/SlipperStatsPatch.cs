@@ -32,10 +32,10 @@ namespace SteveTheTroll.Items.Slippers
             return item != null && item.m_shared != null && item.m_shared.m_name == SlipperItem.TokenName;
         }
 
-        [HarmonyPatch(typeof(Player), nameof(Player.GetBodyArmor))]
-        static class BodyArmor
+        // Harmony hook: src/Integrations/Harmony/SlippersPatches.cs, SlipperStatsPatch_BodyArmor (MIGRATION_DECISIONS A5)
+        internal static class BodyArmor
         {
-            static void Postfix(Player __instance, ref float __result)
+            internal static void Postfix(Player __instance, ref float __result)
             {
                 var s = Worn(__instance);
                 if (s == null || !ModSettings.On) return;
@@ -45,10 +45,10 @@ namespace SteveTheTroll.Items.Slippers
             }
         }
 
-        [HarmonyPatch(typeof(Player), "ApplyArmorDamageMods")]
-        static class ArmorDamageMods
+        // Harmony hook: src/Integrations/Harmony/SlippersPatches.cs, SlipperStatsPatch_ArmorDamageMods (MIGRATION_DECISIONS A5)
+        internal static class ArmorDamageMods
         {
-            static void Postfix(Player __instance, ref HitData.DamageModifiers mods)
+            internal static void Postfix(Player __instance, ref HitData.DamageModifiers mods)
             {
                 var s = Worn(__instance);
                 if (s == null || !ModSettings.On) return;
@@ -57,11 +57,10 @@ namespace SteveTheTroll.Items.Slippers
             }
         }
 
-        [HarmonyPatch(typeof(ItemDrop.ItemData), nameof(ItemDrop.ItemData.GetTooltip),
-            new[] { typeof(ItemDrop.ItemData), typeof(int), typeof(bool), typeof(float), typeof(int), typeof(bool) })]
-        static class Tooltip
+        // Harmony hook: src/Integrations/Harmony/SlippersPatches.cs, SlipperStatsPatch_Tooltip (MIGRATION_DECISIONS A5)
+        internal static class Tooltip
         {
-            static void Postfix(ItemDrop.ItemData item, int qualityLevel, float worldLevel, ref string __result)
+            internal static void Postfix(ItemDrop.ItemData item, int qualityLevel, float worldLevel, ref string __result)
             {
                 if (!IsSlippers(item) || !ModSettings.On) return;
                 float armor = item.GetArmor(qualityLevel, worldLevel);

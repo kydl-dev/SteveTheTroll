@@ -28,13 +28,13 @@ namespace SteveTheTroll
         /// Is the mod switched on ([General] EnableAll)? Off = inert: no effects, no menus; nothing built is removed.
         public static bool On { get { return EnableAll == null || EnableAll.Value; } }
 
-        /// A functionality is on only when EnableAll AND its own Enable are on (the rule itself is Functions.IsOn). They are read at start: the
-        /// switched-off parts are not set up at all (Plugin.Awake), so changing a switch needs a game restart.
+        /// A functionality is on only when EnableAll AND its own Enable are on (the rule itself is Functions.IsOn). Read live: the features (Bootstrap.ModInstaller)
+        /// start / stop their tabs, KY-Items entries and ticks at once. The prefabs of a part that was off at game start are not added, so switching it ON needs a restart.
         public static bool SlippersOn { get { return Functions.IsOn(On, SlippersEnable == null || SlippersEnable.Value); } }
         public static bool CostumeOn { get { return Functions.IsOn(On, CostumeEnable == null || CostumeEnable.Value); } }
         public static bool TrollsOn { get { return Functions.IsOn(On, TrollsEnable == null || TrollsEnable.Value); } }
 
-        /// The Troll Hubs (D-135): [General] EnableAll AND [Trolls] Enable AND [TrollHub] Enable. Read at start like the others.
+        /// The Troll Hubs (D-135): [General] EnableAll AND [Trolls] Enable AND [TrollHub] Enable. Read live like the others.
         public static bool HubsOn { get { return Functions.IsOn(TrollsOn, HubEnable == null || HubEnable.Value); } }
         /// Trolls with no hub chosen go to the nearest one ([TrollHub] AutoAssign).
         public static bool HubAuto { get { return HubAutoAssign == null || HubAutoAssign.Value; } }
@@ -126,15 +126,15 @@ namespace SteveTheTroll
             EnableAll = c.Bind("General", "EnableAll", true,
                 "Switches the whole mod on / off while playing. Off: no effects and no menus from this mod; things already built stay in the world.");
             SlippersEnable = c.Bind("Slippers", "Enable", true,
-                "The Fluffy Slippers with the little plush trolls on your feet. Off: the slippers are not added to the game. Needs a game restart.");
+                "The Fluffy Slippers with the little plush trolls on your feet. Off: their menu tab goes away at once; the item itself is added when the game starts, so switching this on needs a game restart.");
             CostumeEnable = c.Bind("Costume", "Enable", true,
-                "The troll costume (head, suit, trousers), the Troll Club and the set effects. Off: they are not added to the game. Needs a game restart.");
+                "The troll costume (head, suit, trousers), the Troll Club and the set effects. Off: their menu tab goes away at once; the items are added when the game starts, so switching this on needs a game restart.");
             TrollsEnable = c.Bind("Trolls", "Enable", true,
-                "Taming and farming of real trolls with the slippers, their backpack and depots, map pins and extra trolls near your bed. Off: none of it is set up. Needs a game restart.");
+                "Taming and farming of real trolls with the slippers, their backpack and depots, map pins and extra trolls near your bed. Off: the troll menu tabs and the background troll work (pick-up, depots, orders, map pins) stop at once; everything else follows after a game restart, and switching this on also needs a restart.");
             AttackKey = c.Bind("Trolls", "AttackKey", KeyCode.Mouse3,
                 "Look at a creature, tree, log or rock and press this: your nearest tamed troll attacks / breaks it (Mouse3 = the mouse's back button, Mouse 4). Looking at nothing: it goes farming. None = off.");
             HubEnable = c.Bind("TrollHub", "Enable", true,
-                "The Troll Hub building: where your trolls go when you log out and unload, with a sign you can name. Off: it is not added to the game and trolls use the bed. Needs a game restart.");
+                "The Troll Hub building: where your trolls go when you log out and unload, with a sign you can name. Off: trolls use the bed and the Troll Hub tab goes away at once; the building is added when the game starts, so switching this on needs a game restart.");
             HubAutoAssign = c.Bind("TrollHub", "AutoAssign", true,
                 "On: a troll you did not send to a hub yourself uses the hub nearest to it. Off: only trolls you assigned in the Troll Hub tab use a hub, the others use the bed.");
             DebugLog = c.Bind("DebugLog", "Enable", false,

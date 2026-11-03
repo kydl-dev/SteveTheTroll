@@ -22,6 +22,7 @@ namespace SteveTheTroll.Ui
             { "stevethetroll_costume_chest_desc", "The fluffy top of a troll mascot suit, with clawed mitts and a straw collar." },
             { "stevethetroll_costume_legs", "Troll Mascot Trousers" },
             { "stevethetroll_costume_legs_desc", "Plush troll trousers with a straw loincloth and big clawed feet (the Fluffy Slippers fit right in)." },
+            { "stevethetroll_msg_costume_unlocked", "Steve likes your slippers: the troll costume can now be crafted at the workbench." },
             { "stevethetroll_se_set", "Steve The Troll" },
             { "stevethetroll_se_stamina", "Stamina usage" },     // D-091: one line for all 8 stamina modifiers of the set
             { "stevethetroll_se_set_tooltip", "The troll rush runs through your whole body: your strides grow long, your back grows strong enough to haul a forest, and the trolls of the land smell a friend. Up to 5 tamed trolls follow your lead." },

@@ -5,40 +5,38 @@ using UnityEngine;
 namespace SteveTheTroll.Testing
 {
     /// <summary>
-    /// D-171 (user 2026-11-02: "from start spawn player at least 50m away from spawn. trolls keep getting stuck into the stones for boss trophies"): every stt.reset puts the
-    /// player on the SAME open spot, ArenaMetres from the lab's start point, so (1) no troll walks into the boss-trophy stones / the lab house at the start, and (2) a test
-    /// never inherits the position a previous test teleported the player to (the drift that broke recovery-walled-tree and the attack-key tests). The spot is chosen once:
-    /// of 16 directions, the flattest dry 40 x 40 m area.
+    /// The arena hooks of the suite (D-171 / D-172). Where the player stands comes from the SHARED Kydl.Common.TestArena (MIGRATION_DECISIONS C26: one lab start
+    /// per game session, each mod its own lane; SteveTheTroll keeps lane 0 = the spot its long-route tests were tuned on, the flattest dry 40 x 40 m area of
+    /// 16 directions, 70 m from the lab start). This class only adds what SteveTheTroll's tests need on top: going further out, clearing the area / a route,
+    /// stepping aside, looking at a target, god mode.
     /// </summary>
-    internal static class TestArena
+    internal static class ArenaTestHooks
     {
-        const float ArenaMetres = 70f, AreaHalf = 20f, MaxWater = 0.1f;
         static bool _known;
         static Vector3 _start, _spot;
         static readonly AccessTools.FieldRef<Character, float> MaxAirAltitude = AccessTools.FieldRefAccess<Character, float>("m_maxAirAltitude");
 
-        /// Moves the player to the arena spot (chosen on the first call). Expected outcome: the spot (the player stands there).
+        /// Every test starts here (MIGRATION_DECISIONS C26). Expected outcome: "arena at (x, y, z), 70 m from the lab start, god mode True".
+        [TestHook("stt.arena")]
+        static string Arena()
+        {
+            var p = Player.m_localPlayer;
+            if (p == null) return "no player";
+            MovePlayer(p);
+            return "arena at " + _spot.ToString("F0") + ", " + Flat(p.transform.position - _start).ToString("F0") + " m from the lab start, god mode " + p.InGodMode();
+        }
+
+        /// Moves the player to the shared arena spot (lane 0), facing world +z, god mode on. Expected outcome: the spot (the player stands there).
         internal static Vector3 MovePlayer(Player p)
         {
-            if (!_known)
-            {
-                _known = true;
-                // 2026-11-03 (ecosystem run): share the arena with every other mod's Kydl.Common.TestArena (same AppDomain keys), else a suite that moved the
-                // player before ours made us take ITS spot as the lab start
-                object st = System.AppDomain.CurrentDomain.GetData("Kydl.TestArena.Start"), sp = System.AppDomain.CurrentDomain.GetData("Kydl.TestArena.Spot");
-                if (st is Vector3 s0 && sp is Vector3 s1) { _start = s0; _spot = s1; }
-                else
-                {
-                    _start = p.transform.position;
-                    _spot = Choose(_start);
-                    System.AppDomain.CurrentDomain.SetData("Kydl.TestArena.Start", _start);
-                    System.AppDomain.CurrentDomain.SetData("Kydl.TestArena.Spot", _spot);
-                }
-                ModLog.Info("TestArena: lab start " + _start.ToString("F0") + " -> test spot " + _spot.ToString("F0") + " (" + Flat(_spot - _start).ToString("F0") + " m away, flattest dry area of 16 directions)");
-            }
-            Place(p, _spot, Quaternion.identity);         // D-172: always facing world +z - a test's dz > 0 is in front of the player
-            if (!p.InGodMode()) p.SetGodMode(true);      // D-172 (user): god mode on, fly off - creatures still target the player, but no test dies by accident
-            ModLog.Verbose("TestArena: player moved to " + _spot.ToString("F0") + ", god mode " + p.InGodMode());
+            string moved = global::Kydl.Common.TestArena.MovePlayer();
+            _spot = global::Kydl.Common.TestArena.Spot;
+            object st = System.AppDomain.CurrentDomain.GetData(global::Kydl.Common.TestArena.StartKey);
+            _start = st is Vector3 s0 ? s0 : _spot;
+            if (!_known) ModLog.Info("ArenaTestHooks: shared arena - lab start " + _start.ToString("F0") + ", our spot " + _spot.ToString("F0"));
+            _known = true;
+            ModLog.Check("ArenaTestHooks: player on the arena spot", Flat(p.transform.position - _spot), 0f, 0.5f, "m");
+            ModLog.Verbose("ArenaTestHooks: " + moved);
             return _spot;
         }
 
@@ -54,7 +52,7 @@ namespace SteveTheTroll.Testing
             to.y = ZoneSystem.instance.GetGroundHeight(to) + 0.2f;
             _further = true; _furtherSpot = to;
             Place(p, to, Quaternion.identity);           // D-172: same facing as after stt.reset (world +z), so dz > 0 stays "in front"
-            ModLog.Info("TestArena: player " + metres.ToString("F0") + " m further out at " + to.ToString("F0") + " (stands at " + p.transform.position.ToString("F0") + "), facing +z");
+            ModLog.Info("ArenaTestHooks: player " + metres.ToString("F0") + " m further out at " + to.ToString("F0") + " (stands at " + p.transform.position.ToString("F0") + "), facing +z");
             return p.transform.position;
         }
 
@@ -75,7 +73,7 @@ namespace SteveTheTroll.Testing
                 if (!veg) continue;
                 v.ClaimOwnership(); ZNetScene.instance.Destroy(g); n++;
             }
-            ModLog.Info("TestArena: " + n + " tree(s) / bush(es) / rock(s) removed within " + radius.ToString("F0") + " m of the player");
+            ModLog.Info("ArenaTestHooks: " + n + " tree(s) / bush(es) / rock(s) removed within " + radius.ToString("F0") + " m of the player");
             return n;
         }
 
@@ -88,7 +86,7 @@ namespace SteveTheTroll.Testing
             var to = p.transform.position + new Vector3(dx, 0f, dz);
             to.y = ZoneSystem.instance.GetGroundHeight(to) + 0.2f;
             Place(p, to, Quaternion.identity);
-            ModLog.Info("TestArena: player stepped aside to " + to.ToString("F0"));
+            ModLog.Info("ArenaTestHooks: player stepped aside to " + to.ToString("F0"));
             return to;
         }
 
@@ -124,7 +122,7 @@ namespace SteveTheTroll.Testing
             _further = true; _furtherSpot = to;
             p.TeleportTo(to, Quaternion.identity, true);
             string info = "clear route " + metres.ToString("F0") + " m, direction " + best + " of 16, steepest 10 m step " + bestSteep.ToString("F1") + " m, player to " + to.ToString("F0");
-            ModLog.Info("TestArena: " + info);
+            ModLog.Info("ArenaTestHooks: " + info);
             return info;
         }
 
@@ -143,7 +141,7 @@ namespace SteveTheTroll.Testing
                 if (v == null || !v.IsValid()) continue;
                 v.ClaimOwnership(); ZNetScene.instance.Destroy(c.gameObject); n++;
             }
-            ModLog.Info("TestArena: " + n + " wild creature(s) removed within " + radius.ToString("F0") + " m of the player");
+            ModLog.Info("ArenaTestHooks: " + n + " wild creature(s) removed within " + radius.ToString("F0") + " m of the player");
             return n;
         }
 
@@ -156,7 +154,7 @@ namespace SteveTheTroll.Testing
             var dir = (target.transform.position + Vector3.up * height) - p.GetEyePoint();
             p.SetLookDir(dir.normalized);
             float pitch = Mathf.Asin(Mathf.Clamp(dir.normalized.y, -1f, 1f)) * Mathf.Rad2Deg;
-            ModLog.Info("TestArena: player looks at " + target.name + " " + height.ToString("F1") + " m above its root, " + dir.magnitude.ToString("F1") + " m from the eyes, pitch " + pitch.ToString("F0"));
+            ModLog.Info("ArenaTestHooks: player looks at " + target.name + " " + height.ToString("F1") + " m above its root, " + dir.magnitude.ToString("F1") + " m from the eyes, pitch " + pitch.ToString("F0"));
             return pitch;
         }
 
@@ -167,7 +165,7 @@ namespace SteveTheTroll.Testing
         {
             var p = Player.m_localPlayer;
             if (p.InGodMode() != on) p.SetGodMode(on);
-            ModLog.Info("TestArena: god mode " + p.InGodMode());
+            ModLog.Info("ArenaTestHooks: god mode " + p.InGodMode());
             return p.InGodMode();
         }
 
@@ -196,31 +194,5 @@ namespace SteveTheTroll.Testing
         static Vector3 _furtherSpot;
 
         static float Flat(Vector3 v) { v.y = 0f; return v.magnitude; }
-
-        static Vector3 Choose(Vector3 start)
-        {
-            var zs = ZoneSystem.instance;
-            Vector3 best = start + new Vector3(ArenaMetres, 0f, 0f);
-            float bestScore = float.MaxValue;
-            for (int k = 0; k < 16; k++)
-            {
-                float a = k * Mathf.PI * 2f / 16f;
-                var c = start + new Vector3(Mathf.Cos(a), 0f, Mathf.Sin(a)) * ArenaMetres;
-                float lo = float.MaxValue, hi = float.MinValue;
-                bool wet = false;
-                for (float x = -AreaHalf; x <= AreaHalf; x += 5f)
-                    for (float z = -AreaHalf; z <= AreaHalf; z += 5f)
-                    {
-                        var q = c + new Vector3(x, 0f, z);
-                        float h = zs.GetGroundHeight(q);
-                        lo = Mathf.Min(lo, h); hi = Mathf.Max(hi, h);
-                        if (Floating.GetLiquidLevel(new Vector3(q.x, h, q.z)) - h > MaxWater) wet = true;
-                    }
-                float score = (hi - lo) + (wet ? 1000f : 0f);
-                ModLog.Verbose("TestArena: direction " + k + " uneven " + (hi - lo).ToString("F1") + " m, water " + wet);
-                if (score < bestScore) { bestScore = score; best = new Vector3(c.x, zs.GetGroundHeight(c) + 0.2f, c.z); }
-            }
-            return best;
-        }
     }
 }

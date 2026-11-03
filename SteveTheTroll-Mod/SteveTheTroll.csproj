@@ -26,6 +26,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- T-200: the Troll Hub's build menu icon (the word HUB on a wooden plaque), loaded by EmbeddedImages; no Unity rebuild needed -->
+    <EmbeddedResource Include="src\Features\Hubs\Infrastructure\HubIcon.png" LogicalName="stevethetroll_hub_icon.png" />
+    <Reference Include="UnityEngine.ImageConversionModule"><HintPath>$(ValheimRefs)\UnityEngine.ImageConversionModule.dll</HintPath><Private>false</Private></Reference>
+  </ItemGroup>
+
+  <ItemGroup>
     <!-- the mod's menu views live in the Unity project (previewed there) and are compiled into the mod from there -->
     <Compile Include="..\SteveTheTroll-Unity\Assets\SteveTheTroll_UI\Runtime\*.cs" Link="UiViews\%(Filename)%(Extension)" />
     <!-- D-014: the troll fit math + the fit saved in Unity are compiled into the mod from there (same code in the fit scene and in game) -->

@@ -27,19 +27,21 @@ namespace SteveTheTroll
     [BepInPlugin(ModGuid, ModName, ModVersion)]
     [BepInDependency(Jotunn.Main.ModGuid)]
     [BepInDependency(KydlCore.Plugin.ModGuid, "0.1.0")]
-    [NetworkCompatibility(CompatibilityLevel.EveryoneMustHaveMod, VersionStrictness.Minor)]
+    // shared world state (tamed trolls, ZDOs, items, pieces, RPCs): everyone needs the mod, the exact same version (MIGRATION_DECISIONS network rule)
+    [NetworkCompatibility(CompatibilityLevel.EveryoneMustHaveMod, VersionStrictness.Patch)]
     public class Plugin : BaseUnityPlugin
     {
         // ModGuid never changes after the first release. ModVersion = manifest.json version_number = newest CHANGELOG heading (tests check it).
         public const string ModGuid = "com.kydldev.SteveTheTroll";
         public const string ModName = "SteveTheTroll";
-        public const string ModVersion = "2.0.0";
+        public const string ModVersion = "2.1.0";
         public const string BundleName = "stevethetroll";
 
         internal static Plugin Instance;
         /// This mod's AssetBundle (null while the mod has none yet: Unity has not built one).
         internal static AssetBundle Bundle;
         ConfigReloader _cfgWatcher;
+        Bootstrap.ModInstaller _installer;
 
         void Awake()
         {
@@ -54,21 +56,26 @@ namespace SteveTheTroll
             Loc.Register(UiText.En);
             Loc.Register(HubText.En);               // D-135: Troll Hub + its sign menu
 
-            HubTabs.Register(Config);               // the menu = tabs in the KY hub (F6) of KydlCore
-
-            // PROJECT_RULES 11: a switched-off part is not set up at all (restart the game after changing a switch)
+            // PROJECT_RULES 11: the prefabs of a part that is off at start are not added at all (switching it ON later needs a restart); the features
+            // (Bootstrap.ModInstaller) switch their tabs, KY-Items entries and ticks live
             Bundle = LoadBundle();
-            if (ModSettings.SlippersOn) SlipperItem.Install();             // T-007: needs the bundle (icon) and the vanilla prefabs (added later by Jotunn)
-            if (ModSettings.CostumeOn) CostumeItems.Install();            // T-009d: costume helmet / chest / legs + Troll Club (bundle parts, vanilla prefabs)
+            bool slippers = ModSettings.SlippersOn && SlipperItem.Install();      // T-007: needs the bundle (icon) and the vanilla prefabs (added later by Jotunn)
+            bool costume = ModSettings.CostumeOn && CostumeItems.Install();       // T-009d: costume helmet / chest / legs + Troll Club (bundle parts, vanilla prefabs)
+            bool trolls = false, hubs = false;
             if (ModSettings.TrollsOn)
             {
                 DepotPrefab.Install();     // D-064: troll depot frame prefab (vanilla prefabs)
                 DepotGround.Install();     // D-103: own level-ground terrain op for the depot spots
                 TrollTaming.Install();       // T-008a: the game's Troll becomes tameable (vanilla prefabs, added later by Jotunn)
-                if (ModSettings.HubsOn) HubPrefab.Install();   // D-135: the Troll Hub piece (needs the level op above)
+                trolls = true;
+                if (ModSettings.HubsOn) { HubPrefab.Install(); hubs = true; }   // D-135: the Troll Hub piece (needs the level op above)
             }
-            ModLog.Verbose("Plugin: set up slippers " + ModSettings.SlippersOn + ", costume " + ModSettings.CostumeOn + ", trolls " + ModSettings.TrollsOn);
-            new Harmony(ModGuid).PatchAll(Assembly.GetExecutingAssembly());
+            ModLog.Verbose("Plugin: set up slippers " + slippers + ", costume " + costume + ", trolls " + trolls + ", hubs " + hubs);
+            new Harmony(ModGuid).PatchAll(Assembly.GetExecutingAssembly());      // the patches are declared in src/Integrations/Harmony (MIGRATION_DECISIONS A5)
+            _installer = new Bootstrap.ModInstaller(Config);
+            bool installed = _installer.Install(slippers, costume, trolls, hubs);  // the KY hub page (F6) + the four features
+            Config.SettingChanged += (s, e) => { if (_installer != null) _installer.Refresh(); };
+            ModLog.Verbose("Plugin: features " + (installed ? "started" : "had failures") + " (architecture " + Core.Architecture.Tag + ")");
             Jotunn.Managers.CommandManager.Instance.AddConsoleCommand(new BuildDumpCommand());   // T-008b: stt_dumpbuild (backpack model)
             Jotunn.Managers.CommandManager.Instance.AddConsoleCommand(new Testing.ClearCommand());        // D-093: stt_clear (clean test area)
             Jotunn.Managers.CommandManager.Instance.AddConsoleCommand(new Testing.ClearDepotsCommand());  // D-104: stt_cleardepots (start clean)
@@ -149,7 +156,7 @@ namespace SteveTheTroll
         {
             if (_cfgWatcher != null) _cfgWatcher.Tick();
             if (!ModSettings.On) return;
-            if (!ModSettings.TrollsOn) return;       // every tick below belongs to the trolls (taming, farming, backpack, orders, map pins)
+            if (!Trolls.TrollsFeature.Running) return;       // every tick below belongs to the trolls feature (taming, farming, backpack, orders, map pins, hubs)
             Run("TrollRegistry", () => TrollRegistry.Tick());
             Run("TrollZones", () => TrollZones.Tick());               // D-084: zones around far own trolls stay loaded (they keep farming)
             Run("TrollCensus", () => TrollCensus.Tick());             // D-085: trolls within 500 m of the bed (spawn cap)
@@ -172,6 +179,7 @@ namespace SteveTheTroll
         void OnDestroy()
         {
             if (_cfgWatcher != null) { _cfgWatcher.Dispose(); _cfgWatcher = null; }
+            if (_installer != null) { _installer.Uninstall(); _installer = null; }
             ModLog.Verbose("Plugin: destroyed");
         }
     }

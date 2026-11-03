@@ -1,0 +1,27 @@
+{
+  "name": "costume-after-slippers",
+  "description": "T-201: the costume recipes stay hidden (even with every material known) until the slippers are put on for the first time; then all 4 appear, and they and the mark survive a relog",
+  "timeout": 120,
+  "steps": [
+    { "do": "hook", "name": "stt.arena", "contains": "arena at", "label": "start on the arena spot (MIGRATION_DECISIONS C26)" },
+    { "do": "hook", "name": "stt.forgetCostume", "contains": "worn once False", "label": "a character that never wore the slippers, materials known" },
+    { "do": "wait", "seconds": 2 },
+    { "do": "hook", "name": "stt.costumeRecipesKnown", "expect": 0, "label": "no costume recipe before the slippers" },
+    { "do": "spawn", "prefab": "piece_workbench", "dz": 4, "owner": "me", "as": "bench" },
+    { "do": "craft", "prefab": "STT_TrollSlippers", "station": "bench" },
+    { "do": "check", "check": "hasItem", "prefab": "STT_TrollSlippers", "crafter": "me", "label": "slippers crafted" },
+    { "do": "hook", "name": "stt.costumeRecipesKnown", "expect": 0, "label": "crafting alone unlocks nothing" },
+    { "do": "hook", "name": "stt.slippers", "args": { "on": true }, "expect": true, "label": "slippers put on" },
+    { "do": "wait", "until": { "check": "hook", "name": "stt.costumeRecipesKnown", "expect": 4 }, "timeout": 5 },
+    { "do": "hook", "name": "stt.slippersWornOnce", "expect": true, "label": "the character is marked" },
+    { "do": "check", "check": "logContains", "source": "SteveTheTroll", "text": "costume recipes unlocked", "expect": true },
+    { "do": "relog", "timeout": 90 },
+    { "do": "wait", "seconds": 3 },
+    { "do": "hook", "name": "stt.slippersWornOnce", "expect": true, "label": "the mark survives a relog" },
+    { "do": "hook", "name": "stt.costumeRecipesKnown", "expect": 4, "label": "the costume recipes survive a relog" },
+    { "do": "hook", "name": "stt.slippers", "args": { "on": false }, "expect": false, "label": "slippers off again (no spawn boost in later tests)" }
+  ],
+  "asserts": [
+    { "check": "noErrors", "source": "SteveTheTroll" }
+  ]
+}

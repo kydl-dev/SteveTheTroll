@@ -346,10 +346,10 @@ namespace SteveTheTroll.Trolls.Registry.Infrastructure
             p.m_customData[DataKey] = string.Join("\n", lines.ToArray());
         }
 
-        [HarmonyPatch(typeof(Tameable), "OnDeath")]
-        static class Death
+        // Harmony hook: src/Integrations/Harmony/TrollsRegistryPatches.cs, TrollRegistry_Death (MIGRATION_DECISIONS A5)
+        internal static class Death
         {
-            static void Postfix(Tameable __instance)
+            internal static void Postfix(Tameable __instance)
             {
                 var c = __instance != null ? __instance.GetComponent<Character>() : null;
                 if (c == null || !TrollTaming.IsTroll(c) || Player.m_localPlayer == null || TrollTaming.Owner(c) != Player.m_localPlayer.GetPlayerID()) return;

@@ -69,10 +69,10 @@ namespace SteveTheTroll.World.Spawning
             return cap > 0 ? p : null;
         }
 
-        [HarmonyPatch(typeof(SpawnSystem), "UpdateSpawnList")]
-        static class SpawnList
+        // Harmony hook: src/Integrations/Harmony/TrollsWorldPatches.cs, TrollSpawnBoost_SpawnList (MIGRATION_DECISIONS A5)
+        internal static class SpawnList
         {
-            static void Prefix(SpawnSystem __instance, List<SpawnSystem.SpawnData> spawners, bool eventSpawners)
+            internal static void Prefix(SpawnSystem __instance, List<SpawnSystem.SpawnData> spawners, bool eventSpawners)
             {
                 Changed.Clear();
                 _active = false;
@@ -117,7 +117,7 @@ namespace SteveTheTroll.World.Spawning
                 }
             }
 
-            static void Finalizer()
+            internal static void Finalizer()
             {
                 foreach (var c in Changed) { c.Data.m_spawnInterval = c.Interval; c.Data.m_spawnChance = c.Chance; c.Data.m_spawnAtDay = c.Day; c.Data.m_spawnAtNight = c.Night; c.Data.m_maxSpawned = c.Max; c.Data.m_biome = c.Biome; c.Data.m_biomeArea = c.Area; }
                 Changed.Clear();
@@ -128,10 +128,10 @@ namespace SteveTheTroll.World.Spawning
         /// D-094 (user: "yes, but not closer than 200m, don't want them to come ruining my house"): while the boost runs, a troll spawn
         /// point must lie SpawnBedMinRadius .. SpawnBedRadius (200 .. 500 m) from the bed, flat. The game picks points 40 - 80 m from a
         /// player, so trolls appear while the wearer is out in that ring (or near it), never next to the house.
-        [HarmonyPatch(typeof(SpawnSystem), "IsSpawnPointGood")]
-        static class SpawnRing
+        // Harmony hook: src/Integrations/Harmony/TrollsWorldPatches.cs, TrollSpawnBoost_SpawnRing (MIGRATION_DECISIONS A5)
+        internal static class SpawnRing
         {
-            static void Postfix(SpawnSystem.SpawnData spawn, ref Vector3 spawnPoint, ref bool __result)
+            internal static void Postfix(SpawnSystem.SpawnData spawn, ref Vector3 spawnPoint, ref bool __result)
             {
                 if (!__result || !_active || spawn == null || spawn.m_prefab == null || spawn.m_prefab.name != TrollTaming.TrollPrefab) return;
                 var flat = spawnPoint - _bed; flat.y = 0f;
@@ -144,10 +144,10 @@ namespace SteveTheTroll.World.Spawning
         }
 
         // A boosted troll spawn: remember where, so Humanoid.GiveDefaultItems of that new troll picks the Log set.
-        [HarmonyPatch(typeof(SpawnSystem), "Spawn")]
-        static class SpawnOne
+        // Harmony hook: src/Integrations/Harmony/TrollsWorldPatches.cs, TrollSpawnBoost_SpawnOne (MIGRATION_DECISIONS A5)
+        internal static class SpawnOne
         {
-            static void Prefix(SpawnSystem.SpawnData critter, Vector3 spawnPoint)
+            internal static void Prefix(SpawnSystem.SpawnData critter, Vector3 spawnPoint)
             {
                 if (!_active || critter == null || critter.m_prefab == null || critter.m_prefab.name != TrollTaming.TrollPrefab) return;
                 Pending.Add(new KeyValuePair<Vector3, float>(spawnPoint, Time.time));
@@ -172,10 +172,10 @@ namespace SteveTheTroll.World.Spawning
             return log ? LogSet : "";
         }
 
-        [HarmonyPatch(typeof(Humanoid), nameof(Humanoid.GiveDefaultItems))]
-        static class LogForBoosted
+        // Harmony hook: src/Integrations/Harmony/TrollsWorldPatches.cs, TrollSpawnBoost_LogForBoosted (MIGRATION_DECISIONS A5)
+        internal static class LogForBoosted
         {
-            static void Prefix(Humanoid __instance)
+            internal static void Prefix(Humanoid __instance)
             {
                 if (!TrollTaming.IsTroll(__instance)) return;
                 var zdo = TrollTaming.Zdo(__instance);

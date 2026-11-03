@@ -2,40 +2,79 @@ using System;
 using BepInEx.Configuration;
 using Kydl.Common;
 using Kydl.Ui;
-using UnityEngine.UIElements;
 
 namespace SteveTheTroll.Ui
 {
     /// <summary>
-    /// The mod's menu = tabs in the KY hub of KydlCore (F6). There is NO menu key, window or input lock in this mod: KydlCore owns them (D-040).
-    /// Row 1 of the hub shows this mod (named by SetModTitle), row 2 the tabs registered here: Slippers when [Slippers] Enable is on, Costume when
-    /// [Costume] Enable is on, My trolls / Troll work / Trolls when [Trolls] Enable is on (until the player has a living tamed troll they show a
-    /// note), and Settings (the player config with the switches). What a tab shows is built by MainMenuView and its siblings in the Unity project
-    /// (SteveTheTroll-Unity/Assets/SteveTheTroll_UI/Runtime, previewed there); the game side only hands them data. A mod that registers any tab
-    /// loses the automatic "Settings" tab, so the settings tab is registered on purpose.
+    /// What SteveTheTroll declares to the KY hub of KydlCore (F6, MIGRATION_DECISIONS B11 / A6). There is NO menu key, window or input lock in this mod: KydlCore
+    /// owns them (D-040). Row 1 of the hub shows this mod (SetModTitle), row 2 its tabs. The Settings tab is always there (the player config with the
+    /// switches); every other tab belongs to a feature and is added by that feature's Start and removed by its Stop (A4: switching a feature off in the config
+    /// removes its tabs at once, no stale tab stays): Slippers (SlippersFeature), Costume (CostumeFeature), My trolls / Troll work / Trolls (TrollsFeature),
+    /// Troll Hub (HubsFeature). WHAT a tab shows is described here and in Presentation/Hub/Pages (plain data); HOW it is drawn is MainMenuView and its siblings
+    /// in the Unity project (SteveTheTroll-Unity/Assets/SteveTheTroll_UI/Runtime, previewed there).
     /// </summary>
     internal static class HubTabs
     {
         internal const string SlippersId = "slippers", CostumeId = "costume", MyTrollsId = "mytrolls", WorkId = "work", TrollsId = "trolls", SettingsId = "settings", HubId = "trollhub";
 
-        /// Called once from Plugin.Awake (after the config is bound and the text is registered). Expected outcome: the settings tab is registered, and every tab of a switched-on part.
-        internal static void Register(ConfigFile config)
+        /// The mod's title and its Settings tab (Bootstrap, once). Expected outcome: the settings tab is registered.
+        internal static bool RegisterModPage(ConfigFile config)
         {
             KydlCore.KyHub.SetModTitle(Plugin.ModGuid, Plugin.ModName);
-            int n = 0;
-            if (ModSettings.SlippersOn) { KydlCore.KyHub.AddPage(Plugin.ModGuid, SlippersId, Loc.T("stevethetroll_tab_slippers"), ModelKyPages.Slippers, 0, 3); n++; }
-            if (ModSettings.CostumeOn) { KydlCore.KyHub.AddPage(Plugin.ModGuid, CostumeId, Loc.T("stevethetroll_tab_costume"), ModelKyPages.Costume, 1, 3); n++; }
-            if (ModSettings.TrollsOn)
+            var tab = KydlCore.KyHub.AddTab(Plugin.ModGuid, SettingsId, Loc.T("stevethetroll_tab_settings"), () => KydlCore.KyHub.ConfigEntries(config), 10);
+            ModLog.Verbose("HubTabs: mod title + settings tab " + (tab != null ? "registered" : "FAILED"));
+            return tab != null && KydlCore.KyHub.HasTab(Plugin.ModGuid, SettingsId);
+        }
+
+        /// Removes the Settings tab (mod unload). Expected outcome: it is gone.
+        internal static bool UnregisterModPage()
+        {
+            KydlCore.KyHub.RemoveTab(Plugin.ModGuid, SettingsId);
+            return !KydlCore.KyHub.HasTab(Plugin.ModGuid, SettingsId);
+        }
+
+        /// The Slippers tab (SlippersFeature.Start). Expected outcome: it is registered.
+        internal static bool AddSlippers() { return AddPage(SlippersId, "stevethetroll_tab_slippers", ModelKyPages.Slippers, 0, 3); }
+
+        /// The Costume tab (CostumeFeature.Start). Expected outcome: it is registered.
+        internal static bool AddCostume() { return AddPage(CostumeId, "stevethetroll_tab_costume", ModelKyPages.Costume, 1, 3); }
+
+        /// My trolls / Troll work / Trolls (TrollsFeature.Start; T-098: described, not built - KydlCore draws these). Expected outcome: all three are registered.
+        internal static bool AddTrolls()
+        {
+            bool mine = AddPage(MyTrollsId, "stevethetroll_tab_mytrolls", TrollListKyPages.MyTrolls, 2, 2);
+            bool work = AddPage(WorkId, "stevethetroll_tab_troll", TrollListKyPages.Work, 3, 2);
+            bool all = AddPage(TrollsId, "stevethetroll_tab_trolls", TrollsKyPage.Build, 4, 2);
+            return mine && work && all;
+        }
+
+        /// The Troll Hub tab (HubsFeature.Start). Expected outcome: it is registered.
+        internal static bool AddHub()
+        {
+            HubTab.Tab = KydlCore.KyHub.AddPage(Plugin.ModGuid, HubId, Loc.T("stevethetroll_hub_tab"), HubTab.Build, 5);
+            ModLog.Verbose("HubTabs: tab " + HubId + " " + (HubTab.Tab != null ? "added" : "FAILED"));
+            return HubTab.Tab != null;
+        }
+
+        /// Removes the given tabs (a feature's Stop). Expected outcome: none of them is registered any more.
+        internal static bool Remove(params string[] ids)
+        {
+            int left = 0;
+            foreach (var id in ids)
             {
-                // T-098: described, not built - KydlCore draws these (this mod sets no font on them)
-                KydlCore.KyHub.AddPage(Plugin.ModGuid, MyTrollsId, Loc.T("stevethetroll_tab_mytrolls"), TrollListKyPages.MyTrolls, 2);
-                KydlCore.KyHub.AddPage(Plugin.ModGuid, WorkId, Loc.T("stevethetroll_tab_troll"), TrollListKyPages.Work, 3);
-                KydlCore.KyHub.AddPage(Plugin.ModGuid, TrollsId, Loc.T("stevethetroll_tab_trolls"), TrollsKyPage.Build, 4);
-                n += 3;
-                if (ModSettings.HubsOn) { HubTab.Tab = KydlCore.KyHub.AddPage(Plugin.ModGuid, HubId, Loc.T("stevethetroll_hub_tab"), HubTab.Build, 5); n++; }
+                KydlCore.KyHub.RemoveTab(Plugin.ModGuid, id);
+                if (id == HubId) HubTab.Tab = null;
+                if (KydlCore.KyHub.HasTab(Plugin.ModGuid, id)) left++;
             }
-            KydlCore.KyHub.AddTab(Plugin.ModGuid, SettingsId, Loc.T("stevethetroll_tab_settings"), () => KydlCore.KyHub.ConfigEntries(config), 10);
-            ModLog.Verbose("HubTabs: registered " + n + " page tab(s) + settings (slippers " + ModSettings.SlippersOn + ", costume " + ModSettings.CostumeOn + ", trolls " + ModSettings.TrollsOn + ")");
+            ModLog.Verbose("HubTabs: removed " + string.Join(", ", ids) + (left > 0 ? " - " + left + " STILL registered" : ""));
+            return left == 0;
+        }
+
+        static bool AddPage(string id, string titleKey, Func<KydlCore.KyPage> build, int order, int refreshSeconds)
+        {
+            var tab = KydlCore.KyHub.AddPage(Plugin.ModGuid, id, Loc.T(titleKey), build, order, refreshSeconds);
+            ModLog.Verbose("HubTabs: tab " + id + " " + (tab != null ? "added" : "FAILED"));
+            return tab != null;
         }
 
         /// The views' studio light from the Tunables (F7), read when a page is built.
