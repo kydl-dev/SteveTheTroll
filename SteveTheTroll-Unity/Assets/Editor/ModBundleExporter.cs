@@ -1,7 +1,7 @@
 // Editor-only. Keeps the mod project's Assets folder in sync with the AssetBundles built in Unity.
 //
-//  * Every bundle goes to THREE places (user, 2026-10-21): ../SteveTheTroll-Mod/Assets (embedded into the DLL on the next mod
-//    build), ../SteveTheTroll-Mod/build (the real, current files) and the Gale TEST profile's BepInEx/plugins/SteveTheTroll/
+//  * Every bundle goes to two places (user, 2026-10-21; build\ dropped by MIGRATION_DECISIONS A8): ../SteveTheTroll-Mod/Assets (embedded into the DLL on the next mod
+//    build) and the Gale TEST profile's BepInEx/plugins/SteveTheTroll/
 //    (the mod's own folder; skipped when that profile does not exist on this PC).
 //  * Watches <UnityProject>/AssetBundles. Whenever bundles appear/change there (from ANY builder:
 //    this script's menu item, AssetBundle Browser, a custom build script...) they are copied to
@@ -28,7 +28,6 @@ namespace SteveTheTroll.EditorTools
 
         // Destination, relative to the Unity project root (sibling mod project).
         private const string ModAssetsRelativePath = "../SteveTheTroll-Mod/Assets";
-        private const string ModBuildRelativePath = "../SteveTheTroll-Mod/build";
 
         // Gale test profile, the mod's own plugin folder (same place the mod build deploys the DLL to: Claude/shared/Kydl.Mod.targets).
         private static readonly string GalePluginsPath = System.Environment.ExpandEnvironmentVariables(@"%APPDATA%\com.kesomannen.gale\valheim\profiles\test\BepInEx\plugins");
@@ -51,12 +50,11 @@ namespace SteveTheTroll.EditorTools
         private static string ProjectRoot => Path.GetFullPath(Path.Combine(Application.dataPath, ".."));
         private static string BundleOutputPath => Path.Combine(ProjectRoot, BundleOutputFolderName);
         private static string ModAssetsPath => Path.GetFullPath(Path.Combine(ProjectRoot, ModAssetsRelativePath));
-        private static string ModBuildPath => Path.GetFullPath(Path.Combine(ProjectRoot, ModBuildRelativePath));
 
-        // Extra copies of every bundle: mod build folder, and the Gale test profile when it exists on this PC.
+        // Extra copies of every bundle: the Gale test profile when it exists on this PC.
         private static string[] ExtraDestinations()
         {
-            var list = new System.Collections.Generic.List<string> { ModBuildPath };
+            var list = new System.Collections.Generic.List<string>();      // MIGRATION_DECISIONS A8: no build\ folder any more (assets\ is the copy)
             if (Directory.Exists(GalePluginsPath))
             {
                 list.Add(Path.Combine(GalePluginsPath, GaleModFolder));

@@ -18,7 +18,7 @@ namespace SteveTheTroll.Tests.Integration
         static readonly Regex Spawn = new Regex(@"""name""\s*:\s*""(stt\.spawnTroll(?:Near)?)""\s*,\s*""args""\s*:\s*\{(?<args>[^}]*)\}");
         static readonly Regex Dx = new Regex(@"""dx""\s*:\s*(-?[0-9.]+)"), Dz = new Regex(@"""dz""\s*:\s*(-?[0-9.]+)");
 
-        static string SuiteDir { get { return Path.Combine(TestPaths.ProjectRoot, "SteveTheTroll-Tests", "TestLab", "suites", "SteveTheTroll"); } }
+        static string SuiteDir { get { return Path.Combine(TestPaths.SuiteDir); } }
 
         [Test] public void EveryTrollSpawn_IsInFront_AndFarEnough()
         {
@@ -68,7 +68,7 @@ namespace SteveTheTroll.Tests.Integration
 
         [Test] public void TheHook_UsesTheSameMinimum()
         {
-            string hooks = File.ReadAllText(Path.Combine(TestPaths.ProjectRoot, "SteveTheTroll-Mod", "src", "Testing", "TestHooks.cs"));
+            string hooks = File.ReadAllText(Path.Combine(TestPaths.Src, "Testing", "TestHooks.cs"));
             Assert.That(hooks, Does.Contain("const float MinFromPlayer = 16f;"));
             Assert.That(hooks, Does.Contain("is not in front of the player"));
         }

@@ -1,6 +1,6 @@
+using System;
 using System.IO;
 using System.Reflection;
-using System;
 
 namespace SteveTheTroll.Tests
 {
@@ -9,7 +9,7 @@ namespace SteveTheTroll.Tests
     {
         static string _testsRoot;
 
-        /// SteveTheTroll-Tests
+        /// SteveTheTroll-Mod\tests
         public static string TestsRoot
         {
             get
@@ -22,15 +22,32 @@ namespace SteveTheTroll.Tests
             }
         }
 
-        /// The project root (the repo root): parent of SteveTheTroll-Tests.
-        public static string ProjectRoot { get { return Directory.GetParent(TestsRoot).FullName; } }
-        public static string ModDir { get { return Path.Combine(ProjectRoot, "SteveTheTroll-Mod"); } }
+        /// SteveTheTroll-Mod: the parent of tests (MIGRATION_DECISIONS A1).
+        public static string ModDir { get { return Directory.GetParent(TestsRoot).FullName; } }
+        /// The project root (the repo root): parent of SteveTheTroll-Mod.
+        public static string ProjectRoot { get { return Directory.GetParent(ModDir).FullName; } }
+        /// src of the mod.
+        public static string Src { get { return Path.Combine(ModDir, "src"); } }
+        /// The TestLab suite folder of this mod.
+        public static string SuiteDir { get { return Path.Combine(TestsRoot, "TestLab", "suites", "SteveTheTroll"); } }
 
         /// Game / BepInEx / Jotunn DLLs: the central E:\Projects\Valheim\Claude\ref. KYDL_REF_DIR overrides (e.g. the installed game's Managed folder).
         public static string RefDir { get { return Env("KYDL_REF_DIR") ?? Path.GetFullPath(Path.Combine(ProjectRoot, "..", "Claude", "ref")); } }
 
-        /// The built mod (the copy in build\ is the real one). KYDL_MOD_DLL overrides.
-        public static string ModDll { get { return Env("KYDL_MOD_DLL") ?? Path.Combine(ModDir, "build", "SteveTheTroll.dll"); } }
+        /// The built mod (the copy in assets\ is the real one, MIGRATION_DECISIONS A8). KYDL_MOD_DLL overrides.
+        public static string ModDll { get { return Env("KYDL_MOD_DLL") ?? Path.Combine(ModDir, "assets", "SteveTheTroll.dll"); } }
+
+        /// KydlCore.dll, which every mod requires: the built KydlCore next to this project (E:\Projects\Valheim\KydlCore). KYDL_CORE_DLL overrides.
+        public static string CoreDll
+        {
+            get
+            {
+                var env = Env("KYDL_CORE_DLL");
+                if (env != null) return env;
+                var spec = Path.GetFullPath(Path.Combine(ProjectRoot, "..", "KydlCore", "KydlCore-Mod", "assets", "KydlCore.dll"));
+                return File.Exists(spec) ? spec : Path.GetFullPath(Path.Combine(ProjectRoot, "..", "KydlCore", "KydlCore-Mod", "build", "KydlCore.dll"));
+            }
+        }
 
         static string Env(string name)
         {
@@ -95,7 +112,7 @@ namespace SteveTheTroll.Tests
         }
     }
 
-    /// Makes the test process find game / BepInEx / Jotunn assemblies in the ref folder when something asks for them.
+    /// Makes the test process find game / BepInEx / Jotunn assemblies in the ref folder, and KydlCore.dll in KydlCore's build folder, when something asks for them.
     [SetUpFixture]
     public sealed class GameAssemblyResolver
     {
@@ -109,7 +126,8 @@ namespace SteveTheTroll.Tests
         {
             var name = new AssemblyName(args.Name).Name;
             var path = Path.Combine(TestPaths.RefDir, name + ".dll");
-            return File.Exists(path) ? Assembly.LoadFrom(path) : null;
+            if (File.Exists(path)) return Assembly.LoadFrom(path);
+            return name == "KydlCore" && File.Exists(TestPaths.CoreDll) ? Assembly.LoadFrom(TestPaths.CoreDll) : null;
         }
     }
 }

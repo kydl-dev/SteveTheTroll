@@ -1,0 +1,80 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Unit tests: pure logic, no game running. Logic worth testing lives in classes without Unity / Valheim types; link those files here
+       (<Compile Include="..\..\src\...\X.cs" Link="Mod\X.cs" />) or reach them in the built DLL through ModAssembly.
+       Unity's plain value types (Vector3, Bounds, Mathf, Color) are managed code and work here; anything that calls into the engine
+       (ColorUtility.TryParseHtmlString, GameObject, ...) does not - test that in game (InGameTests).
+       How good the tests are: _agent\tools\test-quality.ps1 (coverage + mutation score, E:\Projects\Valheim\Claude\testing\TEST_QUALITY.md). -->
+  <PropertyGroup>
+    <AssemblyName>SteveTheTroll.UnitTests</AssemblyName>
+    <RootNamespace>SteveTheTroll.Tests.Unit</RootNamespace>
+  </PropertyGroup>
+  <!-- Linked copies only in normal runs; in test-quality runs (KydlQuality=true) the tests use the mod's types (InternalsVisibleTo), so
+       Stryker / coverage measure the mod code itself (D-086). -->
+  <ItemGroup Condition="'$(KydlQuality)' != 'true'">
+    <!-- D-039 menu: pure UI logic from the Unity project (shared viewer from the template + Slippers / Troll work tabs) -->
+    <Compile Include="..\..\..\SteveTheTroll-Unity\Assets\SteveTheTroll_UI\Runtime\ViewerSettings.cs" Link="Ui\ViewerSettings.cs" />
+    <Compile Include="..\..\..\SteveTheTroll-Unity\Assets\SteveTheTroll_UI\Runtime\ViewerMath.cs" Link="Ui\ViewerMath.cs" />
+    <Compile Include="..\..\..\SteveTheTroll-Unity\Assets\SteveTheTroll_UI\Runtime\ViewerOrbit.cs" Link="Ui\ViewerOrbit.cs" />
+    <Compile Include="..\..\..\SteveTheTroll-Unity\Assets\SteveTheTroll_UI\Runtime\DetailRow.cs" Link="Ui\DetailRow.cs" />
+    <Compile Include="..\..\..\SteveTheTroll-Unity\Assets\SteveTheTroll_UI\Runtime\DetailGroup.cs" Link="Ui\DetailGroup.cs" />
+    <Compile Include="..\..\..\SteveTheTroll-Unity\Assets\SteveTheTroll_UI\Runtime\SlipperData.cs" Link="Ui\SlipperData.cs" />
+    <Compile Include="..\..\..\SteveTheTroll-Unity\Assets\SteveTheTroll_UI\Runtime\SlipperDetailsBuilder.cs" Link="Ui\SlipperDetailsBuilder.cs" />
+    <Compile Include="..\..\..\SteveTheTroll-Unity\Assets\SteveTheTroll_UI\Runtime\CostumeData.cs" Link="Ui\CostumeData.cs" />
+    <Compile Include="..\..\..\SteveTheTroll-Unity\Assets\SteveTheTroll_UI\Runtime\CostumeDetailsBuilder.cs" Link="Ui\CostumeDetailsBuilder.cs" />
+    <Compile Include="..\..\..\SteveTheTroll-Unity\Assets\SteveTheTroll_UI\Runtime\TrollFocus.cs" Link="Ui\TrollFocus.cs" />
+    <Compile Include="..\..\..\SteveTheTroll-Unity\Assets\SteveTheTroll_UI\Runtime\TrollInfo.cs" Link="Ui\TrollInfo.cs" />
+    <Compile Include="..\..\..\SteveTheTroll-Unity\Assets\SteveTheTroll_UI\Runtime\TrollDetailsBuilder.cs" Link="Ui\TrollDetailsBuilder.cs" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(KydlQuality)' != 'true'">
+    <!-- which functionalities are on (PROJECT_RULES 11) -->
+    <Compile Include="..\..\src\Functions.cs" Link="Mod\Functions.cs" />
+    <!-- D-135 Troll Hub: pure rules + the building's data -->
+    <Compile Include="..\..\src\Hubs\Domain\HubRules.cs" Link="Mod\HubRules.cs" />
+    <Compile Include="..\..\src\Hubs\Application\*.cs" Link="Mod\Hubs\%(Filename)%(Extension)" />
+    <Compile Include="..\..\src\Trolls\Farming\Domain\IdleRules.cs" Link="Mod\IdleRules.cs" />
+    <Compile Include="..\..\src\Backpack\Domain\DepotRules.cs" Link="Mod\DepotRules.cs" />
+    <Compile Include="..\..\src\Trolls\Taming\Domain\HealthRules.cs" Link="Mod\HealthRules.cs" />
+    <!-- D-167 stuck detection and recovery: pure rules, the escalation ladder, the per troll + resource failure book (TargetRules: head-on test) -->
+    <Compile Include="..\..\src\Trolls\Recovery\Domain\StuckRules.cs" Link="Mod\StuckRules.cs" />
+    <Compile Include="..\..\src\Trolls\Recovery\Domain\Obstruction.cs" Link="Mod\Obstruction.cs" />
+    <Compile Include="..\..\src\Trolls\Recovery\Domain\Side.cs" Link="Mod\Side.cs" />
+    <Compile Include="..\..\src\Trolls\Recovery\Domain\ProgressMeter.cs" Link="Mod\ProgressMeter.cs" />
+    <Compile Include="..\..\src\Trolls\Recovery\Domain\RecoveryMachine.cs" Link="Mod\RecoveryMachine.cs" />
+    <Compile Include="..\..\src\Trolls\Recovery\Domain\RecoveryBook.cs" Link="Mod\RecoveryBook.cs" />
+    <Compile Include="..\..\src\Trolls\Recovery\Domain\RecoveryStage.cs" Link="Mod\RecoveryStage.cs" />
+    <!-- D-169 Recovery V2: typed input / decision, the pipeline and the executor (game-free) + the capability contracts the executor checks -->
+    <Compile Include="..\..\src\Trolls\Recovery\Domain\RecoveryInput.cs" Link="Mod\RecoveryInput.cs" />
+    <Compile Include="..\..\src\Trolls\Recovery\Domain\RecoveryDecision.cs" Link="Mod\RecoveryDecision.cs" />
+    <Compile Include="..\..\src\Trolls\Recovery\Application\RecoveryPipeline.cs" Link="Mod\RecoveryPipeline.cs" />
+    <Compile Include="..\..\src\Trolls\Recovery\Execution\RecoveryExecutor.cs" Link="Mod\RecoveryExecutor.cs" />
+    <Compile Include="..\..\src\Trolls\Contracts\ITrollOwnership.cs" Link="Mod\ITrollOwnership.cs" />
+    <!-- D-170 farming + orders: every game-free layer of the two slices -->
+    <Compile Include="..\..\src\Trolls\Farming\Domain\FarmGate.cs" Link="Mod\Farming\FarmGate.cs" />
+    <Compile Include="..\..\src\Trolls\Farming\Domain\Approach.cs" Link="Mod\Farming\Approach.cs" />
+    <Compile Include="..\..\src\Trolls\Farming\Domain\SwingLadder.cs" Link="Mod\Farming\SwingLadder.cs" />
+    <Compile Include="..\..\src\Trolls\Farming\Domain\TargetSelection.cs" Link="Mod\Farming\TargetSelection.cs" />
+    <Compile Include="..\..\src\Trolls\Farming\Application\*.cs" Link="Mod\Farming\%(Filename)%(Extension)" />
+    <Compile Include="..\..\src\Trolls\Farming\Execution\*.cs" Link="Mod\Farming\%(Filename)%(Extension)" />
+    <Compile Include="..\..\src\Trolls\Orders\Domain\*.cs" Link="Mod\Orders\%(Filename)%(Extension)" />
+    <Compile Include="..\..\src\Trolls\Orders\Application\*.cs" Link="Mod\Orders\%(Filename)%(Extension)" />
+    <!-- D-171 P5..P8: the game-free rules of combat, backpack, hubs / home, taming -->
+    <Compile Include="..\..\src\Trolls\Combat\Domain\*.cs" Link="Mod\Combat\%(Filename)%(Extension)" />
+    <Compile Include="..\..\src\Trolls\Combat\Application\*.cs" Link="Mod\Combat\%(Filename)%(Extension)" />
+    <Compile Include="..\..\src\Trolls\Combat\Execution\*.cs" Link="Mod\Combat\%(Filename)%(Extension)" />
+    <Compile Include="..\..\src\Backpack\Domain\BackpackRules.cs" Link="Mod\Backpack\BackpackRules.cs" />
+    <Compile Include="..\..\src\Backpack\Domain\PickupRules.cs" Link="Mod\Backpack\PickupRules.cs" />
+    <Compile Include="..\..\src\Backpack\Domain\DepotPlanner.cs" Link="Mod\Backpack\DepotPlanner.cs" />
+    <Compile Include="..\..\src\Backpack\Application\*.cs" Link="Mod\Backpack\%(Filename)%(Extension)" />
+    <Compile Include="..\..\src\Backpack\Execution\*.cs" Link="Mod\Backpack\%(Filename)%(Extension)" />
+    <Compile Include="..\..\src\Trolls\Contracts\ITrollInventory.cs" Link="Mod\ITrollInventory.cs" />
+    <Compile Include="..\..\src\Hubs\Infrastructure\HubGeometry.cs" Link="Mod\Hubs\HubGeometry.cs" />
+    <Compile Include="..\..\src\Trolls\Home\Domain\*.cs" Link="Mod\Home\%(Filename)%(Extension)" />
+    <Compile Include="..\..\src\Trolls\Farming\Domain\TargetRules.cs" Link="Mod\TargetRules.cs" />
+    <Compile Include="..\..\src\Hubs\Domain\HubData.cs" Link="Mod\HubData.cs" />
+    <!-- D-169 Architecture V2: the game-free foundation (typed responses, validation, commands, pipeline) -->
+    <Compile Include="..\..\src\Core\**\*.cs" Link="Mod\Core\%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="UnityEngine.CoreModule"><HintPath>$(ValheimRefs)\UnityEngine.CoreModule.dll</HintPath><Private>true</Private></Reference>
+  </ItemGroup>
+</Project>

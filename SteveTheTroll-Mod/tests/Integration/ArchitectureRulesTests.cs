@@ -63,10 +63,10 @@ namespace SteveTheTroll.Tests.Integration
         [Test] public void V2Marker_AndTheLabTestThatRunsFirst()
         {
             Assert.That(File.ReadAllText(Path.Combine(Src, "Core", "Architecture.cs")), Does.Contain("Marker = \"STT-ARCH-V2\"").And.Contain("Version = 2"));
-            string suite = File.ReadAllText(Path.Combine(TestPaths.ProjectRoot, "SteveTheTroll-Tests", "TestLab", "suites", "SteveTheTroll", "suite.json"));
+            string suite = File.ReadAllText(Path.Combine(TestPaths.SuiteDir, "suite.json"));
             var first = Regex.Match(suite, @"""tests""\s*:\s*\[\s*""([^""]+)""");
             Assert.That(first.Groups[1].Value, Is.EqualTo("architecture-v2"));
-            Assert.That(File.Exists(Path.Combine(TestPaths.ProjectRoot, "SteveTheTroll-Tests", "TestLab", "suites", "SteveTheTroll", "architecture-v2.json")), Is.True);
+            Assert.That(File.Exists(Path.Combine(TestPaths.SuiteDir, "architecture-v2.json")), Is.True);
         }
 
         // D-170: every order command has exactly one handler (the dispatcher would answer Failed for a command without one)

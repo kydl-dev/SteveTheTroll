@@ -11,7 +11,7 @@ namespace SteveTheTroll.Tests.Unit
     [TestFixture]
     public class PageSourcesTests
     {
-        static string Src([CallerFilePath] string here = "") { return Path.GetFullPath(Path.Combine(Path.GetDirectoryName(here), "..", "..", "SteveTheTroll-Mod", "src", "Ui")); }
+        static string Src([CallerFilePath] string here = "") { return Path.GetFullPath(Path.Combine(Path.GetDirectoryName(here), "..", "..", "src", "Ui")); }
 
         [TestCase("TrollsKyPage.cs")]
         [TestCase("TrollListKyPages.cs")]

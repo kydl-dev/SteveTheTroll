@@ -6,7 +6,7 @@ namespace SteveTheTroll.Fit.Tests
 {
     /// <summary>
     /// Unity EditMode tests (real engine: Quaternion, Transform, Mesh, SkinnedMeshRenderer.BakeMesh) for the fit code the mod and the fit
-    /// scene share. The pure maths (FitGeometry) is tested in plain .NET with coverage + Stryker (SteveTheTroll-Tests/Unit); these tests
+    /// scene share. The pure maths (FitGeometry) is tested in plain .NET with coverage + Stryker (SteveTheTroll-Mod/tests/Unit); these tests
     /// check the engine-side wrappers and that FitGeometry's managed formulas equal the engine's own (Quaternion.AngleAxis, LookRotation).
     /// Run: Unity Test Runner (EditMode) or the Unity MCP run_tests tool. Every object a test makes is destroyed in TearDown.
     /// </summary>

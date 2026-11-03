@@ -15,7 +15,15 @@
     <BundleName>stevethetroll</BundleName>
     <!-- 2.0.0: the UI kit, the input lock and the KY hub come from KydlCore.dll (a hard dependency), not from a copy in this DLL -->
     <KydlUseCore>true</KydlUseCore>
+    <!-- KydlDev spec layout (MIGRATION_DECISIONS A8): the DLL goes to assets\ only -->
+    <KydlBuildFolder>false</KydlBuildFolder>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="tests\**;docs\**;release\**" />
+    <None Remove="tests\**;docs\**;release\**" />
+    <EmbeddedResource Remove="tests\**;docs\**;release\**" />
+  </ItemGroup>
 
   <ItemGroup>
     <!-- the mod's menu views live in the Unity project (previewed there) and are compiled into the mod from there -->
