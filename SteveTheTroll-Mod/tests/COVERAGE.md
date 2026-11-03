@@ -6,7 +6,7 @@ Status "Automated" here is only true after the TestLab run named in `_agent\TEST
 | Feature / requirement | Unit | Integration | TestLab | Manual | Status |
 |---|---|---|---|---|---|
 | Loads with its exact KydlCore, V2 + spec build, no errors | - | ManifestTests, ArchitectureRulesTests | architecture-v2, startup-clean | - | Automated |
-| Features run, tabs declared, KY-Items listed, HUB icon (T-210, T-200) | Kydl.Core FeatureRegistry | ArchitectureRulesTests | kydl-spec-port | hub-look (looks, icon) | Automated + Manual |
+| Features run, tabs declared, KY-Items listed, HUB icon (T-210, T-200) | KydlCore.Core FeatureRegistry | ArchitectureRulesTests | kydl-spec-port | hub-look (looks, icon) | Automated + Manual |
 | Feature switches live, no stale tab / KY-Items entry | - | - | feature-toggle | - | Automated |
 | Costume recipes only after the first slipper equip, survives relog (T-201) | CostumeUnlockRulesTests | - | costume-after-slippers | hub-look (message) | Automated + Manual |
 | Player config layout (EnableAll, Enables, DebugLog, ranges) | - | SettingsTests, SuiteRulesTests | (configOverrides) | - | Automated |
