@@ -189,9 +189,14 @@ namespace SteveTheTroll.World.Zones
                         zoneUnowned++;
                         // D-139: only what a troll can reach. The kept zones are whole 64 m squares (3 x 3 around each troll, ~5 000 objects), the troll works within
                         // TrollZoneRadius (50 m): the rest was claimed every second for nothing (thousands of SetOwner calls a second, each a ZDO update for the network).
-                        if (mayClaim && claimed < MaxClaimsPerTick && NearTroll(z.GetPosition(), claimReach2))
+                        // T-211 (run 20261103-124703): the game releases an object its peer owns once it leaves the peer's ACTIVE area, and claims unowned ones only inside it.
+                        // A far troll that walks through a zone the game still lists as NEAR was therefore released and, with ClaimNearBand off, never claimed again (it stopped, spot-return /
+                        // far-troll-goes-home never arrived). The own tracked trolls (a handful of ZDOs) are claimed in every band; ClaimNearBand only governs the other objects.
+                        bool ownTroll = Trolls.Contains(z.m_uid);
+                        if ((mayClaim || ownTroll) && claimed < MaxClaimsPerTick && NearTroll(z.GetPosition(), claimReach2))
                         {
                             z.SetOwner(session); claimed++; zoneClaimed++;
+                            if (ownTroll && !mayClaim && debug) ModLog.Verbose("TrollZones: own troll " + z.m_uid + " claimed in a zone of the game's near band (the game had released it outside the active area)");
                             if (debug) { if (LastClaimed.Contains(z.m_uid)) reclaimed++; NowClaimed.Add(z.m_uid); }
                         }
                     }

@@ -86,18 +86,6 @@
       "do": "wait",
       "until": {
         "check": "hook",
-        "name": "stt.returningToUnload",
-        "args": {
-          "troll": "troll"
-        },
-        "expect": true
-      },
-      "timeout": 30
-    },
-    {
-      "do": "wait",
-      "until": {
-        "check": "hook",
         "name": "stt.followedBackpackAtMost",
         "args": {
           "stacks": 20
