@@ -96,7 +96,7 @@ namespace SteveTheTroll.Tests.Unit
 
         // ---- CostumeData (the Unity preview sample = the game's items) ----
 
-        const string Items = "SteveTheTroll.Items.Costume.CostumeItems";
+        const string Items = "SteveTheTroll.Features.Costume.Infrastructure.CostumeItems";
 
         static float Const(string name) { return System.Convert.ToSingle(ModAssembly.GetStatic(Items, name)); }
 

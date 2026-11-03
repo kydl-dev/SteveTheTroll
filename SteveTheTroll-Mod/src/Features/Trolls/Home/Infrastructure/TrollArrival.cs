@@ -1,49 +1,83 @@
-using Kydl.Common;
+using KydlCore.Common;
 using SteveTheTroll.Features.Trolls.Taming.Infrastructure;
 using SteveTheTroll.Presentation.Notifications;
 using UnityEngine;
 
-namespace SteveTheTroll.Features.Trolls.Home.Infrastructure
+namespace SteveTheTroll.Features.Trolls.Home.Infrastructure;
+
+/// <summary>
+///     D-043: a newly tamed troll walks to the player who tamed it (follow) and, once within ArriveMetres, stays there and
+///     waits for orders
+///     (follow off, patrol point here) with a message to that player. Added on the client that tamed it (owner of the
+///     troll's ZDO); gives up
+///     after GiveUpSeconds. Lost when the troll unloads before it arrives (it then simply follows).
+///     D-058 / D-062: after arriving it is idle - TrollIdle sends it farming after AutoFarmSeconds (2 min) without an
+///     order.
+/// </summary>
+internal sealed class TrollArrival : MonoBehaviour
 {
-    /// <summary>
-    /// D-043: a newly tamed troll walks to the player who tamed it (follow) and, once within ArriveMetres, stays there and waits for orders
-    /// (follow off, patrol point here) with a message to that player. Added on the client that tamed it (owner of the troll's ZDO); gives up
-    /// after GiveUpSeconds. Lost when the troll unloads before it arrives (it then simply follows).
-    /// D-058 / D-062: after arriving it is idle - TrollIdle sends it farming after AutoFarmSeconds (2 min) without an order.
-    /// </summary>
-    internal sealed class TrollArrival : MonoBehaviour
+    private const float ArriveMetres = 5f, GiveUpSeconds = 180f, CheckSeconds = 0.5f;
+    private MonsterAI _ai;
+    private Player _player;
+    private float _start, _next;
+
+    private void Update()
     {
-        const float ArriveMetres = 5f, GiveUpSeconds = 180f, CheckSeconds = 0.5f;
-        Player _player;
-        MonsterAI _ai;
-        float _start, _next;
-
-        internal static TrollArrival Begin(Character troll, Player player)
+        if (Time.time < _next)
         {
-            var ai = troll != null ? troll.GetComponent<MonsterAI>() : null;
-            if (ai == null || player == null) { ModLog.Warn("TrollArrival: no AI / player - the troll stays where it is"); return null; }
-            var a = troll.gameObject.AddComponent<TrollArrival>();
-            a._player = player; a._ai = ai; a._start = Time.time;
-            ai.SetFollowTarget(player.gameObject);
-            ModLog.Info("TrollArrival: " + TrollTaming.Tag(troll) + " walks to " + player.GetPlayerName() + " (" + Vector3.Distance(troll.transform.position, player.transform.position).ToString("F1") + " m)");
-            return a;
+            return;
         }
 
-        string Shown() { return TrollTaming.ShownName(this); }
-
-        void Update()
+        _next = Time.time + CheckSeconds;
+        if (_player == null || _ai == null)
         {
-            if (Time.time < _next) return;
-            _next = Time.time + CheckSeconds;
-            if (_player == null || _ai == null) { ModLog.Verbose("TrollArrival: " + TrollTaming.Tag(this) + " lost its player / AI - done"); Destroy(this); return; }
-            float d = Vector3.Distance(transform.position, _player.transform.position);
-            bool late = Time.time - _start > GiveUpSeconds;
-            if (d > ArriveMetres && !late) return;
-            TrollTaming.StopFollow(_ai);
-            _ai.SetPatrolPoint();
-            ModLog.Info("TrollArrival: " + TrollTaming.Tag(this) + (late ? " gave up walking after " + GiveUpSeconds + " s" : " arrived (" + d.ToString("F1") + " m)") + " - stays and waits for orders");
-            if (!late && _player == Player.m_localPlayer) Notify.Show(Loc.T("stevethetroll_troll_waits", Shown()), Notify.Kind.Good);
+            ModLog.Verbose("TrollArrival: " + TrollTaming.Tag(this) + " lost its player / AI - done");
             Destroy(this);
+            return;
         }
+
+        float d = Vector3.Distance(transform.position, _player.transform.position);
+        bool late = Time.time - _start > GiveUpSeconds;
+        if (d > ArriveMetres && !late)
+        {
+            return;
+        }
+
+        TrollTaming.StopFollow(_ai);
+        _ai.SetPatrolPoint();
+        ModLog.Info("TrollArrival: " + TrollTaming.Tag(this) +
+                    (late
+                        ? " gave up walking after " + GiveUpSeconds + " s"
+                        : " arrived (" + d.ToString("F1") + " m)") + " - stays and waits for orders");
+        if (!late && _player == Player.m_localPlayer)
+        {
+            Notify.Show(Loc.T("stevethetroll_troll_waits", Shown()), Notify.Kind.Good);
+        }
+
+        Destroy(this);
+    }
+
+    internal static TrollArrival Begin(Character troll, Player player)
+    {
+        MonsterAI ai = troll != null ? troll.GetComponent<MonsterAI>() : null;
+        if (ai == null || player == null)
+        {
+            ModLog.Warn("TrollArrival: no AI / player - the troll stays where it is");
+            return null;
+        }
+
+        TrollArrival a = troll.gameObject.AddComponent<TrollArrival>();
+        a._player = player;
+        a._ai = ai;
+        a._start = Time.time;
+        ai.SetFollowTarget(player.gameObject);
+        ModLog.Info("TrollArrival: " + TrollTaming.Tag(troll) + " walks to " + player.GetPlayerName() + " (" +
+                    Vector3.Distance(troll.transform.position, player.transform.position).ToString("F1") + " m)");
+        return a;
+    }
+
+    private string Shown()
+    {
+        return TrollTaming.ShownName(this);
     }
 }

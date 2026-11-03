@@ -1,66 +1,98 @@
 using System.Collections.Generic;
-using Kydl.Common;
+using KydlCore.Common;
 using SteveTheTroll.Features.Trolls.Taming.Infrastructure;
 using SteveTheTroll.Presentation.Notifications;
 using UnityEngine;
 
-namespace SteveTheTroll.Features.Trolls.Backpack.Infrastructure
+namespace SteveTheTroll.Features.Trolls.Backpack.Infrastructure;
+
+/// <summary>
+///     T-008c (D-062, user spec): when a tamed troll dies, everything in its backpack drops in the game's cargo crates
+///     (CargoCrate, as from
+///     a sunk ship) next to it - as many crates as needed; without that prefab the items drop on the ground. Runs on the
+///     troll's owner.
+/// </summary>
+// Harmony hook: src/Integrations/Harmony/TrollsBackpackPatches.cs, BackpackDeathHook (MIGRATION_DECISIONS A5)
+internal static class BackpackDeath
 {
-    /// <summary>
-    /// T-008c (D-062, user spec): when a tamed troll dies, everything in its backpack drops in the game's cargo crates (CargoCrate, as from
-    /// a sunk ship) next to it - as many crates as needed; without that prefab the items drop on the ground. Runs on the troll's owner.
-    /// </summary>
-    // Harmony hook: src/Integrations/Harmony/TrollsBackpackPatches.cs, BackpackDeathHook (MIGRATION_DECISIONS A5)
-    internal static class BackpackDeath
+    private const string CratePrefab = "CargoCrate";
+
+    internal static void Prefix(Tameable __instance)
     {
-        const string CratePrefab = "CargoCrate";
-
-        internal static void Prefix(Tameable __instance)
+        Character troll = __instance != null ? __instance.GetComponent<Character>() : null;
+        if (troll == null || !troll.IsTamed() || !TrollTaming.IsTroll(troll))
         {
-            var troll = __instance != null ? __instance.GetComponent<Character>() : null;
-            if (troll == null || !troll.IsTamed() || !TrollTaming.IsTroll(troll)) return;
-            var view = troll.GetComponent<ZNetView>();
-            if (view == null || !view.IsValid() || !view.IsOwner()) return;
-            var zdo = view.GetZDO();
-            var items = new List<ItemDrop.ItemData>();
-            for (int i = 0; i < BackpackStore.ChestCount; i++)
-            {
-                var inv = BackpackStore.Read(zdo, i);
-                items.AddRange(inv.GetAllItems());
-                BackpackStore.Write(zdo, i, new Inventory("", null, 1, 1));
-            }
-            if (items.Count == 0) { ModLog.Verbose("BackpackDeath: " + TrollTaming.Tag(troll) + " died with an empty backpack"); return; }
-            int crates = Drop(items, troll.transform.position + Vector3.up);
-            ModLog.Info("BackpackDeath: " + TrollTaming.Tag(troll) + " died - " + items.Count + " stack(s) dropped in " + crates + " cargo crate(s)");
-            if (TrollTaming.Owner(troll) == (Player.m_localPlayer != null ? Player.m_localPlayer.GetPlayerID() : -1L))
-                Notify.Show(Loc.T("stevethetroll_backpack_dropped", __instance.GetHoverName(), crates.ToString()), Notify.Kind.Death);
+            return;
         }
 
-        // Expected outcome: the number of crates used (0 = dropped on the ground).
-        static int Drop(List<ItemDrop.ItemData> items, Vector3 at)
+        ZNetView view = troll.GetComponent<ZNetView>();
+        if (view == null || !view.IsValid() || !view.IsOwner())
         {
-            var prefab = ZNetScene.instance != null ? ZNetScene.instance.GetPrefab(CratePrefab) : null;
-            if (prefab == null)
+            return;
+        }
+
+        ZDO zdo = view.GetZDO();
+        var items = new List<ItemDrop.ItemData>();
+        for (int i = 0; i < BackpackStore.ChestCount; i++)
+        {
+            Inventory inv = BackpackStore.Read(zdo, i);
+            items.AddRange(inv.GetAllItems());
+            BackpackStore.Write(zdo, i, new Inventory("", null, 1, 1));
+        }
+
+        if (items.Count == 0)
+        {
+            ModLog.Verbose("BackpackDeath: " + TrollTaming.Tag(troll) + " died with an empty backpack");
+            return;
+        }
+
+        int crates = Drop(items, troll.transform.position + Vector3.up);
+        ModLog.Info("BackpackDeath: " + TrollTaming.Tag(troll) + " died - " + items.Count + " stack(s) dropped in " +
+                    crates + " cargo crate(s)");
+        if (TrollTaming.Owner(troll) == (Player.m_localPlayer != null ? Player.m_localPlayer.GetPlayerID() : -1L))
+        {
+            Notify.Show(Loc.T("stevethetroll_backpack_dropped", __instance.GetHoverName(), crates.ToString()),
+                Notify.Kind.Death);
+        }
+    }
+
+    // Expected outcome: the number of crates used (0 = dropped on the ground).
+    private static int Drop(List<ItemDrop.ItemData> items, Vector3 at)
+    {
+        GameObject prefab = ZNetScene.instance != null ? ZNetScene.instance.GetPrefab(CratePrefab) : null;
+        if (prefab == null)
+        {
+            ModLog.Warn("BackpackDeath: no '" + CratePrefab + "' prefab - the items drop on the ground");
+            foreach (ItemDrop.ItemData it in items)
             {
-                ModLog.Warn("BackpackDeath: no '" + CratePrefab + "' prefab - the items drop on the ground");
-                foreach (var it in items) ItemDrop.DropItem(it, it.m_stack, at + Random.insideUnitSphere, Quaternion.identity);
-                return 0;
+                ItemDrop.DropItem(it, it.m_stack, at + Random.insideUnitSphere, Quaternion.identity);
             }
-            int crates = 0;
-            Inventory inv = null;
-            foreach (var it in items)
+
+            return 0;
+        }
+
+        int crates = 0;
+        Inventory inv = null;
+        foreach (ItemDrop.ItemData it in items)
+        {
+            if (inv == null || !inv.CanAddItem(it))
             {
-                if (inv == null || !inv.CanAddItem(it))
+                GameObject go = Object.Instantiate(prefab, at + new Vector3(crates * 1.2f, 0.5f, 0f),
+                    Quaternion.identity);
+                Container c = go.GetComponent<Container>();
+                if (c == null)
                 {
-                    var go = Object.Instantiate(prefab, at + new Vector3(crates * 1.2f, 0.5f, 0f), Quaternion.identity);
-                    var c = go.GetComponent<Container>();
-                    if (c == null) { ModLog.Warn("BackpackDeath: '" + CratePrefab + "' has no Container"); return crates; }
-                    inv = c.GetInventory();
-                    crates++;
+                    ModLog.Warn("BackpackDeath: '" + CratePrefab + "' has no Container");
+                    return crates;
                 }
-                inv.AddItem(it);
+
+                inv = c.GetInventory();
+                crates++;
             }
-            return crates;
+
+            inv.AddItem(it);
         }
+
+        return crates;
     }
 }

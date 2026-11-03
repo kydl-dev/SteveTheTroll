@@ -1,17 +1,16 @@
-using Kydl.Core.Commands;
-using Kydl.Core.Features;
-using Kydl.Core.Identity;
-using Kydl.Core.Pipeline;
-using Kydl.Core.Results;
-using Kydl.Core.Time;
+using KydlCore.Core;
 
-namespace SteveTheTroll.Features.Trolls.Orders.Commands
+namespace SteveTheTroll.Features.Trolls.Orders.Commands;
+
+/// <summary>D-170 (D-065): attack this creature.</summary>
+internal sealed class AttackTargetCommand : ICommand<bool>
 {
-    /// <summary>D-170 (D-065): attack this creature.</summary>
-    internal sealed class AttackTargetCommand : ICommand<bool>
+    internal AttackTargetCommand(Character troll, Character target)
     {
-        internal Character Troll { get; }
-        internal Character Target { get; }
-        internal AttackTargetCommand(Character troll, Character target) { Troll = troll; Target = target; }
+        Troll = troll;
+        Target = target;
     }
+
+    internal Character Troll { get; }
+    internal Character Target { get; }
 }

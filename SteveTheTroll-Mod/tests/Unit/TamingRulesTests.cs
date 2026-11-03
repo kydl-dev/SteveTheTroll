@@ -7,7 +7,7 @@ namespace SteveTheTroll.Tests.Unit
     [TestFixture]
     public class TamingRulesTests
     {
-        const string T = "SteveTheTroll.Trolls.Taming.Domain.TamingRules";
+        const string T = "SteveTheTroll.Features.Trolls.Taming.Domain.TamingRules";
 
         static string Decide(float wearer, float own)
         {

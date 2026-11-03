@@ -15,7 +15,7 @@ namespace SteveTheTroll.Tests
 
         public static void Check(Property property, int runs = DefaultRuns)
         {
-            var config = Configuration.QuickThrowOnFailure;
+            var config = FsCheck.Configuration.QuickThrowOnFailure;
             config.MaxNbOfTest = runs;
             config.QuietOnSuccess = true;
             property.Check(config);

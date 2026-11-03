@@ -1,47 +1,63 @@
 using System.Collections.Generic;
 using System.Reflection;
 using HarmonyLib;
-using Kydl.Common;
-using UnityEngine;
+using SteveTheTroll.Features.Trolls.Combat.Infrastructure;
 
-namespace SteveTheTroll.Integrations.Harmony
+namespace SteveTheTroll.Integrations.Harmony;
+// MIGRATION_DECISIONS A5: every Harmony patch of the TrollsCombat feature, declared here; each one only forwards to the feature's own method
+// (the logic stays in the feature). PatchAll in Plugin.Awake applies them; PatchTargetsTests checks the targets still exist in the game.
+
+// PlayerPieceGuard.GuardDamage (Features/Trolls/Combat/Infrastructure/PlayerPieceGuard.cs)
+[HarmonyPatch(typeof(WearNTear), nameof(WearNTear.Damage))]
+internal static class PlayerPieceGuard_GuardDamage
 {
-    // MIGRATION_DECISIONS A5: every Harmony patch of the TrollsCombat feature, declared here; each one only forwards to the feature's own method
-    // (the logic stays in the feature). PatchAll in Plugin.Awake applies them; PatchTargetsTests checks the targets still exist in the game.
-
-    // PlayerPieceGuard.GuardDamage (Features/Trolls/Combat/Infrastructure/PlayerPieceGuard.cs)
-    [HarmonyPatch(typeof(WearNTear), nameof(WearNTear.Damage))]
-    static class PlayerPieceGuard_GuardDamage
+    private static bool Prefix(WearNTear __instance, HitData hit)
     {
-        static bool Prefix(WearNTear __instance, HitData hit) { return global::SteveTheTroll.Features.Trolls.Combat.Infrastructure.PlayerPieceGuard.GuardDamage.Prefix(__instance, hit); }
+        return PlayerPieceGuard.GuardDamage.Prefix(__instance, hit);
+    }
+}
+
+// TrollDefend.PlayerHit (Features/Trolls/Combat/Infrastructure/TrollDefend.cs)
+[HarmonyPatch(typeof(Character), nameof(Character.ApplyDamage))]
+internal static class TrollDefend_PlayerHit
+{
+    private static void Postfix(Character __instance, HitData hit)
+    {
+        TrollDefend.PlayerHit.Postfix(__instance, hit);
+    }
+}
+
+// TrollFarmHits (Features/Trolls/Combat/Infrastructure/TrollFarmHits.cs)
+[HarmonyPatch]
+internal static class TrollFarmHitsHook
+{
+    private static IEnumerable<MethodBase> TargetMethods()
+    {
+        return TrollFarmHits.TargetMethods();
     }
 
-    // TrollDefend.PlayerHit (Features/Trolls/Combat/Infrastructure/TrollDefend.cs)
-    [HarmonyPatch(typeof(Character), nameof(Character.ApplyDamage))]
-    static class TrollDefend_PlayerHit
+    private static void Prefix(object __instance, HitData hit)
     {
-        static void Postfix(Character __instance, HitData hit) { global::SteveTheTroll.Features.Trolls.Combat.Infrastructure.TrollDefend.PlayerHit.Postfix(__instance, hit); }
+        TrollFarmHits.Prefix(__instance, hit);
     }
+}
 
-    // TrollFarmHits (Features/Trolls/Combat/Infrastructure/TrollFarmHits.cs)
-    [HarmonyPatch]
-    static class TrollFarmHitsHook
+// TrollNoHit.NoSwing (Features/Trolls/Combat/Infrastructure/TrollNoHit.cs)
+[HarmonyPatch(typeof(Humanoid), nameof(Humanoid.StartAttack))]
+internal static class TrollNoHit_NoSwing
+{
+    private static bool Prefix(Humanoid __instance, ref bool __result)
     {
-        static IEnumerable<MethodBase> TargetMethods() { return global::SteveTheTroll.Features.Trolls.Combat.Infrastructure.TrollFarmHits.TargetMethods(); }
-        static void Prefix(object __instance, HitData hit) { global::SteveTheTroll.Features.Trolls.Combat.Infrastructure.TrollFarmHits.Prefix(__instance, hit); }
+        return TrollNoHit.NoSwing.Prefix(__instance, ref __result);
     }
+}
 
-    // TrollNoHit.NoSwing (Features/Trolls/Combat/Infrastructure/TrollNoHit.cs)
-    [HarmonyPatch(typeof(Humanoid), nameof(Humanoid.StartAttack))]
-    static class TrollNoHit_NoSwing
+// TrollWalls.WallHit (Features/Trolls/Combat/Infrastructure/TrollWalls.cs)
+[HarmonyPatch(typeof(WearNTear), nameof(WearNTear.Damage))]
+internal static class TrollWalls_WallHit
+{
+    private static void Prefix(WearNTear __instance, HitData hit)
     {
-        static bool Prefix(Humanoid __instance, ref bool __result) { return global::SteveTheTroll.Features.Trolls.Combat.Infrastructure.TrollNoHit.NoSwing.Prefix(__instance, ref __result); }
-    }
-
-    // TrollWalls.WallHit (Features/Trolls/Combat/Infrastructure/TrollWalls.cs)
-    [HarmonyPatch(typeof(WearNTear), nameof(WearNTear.Damage))]
-    static class TrollWalls_WallHit
-    {
-        static void Prefix(WearNTear __instance, HitData hit) { global::SteveTheTroll.Features.Trolls.Combat.Infrastructure.TrollWalls.WallHit.Prefix(__instance, hit); }
+        TrollWalls.WallHit.Prefix(__instance, hit);
     }
 }

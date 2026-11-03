@@ -6,7 +6,7 @@ namespace SteveTheTroll.Tests.Unit
     [TestFixture]
     public class TargetRulesTests
     {
-        const string T = "SteveTheTroll.Trolls.Farming.Domain.TargetRules";
+        const string T = "SteveTheTroll.Features.Trolls.Farming.Domain.TargetRules";
 
         static bool Blocked(float ox, float oz, float gz = 10f)
         {

@@ -1,94 +1,126 @@
-using System.Collections.Generic;
 using HarmonyLib;
-using Kydl.Common;
-using UnityEngine;
+using SteveTheTroll.Features.Trolls.Taming.Infrastructure;
 
-namespace SteveTheTroll.Integrations.Harmony
+namespace SteveTheTroll.Integrations.Harmony;
+// MIGRATION_DECISIONS A5: every Harmony patch of the TrollsTaming feature, declared here; each one only forwards to the feature's own method
+// (the logic stays in the feature). PatchAll in Plugin.Awake applies them; PatchTargetsTests checks the targets still exist in the game.
+
+// TamedTrollSpeed.SwimUpdate (Features/Trolls/Taming/Infrastructure/TamedTrollSpeed.cs)
+[HarmonyPatch(typeof(Character), "UpdateSwimming")]
+internal static class TamedTrollSpeed_SwimUpdate
 {
-    // MIGRATION_DECISIONS A5: every Harmony patch of the TrollsTaming feature, declared here; each one only forwards to the feature's own method
-    // (the logic stays in the feature). PatchAll in Plugin.Awake applies them; PatchTargetsTests checks the targets still exist in the game.
-
-    // TamedTrollSpeed.SwimUpdate (Features/Trolls/Taming/Infrastructure/TamedTrollSpeed.cs)
-    [HarmonyPatch(typeof(Character), "UpdateSwimming")]
-    static class TamedTrollSpeed_SwimUpdate
+    private static void Prefix(Character __instance)
     {
-        static void Prefix(Character __instance) { global::SteveTheTroll.Features.Trolls.Taming.Infrastructure.TamedTrollSpeed.SwimUpdate.Prefix(__instance); }
+        TamedTrollSpeed.SwimUpdate.Prefix(__instance);
     }
+}
 
-    // TamedTrollSpeed.Free (Features/Trolls/Taming/Infrastructure/TamedTrollSpeed.cs)
-    [HarmonyPatch(typeof(CharacterAnimEvent), nameof(CharacterAnimEvent.CustomFixedUpdate))]
-    static class TamedTrollSpeed_Free
+// TamedTrollSpeed.Free (Features/Trolls/Taming/Infrastructure/TamedTrollSpeed.cs)
+[HarmonyPatch(typeof(CharacterAnimEvent), nameof(CharacterAnimEvent.CustomFixedUpdate))]
+internal static class TamedTrollSpeed_Free
+{
+    private static void Postfix(CharacterAnimEvent __instance)
     {
-        static void Postfix(CharacterAnimEvent __instance) { global::SteveTheTroll.Features.Trolls.Taming.Infrastructure.TamedTrollSpeed.Free.Postfix(__instance); }
+        TamedTrollSpeed.Free.Postfix(__instance);
     }
+}
 
-    // TamedTrollSpeed.AttackClip (Features/Trolls/Taming/Infrastructure/TamedTrollSpeed.cs)
-    [HarmonyPatch(typeof(CharacterAnimEvent), nameof(CharacterAnimEvent.Speed))]
-    static class TamedTrollSpeed_AttackClip
+// TamedTrollSpeed.AttackClip (Features/Trolls/Taming/Infrastructure/TamedTrollSpeed.cs)
+[HarmonyPatch(typeof(CharacterAnimEvent), nameof(CharacterAnimEvent.Speed))]
+internal static class TamedTrollSpeed_AttackClip
+{
+    private static void Postfix(CharacterAnimEvent __instance, float speedScale)
     {
-        static void Postfix(CharacterAnimEvent __instance, float speedScale) { global::SteveTheTroll.Features.Trolls.Taming.Infrastructure.TamedTrollSpeed.AttackClip.Postfix(__instance, speedScale); }
+        TamedTrollSpeed.AttackClip.Postfix(__instance, speedScale);
     }
+}
 
-    // TamedTrollStats.MaxHealthBase (Features/Trolls/Taming/Infrastructure/TamedTrollStats.cs)
-    [HarmonyPatch(typeof(Character), nameof(Character.GetMaxHealthBase))]
-    static class TamedTrollStats_MaxHealthBase
+// TamedTrollStats.MaxHealthBase (Features/Trolls/Taming/Infrastructure/TamedTrollStats.cs)
+[HarmonyPatch(typeof(Character), nameof(Character.GetMaxHealthBase))]
+internal static class TamedTrollStats_MaxHealthBase
+{
+    private static void Postfix(Character __instance, ref float __result)
     {
-        static void Postfix(Character __instance, ref float __result) { global::SteveTheTroll.Features.Trolls.Taming.Infrastructure.TamedTrollStats.MaxHealthBase.Postfix(__instance, ref __result); }
+        TamedTrollStats.MaxHealthBase.Postfix(__instance, ref __result);
     }
+}
 
-    // TamedTrollStats.NoLava (Features/Trolls/Taming/Infrastructure/TamedTrollStats.cs)
-    [HarmonyPatch(typeof(Character), "UpdateHeatDamage")]
-    static class TamedTrollStats_NoLava
+// TamedTrollStats.NoLava (Features/Trolls/Taming/Infrastructure/TamedTrollStats.cs)
+[HarmonyPatch(typeof(Character), "UpdateHeatDamage")]
+internal static class TamedTrollStats_NoLava
+{
+    private static bool Prefix(Character __instance)
     {
-        static bool Prefix(Character __instance) { return global::SteveTheTroll.Features.Trolls.Taming.Infrastructure.TamedTrollStats.NoLava.Prefix(__instance); }
+        return TamedTrollStats.NoLava.Prefix(__instance);
     }
+}
 
-    // TamedTrollStats.HitLog (Features/Trolls/Taming/Infrastructure/TamedTrollStats.cs)
-    [HarmonyPatch(typeof(Character), nameof(Character.ApplyDamage))]
-    static class TamedTrollStats_HitLog
+// TamedTrollStats.HitLog (Features/Trolls/Taming/Infrastructure/TamedTrollStats.cs)
+[HarmonyPatch(typeof(Character), nameof(Character.ApplyDamage))]
+internal static class TamedTrollStats_HitLog
+{
+    private static void Postfix(Character __instance, HitData hit)
     {
-        static void Postfix(Character __instance, HitData hit) { global::SteveTheTroll.Features.Trolls.Taming.Infrastructure.TamedTrollStats.HitLog.Postfix(__instance, hit); }
+        TamedTrollStats.HitLog.Postfix(__instance, hit);
     }
+}
 
-    // TamedTrollStats.DamageFactor (Features/Trolls/Taming/Infrastructure/TamedTrollStats.cs)
-    [HarmonyPatch(typeof(Attack), "GetLevelDamageFactor")]
-    static class TamedTrollStats_DamageFactor
+// TamedTrollStats.DamageFactor (Features/Trolls/Taming/Infrastructure/TamedTrollStats.cs)
+[HarmonyPatch(typeof(Attack), "GetLevelDamageFactor")]
+internal static class TamedTrollStats_DamageFactor
+{
+    private static void Postfix(Attack __instance, ref float __result)
     {
-        static void Postfix(Attack __instance, ref float __result) { global::SteveTheTroll.Features.Trolls.Taming.Infrastructure.TamedTrollStats.DamageFactor.Postfix(__instance, ref __result); }
+        TamedTrollStats.DamageFactor.Postfix(__instance, ref __result);
     }
+}
 
-    // TamedTrollStats.Resistances (Features/Trolls/Taming/Infrastructure/TamedTrollStats.cs)
-    [HarmonyPatch(typeof(Character), nameof(Character.GetDamageModifiers))]
-    static class TamedTrollStats_Resistances
+// TamedTrollStats.Resistances (Features/Trolls/Taming/Infrastructure/TamedTrollStats.cs)
+[HarmonyPatch(typeof(Character), nameof(Character.GetDamageModifiers))]
+internal static class TamedTrollStats_Resistances
+{
+    private static void Postfix(Character __instance, ref HitData.DamageModifiers __result)
     {
-        static void Postfix(Character __instance, ref HitData.DamageModifiers __result) { global::SteveTheTroll.Features.Trolls.Taming.Infrastructure.TamedTrollStats.Resistances.Postfix(__instance, ref __result); }
+        TamedTrollStats.Resistances.Postfix(__instance, ref __result);
     }
+}
 
-    // TamedTrollStats.NoStagger (Features/Trolls/Taming/Infrastructure/TamedTrollStats.cs)
-    [HarmonyPatch(typeof(Character), "AddStaggerDamage")]
-    static class TamedTrollStats_NoStagger
+// TamedTrollStats.NoStagger (Features/Trolls/Taming/Infrastructure/TamedTrollStats.cs)
+[HarmonyPatch(typeof(Character), "AddStaggerDamage")]
+internal static class TamedTrollStats_NoStagger
+{
+    private static bool Prefix(Character __instance, float damage, ref bool __result)
     {
-        static bool Prefix(Character __instance, float damage, ref bool __result) { return global::SteveTheTroll.Features.Trolls.Taming.Infrastructure.TamedTrollStats.NoStagger.Prefix(__instance, damage, ref __result); }
+        return TamedTrollStats.NoStagger.Prefix(__instance, damage, ref __result);
     }
+}
 
-    // TrollHover (Features/Trolls/Taming/Infrastructure/TrollHover.cs)
-    [HarmonyPatch(typeof(Tameable), nameof(Tameable.GetHoverText))]
-    static class TrollHoverHook
+// TrollHover (Features/Trolls/Taming/Infrastructure/TrollHover.cs)
+[HarmonyPatch(typeof(Tameable), nameof(Tameable.GetHoverText))]
+internal static class TrollHoverHook
+{
+    private static void Postfix(Tameable __instance, ref string __result)
     {
-        static void Postfix(Tameable __instance, ref string __result) { global::SteveTheTroll.Features.Trolls.Taming.Infrastructure.TrollHover.Postfix(__instance, ref __result); }
+        TrollHover.Postfix(__instance, ref __result);
     }
+}
 
-    // TrollTamingPatch.TamingUpdate (Features/Trolls/Taming/Infrastructure/TrollTamingPatch.cs)
-    [HarmonyPatch(typeof(Tameable), "TamingUpdate")]
-    static class TrollTamingPatch_TamingUpdate
+// TrollTamingPatch.TamingUpdate (Features/Trolls/Taming/Infrastructure/TrollTamingPatch.cs)
+[HarmonyPatch(typeof(Tameable), "TamingUpdate")]
+internal static class TrollTamingPatch_TamingUpdate
+{
+    private static bool Prefix(Tameable __instance)
     {
-        static bool Prefix(Tameable __instance) { return global::SteveTheTroll.Features.Trolls.Taming.Infrastructure.TrollTamingPatch.TamingUpdate.Prefix(__instance); }
+        return TrollTamingPatch.TamingUpdate.Prefix(__instance);
     }
+}
 
-    // TrollTamingPatch.StatusString (Features/Trolls/Taming/Infrastructure/TrollTamingPatch.cs)
-    [HarmonyPatch(typeof(Tameable), nameof(Tameable.GetStatusString))]
-    static class TrollTamingPatch_StatusString
+// TrollTamingPatch.StatusString (Features/Trolls/Taming/Infrastructure/TrollTamingPatch.cs)
+[HarmonyPatch(typeof(Tameable), nameof(Tameable.GetStatusString))]
+internal static class TrollTamingPatch_StatusString
+{
+    private static void Postfix(Tameable __instance, ref string __result)
     {
-        static void Postfix(Tameable __instance, ref string __result) { global::SteveTheTroll.Features.Trolls.Taming.Infrastructure.TrollTamingPatch.StatusString.Postfix(__instance, ref __result); }
+        TrollTamingPatch.StatusString.Postfix(__instance, ref __result);
     }
 }

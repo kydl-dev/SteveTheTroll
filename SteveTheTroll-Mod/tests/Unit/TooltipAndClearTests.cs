@@ -6,7 +6,7 @@ namespace SteveTheTroll.Tests.Unit
     [TestFixture]
     public class TooltipAndClearTests
     {
-        const string Tip = "SteveTheTroll.Items.Costume.SetTooltipPatch", Depot = "SteveTheTroll.Backpack.Domain.DepotData", Clear = "SteveTheTroll.Testing.ClearCommand";
+        const string Tip = "SteveTheTroll.Features.Costume.Infrastructure.SetTooltipPatch", Depot = "SteveTheTroll.Features.Trolls.Backpack.Domain.DepotData", Clear = "SteveTheTroll.Testing.Commands.ClearCommand";
 
         // the 1.0.20 SE_Stats lines of our set (speed, carry and the 8 stamina modifiers)
         const string Game = "$stevethetroll_se_set_tooltip\n$se_runstamina: <color=orange>-50%</color>\n$se_max_carryweight: <color=orange>+75</color>\n"
@@ -51,7 +51,7 @@ namespace SteveTheTroll.Tests.Unit
         [TestCase(4f, 0.1f)]
         public void LevelSquare_HoldsTheFootprintAtAnyTurn(float halfX, float halfZ)
         {
-            float r = (float)ModAssembly.Call("SteveTheTroll.Backpack.Infrastructure.DepotGround", "LevelRadius", halfX, halfZ);
+            float r = (float)ModAssembly.Call("SteveTheTroll.Features.Trolls.Backpack.Infrastructure.DepotGround", "LevelRadius", halfX, halfZ);
             for (int deg = 0; deg < 360; deg += 5)
             {
                 double a = deg * System.Math.PI / 180.0, cos = System.Math.Cos(a), sin = System.Math.Sin(a);     // Quaternion.Euler needs the engine

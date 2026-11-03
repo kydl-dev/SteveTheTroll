@@ -1,32 +1,31 @@
-using Kydl.Core.Commands;
-using Kydl.Core.Features;
-using Kydl.Core.Identity;
-using Kydl.Core.Pipeline;
-using Kydl.Core.Results;
-using Kydl.Core.Time;
 using System;
+using KydlCore.Core;
 using SteveTheTroll.Features.Trolls.Farming.Domain;
 
-namespace SteveTheTroll.Features.Trolls.Farming.Application
+namespace SteveTheTroll.Features.Trolls.Farming.Application;
+
+/// <summary>
+///     D-170, farming slice: FarmGateInput -> validation (this client owns the troll: else Rejected, the game's AI runs)
+///     -> FarmGateRules -> OperationResponse of FarmAction.
+///     One per farmer, built once. Game-free.
+/// </summary>
+internal sealed class FarmingPipeline
 {
-    /// <summary>
-    /// D-170, farming slice: FarmGateInput -> validation (this client owns the troll: else Rejected, the game's AI runs) -> FarmGateRules -> OperationResponse of FarmAction.
-    /// One per farmer, built once. Game-free.
-    /// </summary>
-    internal sealed class FarmingPipeline
+    internal const string NotOwner = "another client owns the troll";
+
+    private readonly OperationPipeline<FarmGateInput, FarmAction> _pipeline;
+
+    internal FarmingPipeline(Action<string> trace = null)
     {
-        internal const string NotOwner = "another client owns the troll";
+        _pipeline = new OperationPipeline<FarmGateInput, FarmAction>("FarmingPipeline",
+                i => OperationResponse<FarmAction>.Success(FarmGateRules.Decide(i)))
+            .Validate("owner", i => ValidationResult.RejectUnless(i.IsOwner, NotOwner));
+        _pipeline.Trace = trace;
+    }
 
-        readonly OperationPipeline<FarmGateInput, FarmAction> _pipeline;
-
-        internal FarmingPipeline(Action<string> trace = null)
-        {
-            _pipeline = new OperationPipeline<FarmGateInput, FarmAction>("FarmingPipeline", i => OperationResponse<FarmAction>.Success(FarmGateRules.Decide(i)))
-                .Validate("owner", i => ValidationResult.RejectUnless(i.IsOwner, NotOwner));
-            _pipeline.Trace = trace;
-        }
-
-        /// Expected outcome: Success with the gate's action, Rejected when another client owns the troll.
-        internal OperationResponse<FarmAction> Evaluate(FarmGateInput input) { return _pipeline.Run(input); }
+    /// Expected outcome: Success with the gate's action, Rejected when another client owns the troll.
+    internal OperationResponse<FarmAction> Evaluate(FarmGateInput input)
+    {
+        return _pipeline.Run(input);
     }
 }

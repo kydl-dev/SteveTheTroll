@@ -13,7 +13,7 @@ namespace SteveTheTroll.Tests.Unit
         [TestCase(false, false, false)]
         public void IsOn_NeedsEnableAllAndTheOwnSwitch(bool all, bool own, bool want)
         {
-            Assert.That(Functions.IsOn(all, own), Is.EqualTo(want));
+            Assert.That(SteveTheTroll.Configuration.Functions.IsOn(all, own), Is.EqualTo(want));
         }
     }
 }

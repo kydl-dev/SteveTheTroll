@@ -1,9 +1,7 @@
 using System.Collections.Generic;
 using System;
 using NUnit.Framework;
-using Kydl.Core.Commands;
-using Kydl.Core.Pipeline;
-using Kydl.Core.Results;
+using KydlCore.Core;
 
 namespace SteveTheTroll.Tests.Unit
 {

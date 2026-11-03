@@ -6,7 +6,7 @@ namespace SteveTheTroll.Tests.Unit
     [TestFixture]
     public class YoungGrowthTests
     {
-        static bool Young(string name) { return (bool)ModAssembly.Call("SteveTheTroll.Trolls.Taming.Domain.TamingRules", "IsYoungGrowth", name); }
+        static bool Young(string name) { return (bool)ModAssembly.Call("SteveTheTroll.Features.Trolls.Taming.Domain.TamingRules", "IsYoungGrowth", name); }
 
         [TestCase("Bush01")] [TestCase("Bush01_heath")] [TestCase("Bush02_en")] [TestCase("shrub_2")] [TestCase("shrub_2_heath")]
         [TestCase("Beech_small1")] [TestCase("Beech_small2")] [TestCase("FirTree_small")] [TestCase("FirTree_small_dead")] [TestCase("Birch_sapling")] [TestCase("bush01")]

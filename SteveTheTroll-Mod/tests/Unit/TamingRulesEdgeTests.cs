@@ -10,7 +10,7 @@ namespace SteveTheTroll.Tests.Unit
     [TestFixture]
     public class TamingRulesEdgeTests
     {
-        const string T = "SteveTheTroll.Trolls.Taming.Domain.TamingRules";
+        const string T = "SteveTheTroll.Features.Trolls.Taming.Domain.TamingRules";
 
         static object Call(string m, params object[] a) { return ModAssembly.Call(T, m, a); }
 

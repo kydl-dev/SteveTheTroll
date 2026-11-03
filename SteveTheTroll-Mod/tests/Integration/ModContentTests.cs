@@ -98,7 +98,7 @@ namespace SteveTheTroll.Tests.Integration
 
         static List<string> BundleNames()
         {
-            var t = ModAssembly.Type("SteveTheTroll.BundleAssets");
+            var t = ModAssembly.Type("SteveTheTroll.Integrations.Unity.BundleAssets");
             return t.GetFields(BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public).Where(f => f.IsLiteral && f.FieldType == typeof(string))
                 .Select(f => (string)f.GetRawConstantValue()).ToList();
         }
@@ -147,7 +147,7 @@ namespace SteveTheTroll.Tests.Integration
         {
             // every BundleAssets name is used somewhere in the code (a name nobody loads is a leftover)
             var code = string.Join("\n", CodeFiles().Where(f => Path.GetFileName(f) != "BundleAssets.cs").Select(File.ReadAllText));
-            var fields = ModAssembly.Type("SteveTheTroll.BundleAssets").GetFields(BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public).Where(f => f.IsLiteral).Select(f => f.Name);
+            var fields = ModAssembly.Type("SteveTheTroll.Integrations.Unity.BundleAssets").GetFields(BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public).Where(f => f.IsLiteral).Select(f => f.Name);
             var unused = fields.Where(n => !code.Contains("BundleAssets." + n)).ToList();
             Assert.That(unused, Is.Empty, "BundleAssets names no code loads");
         }

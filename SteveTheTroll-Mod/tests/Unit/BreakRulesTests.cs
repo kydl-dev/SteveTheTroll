@@ -11,9 +11,9 @@ namespace SteveTheTroll.Tests.Unit
     {
         // D-172 (user: "Protect player pieces"): a tamed troll's hit never damages a player-built piece; fortress walls (not player-built) and other attackers are untouched
         [TestCase(true, true, false)] [TestCase(true, false, true)] [TestCase(false, true, true)] [TestCase(false, false, true)]
-        public void TrollHitDamagesPiece(bool tamedTroll, bool playerBuilt, bool expected) { Assert.That(SteveTheTroll.Trolls.Combat.Domain.BreakRules.TrollHitDamagesPiece(tamedTroll, playerBuilt), Is.EqualTo(expected)); }
+        public void TrollHitDamagesPiece(bool tamedTroll, bool playerBuilt, bool expected) { Assert.That(SteveTheTroll.Features.Trolls.Combat.Domain.BreakRules.TrollHitDamagesPiece(tamedTroll, playerBuilt), Is.EqualTo(expected)); }
 
-        const string T = "SteveTheTroll.Trolls.Combat.Domain.BreakRules";
+        const string T = "SteveTheTroll.Features.Trolls.Combat.Domain.BreakRules";
         static object Call(string m, params object[] a) { return ModAssembly.Call(T, m, a); }
 
         [TestCase("YggaShoot1(Clone)", true)]

@@ -7,7 +7,7 @@ namespace SteveTheTroll.Tests.Unit
     [TestFixture]
     public class UpgradeCostTests
     {
-        const string T = "SteveTheTroll.Items.Slippers.UpgradeCost";
+        const string T = "SteveTheTroll.Features.Slippers.Domain.UpgradeCost";
 
         static int Amount(int quality, int baseAmount, int perLevel, bool upgrader)
         {

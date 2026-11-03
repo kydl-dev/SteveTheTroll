@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using NUnit.Framework;
 using SteveTheTroll.Features.Trolls.Backpack.Application;
 using SteveTheTroll.Features.Trolls.Backpack.Domain;
-using Kydl.Core.Results;
+using KydlCore.Core;
 
 namespace SteveTheTroll.Tests.Unit
 {

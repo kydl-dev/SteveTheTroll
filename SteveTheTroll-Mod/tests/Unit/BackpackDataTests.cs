@@ -6,7 +6,7 @@ namespace SteveTheTroll.Tests.Unit
     [TestFixture]
     public class BackpackDataTests
     {
-        const string T = "SteveTheTroll.Backpack.Domain.BackpackData";
+        const string T = "SteveTheTroll.Features.Trolls.Backpack.Domain.BackpackData";
 
         static Array Pieces() { return (Array)ModAssembly.GetStatic(T, "Pieces"); }
         static object F(object o, string name) { return o.GetType().GetField(name, System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Public).GetValue(o); }

@@ -1,19 +1,19 @@
-using Kydl.Core.Commands;
-using Kydl.Core.Features;
-using Kydl.Core.Identity;
-using Kydl.Core.Pipeline;
-using Kydl.Core.Results;
-using Kydl.Core.Time;
+using KydlCore.Core;
 using UnityEngine;
 
-namespace SteveTheTroll.Features.Trolls.Orders.Commands
+namespace SteveTheTroll.Features.Trolls.Orders.Commands;
+
+/// <summary>D-170 (D-124): break a fortress wall (2-star trolls only - TrollWalls decides).</summary>
+internal sealed class BreakWallCommand : ICommand<bool>
 {
-    /// <summary>D-170 (D-124): break a fortress wall (2-star trolls only - TrollWalls decides).</summary>
-    internal sealed class BreakWallCommand : ICommand<bool>
+    internal BreakWallCommand(Character troll, GameObject wall, string focus)
     {
-        internal Character Troll { get; }
-        internal GameObject Wall { get; }
-        internal string Focus { get; }
-        internal BreakWallCommand(Character troll, GameObject wall, string focus) { Troll = troll; Wall = wall; Focus = focus ?? ""; }
+        Troll = troll;
+        Wall = wall;
+        Focus = focus ?? "";
     }
+
+    internal Character Troll { get; }
+    internal GameObject Wall { get; }
+    internal string Focus { get; }
 }
