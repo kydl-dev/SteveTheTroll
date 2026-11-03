@@ -1,4 +1,4 @@
-namespace SteveTheTroll.Trolls.Recovery.Domain
+namespace SteveTheTroll.Features.Trolls.Recovery.Domain
 {
     /// <summary>D-167: where one recovery cycle stands (travel = no manoeuvre runs).</summary>
     internal enum RecoveryStage { Travel, Rage, Leg }

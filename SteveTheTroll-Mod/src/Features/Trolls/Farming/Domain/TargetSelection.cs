@@ -1,8 +1,13 @@
-using System.Collections.Generic;
-using System;
+using Kydl.Core.Commands;
+using Kydl.Core.Features;
+using Kydl.Core.Identity;
+using Kydl.Core.Pipeline;
 using Kydl.Core.Results;
+using Kydl.Core.Time;
+using System;
+using System.Collections.Generic;
 
-namespace SteveTheTroll.Trolls.Farming.Domain
+namespace SteveTheTroll.Features.Trolls.Farming.Domain
 {
     /// <summary>D-170: which range and which goal the search found something for.</summary>
     internal readonly struct SelectionHit

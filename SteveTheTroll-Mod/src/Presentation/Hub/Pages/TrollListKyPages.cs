@@ -1,11 +1,13 @@
-using System.Collections.Generic;
 using System;
+using System.Collections.Generic;
 using Kydl.Common;
 using KydlCore;
-using SteveTheTroll.Trolls.Combat.Infrastructure;
-using SteveTheTroll.Trolls.Registry.Infrastructure;
+using SteveTheTroll.Features.Trolls.Registry.Infrastructure;
+using SteveTheTroll.Presentation.Hub.Commands;
+using SteveTheTroll.Presentation.Hub.ViewModels;
+using SteveTheTroll.Ui;
 
-namespace SteveTheTroll.Ui
+namespace SteveTheTroll.Presentation.Hub.Pages
 {
     /// <summary>
     /// T-098: the "My trolls" and "Troll work" tabs as described pages (replaces MyTrollsTab / MainMenuView.WorkTab in the hub; those stay for the Unity preview).

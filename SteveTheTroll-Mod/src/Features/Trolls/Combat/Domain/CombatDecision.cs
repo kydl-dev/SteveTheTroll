@@ -1,4 +1,4 @@
-namespace SteveTheTroll.Trolls.Combat.Domain
+namespace SteveTheTroll.Features.Trolls.Combat.Domain
 {
     /// <summary>D-175 (Architecture V2, P5 combat slice): the facts about one own troll when its owner is attacked (TrollDefend) or hunted (TrollGuard). Readonly struct, game-free.</summary>
     internal readonly struct DefenceInput

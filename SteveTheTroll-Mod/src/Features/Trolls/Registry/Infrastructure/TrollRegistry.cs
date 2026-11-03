@@ -1,18 +1,18 @@
-using System.Collections.Generic;
 using System;
-using HarmonyLib;
+using System.Collections.Generic;
 using Kydl.Common;
-using SteveTheTroll.Backpack.Infrastructure;
-using SteveTheTroll.Hubs.Domain;
-using SteveTheTroll.Hubs.Infrastructure;
-using SteveTheTroll.Trolls.Farming.Infrastructure;
-using SteveTheTroll.Trolls.Home.Infrastructure;
-using SteveTheTroll.Trolls.Taming.Domain;
-using SteveTheTroll.Trolls.Taming.Infrastructure;
+using SteveTheTroll.Configuration;
+using SteveTheTroll.Features.Hubs.Infrastructure;
+using SteveTheTroll.Features.Trolls.Backpack.Infrastructure;
+using SteveTheTroll.Features.Trolls.Farming.Infrastructure;
+using SteveTheTroll.Features.Trolls.Home.Infrastructure;
+using SteveTheTroll.Features.Trolls.Taming.Domain;
+using SteveTheTroll.Features.Trolls.Taming.Infrastructure;
+using SteveTheTroll.Presentation.Notifications;
 using SteveTheTroll.Ui;
 using UnityEngine;
 
-namespace SteveTheTroll.Trolls.Registry.Infrastructure
+namespace SteveTheTroll.Features.Trolls.Registry.Infrastructure
 {
     /// <summary>
     /// D-043: the local player's tamed trolls for the F6 tabs, kept in the player's profile (Player.m_customData, one TrollInfo line each) so
@@ -250,7 +250,7 @@ namespace SteveTheTroll.Trolls.Registry.Infrastructure
             t.Status = "stevethetroll_status_dead"; t.Health = 0f; t.Loaded = false; t.LastSeenTicks = DateTime.UtcNow.Ticks; t.DiedTicks = t.LastSeenTicks;
             Save();
             string shown = t.Shown(k => Loc.T(k));
-            Ui.Notify.Show(Loc.T("stevethetroll_troll_died", shown), Ui.Notify.Kind.Death);
+            Notify.Show(Loc.T("stevethetroll_troll_died", shown), Notify.Kind.Death);
             ModLog.Info("TrollRegistry: " + shown + " [" + id + "] died - removed in " + ModSettings.DeadKeepSeconds.Value + " s");
         }
 

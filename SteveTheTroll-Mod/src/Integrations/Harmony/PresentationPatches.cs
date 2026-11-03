@@ -1,6 +1,5 @@
 using HarmonyLib;
 using Kydl.Common;
-using SteveTheTroll.Trolls.Taming.Infrastructure;
 using SteveTheTroll.Ui;
 
 namespace SteveTheTroll.Integrations.Harmony
@@ -12,30 +11,30 @@ namespace SteveTheTroll.Integrations.Harmony
     [HarmonyPatch(typeof(Tameable), "RPC_Command")]
     static class TrollMessages_Command
     {
-        static void Prefix(Tameable __instance) { global::SteveTheTroll.Ui.TrollMessages.Command.Prefix(__instance); }
-        static void Finalizer(Tameable __instance) { global::SteveTheTroll.Ui.TrollMessages.Command.Finalizer(__instance); }
+        static void Prefix(Tameable __instance) { global::SteveTheTroll.Presentation.Notifications.TrollMessages.Command.Prefix(__instance); }
+        static void Finalizer(Tameable __instance) { global::SteveTheTroll.Presentation.Notifications.TrollMessages.Command.Finalizer(__instance); }
     }
 
     // TrollMessages.Interact (Presentation/Notifications/TrollMessages.cs)
     [HarmonyPatch(typeof(Tameable), nameof(Tameable.Interact))]
     static class TrollMessages_Interact
     {
-        static void Prefix(Tameable __instance) { global::SteveTheTroll.Ui.TrollMessages.Interact.Prefix(__instance); }
-        static void Finalizer(Tameable __instance) { global::SteveTheTroll.Ui.TrollMessages.Interact.Finalizer(__instance); }
+        static void Prefix(Tameable __instance) { global::SteveTheTroll.Presentation.Notifications.TrollMessages.Interact.Prefix(__instance); }
+        static void Finalizer(Tameable __instance) { global::SteveTheTroll.Presentation.Notifications.TrollMessages.Interact.Finalizer(__instance); }
     }
 
     // TrollMessages.Tame (Presentation/Notifications/TrollMessages.cs)
     [HarmonyPatch(typeof(Tameable), "Tame")]
     static class TrollMessages_Tame
     {
-        static void Prefix(Tameable __instance) { global::SteveTheTroll.Ui.TrollMessages.Tame.Prefix(__instance); }
-        static void Finalizer(Tameable __instance) { global::SteveTheTroll.Ui.TrollMessages.Tame.Finalizer(__instance); }
+        static void Prefix(Tameable __instance) { global::SteveTheTroll.Presentation.Notifications.TrollMessages.Tame.Prefix(__instance); }
+        static void Finalizer(Tameable __instance) { global::SteveTheTroll.Presentation.Notifications.TrollMessages.Tame.Finalizer(__instance); }
     }
 
     // TrollMessages.ToLeft (Presentation/Notifications/TrollMessages.cs)
     [HarmonyPatch(typeof(Player), nameof(Player.Message))]
     static class TrollMessages_ToLeft
     {
-        static bool Prefix(ref MessageHud.MessageType type, ref string msg) { return global::SteveTheTroll.Ui.TrollMessages.ToLeft.Prefix(ref type, ref msg); }
+        static bool Prefix(ref MessageHud.MessageType type, ref string msg) { return global::SteveTheTroll.Presentation.Notifications.TrollMessages.ToLeft.Prefix(ref type, ref msg); }
     }
 }

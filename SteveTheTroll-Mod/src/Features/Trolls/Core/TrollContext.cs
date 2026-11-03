@@ -1,13 +1,13 @@
 using Kydl.Common;
-using SteveTheTroll.Backpack.Infrastructure;
-using SteveTheTroll.Trolls.Combat.Infrastructure;
-using SteveTheTroll.Trolls.Contracts;
-using SteveTheTroll.Trolls.Movement.Infrastructure;
-using SteveTheTroll.Trolls.Registry.Infrastructure;
-using SteveTheTroll.Trolls.Taming.Infrastructure;
+using SteveTheTroll.Features.Trolls.Backpack.Infrastructure;
+using SteveTheTroll.Features.Trolls.Combat.Infrastructure;
+using SteveTheTroll.Features.Trolls.Contracts;
+using SteveTheTroll.Features.Trolls.Movement.Infrastructure;
+using SteveTheTroll.Features.Trolls.Registry.Infrastructure;
+using SteveTheTroll.Features.Trolls.Taming.Infrastructure;
 using UnityEngine;
 
-namespace SteveTheTroll.Trolls.Core
+namespace SteveTheTroll.Features.Trolls.Core
 {
     /// <summary>
     /// Architecture V2 (D-169): the mod's lightweight view of ONE game troll - the game owns the Character, the mod owns its behaviour. Not a MonoBehaviour: a component that

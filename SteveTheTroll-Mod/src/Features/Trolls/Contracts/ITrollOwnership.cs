@@ -1,4 +1,4 @@
-namespace SteveTheTroll.Trolls.Contracts
+namespace SteveTheTroll.Features.Trolls.Contracts
 {
     /// <summary>
     /// Architecture V2 (D-169): network ownership of the troll's object. Executors check IsOwner before they act, so a client that lost the troll to another peer

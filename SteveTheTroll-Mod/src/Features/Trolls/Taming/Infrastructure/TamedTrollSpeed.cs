@@ -1,13 +1,14 @@
 using System.Collections.Generic;
 using HarmonyLib;
 using Kydl.Common;
-using SteveTheTroll.Hubs.Infrastructure;
-using SteveTheTroll.Trolls.Combat.Domain;
-using SteveTheTroll.Trolls.Taming.Domain;
-using SteveTheTroll.Trolls.Water.Infrastructure;
+using SteveTheTroll.Configuration;
+using SteveTheTroll.Features.Hubs.Infrastructure;
+using SteveTheTroll.Features.Trolls.Combat.Domain;
+using SteveTheTroll.Features.Trolls.Taming.Domain;
+using SteveTheTroll.Features.Trolls.Water.Infrastructure;
 using UnityEngine;
 
-namespace SteveTheTroll.Trolls.Taming.Infrastructure
+namespace SteveTheTroll.Features.Trolls.Taming.Infrastructure
 {
     /// <summary>
     /// D-111 (user 2026-10-28: "tamed trolls have extra 25% speed (walking and hitting animations)"): an own or anyone's tamed Troll moves

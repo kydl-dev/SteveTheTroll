@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace SteveTheTroll.Backpack.Domain
+namespace SteveTheTroll.Features.Trolls.Backpack.Domain
 {
     /// <summary>D-173 (Architecture V2, P6): one depot chest as the planner sees it (read by TrollDepot.Plan). Readonly struct, game-free.</summary>
     internal readonly struct DepotCandidate

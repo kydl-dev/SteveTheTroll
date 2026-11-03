@@ -1,10 +1,10 @@
-using HarmonyLib;
 using Kydl.Common;
-using SteveTheTroll.Trolls.Combat.Domain;
-using SteveTheTroll.Trolls.Taming.Infrastructure;
+using SteveTheTroll.Configuration;
+using SteveTheTroll.Features.Trolls.Combat.Domain;
+using SteveTheTroll.Features.Trolls.Taming.Infrastructure;
 using UnityEngine;
 
-namespace SteveTheTroll.Trolls.Combat.Infrastructure
+namespace SteveTheTroll.Features.Trolls.Combat.Infrastructure
 {
     /// <summary>
     /// D-097 (user: "set no hit zone 15m from bed"): the local player's own tamed trolls never swing within NoHitRadius of the player's bed

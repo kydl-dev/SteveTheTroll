@@ -4,21 +4,25 @@ using BepInEx;
 using HarmonyLib;
 using Jotunn.Utils;
 using Kydl.Common;
-using SteveTheTroll.Backpack.Infrastructure;
-using SteveTheTroll.Hubs.Infrastructure;
-using SteveTheTroll.Items.Costume;
-using SteveTheTroll.Items.Slippers;
-using SteveTheTroll.Testing;
-using SteveTheTroll.Trolls.Combat.Infrastructure;
-using SteveTheTroll.Trolls.Home.Infrastructure;
-using SteveTheTroll.Trolls.Orders.Infrastructure;
-using SteveTheTroll.Trolls.Registry.Infrastructure;
-using SteveTheTroll.Trolls.Taming.Infrastructure;
+using SteveTheTroll.Configuration;
+using SteveTheTroll.Features.Costume.Infrastructure;
+using SteveTheTroll.Features.Hubs.Infrastructure;
+using SteveTheTroll.Features.Slippers.Infrastructure;
+using SteveTheTroll.Features.Trolls.Backpack.Infrastructure;
+using SteveTheTroll.Features.Trolls.Combat.Infrastructure;
+using SteveTheTroll.Features.Trolls.Home.Infrastructure;
+using SteveTheTroll.Features.Trolls.Infrastructure;
+using SteveTheTroll.Features.Trolls.Orders.Infrastructure;
+using SteveTheTroll.Features.Trolls.Registry.Infrastructure;
+using SteveTheTroll.Features.Trolls.Taming.Infrastructure;
+using SteveTheTroll.Features.Trolls.World.Infrastructure;
+using SteveTheTroll.Presentation.Hub.Commands;
+using SteveTheTroll.Presentation.Map;
+using SteveTheTroll.Testing.Commands;
 using SteveTheTroll.Ui;
-using SteveTheTroll.World.Zones;
 using UnityEngine;
 
-namespace SteveTheTroll
+namespace SteveTheTroll.Bootstrap
 {
     /// <summary>
     /// SteveTheTroll: Steve the Troll plush slippers (utility item, troll powers) and later a fluffy troll costume (_agent/PLAN.md).
@@ -34,7 +38,7 @@ namespace SteveTheTroll
         // ModGuid never changes after the first release. ModVersion = manifest.json version_number = newest CHANGELOG heading (tests check it).
         public const string ModGuid = "com.kydldev.SteveTheTroll";
         public const string ModName = "SteveTheTroll";
-        public const string ModVersion = "2.1.0";
+        public const string ModVersion = "2.0.0";
         public const string BundleName = "stevethetroll";
 
         internal static Plugin Instance;
@@ -77,10 +81,10 @@ namespace SteveTheTroll
             Config.SettingChanged += (s, e) => { if (_installer != null) _installer.Refresh(); };
             ModLog.Verbose("Plugin: features " + (installed ? "started" : "had failures") + " (architecture " + Core.Architecture.Tag + ")");
             Jotunn.Managers.CommandManager.Instance.AddConsoleCommand(new BuildDumpCommand());   // T-008b: stt_dumpbuild (backpack model)
-            Jotunn.Managers.CommandManager.Instance.AddConsoleCommand(new Testing.ClearCommand());        // D-093: stt_clear (clean test area)
-            Jotunn.Managers.CommandManager.Instance.AddConsoleCommand(new Testing.ClearDepotsCommand());  // D-104: stt_cleardepots (start clean)
-            Jotunn.Managers.CommandManager.Instance.AddConsoleCommand(new Testing.LevelGroundCommand());   // D-105: stt_levelground (repair)
-            Jotunn.Managers.CommandManager.Instance.AddConsoleCommand(new Ui.ComingPreviewCommand());     // D-058 preview: stt_coming [name]
+            Jotunn.Managers.CommandManager.Instance.AddConsoleCommand(new ClearCommand());        // D-093: stt_clear (clean test area)
+            Jotunn.Managers.CommandManager.Instance.AddConsoleCommand(new ClearDepotsCommand());  // D-104: stt_cleardepots (start clean)
+            Jotunn.Managers.CommandManager.Instance.AddConsoleCommand(new LevelGroundCommand());   // D-105: stt_levelground (repair)
+            Jotunn.Managers.CommandManager.Instance.AddConsoleCommand(new ComingPreviewCommand());     // D-058 preview: stt_coming [name]
             Jotunn.Managers.CommandManager.Instance.AddConsoleCommand(new FillBackpackCommand());  // D-064 test: stt_fillbackpack [item]
             ModLog.Verbose("Plugin: console commands stt_dumpbuild, stt_clear, stt_cleardepots, stt_levelground, stt_coming, stt_fillbackpack registered");
             ModLog.Verbose("Plugin: Awake finished (Harmony patches applied)");
@@ -156,18 +160,18 @@ namespace SteveTheTroll
         {
             if (_cfgWatcher != null) _cfgWatcher.Tick();
             if (!ModSettings.On) return;
-            if (!Trolls.TrollsFeature.Running) return;       // every tick below belongs to the trolls feature (taming, farming, backpack, orders, map pins, hubs)
+            if (!TrollsFeature.Running) return;       // every tick below belongs to the trolls feature (taming, farming, backpack, orders, map pins, hubs)
             Run("TrollRegistry", () => TrollRegistry.Tick());
             Run("TrollZones", () => TrollZones.Tick());               // D-084: zones around far own trolls stay loaded (they keep farming)
             Run("TrollCensus", () => TrollCensus.Tick());             // D-085: trolls within 500 m of the bed (spawn cap)
-            Run("TrollMapPins", () => Ui.TrollMapPins.Tick());               // D-081: a map pin (costume head icon) per own tamed troll
+            Run("TrollMapPins", () => TrollMapPins.Tick());               // D-081: a map pin (costume head icon) per own tamed troll
             Run("TrollBedHeal", () => TrollBedHeal.Tick());           // D-085: +50 HP/s within 50 m of the bed
             Run("TrollDepot", () => TrollDepot.Tick());              // D-159: retry removing empty depots
             Run("RuntimeHealth", () => Testing.RuntimeHealth.Tick());          // D-160: read-only health report (full backpacks, hub leash, stale hubs, stuck depots)
             Run("BackpackVisual", () => BackpackVisual.Tick());
             Run("BackpackPickup", () => BackpackPickup.Tick());     // T-008c: wood / ores / scrap within 50 m into the backpack
             Run("TrollOrders", () => TrollOrders.Tick());             // D-065: attack key (Mouse 4)
-            Run("TrollCommands", () => Ui.TrollCommands.Tick());             // D-119: far trolls sent to die from the My trolls tab
+            Run("TrollCommands", () => TrollCommands.Tick());             // D-119: far trolls sent to die from the My trolls tab
             Run("TrollGuard", () => TrollGuard.Tick());               // D-065 / D-084: creatures going for the player near a troll
             Run("TrollHome", () => TrollHome.Tick());                 // T-008e: slippers off -> own trolls wait at the bed
             Run("HubPlacement", () => HubPlacement.Tick());               // D-135: set bonus active once -> Troll Hub unlocked

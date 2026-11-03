@@ -1,10 +1,10 @@
 {
   "name": "SteveTheTroll",
-  "description": "SteveTheTroll 2.1.0 (KydlDev spec port T-210; Architecture V2, D-169 - architecture-v2 runs first): the spec features / hub tabs / KY-Items, costume after slippers (T-201), depot lifecycle, backpack storage, hub choice, full-backpack unload, slipper figures, ownership (D-160) - attack-key-tree runs after every test that needs the arena ground (it teleports the player); costume-after-slippers runs LAST because of its relog (run 20261103-124440: after a relog in the middle, spot-return and far-troll-goes-home-clear-route lost the far troll's ZDO ownership - T-211)",
+  "description": "SteveTheTroll 2.0.0 (KydlDev spec port T-210; Architecture V2, D-169 - architecture-v2 runs first): the spec features / hub tabs / KY-Items, costume after slippers (T-201), depot lifecycle, backpack storage, hub choice, full-backpack unload, slipper figures, ownership (D-160) - attack-key-tree runs after every test that needs the arena ground (it teleports the player); costume-after-slippers runs LAST because of its relog (run 20261103-124440: after a relog in the middle, spot-return and far-troll-goes-home-clear-route lost the far troll's ZDO ownership - T-211)",
   "requireMods": [
     {
       "guid": "com.kydldev.SteveTheTroll",
-      "minVersion": "2.1.0"
+      "minVersion": "2.0.0"
     },
     {
       "guid": "com.kydldev.KydlCore",

@@ -1,11 +1,11 @@
-using System.Collections.Generic;
 using System;
+using System.Collections.Generic;
 using Kydl.Common;
 using KydlCore;
-using SteveTheTroll.Trolls.Combat.Infrastructure;
-using SteveTheTroll.Trolls.Registry.Infrastructure;
+using SteveTheTroll.Features.Trolls.Registry.Infrastructure;
+using SteveTheTroll.Ui;
 
-namespace SteveTheTroll.Ui
+namespace SteveTheTroll.Presentation.Hub.Pages
 {
     /// <summary>
     /// T-098 first page on the described-page API: the "Trolls" tab says WHAT it shows (a troll picker and the detail blocks of the picked troll) and KydlCore draws it with its

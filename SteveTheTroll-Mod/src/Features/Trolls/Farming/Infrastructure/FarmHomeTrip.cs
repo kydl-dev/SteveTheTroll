@@ -1,15 +1,17 @@
 using Kydl.Common;
-using SteveTheTroll.Backpack.Infrastructure;
-using SteveTheTroll.Hubs.Domain;
-using SteveTheTroll.Hubs.Infrastructure;
-using SteveTheTroll.Trolls.Home.Domain;
-using SteveTheTroll.Trolls.Home.Infrastructure;
-using SteveTheTroll.Trolls.Recovery.Infrastructure;
-using SteveTheTroll.Trolls.Registry.Infrastructure;
-using SteveTheTroll.Trolls.Taming.Infrastructure;
+using SteveTheTroll.Configuration;
+using SteveTheTroll.Features.Hubs.Domain;
+using SteveTheTroll.Features.Hubs.Infrastructure;
+using SteveTheTroll.Features.Trolls.Backpack.Infrastructure;
+using SteveTheTroll.Features.Trolls.Home.Domain;
+using SteveTheTroll.Features.Trolls.Home.Infrastructure;
+using SteveTheTroll.Features.Trolls.Recovery.Infrastructure;
+using SteveTheTroll.Features.Trolls.Registry.Infrastructure;
+using SteveTheTroll.Features.Trolls.Taming.Infrastructure;
+using SteveTheTroll.Presentation.Notifications;
 using UnityEngine;
 
-namespace SteveTheTroll.Trolls.Farming.Infrastructure
+namespace SteveTheTroll.Features.Trolls.Farming.Infrastructure
 {
     /// <summary>
     /// The way home of a farming troll: to the bed / Troll Hub (D-135), with a full backpack on to a depot (D-064) and into its chests (D-106), afterwards back to the remembered
@@ -82,12 +84,12 @@ namespace SteveTheTroll.Trolls.Farming.Infrastructure
                 Vector3 at;
                 if (TrollDepot.Plan(me, bed, TrollTaming.Owner(me), out at)) { _unloading = true; _unloadAt = at; _unloadStart = Time.time; return _unloading; }
                 TrollIdle.RetrySoon(me);
-                if (_f.IsMine()) Ui.Notify.Show(Loc.T("stevethetroll_depot_nospot", _f.Shown(), HubRegistry.DestinationName(me)), Ui.Notify.Kind.Warn);
+                if (_f.IsMine()) Notify.Show(Loc.T("stevethetroll_depot_nospot", _f.Shown(), HubRegistry.DestinationName(me)), Notify.Kind.Warn);
             }
             mv.Stop();
             ai.SetPatrolPoint();
             ModLog.Info("TrollFarmer: " + TrollTaming.Tag(_f) + " is at its destination (" + HubRegistry.DestinationName(me) + ", " + d.ToString("F1") + " m) - waits");
-            if (!_f.Auto) Ui.Notify.Show(Loc.T("stevethetroll_farm_home", _f.Shown(), HubRegistry.DestinationName(me)), Ui.Notify.Kind.Farm);
+            if (!_f.Auto) Notify.Show(Loc.T("stevethetroll_farm_home", _f.Shown(), HubRegistry.DestinationName(me)), Notify.Kind.Farm);
             _f.Remove();
             return there;
         }
@@ -106,7 +108,7 @@ namespace SteveTheTroll.Trolls.Farming.Infrastructure
             int left;
             int moved = TrollDepot.Unload(me, bed, TrollTaming.Owner(me), out left);
             ModLog.Info("TrollFarmer: " + TrollTaming.Tag(_f) + " unloaded " + moved + " stack(s) at the depot (" + flat.magnitude.ToString("F1") + " m" + (late ? ", walked too long" : "") + "), " + left + " left");
-            if (_f.IsMine()) Ui.Notify.Show(left > 0 ? Loc.T("stevethetroll_depot_full", _f.Shown(), left.ToString()) : Loc.T("stevethetroll_depot_done", _f.Shown(), moved.ToString()), left > 0 ? Ui.Notify.Kind.Warn : Ui.Notify.Kind.Farm);
+            if (_f.IsMine()) Notify.Show(left > 0 ? Loc.T("stevethetroll_depot_full", _f.Shown(), left.ToString()) : Loc.T("stevethetroll_depot_done", _f.Shown(), moved.ToString()), left > 0 ? Notify.Kind.Warn : Notify.Kind.Farm);
             switch (HomeRules.AfterUnloading(left, TrollHome.OwnerWears(me)))
             {
                 case AfterUnload.ResumeSpot:

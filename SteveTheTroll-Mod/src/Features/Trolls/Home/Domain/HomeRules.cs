@@ -1,4 +1,4 @@
-namespace SteveTheTroll.Trolls.Home.Domain
+namespace SteveTheTroll.Features.Trolls.Home.Domain
 {
     /// <summary>D-171 (P7): the game-free home rules - bed / hub heal range (D-085 / D-135) and "stand still while the player looks at me" (D-063 / D-077).</summary>
     /// <summary>D-173: what a troll does right after it emptied its backpack at the home depot.</summary>

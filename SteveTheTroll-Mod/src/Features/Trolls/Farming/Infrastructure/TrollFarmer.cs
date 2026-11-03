@@ -1,20 +1,27 @@
+using Kydl.Core.Commands;
+using Kydl.Core.Features;
+using Kydl.Core.Identity;
+using Kydl.Core.Pipeline;
+using Kydl.Core.Results;
+using Kydl.Core.Time;
 using System.Collections.Generic;
 using Kydl.Common;
-using SteveTheTroll.Backpack.Infrastructure;
-using Kydl.Core.Results;
-using SteveTheTroll.Hubs.Domain;
-using SteveTheTroll.Hubs.Infrastructure;
-using SteveTheTroll.Trolls.Contracts;
-using SteveTheTroll.Trolls.Core;
-using SteveTheTroll.Trolls.Farming.Application;
-using SteveTheTroll.Trolls.Farming.Domain;
-using SteveTheTroll.Trolls.Farming.Execution;
-using SteveTheTroll.Trolls.Recovery.Infrastructure;
-using SteveTheTroll.Trolls.Taming.Domain;
-using SteveTheTroll.Trolls.Taming.Infrastructure;
+using SteveTheTroll.Configuration;
+using SteveTheTroll.Features.Hubs.Domain;
+using SteveTheTroll.Features.Hubs.Infrastructure;
+using SteveTheTroll.Features.Trolls.Backpack.Infrastructure;
+using SteveTheTroll.Features.Trolls.Contracts;
+using SteveTheTroll.Features.Trolls.Core;
+using SteveTheTroll.Features.Trolls.Farming.Application;
+using SteveTheTroll.Features.Trolls.Farming.Domain;
+using SteveTheTroll.Features.Trolls.Farming.Execution;
+using SteveTheTroll.Features.Trolls.Recovery.Infrastructure;
+using SteveTheTroll.Features.Trolls.Taming.Domain;
+using SteveTheTroll.Features.Trolls.Taming.Infrastructure;
+using SteveTheTroll.Presentation.Notifications;
 using UnityEngine;
 
-namespace SteveTheTroll.Trolls.Farming.Infrastructure
+namespace SteveTheTroll.Features.Trolls.Farming.Infrastructure
 {
     /// <summary>
     /// The farming state of one tamed troll (owner client; T-008d, D-048..D-051). Search (D-051, user): quick check within QuickRange of the troll - the focus item first, then
@@ -399,7 +406,7 @@ namespace SteveTheTroll.Trolls.Farming.Infrastructure
                 FarmReservations.Hold(_target, Me);
                 ModLog.Info("TrollFarmer: " + TrollTaming.Tag(this) + " farms " + item + (_focus.Length > 0 && item != _focus ? " (no " + _focus + " found, farming something else)" : "") + " from "
                     + _target.name + " (" + TrollFarming.KindOf(_target) + ") within " + range + " m" + (was != item && was.Length > 0 ? ", was " + was : ""));
-                if (_announce && IsMine()) Ui.Notify.Show(Loc.T("stevethetroll_farm_auto", Shown(), Loc.T(Ui.TrollFocus.KeyOf(item))), Ui.Notify.Kind.Farm);
+                if (_announce && IsMine()) Notify.Show(Loc.T("stevethetroll_farm_auto", Shown(), Loc.T(Ui.TrollFocus.KeyOf(item))), Notify.Kind.Farm);
                 _announce = false;
                 return;
             }
@@ -420,7 +427,7 @@ namespace SteveTheTroll.Trolls.Farming.Infrastructure
             if (IsMine() && !Auto && !_saidNothing)      // D-062: a troll that went farming on its own does not report "nothing found" every search; an ordered one says it once
             {
                 _saidNothing = true;
-                Ui.Notify.Show(Loc.T("stevethetroll_farm_nothing", Shown(), Mathf.Max(ModSettings.FarmMaxRange.Value, ModSettings.FarmLongRange.Value).ToString("0")), Ui.Notify.Kind.Farm);
+                Notify.Show(Loc.T("stevethetroll_farm_nothing", Shown(), Mathf.Max(ModSettings.FarmMaxRange.Value, ModSettings.FarmLongRange.Value).ToString("0")), Notify.Kind.Farm);
             }
         }
 
@@ -435,7 +442,7 @@ namespace SteveTheTroll.Trolls.Farming.Infrastructure
             CurrentItem = farItem;
             var away = farPos - transform.position; away.y = 0f;
             ModLog.Info("TrollFarmer: " + TrollTaming.Tag(this) + " finds nothing within " + ModSettings.FarmMaxRange.Value + " m - walks " + away.magnitude.ToString("F0") + " m to a " + farItem + " source at " + farPos.ToString("F0"));
-            if (_announce && IsMine()) Ui.Notify.Show(Loc.T("stevethetroll_farm_auto", Shown(), Loc.T(Ui.TrollFocus.KeyOf(farItem))), Ui.Notify.Kind.Farm);
+            if (_announce && IsMine()) Notify.Show(Loc.T("stevethetroll_farm_auto", Shown(), Loc.T(Ui.TrollFocus.KeyOf(farItem))), Notify.Kind.Farm);
             _announce = false;
             StartTravel(farPos);
             return _travelling;
@@ -449,7 +456,7 @@ namespace SteveTheTroll.Trolls.Farming.Infrastructure
             if (view == null || !view.IsValid() || !BackpackStore.IsFull(view.GetZDO())) return IsFull;
             ModLog.Info("TrollFarmer: " + TrollTaming.Tag(this) + " backpack is full - goes to " + HubRegistry.DestinationName(GetComponent<Character>()));
             _home = true; Auto = true; IsFull = true; _target = null; _hit = null; CurrentItem = ""; _travelling = false;
-            if (IsMine()) Ui.Notify.Show(Loc.T("stevethetroll_backpack_full", Shown(), HubRegistry.DestinationName(GetComponent<Character>())), Ui.Notify.Kind.Farm);
+            if (IsMine()) Notify.Show(Loc.T("stevethetroll_backpack_full", Shown(), HubRegistry.DestinationName(GetComponent<Character>())), Notify.Kind.Farm);
             return IsFull;
         }
 

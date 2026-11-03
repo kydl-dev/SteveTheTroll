@@ -1,7 +1,7 @@
-using SteveTheTroll.Trolls.Taming.Domain;
+using SteveTheTroll.Features.Trolls.Taming.Domain;
 using UnityEngine;
 
-namespace SteveTheTroll.Trolls.Farming.Infrastructure
+namespace SteveTheTroll.Features.Trolls.Farming.Infrastructure
 {
     /// <summary>
     /// Where a farming troll aims (D-059 / D-082), moved out of TrollFarmer unchanged (D-170, class size). Trees: the trunk at chest height. Logs and other long sources: the

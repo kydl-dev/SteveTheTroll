@@ -1,15 +1,15 @@
 using System.Collections.Generic;
 using Kydl.Common;
-using SteveTheTroll.Backpack.Infrastructure;
-using SteveTheTroll.Hubs.Infrastructure;
-using SteveTheTroll.Trolls.Farming.Domain;
-using SteveTheTroll.Trolls.Farming.Infrastructure;
-using SteveTheTroll.Trolls.Orders.Commands;
-using SteveTheTroll.Trolls.Registry.Infrastructure;
-using SteveTheTroll.Trolls.Taming.Infrastructure;
+using SteveTheTroll.Configuration;
+using SteveTheTroll.Features.Trolls.Backpack.Infrastructure;
+using SteveTheTroll.Features.Trolls.Farming.Domain;
+using SteveTheTroll.Features.Trolls.Farming.Infrastructure;
+using SteveTheTroll.Features.Trolls.Orders.Commands;
+using SteveTheTroll.Features.Trolls.Registry.Infrastructure;
+using SteveTheTroll.Features.Trolls.Taming.Infrastructure;
 using UnityEngine;
 
-namespace SteveTheTroll.Trolls.Home.Infrastructure
+namespace SteveTheTroll.Features.Trolls.Home.Infrastructure
 {
     /// <summary>
     /// D-062 (user: the 2-minute check "for any moment when no job was given and the backpack storages are not full"): on the client that

@@ -2,13 +2,12 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Text;
-using BepInEx;
 using Jotunn.Entities;
 using Kydl.Common;
-using SteveTheTroll.Backpack.Domain;
+using SteveTheTroll.Bootstrap;
 using UnityEngine;
 
-namespace SteveTheTroll.Testing
+namespace SteveTheTroll.Testing.Commands
 {
     /// <summary>
     /// T-008b step 1 (D-037, reworked D-137 after the user's 22:55 review: two dumps of the same building gave different piece counts):

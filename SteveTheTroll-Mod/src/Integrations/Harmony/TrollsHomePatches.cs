@@ -1,13 +1,6 @@
 using System.Collections.Generic;
 using HarmonyLib;
 using Kydl.Common;
-using SteveTheTroll.Hubs.Infrastructure;
-using SteveTheTroll.Trolls.Farming.Infrastructure;
-using SteveTheTroll.Trolls.Home.Infrastructure;
-using SteveTheTroll.Trolls.Orders.Commands;
-using SteveTheTroll.Trolls.Orders.Infrastructure;
-using SteveTheTroll.Trolls.Registry.Infrastructure;
-using SteveTheTroll.Trolls.Taming.Infrastructure;
 using UnityEngine;
 
 namespace SteveTheTroll.Integrations.Harmony
@@ -19,6 +12,6 @@ namespace SteveTheTroll.Integrations.Harmony
     [HarmonyPatch(typeof(Game), nameof(Game.Logout))]
     static class TrollHome_Logout
     {
-        static void Prefix() { global::SteveTheTroll.Trolls.Home.Infrastructure.TrollHome.Logout.Prefix(); }
+        static void Prefix() { global::SteveTheTroll.Features.Trolls.Home.Infrastructure.TrollHome.Logout.Prefix(); }
     }
 }

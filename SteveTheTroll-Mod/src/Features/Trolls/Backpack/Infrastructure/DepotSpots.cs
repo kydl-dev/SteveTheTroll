@@ -1,10 +1,9 @@
 using System.Collections.Generic;
 using Kydl.Common;
-using SteveTheTroll.Backpack.Domain;
-using SteveTheTroll.Trolls.Taming.Infrastructure;
+using SteveTheTroll.Features.Trolls.Backpack.Domain;
 using UnityEngine;
 
-namespace SteveTheTroll.Backpack.Infrastructure
+namespace SteveTheTroll.Features.Trolls.Backpack.Infrastructure
 {
     /// <summary>
     /// Where a NEW depot stack may stand (D-095 / D-097 / D-106 / TEST-043, user 2026-10-31 relaxed second pass): rings around the bed, level or levelable ground, free, away from

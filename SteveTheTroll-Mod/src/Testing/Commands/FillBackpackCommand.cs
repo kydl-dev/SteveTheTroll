@@ -1,12 +1,12 @@
 using Jotunn.Entities;
 using Kydl.Common;
-using SteveTheTroll.Backpack.Infrastructure;
-using SteveTheTroll.Trolls.Farming.Infrastructure;
-using SteveTheTroll.Trolls.Orders.Commands;
-using SteveTheTroll.Trolls.Taming.Infrastructure;
+using SteveTheTroll.Features.Trolls.Backpack.Infrastructure;
+using SteveTheTroll.Features.Trolls.Farming.Infrastructure;
+using SteveTheTroll.Features.Trolls.Orders.Commands;
+using SteveTheTroll.Features.Trolls.Taming.Infrastructure;
 using UnityEngine;
 
-namespace SteveTheTroll.Testing
+namespace SteveTheTroll.Testing.Commands
 {
     /// <summary>
     /// Test help (D-064): console command stt_fillbackpack [item] fills the backpack of your nearest tamed troll (within 30 m) with that

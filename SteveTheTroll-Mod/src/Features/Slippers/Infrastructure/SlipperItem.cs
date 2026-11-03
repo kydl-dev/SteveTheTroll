@@ -1,12 +1,14 @@
 using System.Collections.Generic;
-using HarmonyLib;
 using Jotunn.Configs;
 using Jotunn.Entities;
 using Jotunn.Managers;
 using Kydl.Common;
+using SteveTheTroll.Bootstrap;
+using SteveTheTroll.Configuration;
+using SteveTheTroll.Integrations.Unity;
 using UnityEngine;
 
-namespace SteveTheTroll.Items.Slippers
+namespace SteveTheTroll.Features.Slippers.Infrastructure
 {
     /// <summary>
     /// T-007 (D-030): the craftable item "Fluffy Slippers" (D-034; was "Steve the Troll Slippers") in the utility slot (D-009). Cloned from the vanilla belt so the

@@ -4,7 +4,7 @@ using SteveTheTroll.Ui;
 using TMPro;
 using UnityEngine;
 
-namespace SteveTheTroll.Hubs.Infrastructure
+namespace SteveTheTroll.Features.Hubs.Infrastructure
 {
     /// <summary>
     /// D-135: the TextMeshPro fonts loaded in the game and putting a style on a sign's text (copied from the pool sign; the size is NOT part of the

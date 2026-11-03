@@ -2,10 +2,11 @@ using BepInEx.Configuration;
 using Kydl.Common;
 using Kydl.Core.Features;
 using Kydl.Core.Results;
-using SteveTheTroll.Hubs.Infrastructure;
-using SteveTheTroll.Items.Costume;
-using SteveTheTroll.Items.Slippers;
-using SteveTheTroll.Trolls;
+using SteveTheTroll.Features.Costume.Infrastructure;
+using SteveTheTroll.Features.Hubs.Infrastructure;
+using SteveTheTroll.Features.Slippers.Infrastructure;
+using SteveTheTroll.Features.Trolls.Infrastructure;
+using SteveTheTroll.Presentation.Hub.Registration;
 using SteveTheTroll.Ui;
 
 namespace SteveTheTroll.Bootstrap

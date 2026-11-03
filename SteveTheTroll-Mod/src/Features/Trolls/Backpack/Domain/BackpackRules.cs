@@ -1,6 +1,6 @@
 using System;
 
-namespace SteveTheTroll.Backpack.Domain
+namespace SteveTheTroll.Features.Trolls.Backpack.Domain
 {
     /// <summary>D-171 (P6): the game-free backpack rules (T-008c / D-062 / D-142).</summary>
     internal static class BackpackRules

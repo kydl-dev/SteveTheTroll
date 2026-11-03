@@ -1,11 +1,11 @@
-using HarmonyLib;
 using Kydl.Common;
-using SteveTheTroll.Backpack.Domain;
-using SteveTheTroll.Hubs.Domain;
-using SteveTheTroll.Items.Costume;
+using SteveTheTroll.Configuration;
+using SteveTheTroll.Features.Costume.Infrastructure;
+using SteveTheTroll.Features.Hubs.Domain;
+using SteveTheTroll.Presentation.Notifications;
 using UnityEngine;
 
-namespace SteveTheTroll.Hubs.Infrastructure
+namespace SteveTheTroll.Features.Hubs.Infrastructure
 {
     /// <summary>
     /// D-135: the hammer side of the Troll Hub. Unlock: the hub shows in the build menu once the player has had the "Steve The Troll" set bonus
@@ -35,7 +35,7 @@ namespace SteveTheTroll.Hubs.Infrastructure
             if (p == null || Unlocked(p) || !SetActive(p)) return false;
             p.m_customData[UnlockKey] = "1";
             ModLog.Info("HubPlacement: the set bonus is active for the first time - Troll Hub unlocked for " + p.GetPlayerName());
-            Ui.Notify.Show(Loc.T("stevethetroll_hub_msg_unlocked"), Ui.Notify.Kind.Good);
+            Notify.Show(Loc.T("stevethetroll_hub_msg_unlocked"), Notify.Kind.Good);
             return true;
         }
 

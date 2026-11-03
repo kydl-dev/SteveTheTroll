@@ -5,7 +5,7 @@ using Jotunn.Entities;
 using Kydl.Common;
 using UnityEngine;
 
-namespace SteveTheTroll.Testing
+namespace SteveTheTroll.Testing.Commands
 {
     /// <summary>
     /// D-093 (user: "a command that kills all (players not included) in a 500m circular area ... a clean test"): console command

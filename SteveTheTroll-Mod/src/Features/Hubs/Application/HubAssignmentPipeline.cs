@@ -1,9 +1,13 @@
-using System;
+using Kydl.Core.Commands;
+using Kydl.Core.Features;
+using Kydl.Core.Identity;
 using Kydl.Core.Pipeline;
 using Kydl.Core.Results;
-using SteveTheTroll.Hubs.Domain;
+using Kydl.Core.Time;
+using System;
+using SteveTheTroll.Features.Hubs.Domain;
 
-namespace SteveTheTroll.Hubs.Application
+namespace SteveTheTroll.Features.Hubs.Application
 {
     /// <summary>D-173 (P7): the facts for "which hub does this troll belong to" (read by HubRegistry.For). Readonly struct, game-free.</summary>
     internal readonly struct HubAssignmentInput

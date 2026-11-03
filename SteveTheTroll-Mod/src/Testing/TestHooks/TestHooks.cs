@@ -1,18 +1,18 @@
 using System.Collections.Generic;
 using Kydl.Common;
-using SteveTheTroll.Backpack.Domain;
-using SteveTheTroll.Backpack.Infrastructure;
-using SteveTheTroll.Hubs.Domain;
-using SteveTheTroll.Hubs.Infrastructure;
-using SteveTheTroll.Trolls.Combat.Infrastructure;
-using SteveTheTroll.Trolls.Farming.Infrastructure;
-using SteveTheTroll.Trolls.Home.Infrastructure;
-using SteveTheTroll.Trolls.Orders.Commands;
-using SteveTheTroll.Trolls.Registry.Infrastructure;
-using SteveTheTroll.Trolls.Taming.Infrastructure;
+using SteveTheTroll.Configuration;
+using SteveTheTroll.Features.Hubs.Domain;
+using SteveTheTroll.Features.Hubs.Infrastructure;
+using SteveTheTroll.Features.Trolls.Backpack.Domain;
+using SteveTheTroll.Features.Trolls.Backpack.Infrastructure;
+using SteveTheTroll.Features.Trolls.Farming.Infrastructure;
+using SteveTheTroll.Features.Trolls.Home.Infrastructure;
+using SteveTheTroll.Features.Trolls.Orders.Commands;
+using SteveTheTroll.Features.Trolls.Registry.Infrastructure;
+using SteveTheTroll.Features.Trolls.Taming.Infrastructure;
 using UnityEngine;
 
-namespace SteveTheTroll.Testing
+namespace SteveTheTroll.Testing.TestHooks
 {
     /// <summary>
     /// D-160: hooks for DrakesTestLab suites (Tests/suites/SteveTheTroll). Actions call the REAL mod code (TrollDepot.Place, BackpackStore, HubRegistry, RuntimeHealth); reads return short,

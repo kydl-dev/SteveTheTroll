@@ -2,10 +2,10 @@ using System.Collections.Generic;
 using System.Reflection;
 using HarmonyLib;
 using Kydl.Common;
-using SteveTheTroll.Trolls.Taming.Domain;
-using SteveTheTroll.Trolls.Taming.Infrastructure;
+using SteveTheTroll.Features.Trolls.Taming.Domain;
+using SteveTheTroll.Features.Trolls.Taming.Infrastructure;
 
-namespace SteveTheTroll.Trolls.Combat.Infrastructure
+namespace SteveTheTroll.Features.Trolls.Combat.Infrastructure
 {
     /// <summary>
     /// D-059 (user: "with the current damage of the troll, he should be able to break them easily"): a hit of a TAMED troll on a tree, log,

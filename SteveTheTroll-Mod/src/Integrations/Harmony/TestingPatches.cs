@@ -1,12 +1,7 @@
 using System.Collections.Generic;
 using HarmonyLib;
 using Kydl.Common;
-using SteveTheTroll.Hubs.Infrastructure;
 using SteveTheTroll.Testing;
-using SteveTheTroll.Trolls.Farming.Infrastructure;
-using SteveTheTroll.Trolls.Orders.Commands;
-using SteveTheTroll.Trolls.Recovery.Infrastructure;
-using SteveTheTroll.Trolls.Taming.Infrastructure;
 using UnityEngine;
 
 namespace SteveTheTroll.Integrations.Harmony
@@ -18,6 +13,6 @@ namespace SteveTheTroll.Integrations.Harmony
     [HarmonyPatch(typeof(WearNTear), "RPC_Damage")]
     static class RecoveryTestHooks_CountWallHits
     {
-        static void Prefix(WearNTear __instance, HitData hit) { global::SteveTheTroll.Testing.RecoveryTestHooks.CountWallHits.Prefix(__instance, hit); }
+        static void Prefix(WearNTear __instance, HitData hit) { global::SteveTheTroll.Testing.TestHooks.RecoveryTestHooks.CountWallHits.Prefix(__instance, hit); }
     }
 }

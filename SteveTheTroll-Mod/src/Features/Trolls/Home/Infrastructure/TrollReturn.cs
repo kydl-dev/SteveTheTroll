@@ -1,20 +1,26 @@
-using Kydl.Common;
+using Kydl.Core.Commands;
+using Kydl.Core.Features;
+using Kydl.Core.Identity;
+using Kydl.Core.Pipeline;
 using Kydl.Core.Results;
-using SteveTheTroll.Backpack.Infrastructure;
-using SteveTheTroll.Hubs.Application;
-using SteveTheTroll.Hubs.Domain;
-using SteveTheTroll.Hubs.Infrastructure;
-using SteveTheTroll.Trolls.Combat.Infrastructure;
-using SteveTheTroll.Trolls.Farming.Infrastructure;
-using SteveTheTroll.Trolls.Orders.Commands;
-using SteveTheTroll.Trolls.Recovery.Infrastructure;
-using SteveTheTroll.Trolls.Registry.Infrastructure;
-using SteveTheTroll.Trolls.Taming.Domain;
-using SteveTheTroll.Trolls.Taming.Infrastructure;
-using SteveTheTroll.Trolls.Core;
+using Kydl.Core.Time;
+using Kydl.Common;
+using SteveTheTroll.Configuration;
+using SteveTheTroll.Features.Hubs.Application;
+using SteveTheTroll.Features.Hubs.Domain;
+using SteveTheTroll.Features.Hubs.Infrastructure;
+using SteveTheTroll.Features.Trolls.Backpack.Infrastructure;
+using SteveTheTroll.Features.Trolls.Combat.Infrastructure;
+using SteveTheTroll.Features.Trolls.Core;
+using SteveTheTroll.Features.Trolls.Farming.Infrastructure;
+using SteveTheTroll.Features.Trolls.Orders.Commands;
+using SteveTheTroll.Features.Trolls.Recovery.Infrastructure;
+using SteveTheTroll.Features.Trolls.Registry.Infrastructure;
+using SteveTheTroll.Features.Trolls.Taming.Infrastructure;
+using SteveTheTroll.Presentation.Notifications;
 using UnityEngine;
 
-namespace SteveTheTroll.Trolls.Home.Infrastructure
+namespace SteveTheTroll.Features.Trolls.Home.Infrastructure
 {
     /// <summary>
     /// D-162 (user 2026-10-31): a tamed troll that ends up further than 1000 m from its hub with no follow order (the player let it go far away) walks back to the hub until it is
@@ -71,7 +77,7 @@ namespace SteveTheTroll.Trolls.Home.Infrastructure
             ai.SetPatrolPoint();
             ModLog.Info("TrollReturn: " + TrollTaming.Tag(c) + " is " + d.ToString("F0") + " m from " + hub.Name + " (more than " + HubRules.AutoReach.ToString("0") + " m) and has no follow order - walks back to the " + HubRules.FarmLeash.ToString("0") + " m farm zone");
             if (Player.m_localPlayer != null && TrollTaming.Owner(c) == Player.m_localPlayer.GetPlayerID())
-                Ui.Notify.Show(Loc.T("stevethetroll_hub_return", TrollTaming.ShownName(r), d.ToString("0"), hub.Name, HubRules.FarmLeash.ToString("0")), Ui.Notify.Kind.Farm);
+                Notify.Show(Loc.T("stevethetroll_hub_return", TrollTaming.ShownName(r), d.ToString("0"), hub.Name, HubRules.FarmLeash.ToString("0")), Notify.Kind.Farm);
             return true;
         }
 
@@ -130,7 +136,7 @@ namespace SteveTheTroll.Trolls.Home.Infrastructure
             ModLog.Info("TrollReturn: " + TrollTaming.Tag(c) + " is back inside the farm zone of " + _hub.Name + " (" + d.ToString("F0") + " m, " + (Time.time - _start).ToString("F0") + " s) - farms again");
             string name = _hub.Name;
             if (Player.m_localPlayer != null && TrollTaming.Owner(c) == Player.m_localPlayer.GetPlayerID())
-                Ui.Notify.Show(Loc.T("stevethetroll_hub_return_done", TrollTaming.ShownName(this), name), Ui.Notify.Kind.Farm);
+                Notify.Show(Loc.T("stevethetroll_hub_return_done", TrollTaming.ShownName(this), name), Notify.Kind.Farm);
             var z = TrollTaming.Zdo(c);
             string focus = z != null ? Ui.TrollFocus.Normalize(z.GetString(TrollRegistry.FocusKey, "")) : "";
             bool full = z != null && BackpackStore.IsFullCached(z);

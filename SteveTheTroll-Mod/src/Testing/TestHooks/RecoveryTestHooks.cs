@@ -1,14 +1,13 @@
 using System.Collections.Generic;
 using HarmonyLib;
 using Kydl.Common;
-using SteveTheTroll.Hubs.Infrastructure;
-using SteveTheTroll.Trolls.Farming.Infrastructure;
-using SteveTheTroll.Trolls.Orders.Commands;
-using SteveTheTroll.Trolls.Recovery.Infrastructure;
-using SteveTheTroll.Trolls.Taming.Infrastructure;
+using SteveTheTroll.Features.Hubs.Infrastructure;
+using SteveTheTroll.Features.Trolls.Orders.Commands;
+using SteveTheTroll.Features.Trolls.Recovery.Infrastructure;
+using SteveTheTroll.Features.Trolls.Taming.Infrastructure;
 using UnityEngine;
 
-namespace SteveTheTroll.Testing
+namespace SteveTheTroll.Testing.TestHooks
 {
     /// <summary>
     /// D-167: TestLab hooks for the stuck detection and recovery (suite recovery-walled-tree): a tree inside a closed ring of player-built walls. Nothing a troll may attack stands in

@@ -1,10 +1,11 @@
 using System.Collections.Generic;
 using Kydl.Common;
+using SteveTheTroll.Configuration;
 using SteveTheTroll.Ui;
 using TMPro;
 using UnityEngine;
 
-namespace SteveTheTroll.Hubs.Infrastructure
+namespace SteveTheTroll.Features.Hubs.Infrastructure
 {
     /// <summary>
     /// D-135 (user: "a new sign like the one in WaterAndPools, without the font size change"): the sign on a Troll Hub. Name and look (SignStyle) are

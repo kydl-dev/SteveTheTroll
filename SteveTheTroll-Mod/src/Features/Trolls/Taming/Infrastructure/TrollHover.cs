@@ -1,7 +1,7 @@
 using HarmonyLib;
 using Kydl.Common;
 
-namespace SteveTheTroll.Trolls.Taming.Infrastructure
+namespace SteveTheTroll.Features.Trolls.Taming.Infrastructure
 {
     /// <summary>
     /// D-060 (TEST-025 screenshot: "Troll ( Tame, Happy ) [E] Pet"): the hover text of a TAMED troll shows its own name (Steve N / Spencer N,

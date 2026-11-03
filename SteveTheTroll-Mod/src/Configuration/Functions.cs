@@ -1,4 +1,4 @@
-namespace SteveTheTroll
+namespace SteveTheTroll.Configuration
 {
     /// <summary>
     /// Which functionalities of SteveTheTroll are on (PROJECT_RULES 11, user 2026-10-30). Pure: no game types, unit tested.

@@ -1,7 +1,7 @@
-using System.Collections.Generic;
 using System;
+using System.Collections.Generic;
 
-namespace SteveTheTroll.Trolls.Recovery.Domain
+namespace SteveTheTroll.Features.Trolls.Recovery.Domain
 {
     /// <summary>
     /// D-167 (spec "failure counter attached to each troll-resource pair"): per troll and per resource (its network identity, never the prefab) how many complete recovery cycles failed,

@@ -1,9 +1,13 @@
-using System;
+using Kydl.Core.Commands;
+using Kydl.Core.Features;
+using Kydl.Core.Identity;
 using Kydl.Core.Pipeline;
 using Kydl.Core.Results;
-using SteveTheTroll.Trolls.Combat.Domain;
+using Kydl.Core.Time;
+using System;
+using SteveTheTroll.Features.Trolls.Combat.Domain;
 
-namespace SteveTheTroll.Trolls.Combat.Application
+namespace SteveTheTroll.Features.Trolls.Combat.Application
 {
     /// <summary>
     /// D-175 (Architecture V2, P5 combat slice): DefenceInput -> validation (no slippers and no raid: Ignored; too far from the owner: Ignored; another client owns the troll:

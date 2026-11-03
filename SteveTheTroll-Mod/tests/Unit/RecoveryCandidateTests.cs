@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using NUnit.Framework;
-using SteveTheTroll.Trolls.Recovery.Domain;
+using SteveTheTroll.Features.Trolls.Recovery.Domain;
 
 namespace SteveTheTroll.Tests.Unit
 {

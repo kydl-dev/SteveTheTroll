@@ -1,8 +1,13 @@
-using System;
+using Kydl.Core.Commands;
+using Kydl.Core.Features;
+using Kydl.Core.Identity;
+using Kydl.Core.Pipeline;
 using Kydl.Core.Results;
-using SteveTheTroll.Trolls.Contracts;
+using Kydl.Core.Time;
+using System;
+using SteveTheTroll.Features.Trolls.Contracts;
 
-namespace SteveTheTroll.Trolls.Combat.Execution
+namespace SteveTheTroll.Features.Trolls.Combat.Execution
 {
     /// <summary>
     /// D-175 (Architecture V2, P5 combat slice): performs "attack this creature" for the troll / creature the adapter is working on. `forceTarget` = TrollGuard.Order (the

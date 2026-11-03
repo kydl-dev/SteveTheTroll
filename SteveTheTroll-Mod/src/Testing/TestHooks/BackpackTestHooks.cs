@@ -1,8 +1,9 @@
 using Kydl.Common;
-using SteveTheTroll.Trolls.Taming.Infrastructure;
+using SteveTheTroll.Features.Trolls.Backpack.Infrastructure;
+using SteveTheTroll.Features.Trolls.Taming.Infrastructure;
 using UnityEngine;
 
-namespace SteveTheTroll.Testing
+namespace SteveTheTroll.Testing.TestHooks
 {
     /// <summary>D-171 (P6): TestLab hooks for the backpack pickup and the death crates (suite tests backpack-pickup, backpack-death-crates).</summary>
     internal static class BackpackTestHooks
@@ -32,11 +33,11 @@ namespace SteveTheTroll.Testing
         static int FillAndKill(GameObject troll)
         {
             var c = troll.GetComponent<Character>();
-            var z = SteveTheTroll.Trolls.Taming.Infrastructure.TrollTaming.Zdo(c);
+            var z = TrollTaming.Zdo(c);
             int added = 0;
             var stone = ObjectDB.instance.GetItemPrefab("Stone").GetComponent<ItemDrop>().m_itemData;
-            while (added < 500) { var it = stone.Clone(); it.m_stack = 20; it.m_dropPrefab = ObjectDB.instance.GetItemPrefab("Stone"); if (SteveTheTroll.Backpack.Infrastructure.BackpackStore.TryAdd(z, it, null) < 0) break; added++; }
-            int used, slots; SteveTheTroll.Backpack.Infrastructure.BackpackStore.Fill(z, out used, out slots);
+            while (added < 500) { var it = stone.Clone(); it.m_stack = 20; it.m_dropPrefab = ObjectDB.instance.GetItemPrefab("Stone"); if (BackpackStore.TryAdd(z, it, null) < 0) break; added++; }
+            int used, slots; BackpackStore.Fill(z, out used, out slots);
             KillTroll(troll);
             ModLog.Info("BackpackTestHooks: filled (" + added + " stack(s) added, " + used + " of " + slots + " slots) and killed " + troll.name + " in one frame");
             return used;

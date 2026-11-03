@@ -1,9 +1,8 @@
 using System.Collections.Generic;
-using HarmonyLib;
 using Kydl.Common;
-using SteveTheTroll.Backpack.Domain;
+using SteveTheTroll.Features.Slippers.Domain;
 
-namespace SteveTheTroll.Items.Slippers
+namespace SteveTheTroll.Features.Slippers.Infrastructure
 {
     /// <summary>
     /// D-035: constant upgrade cost for the slippers and (D-070 / D-071) the costume pieces and the club (UpgradeCost). Postfix on Piece.Requirement.GetAmount, which the crafting GUI,

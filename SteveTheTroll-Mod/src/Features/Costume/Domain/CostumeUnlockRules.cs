@@ -1,4 +1,4 @@
-namespace SteveTheTroll.Items.Costume
+namespace SteveTheTroll.Features.Costume.Domain
 {
     /// <summary>
     /// T-201 (user 2026-11-03: "costume recipes learned only after first equipping the slippers"): the forced path is craft the slippers -> equip them -> the

@@ -1,14 +1,14 @@
 using System.Collections.Generic;
 using Kydl.Common;
-using SteveTheTroll.Trolls.Combat.Domain;
-using SteveTheTroll.Trolls.Farming.Infrastructure;
-using SteveTheTroll.Trolls.Orders.Infrastructure;
-using SteveTheTroll.Trolls.Taming.Domain;
-using SteveTheTroll.Trolls.Taming.Infrastructure;
-using SteveTheTroll.Trolls.Core;
+using SteveTheTroll.Configuration;
+using SteveTheTroll.Features.Trolls.Combat.Domain;
+using SteveTheTroll.Features.Trolls.Contracts;
+using SteveTheTroll.Features.Trolls.Core;
+using SteveTheTroll.Features.Trolls.Orders.Infrastructure;
+using SteveTheTroll.Features.Trolls.Taming.Infrastructure;
 using UnityEngine;
 
-namespace SteveTheTroll.Trolls.Combat.Infrastructure
+namespace SteveTheTroll.Features.Trolls.Combat.Infrastructure
 {
     /// <summary>
     /// D-082 enrage (user: "if I am within 10m of them and attacked then they should go in enrage mode and hit everything and anything in their
@@ -55,7 +55,7 @@ namespace SteveTheTroll.Trolls.Combat.Infrastructure
         /// One AI step. Expected outcome: true = the rage drove the troll (the game's AI is skipped); false = it calmed down.
         // D-175 (Architecture V2): walking and turning go through the troll's movement capability (TrollContext), built once
         TrollContext _ctx;
-        SteveTheTroll.Trolls.Contracts.ITrollMovement Mv() { if (_ctx == null) _ctx = new TrollContext(GetComponent<Character>()); return _ctx.Capabilities.Movement; }
+        ITrollMovement Mv() { if (_ctx == null) _ctx = new TrollContext(GetComponent<Character>()); return _ctx.Capabilities.Movement; }
 
         internal bool Step(MonsterAI ai, float dt)
         {

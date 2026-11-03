@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using NUnit.Framework;
-using SteveTheTroll.Backpack.Application;
-using SteveTheTroll.Backpack.Domain;
+using SteveTheTroll.Features.Trolls.Backpack.Application;
+using SteveTheTroll.Features.Trolls.Backpack.Domain;
 using Kydl.Core.Results;
 
 namespace SteveTheTroll.Tests.Unit

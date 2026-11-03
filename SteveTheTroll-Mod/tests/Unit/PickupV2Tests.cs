@@ -1,9 +1,9 @@
 using NUnit.Framework;
-using SteveTheTroll.Backpack.Application;
-using SteveTheTroll.Backpack.Domain;
-using SteveTheTroll.Backpack.Execution;
+using SteveTheTroll.Features.Trolls.Backpack.Application;
+using SteveTheTroll.Features.Trolls.Backpack.Domain;
+using SteveTheTroll.Features.Trolls.Backpack.Execution;
 using Kydl.Core.Results;
-using SteveTheTroll.Trolls.Contracts;
+using SteveTheTroll.Features.Trolls.Contracts;
 
 namespace SteveTheTroll.Tests.Unit
 {

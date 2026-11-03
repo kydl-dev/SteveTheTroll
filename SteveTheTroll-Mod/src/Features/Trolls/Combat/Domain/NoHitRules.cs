@@ -1,4 +1,4 @@
-namespace SteveTheTroll.Trolls.Combat.Domain
+namespace SteveTheTroll.Features.Trolls.Combat.Domain
 {
     /// <summary>D-171 (P5): D-097 (user: "set no hit zone 15m from bed") - the flat circle around the bed where own tamed trolls never swing. Game-free.</summary>
     internal static class NoHitRules

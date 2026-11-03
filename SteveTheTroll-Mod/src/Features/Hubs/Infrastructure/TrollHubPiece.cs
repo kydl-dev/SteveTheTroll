@@ -1,10 +1,10 @@
 using Kydl.Common;
-using SteveTheTroll.Backpack.Domain;
-using SteveTheTroll.Backpack.Infrastructure;
-using SteveTheTroll.Hubs.Domain;
+using SteveTheTroll.Features.Hubs.Domain;
+using SteveTheTroll.Features.Trolls.Backpack.Infrastructure;
+using SteveTheTroll.Presentation.Notifications;
 using UnityEngine;
 
-namespace SteveTheTroll.Hubs.Infrastructure
+namespace SteveTheTroll.Features.Hubs.Infrastructure
 {
     /// <summary>
     /// D-135: on the hub prefab. The first frame after the player placed it (its creator is set by then) the owner's client numbers it
@@ -37,7 +37,7 @@ namespace SteveTheTroll.Hubs.Infrastructure
             bool levelled = DepotGround.FlattenHub(transform.position);
             ModLog.Info("TrollHubPiece: " + HubRules.DefaultName(no) + " set up at " + transform.position.ToString("F1") + " for player " + creator + (levelled ? ", ground levelled" : ", ground NOT levelled (no level op)"));
             HubRegistry.All(true);
-            if (p != null && p.GetPlayerID() == creator) Ui.Notify.Show(Loc.T("stevethetroll_hub_msg_built", HubRules.DefaultName(no)), Ui.Notify.Kind.Good);
+            if (p != null && p.GetPlayerID() == creator) Notify.Show(Loc.T("stevethetroll_hub_msg_built", HubRules.DefaultName(no)), Notify.Kind.Good);
             enabled = false;
         }
     }

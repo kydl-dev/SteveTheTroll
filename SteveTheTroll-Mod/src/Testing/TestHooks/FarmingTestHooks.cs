@@ -1,9 +1,9 @@
 using System.Collections.Generic;
 using Kydl.Common;
-using SteveTheTroll.Trolls.Farming.Infrastructure;
+using SteveTheTroll.Features.Trolls.Farming.Infrastructure;
 using UnityEngine;
 
-namespace SteveTheTroll.Testing
+namespace SteveTheTroll.Testing.TestHooks
 {
     /// <summary>
     /// D-170: TestLab hooks for the farming slice (suite test farm-chops-tree): a free-standing tree near the player, and how many swings the troll's farmer made. Until now no

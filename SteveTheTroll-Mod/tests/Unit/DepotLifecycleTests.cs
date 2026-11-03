@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using NUnit.Framework;
-using SteveTheTroll.Backpack.Domain;
-using SteveTheTroll.Hubs.Domain;
+using SteveTheTroll.Features.Trolls.Backpack.Domain;
+using SteveTheTroll.Features.Hubs.Domain;
 
 namespace SteveTheTroll.Tests.Unit
 {

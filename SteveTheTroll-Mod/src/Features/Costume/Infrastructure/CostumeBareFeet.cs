@@ -1,9 +1,9 @@
 using System.Collections.Generic;
 using Kydl.Common;
-using SteveTheTroll.Items.Slippers;
+using SteveTheTroll.Features.Slippers.Infrastructure;
 using UnityEngine;
 
-namespace SteveTheTroll.Items.Costume
+namespace SteveTheTroll.Features.Costume.Infrastructure
 {
     /// <summary>
     /// D-089 (user: "give the character his feet back when the slippers are active ... being invisible is weird"): the whole costume hides the

@@ -1,4 +1,4 @@
-namespace SteveTheTroll.Trolls.Combat.Domain
+namespace SteveTheTroll.Features.Trolls.Combat.Domain
 {
     /// <summary>D-171 (P5): the game-free decisions of TrollSlam (D-065 / D-084).</summary>
     internal static class SlamRules

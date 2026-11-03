@@ -1,9 +1,8 @@
 using Kydl.Common;
-using SteveTheTroll.Trolls.Registry.Infrastructure;
 using TMPro;
 using UnityEngine;
 
-namespace SteveTheTroll.Ui
+namespace SteveTheTroll.Presentation.Notifications
 {
     /// <summary>
     /// D-047: every message of the mod goes to the LEFT side of the screen (MessageHud TopLeft, normal text), coloured by kind.

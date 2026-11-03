@@ -1,9 +1,13 @@
-using System;
-using SteveTheTroll.Backpack.Domain;
+using Kydl.Core.Commands;
+using Kydl.Core.Features;
+using Kydl.Core.Identity;
 using Kydl.Core.Pipeline;
 using Kydl.Core.Results;
+using Kydl.Core.Time;
+using System;
+using SteveTheTroll.Features.Trolls.Backpack.Domain;
 
-namespace SteveTheTroll.Backpack.Application
+namespace SteveTheTroll.Features.Trolls.Backpack.Application
 {
     /// <summary>
     /// D-173 (Architecture V2, P6 pickup slice): PickupInput -> validation (another client owns the troll: Rejected; a chest window is open, the backpack is full or the tick's

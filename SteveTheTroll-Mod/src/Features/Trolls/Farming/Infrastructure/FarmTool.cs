@@ -1,9 +1,9 @@
 using Kydl.Common;
-using SteveTheTroll.Trolls.Combat.Infrastructure;
-using SteveTheTroll.Trolls.Taming.Infrastructure;
+using SteveTheTroll.Features.Trolls.Combat.Infrastructure;
+using SteveTheTroll.Features.Trolls.Taming.Infrastructure;
 using UnityEngine;
 
-namespace SteveTheTroll.Trolls.Farming.Infrastructure
+namespace SteveTheTroll.Features.Trolls.Farming.Infrastructure
 {
     /// <summary>
     /// The farming troll's tool (D-061 / D-149), moved out of TrollFarmer unchanged (D-170, class size). One per farmer.

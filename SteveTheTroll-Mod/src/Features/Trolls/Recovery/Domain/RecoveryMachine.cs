@@ -1,7 +1,4 @@
-using SteveTheTroll.Trolls.Taming.Domain;
-
-
-namespace SteveTheTroll.Trolls.Recovery.Domain
+namespace SteveTheTroll.Features.Trolls.Recovery.Domain
 {
     /// <summary>
     /// D-167: the escalation ladder of ONE complete recovery cycle (spec 1 / 2): rage against a destructible obstruction, a first detour (turn 90 degrees, walk up to 10 m), a second

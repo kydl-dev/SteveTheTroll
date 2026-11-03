@@ -1,9 +1,10 @@
 using System;
 using Kydl.Common;
 using Kydl.Ui;
+using SteveTheTroll.Ui;
 using UnityEngine;
 
-namespace SteveTheTroll.Ui
+namespace SteveTheTroll.Presentation.Hub.Pages
 {
     /// <summary>
     /// Game side of a ModelViewportView (from WhipItUp's WeaponViewerScene, shared through the mod template): makes a ModelViewerRig on a layer

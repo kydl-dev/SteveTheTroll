@@ -1,5 +1,5 @@
 
-namespace SteveTheTroll.Trolls.Farming.Domain
+namespace SteveTheTroll.Features.Trolls.Farming.Domain
 {
     /// <summary>D-170: what a farming troll does first in one AI frame (the priority order of TrollFarmer.Step since D-048 .. D-167).</summary>
     internal enum FarmAction

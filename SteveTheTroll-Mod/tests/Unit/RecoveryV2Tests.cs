@@ -1,11 +1,11 @@
 using System.Collections.Generic;
 using NUnit.Framework;
 using Kydl.Core.Results;
-using SteveTheTroll.Trolls.Contracts;
-using SteveTheTroll.Trolls.Recovery.Application;
-using SteveTheTroll.Trolls.Recovery.Domain;
-using SteveTheTroll.Trolls.Recovery.Execution;
-using SteveTheTroll.Trolls.Taming.Domain;
+using SteveTheTroll.Features.Trolls.Contracts;
+using SteveTheTroll.Features.Trolls.Recovery.Application;
+using SteveTheTroll.Features.Trolls.Recovery.Domain;
+using SteveTheTroll.Features.Trolls.Recovery.Execution;
+using SteveTheTroll.Features.Trolls.Taming.Domain;
 
 namespace SteveTheTroll.Tests.Unit
 {

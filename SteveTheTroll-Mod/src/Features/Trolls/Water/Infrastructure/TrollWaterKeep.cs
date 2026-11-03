@@ -1,11 +1,11 @@
-using HarmonyLib;
 using Kydl.Common;
-using SteveTheTroll.Trolls.Combat.Domain;
-using SteveTheTroll.Trolls.Movement.Infrastructure;
-using SteveTheTroll.Trolls.Taming.Infrastructure;
+using SteveTheTroll.Configuration;
+using SteveTheTroll.Features.Trolls.Combat.Domain;
+using SteveTheTroll.Features.Trolls.Movement.Infrastructure;
+using SteveTheTroll.Features.Trolls.Taming.Infrastructure;
 using UnityEngine;
 
-namespace SteveTheTroll.Trolls.Water.Infrastructure
+namespace SteveTheTroll.Features.Trolls.Water.Infrastructure
 {
     /// <summary>
     /// D-131 (user 2026-10-29: "when they enter water, they are to keep 15m away from the player at all times so that the player can have

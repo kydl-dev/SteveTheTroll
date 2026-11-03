@@ -1,8 +1,9 @@
 using Kydl.Common;
-using SteveTheTroll.Trolls.Taming.Infrastructure;
+using SteveTheTroll.Features.Trolls.Taming.Infrastructure;
+using SteveTheTroll.Presentation.Notifications;
 using UnityEngine;
 
-namespace SteveTheTroll.Trolls.Home.Infrastructure
+namespace SteveTheTroll.Features.Trolls.Home.Infrastructure
 {
     /// <summary>
     /// D-043: a newly tamed troll walks to the player who tamed it (follow) and, once within ArriveMetres, stays there and waits for orders
@@ -41,7 +42,7 @@ namespace SteveTheTroll.Trolls.Home.Infrastructure
             TrollTaming.StopFollow(_ai);
             _ai.SetPatrolPoint();
             ModLog.Info("TrollArrival: " + TrollTaming.Tag(this) + (late ? " gave up walking after " + GiveUpSeconds + " s" : " arrived (" + d.ToString("F1") + " m)") + " - stays and waits for orders");
-            if (!late && _player == Player.m_localPlayer) Ui.Notify.Show(Loc.T("stevethetroll_troll_waits", Shown()), Ui.Notify.Kind.Good);
+            if (!late && _player == Player.m_localPlayer) Notify.Show(Loc.T("stevethetroll_troll_waits", Shown()), Notify.Kind.Good);
             Destroy(this);
         }
     }

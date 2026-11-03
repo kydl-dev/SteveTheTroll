@@ -1,11 +1,10 @@
 using Kydl.Common;
-using SteveTheTroll.Trolls.Combat.Domain;
-using SteveTheTroll.Trolls.Taming.Domain;
-using SteveTheTroll.Trolls.Taming.Infrastructure;
-using SteveTheTroll.Trolls.Core;
+using SteveTheTroll.Features.Trolls.Combat.Domain;
+using SteveTheTroll.Features.Trolls.Core;
+using SteveTheTroll.Features.Trolls.Taming.Infrastructure;
 using UnityEngine;
 
-namespace SteveTheTroll.Trolls.Combat.Infrastructure
+namespace SteveTheTroll.Features.Trolls.Combat.Infrastructure
 {
     /// <summary>
     /// D-065 (user: "if a lot of mobs are targeting the player / troll ... do 4 hits in fast succession to the ground and then target any mobs

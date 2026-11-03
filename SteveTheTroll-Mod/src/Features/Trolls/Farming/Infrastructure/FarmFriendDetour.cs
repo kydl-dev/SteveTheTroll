@@ -1,9 +1,9 @@
 using Kydl.Common;
-using SteveTheTroll.Trolls.Farming.Domain;
-using SteveTheTroll.Trolls.Taming.Infrastructure;
+using SteveTheTroll.Features.Trolls.Farming.Domain;
+using SteveTheTroll.Features.Trolls.Taming.Infrastructure;
 using UnityEngine;
 
-namespace SteveTheTroll.Trolls.Farming.Infrastructure
+namespace SteveTheTroll.Features.Trolls.Farming.Infrastructure
 {
     /// <summary>
     /// D-151 (user: "there is a friendly troll right in front of me, let's re-route next to it"): every 0.25 s the own tamed trolls are checked; one standing on the line to the

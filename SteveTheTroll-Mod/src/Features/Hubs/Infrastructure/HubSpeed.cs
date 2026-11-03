@@ -1,11 +1,13 @@
 using System.Collections.Generic;
 using Kydl.Common;
-using SteveTheTroll.Hubs.Domain;
-using SteveTheTroll.Items.Costume;
-using SteveTheTroll.Trolls.Taming.Infrastructure;
+using SteveTheTroll.Configuration;
+using SteveTheTroll.Features.Costume.Infrastructure;
+using SteveTheTroll.Features.Hubs.Domain;
+using SteveTheTroll.Features.Trolls.Taming.Infrastructure;
+using SteveTheTroll.Presentation.Notifications;
 using UnityEngine;
 
-namespace SteveTheTroll.Hubs.Infrastructure
+namespace SteveTheTroll.Features.Hubs.Infrastructure
 {
     /// <summary>
     /// D-135 (user 2026-10-30): with Troll Hubs on and the set bonus active, a tamed troll with no hub within 1250 m works at half its usual tamed
@@ -56,7 +58,7 @@ namespace SteveTheTroll.Hubs.Infrastructure
         /// Plugin.Update (every 5 s): tells the player once in a while when own trolls work at half speed for lack of a hub.
         internal static int Tick()
         {
-            Ui.Notify.TickTimed();
+            Notify.TickTimed();
             if (Time.time < _nextTick || !ModSettings.HubsOn) return 0;
             _nextTick = Time.time + 2f;
             var p = Player.m_localPlayer;
@@ -71,7 +73,7 @@ namespace SteveTheTroll.Hubs.Infrastructure
             if (slow > 0 && Time.time >= _nextNotice)
             {
                 _nextNotice = Time.time + 30f;
-                Ui.Notify.Timed(Loc.T("stevethetroll_hub_msg_half", HubRules.FarRadius.ToString("0")), Ui.Notify.Kind.Bad, 5f);
+                Notify.Timed(Loc.T("stevethetroll_hub_msg_half", HubRules.FarRadius.ToString("0")), Notify.Kind.Bad, 5f);
                 ModLog.Info("HubSpeed: " + slow + " own troll(s) work at half speed - no Troll Hub within " + HubRules.FarRadius + " m");
             }
             if (slow == 0) _nextNotice = 0f;

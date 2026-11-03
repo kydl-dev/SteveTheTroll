@@ -1,16 +1,21 @@
+using Kydl.Core.Commands;
+using Kydl.Core.Features;
+using Kydl.Core.Identity;
+using Kydl.Core.Pipeline;
+using Kydl.Core.Results;
+using Kydl.Core.Time;
 using System.Collections.Generic;
 using HarmonyLib;
 using Kydl.Common;
-using SteveTheTroll.Backpack.Application;
-using SteveTheTroll.Backpack.Domain;
-using SteveTheTroll.Backpack.Execution;
-using Kydl.Core.Results;
-using SteveTheTroll.Trolls.Contracts;
-using SteveTheTroll.Trolls.Farming.Infrastructure;
-using SteveTheTroll.Trolls.Taming.Infrastructure;
+using SteveTheTroll.Configuration;
+using SteveTheTroll.Features.Trolls.Backpack.Application;
+using SteveTheTroll.Features.Trolls.Backpack.Domain;
+using SteveTheTroll.Features.Trolls.Backpack.Execution;
+using SteveTheTroll.Features.Trolls.Contracts;
+using SteveTheTroll.Features.Trolls.Taming.Infrastructure;
 using UnityEngine;
 
-namespace SteveTheTroll.Backpack.Infrastructure
+namespace SteveTheTroll.Features.Trolls.Backpack.Infrastructure
 {
     /// <summary>
     /// T-008c (D-062, user spec): every second, on the client that owns the troll, items lying within PickupRange (50 m) of a tamed troll go

@@ -1,4 +1,4 @@
-namespace SteveTheTroll.Trolls.Combat.Domain
+namespace SteveTheTroll.Features.Trolls.Combat.Domain
 {
     /// <summary>
     /// D-120 .. D-126 (user 2026-10-28 batch, all 1.0.0): pure rules (no Unity / Valheim types, unit-tested) for what the Troll Club and

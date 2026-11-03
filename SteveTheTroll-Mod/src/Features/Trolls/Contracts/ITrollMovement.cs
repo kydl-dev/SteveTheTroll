@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace SteveTheTroll.Trolls.Contracts
+namespace SteveTheTroll.Features.Trolls.Contracts
 {
     /// <summary>
     /// Architecture V2 (D-169): moving a troll. Contracts may use Unity value types (Vector3); domain code may not. A MoveTo that returns means "the request was issued",

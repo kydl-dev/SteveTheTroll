@@ -1,15 +1,13 @@
-using HarmonyLib;
 using Kydl.Common;
-using SteveTheTroll.Trolls.Combat.Domain;
-using SteveTheTroll.Trolls.Farming.Infrastructure;
-using SteveTheTroll.Trolls.Orders.Commands;
-using SteveTheTroll.Trolls.Orders.Infrastructure;
-using SteveTheTroll.Trolls.Registry.Infrastructure;
-using SteveTheTroll.Trolls.Taming.Domain;
-using SteveTheTroll.Trolls.Taming.Infrastructure;
+using SteveTheTroll.Configuration;
+using SteveTheTroll.Features.Trolls.Combat.Domain;
+using SteveTheTroll.Features.Trolls.Orders.Commands;
+using SteveTheTroll.Features.Trolls.Registry.Infrastructure;
+using SteveTheTroll.Features.Trolls.Taming.Domain;
+using SteveTheTroll.Features.Trolls.Taming.Infrastructure;
 using UnityEngine;
 
-namespace SteveTheTroll.Trolls.Combat.Infrastructure
+namespace SteveTheTroll.Features.Trolls.Combat.Infrastructure
 {
     /// <summary>
     /// D-124 (user 2026-10-28: "2 star break Ashlands fortress walls"; "They can go for the walls if they consider an enemy behind / on top of

@@ -1,13 +1,13 @@
 using System.Collections.Generic;
-using HarmonyLib;
 using Kydl.Common;
-using SteveTheTroll.Trolls.Combat.Domain;
-using SteveTheTroll.Trolls.Registry.Infrastructure;
-using SteveTheTroll.Trolls.Taming.Domain;
-using SteveTheTroll.Trolls.Taming.Infrastructure;
+using SteveTheTroll.Configuration;
+using SteveTheTroll.Features.Trolls.Combat.Domain;
+using SteveTheTroll.Features.Trolls.Registry.Infrastructure;
+using SteveTheTroll.Features.Trolls.Taming.Domain;
+using SteveTheTroll.Features.Trolls.Taming.Infrastructure;
 using UnityEngine;
 
-namespace SteveTheTroll.World.Spawning
+namespace SteveTheTroll.Features.Trolls.World.Infrastructure
 {
     /// <summary>
     /// D-042 / D-084: within SpawnBedRadius (500 m) of the local slipper wearer's bed (cap 2 with the slippers and 0-1 tamed trolls, 6 with the set

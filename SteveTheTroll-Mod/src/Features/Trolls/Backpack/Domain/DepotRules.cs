@@ -1,6 +1,4 @@
-using SteveTheTroll.Hubs.Domain;
-
-namespace SteveTheTroll.Backpack.Domain
+namespace SteveTheTroll.Features.Trolls.Backpack.Domain
 {
     /// <summary>
     /// TEST-043 (user: "why are they that close"): pure placement rules for troll depots (unit-tested). Distances in metres, flat.

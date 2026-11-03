@@ -1,5 +1,5 @@
 
-namespace SteveTheTroll.Trolls.Farming.Domain
+namespace SteveTheTroll.Features.Trolls.Farming.Domain
 {
     /// <summary>D-170: how the troll gets to its target this frame.</summary>
     internal enum ApproachAction

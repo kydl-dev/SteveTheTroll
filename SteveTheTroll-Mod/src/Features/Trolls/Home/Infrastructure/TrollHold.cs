@@ -1,10 +1,10 @@
 using Kydl.Common;
-using SteveTheTroll.Trolls.Farming.Infrastructure;
-using SteveTheTroll.Trolls.Home.Domain;
-using SteveTheTroll.Trolls.Taming.Infrastructure;
+using SteveTheTroll.Configuration;
+using SteveTheTroll.Features.Trolls.Home.Domain;
+using SteveTheTroll.Features.Trolls.Taming.Infrastructure;
 using UnityEngine;
 
-namespace SteveTheTroll.Trolls.Home.Infrastructure
+namespace SteveTheTroll.Features.Trolls.Home.Infrastructure
 {
     /// <summary>
     /// D-063 (user: "hard to interact with the backpack, as the troll keeps moving"): a tamed troll that is not told to follow and not

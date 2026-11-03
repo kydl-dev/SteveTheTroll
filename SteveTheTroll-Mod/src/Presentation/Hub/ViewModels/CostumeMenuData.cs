@@ -1,10 +1,10 @@
 using Kydl.Common;
-using SteveTheTroll.Backpack.Domain;
-using SteveTheTroll.Items.Costume;
-using SteveTheTroll.Items.Slippers;
+using SteveTheTroll.Features.Costume.Infrastructure;
+using SteveTheTroll.Integrations.Unity;
+using SteveTheTroll.Ui;
 using UnityEngine;
 
-namespace SteveTheTroll.Ui
+namespace SteveTheTroll.Presentation.Hub.ViewModels
 {
     /// <summary>
     /// D-080 game side of the F6 Costume tab: the three costume pieces, the set and the Troll Club read from ObjectDB / the local player, and

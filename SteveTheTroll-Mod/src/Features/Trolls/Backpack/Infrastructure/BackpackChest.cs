@@ -1,8 +1,8 @@
 using Kydl.Common;
-using SteveTheTroll.Trolls.Taming.Infrastructure;
+using SteveTheTroll.Features.Trolls.Taming.Infrastructure;
 using UnityEngine;
 
-namespace SteveTheTroll.Backpack.Infrastructure
+namespace SteveTheTroll.Features.Trolls.Backpack.Infrastructure
 {
     /// <summary>
     /// T-008c (D-062): one chest of the backpack on the troll - hover "Steve 1's backpack - chest 2 / [E] Open", E opens that chest

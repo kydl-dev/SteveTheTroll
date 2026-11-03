@@ -2,12 +2,12 @@ using Jotunn.Configs;
 using Jotunn.Entities;
 using Jotunn.Managers;
 using Kydl.Common;
-using SteveTheTroll.Backpack.Domain;
-using SteveTheTroll.Backpack.Infrastructure;
-using SteveTheTroll.Hubs.Domain;
+using SteveTheTroll.Features.Hubs.Domain;
+using SteveTheTroll.Features.Trolls.Backpack.Infrastructure;
+using SteveTheTroll.Integrations.Unity;
 using UnityEngine;
 
-namespace SteveTheTroll.Hubs.Infrastructure
+namespace SteveTheTroll.Features.Hubs.Infrastructure
 {
     /// <summary>
     /// D-135: the Troll Hub as our own networked prefab "STT_TrollHub" and as a hammer piece (category KY-Items, recipe HubData.Recipe, every item

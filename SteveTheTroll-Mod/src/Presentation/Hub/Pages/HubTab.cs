@@ -1,14 +1,14 @@
 using System.Collections.Generic;
 using Kydl.Common;
-using Kydl.Ui;
 using KydlCore;
-using SteveTheTroll.Hubs.Domain;
-using SteveTheTroll.Hubs.Infrastructure;
-using SteveTheTroll.Trolls.Combat.Infrastructure;
-using SteveTheTroll.Trolls.Registry.Infrastructure;
+using SteveTheTroll.Configuration;
+using SteveTheTroll.Features.Hubs.Domain;
+using SteveTheTroll.Features.Hubs.Infrastructure;
+using SteveTheTroll.Features.Trolls.Registry.Infrastructure;
+using SteveTheTroll.Ui;
 using UnityEngine;
 
-namespace SteveTheTroll.Ui
+namespace SteveTheTroll.Presentation.Hub.Pages
 {
     /// <summary>
     /// D-135 (user: "players will have a list of hubs and which trolls go to each hub", "a pen symbol that opens the whole name / colour / emoji

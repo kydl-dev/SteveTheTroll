@@ -1,4 +1,4 @@
-namespace SteveTheTroll.Trolls.Recovery.Domain
+namespace SteveTheTroll.Features.Trolls.Recovery.Domain
 {
     /// <summary>
     /// Architecture V2 (D-169): what RecoveryMachine decided in one frame - the command and the state of the ladder the executor needs to carry it out (which detour, which leg,

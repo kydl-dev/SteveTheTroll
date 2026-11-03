@@ -1,10 +1,10 @@
 using Jotunn.Entities;
 using Jotunn.Managers;
 using Kydl.Common;
-using SteveTheTroll.Backpack.Domain;
+using SteveTheTroll.Features.Trolls.Backpack.Domain;
 using UnityEngine;
 
-namespace SteveTheTroll.Backpack.Infrastructure
+namespace SteveTheTroll.Features.Trolls.Backpack.Infrastructure
 {
     /// <summary>
     /// D-064: the troll depot frame as our own networked prefab "STT_TrollDepot" (built once the game's prefabs exist): copies of the wood

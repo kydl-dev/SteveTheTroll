@@ -1,9 +1,9 @@
 using Kydl.Common;
-using SteveTheTroll.Trolls.Contracts;
-using SteveTheTroll.Trolls.Taming.Infrastructure;
+using SteveTheTroll.Features.Trolls.Contracts;
+using SteveTheTroll.Features.Trolls.Taming.Infrastructure;
 using UnityEngine;
 
-namespace SteveTheTroll.Trolls.Combat.Infrastructure
+namespace SteveTheTroll.Features.Trolls.Combat.Infrastructure
 {
     /// <summary>Architecture V2 (D-169): ITrollCombat on the game's Humanoid - the troll's own weapons (TrollWeapons.Pick), equip, StartAttack.</summary>
     internal sealed class ValheimTrollCombat : ITrollCombat

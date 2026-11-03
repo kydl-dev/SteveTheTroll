@@ -1,7 +1,7 @@
 using NUnit.Framework;
 using Kydl.Core.Results;
-using SteveTheTroll.Trolls.Orders.Application;
-using SteveTheTroll.Trolls.Orders.Domain;
+using SteveTheTroll.Features.Trolls.Orders.Application;
+using SteveTheTroll.Features.Trolls.Orders.Domain;
 
 namespace SteveTheTroll.Tests.Unit
 {

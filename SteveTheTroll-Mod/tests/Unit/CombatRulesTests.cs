@@ -1,5 +1,5 @@
 using NUnit.Framework;
-using SteveTheTroll.Trolls.Combat.Domain;
+using SteveTheTroll.Features.Trolls.Combat.Domain;
 
 namespace SteveTheTroll.Tests.Unit
 {

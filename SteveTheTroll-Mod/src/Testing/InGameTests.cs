@@ -1,12 +1,15 @@
 using Kydl.Common;
-using SteveTheTroll.Backpack.Infrastructure;
-using SteveTheTroll.Items.Costume;
-using SteveTheTroll.Items.Slippers;
-using SteveTheTroll.Trolls.Combat.Infrastructure;
-using SteveTheTroll.Trolls.Farming.Infrastructure;
-using SteveTheTroll.Trolls.Taming.Infrastructure;
-using SteveTheTroll.Trolls.Water.Infrastructure;
-using SteveTheTroll.World.Zones;
+using SteveTheTroll.Configuration;
+using SteveTheTroll.Features.Costume.Infrastructure;
+using SteveTheTroll.Features.Slippers.Infrastructure;
+using SteveTheTroll.Features.Trolls.Backpack.Infrastructure;
+using SteveTheTroll.Features.Trolls.Combat.Infrastructure;
+using SteveTheTroll.Features.Trolls.Farming.Infrastructure;
+using SteveTheTroll.Features.Trolls.Movement.Infrastructure;
+using SteveTheTroll.Features.Trolls.Taming.Infrastructure;
+using SteveTheTroll.Features.Trolls.Water.Infrastructure;
+using SteveTheTroll.Features.Trolls.World.Infrastructure;
+using SteveTheTroll.Integrations.Unity;
 using UnityEngine;
 
 namespace SteveTheTroll.Testing
@@ -159,7 +162,7 @@ namespace SteveTheTroll.Testing
         static string Startup_Architecture()
         {
             bool v2 = Core.Architecture.Version == 2 && Core.Architecture.Marker == "STT-ARCH-V2";
-            bool moves = Trolls.Movement.Infrastructure.ValheimTrollMovement.SelfCheck();
+            bool moves = ValheimTrollMovement.SelfCheck();
             ModLog.Verbose("InGameTests: architecture V" + Core.Architecture.Version + " " + Core.Architecture.Marker + ", movement adapter delegates found " + moves);
             if (!v2) return "FAIL: architecture marker V" + Core.Architecture.Version + " " + Core.Architecture.Marker + " (expected V2 STT-ARCH-V2)";
             return moves ? "PASS: architecture V2 (" + Core.Architecture.Marker + "), movement adapter ok" : "FAIL: architecture V2 but ValheimTrollMovement did not find BaseAI.MoveTo / LookAt";

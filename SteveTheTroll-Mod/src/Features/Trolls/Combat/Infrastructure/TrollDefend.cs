@@ -1,15 +1,17 @@
 using System.Collections.Generic;
 using HarmonyLib;
 using Kydl.Common;
-using SteveTheTroll.Trolls.Combat.Application;
-using SteveTheTroll.Trolls.Combat.Domain;
-using SteveTheTroll.Trolls.Combat.Execution;
-using SteveTheTroll.Trolls.Home.Infrastructure;
-using SteveTheTroll.Trolls.Taming.Domain;
-using SteveTheTroll.Trolls.Taming.Infrastructure;
+using SteveTheTroll.Configuration;
+using SteveTheTroll.Features.Trolls.Combat.Application;
+using SteveTheTroll.Features.Trolls.Combat.Domain;
+using SteveTheTroll.Features.Trolls.Combat.Execution;
+using SteveTheTroll.Features.Trolls.Contracts;
+using SteveTheTroll.Features.Trolls.Home.Infrastructure;
+using SteveTheTroll.Features.Trolls.Taming.Infrastructure;
+using SteveTheTroll.Presentation.Notifications;
 using UnityEngine;
 
-namespace SteveTheTroll.Trolls.Combat.Infrastructure
+namespace SteveTheTroll.Features.Trolls.Combat.Infrastructure
 {
     /// <summary>
     /// D-042: when a player is hit by a creature, that player's own tamed trolls within DefendRange drop follow / farm and attack the attacker
@@ -47,7 +49,7 @@ namespace SteveTheTroll.Trolls.Combat.Infrastructure
             float last;
             if (LastWarn.TryGetValue(who, out last) && Time.time - last < WarnEverySeconds) return false;
             LastWarn[who] = Time.time;
-            return Ui.Notify.Show(Loc.T("stevethetroll_under_attack", who), Ui.Notify.Kind.Attack);
+            return Notify.Show(Loc.T("stevethetroll_under_attack", who), Notify.Kind.Attack);
         }
 
         static readonly DefencePipeline Defence = new DefencePipeline();
@@ -58,7 +60,7 @@ namespace SteveTheTroll.Trolls.Combat.Infrastructure
         static void SetCurrent() { SetTarget(_ai, _attacker); _ai.Alert(); }
 
         /// ITrollOwnership over one troll's ZNetView (D-175).
-        internal readonly struct ViewOwner : SteveTheTroll.Trolls.Contracts.ITrollOwnership
+        internal readonly struct ViewOwner : ITrollOwnership
         {
             readonly ZNetView _v;
             internal ViewOwner(ZNetView v) { _v = v; }

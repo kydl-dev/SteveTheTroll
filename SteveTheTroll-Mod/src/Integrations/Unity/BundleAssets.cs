@@ -1,7 +1,8 @@
 using Kydl.Common;
+using SteveTheTroll.Bootstrap;
 using UnityEngine;
 
-namespace SteveTheTroll
+namespace SteveTheTroll.Integrations.Unity
 {
     /// <summary>
     /// D-100 (user: "we have to make sure it all works as it should"): every asset the mod loads from its AssetBundle "stevethetroll", by

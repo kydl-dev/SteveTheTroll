@@ -1,5 +1,5 @@
 
-namespace SteveTheTroll.Trolls.Farming.Domain
+namespace SteveTheTroll.Features.Trolls.Farming.Domain
 {
     /// <summary>D-170: what the next swing moment means.</summary>
     internal enum SwingAction

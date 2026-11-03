@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace SteveTheTroll.Trolls.Contracts
+namespace SteveTheTroll.Features.Trolls.Contracts
 {
     /// <summary>Architecture V2 (D-169): what a troll's fighting body can do (attack animations, stagger, one swing at a target). Decisions about WHAT to hit live elsewhere.</summary>
     internal interface ITrollCombat

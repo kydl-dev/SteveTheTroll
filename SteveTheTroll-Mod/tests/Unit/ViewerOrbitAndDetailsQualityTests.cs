@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using SteveTheTroll.Backpack.Domain;
+using SteveTheTroll.Features.Trolls.Backpack.Domain;
 using SteveTheTroll.Ui;
 
 namespace SteveTheTroll.Tests.Unit

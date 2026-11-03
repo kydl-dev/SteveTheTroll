@@ -1,12 +1,6 @@
 using System.Collections.Generic;
 using HarmonyLib;
 using Kydl.Common;
-using SteveTheTroll.Trolls.Combat.Infrastructure;
-using SteveTheTroll.Trolls.Farming.Infrastructure;
-using SteveTheTroll.Trolls.Home.Infrastructure;
-using SteveTheTroll.Trolls.Movement.Infrastructure;
-using SteveTheTroll.Trolls.Orders.Commands;
-using SteveTheTroll.Trolls.Taming.Domain;
 using UnityEngine;
 
 namespace SteveTheTroll.Integrations.Harmony
@@ -18,6 +12,6 @@ namespace SteveTheTroll.Integrations.Harmony
     [HarmonyPatch(typeof(MonsterAI), nameof(MonsterAI.UpdateAI))]
     static class TrollFarming_Steer
     {
-        static bool Prefix(MonsterAI __instance, float dt, ref bool __result) { return global::SteveTheTroll.Trolls.Farming.Infrastructure.TrollFarming.Steer.Prefix(__instance, dt, ref __result); }
+        static bool Prefix(MonsterAI __instance, float dt, ref bool __result) { return global::SteveTheTroll.Features.Trolls.Farming.Infrastructure.TrollFarming.Steer.Prefix(__instance, dt, ref __result); }
     }
 }

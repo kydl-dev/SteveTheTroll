@@ -1,14 +1,13 @@
 using System.Collections.Generic;
 using HarmonyLib;
 using Kydl.Common;
-using SteveTheTroll.Backpack.Application;
-using SteveTheTroll.Backpack.Domain;
-using SteveTheTroll.Hubs.Domain;
-using SteveTheTroll.Hubs.Infrastructure;
-using SteveTheTroll.Trolls.Taming.Infrastructure;
+using SteveTheTroll.Configuration;
+using SteveTheTroll.Features.Trolls.Backpack.Application;
+using SteveTheTroll.Features.Trolls.Backpack.Domain;
+using SteveTheTroll.Features.Trolls.Taming.Infrastructure;
 using UnityEngine;
 
-namespace SteveTheTroll.Backpack.Infrastructure
+namespace SteveTheTroll.Features.Trolls.Backpack.Infrastructure
 {
     /// <summary>
     /// D-064 (user spec): a troll with a FULL backpack that reaches its owner's bed empties it into the owner's troll depots near the bed.

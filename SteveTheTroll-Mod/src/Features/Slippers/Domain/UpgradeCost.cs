@@ -1,4 +1,4 @@
-namespace SteveTheTroll.Items.Slippers
+namespace SteveTheTroll.Features.Slippers.Domain
 {
     /// <summary>
     /// D-035 (user 2026-10-27): every upgrade of the slippers costs the SAME amount of each upgrade resource (2 TrollHide + 2 Blueberries).

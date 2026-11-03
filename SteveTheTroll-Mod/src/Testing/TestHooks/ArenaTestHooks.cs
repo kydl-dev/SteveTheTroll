@@ -2,7 +2,7 @@ using HarmonyLib;
 using Kydl.Common;
 using UnityEngine;
 
-namespace SteveTheTroll.Testing
+namespace SteveTheTroll.Testing.TestHooks
 {
     /// <summary>
     /// The arena hooks of the suite (D-171 / D-172). Where the player stands comes from the SHARED Kydl.Common.TestArena (MIGRATION_DECISIONS C26: one lab start

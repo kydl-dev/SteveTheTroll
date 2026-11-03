@@ -1,6 +1,6 @@
-using SteveTheTroll.Trolls.Contracts;
+using SteveTheTroll.Features.Trolls.Contracts;
 
-namespace SteveTheTroll.Trolls.Core
+namespace SteveTheTroll.Features.Trolls.Core
 {
     /// <summary>
     /// Architecture V2 (D-169): the capabilities one troll offers, each behind an interface (composition, no troll base class). Interfaces are added when something uses them,

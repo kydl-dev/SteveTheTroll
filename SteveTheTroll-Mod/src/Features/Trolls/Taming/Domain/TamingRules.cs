@@ -1,4 +1,4 @@
-namespace SteveTheTroll.Trolls.Taming.Domain
+namespace SteveTheTroll.Features.Trolls.Taming.Domain
 {
     /// <summary>
     /// T-008a pure taming rules (no game types; unit-tested). D-037 / D-038: a wild troll is tamed after TameSeconds while a slipper wearer is

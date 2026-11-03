@@ -1,12 +1,13 @@
 using Kydl.Common;
-using SteveTheTroll.Hubs.Infrastructure;
-using SteveTheTroll.Trolls.Home.Domain;
-using SteveTheTroll.Trolls.Orders.Infrastructure;
-using SteveTheTroll.Trolls.Taming.Domain;
-using SteveTheTroll.Trolls.Taming.Infrastructure;
+using SteveTheTroll.Configuration;
+using SteveTheTroll.Features.Hubs.Infrastructure;
+using SteveTheTroll.Features.Trolls.Home.Domain;
+using SteveTheTroll.Features.Trolls.Orders.Infrastructure;
+using SteveTheTroll.Features.Trolls.Taming.Domain;
+using SteveTheTroll.Features.Trolls.Taming.Infrastructure;
 using UnityEngine;
 
-namespace SteveTheTroll.Trolls.Home.Infrastructure
+namespace SteveTheTroll.Features.Trolls.Home.Infrastructure
 {
     /// <summary>
     /// D-085 (user: "when trolls are within 50m of bed, have their hp regen 50HP/s"): every second, the local player's own tamed trolls that

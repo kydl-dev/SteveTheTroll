@@ -1,9 +1,8 @@
 using HarmonyLib;
-using SteveTheTroll.Trolls.Contracts;
-using SteveTheTroll.Trolls.Farming.Infrastructure;
+using SteveTheTroll.Features.Trolls.Contracts;
 using UnityEngine;
 
-namespace SteveTheTroll.Trolls.Movement.Infrastructure
+namespace SteveTheTroll.Features.Trolls.Movement.Infrastructure
 {
     /// <summary>
     /// Architecture V2 (D-169): ITrollMovement on the game's MonsterAI - the same private BaseAI.MoveTo / LookAt the farming patch uses (cached delegates, no allocation per call).

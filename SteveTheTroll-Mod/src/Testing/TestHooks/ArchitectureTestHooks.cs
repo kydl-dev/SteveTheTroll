@@ -1,7 +1,7 @@
 using Kydl.Common;
 using SteveTheTroll.Core;
 
-namespace SteveTheTroll.Testing
+namespace SteveTheTroll.Testing.TestHooks
 {
     /// <summary>D-169: TestLab proof that the running DLL is the Architecture V2 build (suite test architecture-v2 runs first; the V1 DLL has no such hook, so the test fails).</summary>
     internal static class ArchitectureTestHooks

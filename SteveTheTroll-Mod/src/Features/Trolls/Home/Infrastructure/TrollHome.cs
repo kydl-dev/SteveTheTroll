@@ -1,15 +1,17 @@
 using System.Collections.Generic;
 using HarmonyLib;
 using Kydl.Common;
-using SteveTheTroll.Hubs.Infrastructure;
-using SteveTheTroll.Trolls.Farming.Infrastructure;
-using SteveTheTroll.Trolls.Orders.Commands;
-using SteveTheTroll.Trolls.Orders.Infrastructure;
-using SteveTheTroll.Trolls.Registry.Infrastructure;
-using SteveTheTroll.Trolls.Taming.Infrastructure;
+using SteveTheTroll.Configuration;
+using SteveTheTroll.Features.Hubs.Infrastructure;
+using SteveTheTroll.Features.Trolls.Farming.Infrastructure;
+using SteveTheTroll.Features.Trolls.Orders.Commands;
+using SteveTheTroll.Features.Trolls.Orders.Infrastructure;
+using SteveTheTroll.Features.Trolls.Registry.Infrastructure;
+using SteveTheTroll.Features.Trolls.Taming.Infrastructure;
+using SteveTheTroll.Presentation.Notifications;
 using UnityEngine;
 
-namespace SteveTheTroll.Trolls.Home.Infrastructure
+namespace SteveTheTroll.Features.Trolls.Home.Infrastructure
 {
     /// <summary>
     /// T-008e (D-038 / D-065, user: "slippers off or logout -> the troll waits at the bed, but defends during a raid"): while its owner does
@@ -60,7 +62,7 @@ namespace SteveTheTroll.Trolls.Home.Infrastructure
                 }
                 Sent.Add(id);
                 TrollTaming.StopFollow(ai);
-                if (TrollOrderService.Send(new SendHomeCommand(c))) { sent++; Ui.Notify.Show(Loc.T("stevethetroll_home_noslippers", TrollOrders.Shown(c)), Ui.Notify.Kind.Good); }
+                if (TrollOrderService.Send(new SendHomeCommand(c))) { sent++; Notify.Show(Loc.T("stevethetroll_home_noslippers", TrollOrders.Shown(c)), Notify.Kind.Good); }
             }
             return sent;
         }

@@ -1,14 +1,16 @@
 using Kydl.Common;
-using SteveTheTroll.Trolls.Combat.Infrastructure;
-using SteveTheTroll.Trolls.Farming.Infrastructure;
-using SteveTheTroll.Trolls.Orders.Application;
-using SteveTheTroll.Trolls.Orders.Commands;
-using SteveTheTroll.Trolls.Orders.Domain;
-using SteveTheTroll.Trolls.Registry.Infrastructure;
-using SteveTheTroll.Trolls.Taming.Infrastructure;
+using SteveTheTroll.Configuration;
+using SteveTheTroll.Features.Trolls.Combat.Infrastructure;
+using SteveTheTroll.Features.Trolls.Farming.Infrastructure;
+using SteveTheTroll.Features.Trolls.Orders.Application;
+using SteveTheTroll.Features.Trolls.Orders.Commands;
+using SteveTheTroll.Features.Trolls.Orders.Domain;
+using SteveTheTroll.Features.Trolls.Registry.Infrastructure;
+using SteveTheTroll.Features.Trolls.Taming.Infrastructure;
+using SteveTheTroll.Presentation.Notifications;
 using UnityEngine;
 
-namespace SteveTheTroll.Trolls.Orders.Infrastructure
+namespace SteveTheTroll.Features.Trolls.Orders.Infrastructure
 {
     /// <summary>
     /// T-008d / D-065: the attack key ([Controls] AttackKey, Mouse 4 = the mouse's back button): the player looks at something and presses
@@ -65,17 +67,17 @@ namespace SteveTheTroll.Trolls.Orders.Infrastructure
             {
                 case OrderKind.Attack:
                     TrollOrderService.Send(new AttackTargetCommand(troll, creature));
-                    Ui.Notify.Show(Loc.T("stevethetroll_order_attack", shown, creature.GetHoverName()), Ui.Notify.Kind.Attack);
+                    Notify.Show(Loc.T("stevethetroll_order_attack", shown, creature.GetHoverName()), Notify.Kind.Attack);
                     return decision.Value == OrderKind.Attack;
                 case OrderKind.BreakWall:
                 case OrderKind.BreakSource:
                     // D-124: walls only for 2-star trolls (TrollWalls decides)
                     bool ok = decision.Value == OrderKind.BreakWall ? TrollOrderService.Send(new BreakWallCommand(troll, source, focus)) : TrollOrderService.Send(new BreakSourceCommand(troll, source, focus));
-                    if (ok) Ui.Notify.Show(Loc.T("stevethetroll_order_break", shown, Localization.instance.Localize(Name(source))), Ui.Notify.Kind.Farm);
+                    if (ok) Notify.Show(Loc.T("stevethetroll_order_break", shown, Localization.instance.Localize(Name(source))), Notify.Kind.Farm);
                     return ok;
                 default:
                     bool started = TrollOrderService.Send(new FarmFocusCommand(troll, focus));
-                    if (started) Ui.Notify.Show(Loc.T("stevethetroll_gofarm_started", shown, Loc.T(Ui.TrollFocus.KeyOf(focus))), Ui.Notify.Kind.Farm);
+                    if (started) Notify.Show(Loc.T("stevethetroll_gofarm_started", shown, Loc.T(Ui.TrollFocus.KeyOf(focus))), Notify.Kind.Farm);
                     ModLog.Info("TrollOrders: attack key on nothing - " + TrollTaming.Tag(troll) + " farms (focus '" + focus + "') " + started);
                     return started;
             }

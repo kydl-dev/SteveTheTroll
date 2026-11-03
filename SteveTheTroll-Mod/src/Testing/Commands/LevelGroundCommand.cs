@@ -1,9 +1,9 @@
 using Jotunn.Entities;
 using Kydl.Common;
-using SteveTheTroll.Backpack.Infrastructure;
+using SteveTheTroll.Features.Trolls.Backpack.Infrastructure;
 using UnityEngine;
 
-namespace SteveTheTroll.Testing
+namespace SteveTheTroll.Testing.Commands
 {
     /// <summary>
     /// D-105 (TEST-044: the depot levelling made a spike and a pit): console command stt_levelground. Levels one 14 x 14 m square flat

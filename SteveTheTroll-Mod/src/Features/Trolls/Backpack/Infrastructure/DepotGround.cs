@@ -1,9 +1,9 @@
 using Kydl.Common;
-using SteveTheTroll.Backpack.Domain;
-using SteveTheTroll.Hubs.Domain;
+using SteveTheTroll.Features.Hubs.Domain;
+using SteveTheTroll.Features.Trolls.Backpack.Domain;
 using UnityEngine;
 
-namespace SteveTheTroll.Backpack.Infrastructure
+namespace SteveTheTroll.Features.Trolls.Backpack.Infrastructure
 {
     /// <summary>
     /// D-095 / D-103 / D-105 (user: "flatten the ground a bit where the structure is to go"): levels the ground under a new depot stack.

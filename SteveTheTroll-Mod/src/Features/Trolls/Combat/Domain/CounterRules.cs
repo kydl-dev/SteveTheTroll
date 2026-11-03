@@ -1,4 +1,4 @@
-namespace SteveTheTroll.Trolls.Combat.Domain
+namespace SteveTheTroll.Features.Trolls.Combat.Domain
 {
     /// <summary>D-171: how a troll answers a hit on itself (D-084).</summary>
     internal enum CounterResponse { None, Busy, Ignore, Slam, Chase }

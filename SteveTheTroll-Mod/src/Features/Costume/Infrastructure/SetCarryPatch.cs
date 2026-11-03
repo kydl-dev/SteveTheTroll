@@ -1,7 +1,7 @@
-using HarmonyLib;
 using Kydl.Common;
+using SteveTheTroll.Configuration;
 
-namespace SteveTheTroll.Items.Costume
+namespace SteveTheTroll.Features.Costume.Infrastructure
 {
     /// <summary>
     /// D-112 (user 2026-10-28: "the set gives 25% increased carry weight ... a value and not a set value; with megingjord the total ... would

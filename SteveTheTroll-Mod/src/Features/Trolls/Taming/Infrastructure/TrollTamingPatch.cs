@@ -1,13 +1,15 @@
 using HarmonyLib;
 using Kydl.Common;
-using SteveTheTroll.Trolls.Combat.Domain;
-using SteveTheTroll.Trolls.Home.Infrastructure;
-using SteveTheTroll.Trolls.Registry.Infrastructure;
-using SteveTheTroll.Trolls.Taming.Domain;
-using SteveTheTroll.World.Spawning;
+using SteveTheTroll.Configuration;
+using SteveTheTroll.Features.Trolls.Combat.Domain;
+using SteveTheTroll.Features.Trolls.Home.Infrastructure;
+using SteveTheTroll.Features.Trolls.Registry.Infrastructure;
+using SteveTheTroll.Features.Trolls.Taming.Domain;
+using SteveTheTroll.Features.Trolls.World.Infrastructure;
+using SteveTheTroll.Presentation.Notifications;
 using UnityEngine;
 
-namespace SteveTheTroll.Trolls.Taming.Infrastructure
+namespace SteveTheTroll.Features.Trolls.Taming.Infrastructure
 {
     /// <summary>
     /// T-008a: Tameable.TamingUpdate (InvokeRepeating, owner of the ZDO only) is replaced for the game's Troll: no food, no "not alerted"
@@ -134,8 +136,8 @@ namespace SteveTheTroll.Trolls.Taming.Infrastructure
             if (wearer == Player.m_localPlayer)
             {
                 bool first = !wearer.m_customData.ContainsKey(FirstTameKey);
-                if (first) { wearer.m_customData[FirstTameKey] = "1"; Ui.Notify.Big(Loc.T("stevethetroll_troll_coming", baseName), Ui.Notify.Kind.Good); }
-                else Ui.Notify.Show(Loc.T("stevethetroll_troll_coming", baseName), Ui.Notify.Kind.Good);
+                if (first) { wearer.m_customData[FirstTameKey] = "1"; Notify.Big(Loc.T("stevethetroll_troll_coming", baseName), Notify.Kind.Good); }
+                else Notify.Show(Loc.T("stevethetroll_troll_coming", baseName), Notify.Kind.Good);
             }
             else ModLog.Verbose("TrollTamingPatch: tamer " + wearer.GetPlayerName() + " is on another client - no 'is coming' message here");
             ModLog.Info("TrollTamingPatch: " + TrollTaming.Tag(troll) + " tamed by " + wearer.GetPlayerName() + " as '" + name + "' (owner set " + owned + ", tamed " + troll.IsTamed() + ")");

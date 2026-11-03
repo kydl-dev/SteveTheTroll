@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace SteveTheTroll.Hubs.Infrastructure
+namespace SteveTheTroll.Features.Hubs.Infrastructure
 {
     /// <summary>D-171 (P7): the two Vector3 helpers of the hub rules (nearest point, flat distance), moved out of the game-free HubRules (Domain may not name Unity types).</summary>
     internal static class HubGeometry

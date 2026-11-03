@@ -1,4 +1,4 @@
-namespace SteveTheTroll.Trolls.Contracts
+namespace SteveTheTroll.Features.Trolls.Contracts
 {
     /// <summary>Architecture V2 (D-169): who a troll is. Reading these never writes to the network (TrollContext.EnsureId is the one explicit write).</summary>
     internal interface ITrollIdentity

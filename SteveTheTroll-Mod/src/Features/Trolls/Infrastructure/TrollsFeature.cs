@@ -1,8 +1,14 @@
-using Kydl.Common;
+using Kydl.Core.Commands;
 using Kydl.Core.Features;
-using SteveTheTroll.Ui;
+using Kydl.Core.Identity;
+using Kydl.Core.Pipeline;
+using Kydl.Core.Results;
+using Kydl.Core.Time;
+using Kydl.Common;
+using SteveTheTroll.Configuration;
+using SteveTheTroll.Presentation.Hub.Registration;
 
-namespace SteveTheTroll.Trolls
+namespace SteveTheTroll.Features.Trolls.Infrastructure
 {
     /// <summary>
     /// Taming and farming of real trolls with the slippers, their backpack and depots, orders, map pins and extra trolls near the bed (MIGRATION_DECISIONS A4).

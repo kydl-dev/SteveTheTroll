@@ -1,8 +1,10 @@
 using System.Collections.Generic;
 using Kydl.Common;
+using SteveTheTroll.Configuration;
+using SteveTheTroll.Integrations.Unity;
 using UnityEngine;
 
-namespace SteveTheTroll.Items.Slippers
+namespace SteveTheTroll.Features.Slippers.Infrastructure
 {
     /// <summary>
     /// The look of the item lying on the ground: the cloned belt keeps its ground model in the child "attach" (worn parts are "attach_*").

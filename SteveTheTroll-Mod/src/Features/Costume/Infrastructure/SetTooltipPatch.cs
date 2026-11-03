@@ -2,9 +2,9 @@ using System.Collections.Generic;
 using System.Reflection;
 using HarmonyLib;
 using Kydl.Common;
-using SteveTheTroll.Items.Slippers;
+using SteveTheTroll.Features.Slippers.Infrastructure;
 
-namespace SteveTheTroll.Items.Costume
+namespace SteveTheTroll.Features.Costume.Infrastructure
 {
     /// <summary>
     /// D-091 (user: "could we not just say: stamina usage: -50%? there is a lot of text and font-size goes really small"): the set effect's

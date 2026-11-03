@@ -3,11 +3,11 @@ using System.Globalization;
 using HarmonyLib;
 using Jotunn.Entities;
 using Kydl.Common;
-using SteveTheTroll.Backpack.Domain;
-using SteveTheTroll.Backpack.Infrastructure;
+using SteveTheTroll.Features.Trolls.Backpack.Domain;
+using SteveTheTroll.Features.Trolls.Backpack.Infrastructure;
 using UnityEngine;
 
-namespace SteveTheTroll.Testing
+namespace SteveTheTroll.Testing.Commands
 {
     /// <summary>
     /// D-104 (user: "a devcommand that removes all prefabs placed by the mod, so we can start clean"): console command

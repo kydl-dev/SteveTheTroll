@@ -1,8 +1,11 @@
 using HarmonyLib;
 using Kydl.Common;
-using SteveTheTroll.Items.Slippers;
+using SteveTheTroll.Configuration;
+using SteveTheTroll.Features.Costume.Domain;
+using SteveTheTroll.Features.Slippers.Infrastructure;
+using SteveTheTroll.Presentation.Notifications;
 
-namespace SteveTheTroll.Items.Costume
+namespace SteveTheTroll.Features.Costume.Infrastructure
 {
     /// <summary>
     /// T-201: the game side of the costume unlock. The first time the local player equips the Fluffy Slippers the character is marked
@@ -23,7 +26,7 @@ namespace SteveTheTroll.Items.Costume
             p.m_customData[CostumeUnlockRules.WornKey] = "1";
             bool refreshed = RefreshRecipes(p);
             ModLog.Info("CostumeUnlock: " + p.GetPlayerName() + " " + why + " - costume recipes unlocked (known recipes refreshed " + refreshed + ")");
-            if (ModSettings.CostumeOn) Ui.Notify.Show(Loc.T("stevethetroll_msg_costume_unlocked"), Ui.Notify.Kind.Good);
+            if (ModSettings.CostumeOn) Notify.Show(Loc.T("stevethetroll_msg_costume_unlocked"), Notify.Kind.Good);
             return WornOnce(p);
         }
 

@@ -2,10 +2,10 @@ using System.Collections.Generic;
 using System;
 using NUnit.Framework;
 using Kydl.Core.Results;
-using SteveTheTroll.Trolls.Contracts;
-using SteveTheTroll.Trolls.Farming.Application;
-using SteveTheTroll.Trolls.Farming.Domain;
-using SteveTheTroll.Trolls.Farming.Execution;
+using SteveTheTroll.Features.Trolls.Contracts;
+using SteveTheTroll.Features.Trolls.Farming.Application;
+using SteveTheTroll.Features.Trolls.Farming.Domain;
+using SteveTheTroll.Features.Trolls.Farming.Execution;
 
 namespace SteveTheTroll.Tests.Unit
 {

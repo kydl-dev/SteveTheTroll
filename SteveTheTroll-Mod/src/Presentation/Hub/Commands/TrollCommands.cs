@@ -1,10 +1,12 @@
 using System.Collections.Generic;
 using Kydl.Common;
-using SteveTheTroll.Trolls.Registry.Infrastructure;
-using SteveTheTroll.Trolls.Taming.Infrastructure;
+using SteveTheTroll.Features.Trolls.Registry.Infrastructure;
+using SteveTheTroll.Features.Trolls.Taming.Infrastructure;
+using SteveTheTroll.Presentation.Notifications;
+using SteveTheTroll.Ui;
 using UnityEngine;
 
-namespace SteveTheTroll.Ui
+namespace SteveTheTroll.Presentation.Hub.Commands
 {
     /// <summary>
     /// D-119 (user 2026-10-28): the game side of the F6 "My trolls" tab - Follow, Kill and the distance of each own tamed troll.

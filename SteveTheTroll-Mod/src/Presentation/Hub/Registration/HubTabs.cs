@@ -1,9 +1,12 @@
 using System;
 using BepInEx.Configuration;
 using Kydl.Common;
-using Kydl.Ui;
+using SteveTheTroll.Bootstrap;
+using SteveTheTroll.Configuration;
+using SteveTheTroll.Presentation.Hub.Pages;
+using SteveTheTroll.Ui;
 
-namespace SteveTheTroll.Ui
+namespace SteveTheTroll.Presentation.Hub.Registration
 {
     /// <summary>
     /// What SteveTheTroll declares to the KY hub of KydlCore (F6, MIGRATION_DECISIONS B11 / A6). There is NO menu key, window or input lock in this mod: KydlCore

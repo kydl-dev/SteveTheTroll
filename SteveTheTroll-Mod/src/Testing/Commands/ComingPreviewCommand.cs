@@ -1,7 +1,8 @@
 using Jotunn.Entities;
 using Kydl.Common;
+using SteveTheTroll.Presentation.Notifications;
 
-namespace SteveTheTroll.Ui
+namespace SteveTheTroll.Testing.Commands
 {
     /// <summary>
     /// Console command stt_coming [name] (user 2026-10-27: "can I trigger this to see how it looks?"): shows the big first-tame message

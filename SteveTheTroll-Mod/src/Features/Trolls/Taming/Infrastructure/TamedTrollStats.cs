@@ -1,10 +1,11 @@
 using HarmonyLib;
 using Kydl.Common;
-using SteveTheTroll.Trolls.Combat.Infrastructure;
-using SteveTheTroll.Trolls.Taming.Domain;
+using SteveTheTroll.Configuration;
+using SteveTheTroll.Features.Trolls.Combat.Infrastructure;
+using SteveTheTroll.Features.Trolls.Taming.Domain;
 using UnityEngine;
 
-namespace SteveTheTroll.Trolls.Taming.Infrastructure
+namespace SteveTheTroll.Features.Trolls.Taming.Infrastructure
 {
     /// <summary>
     /// D-042 (user 2026-10-27, "always when tamed"): a tamed Troll has TamedHealthFactor x its base health, TamedDamageFactor x its damage,

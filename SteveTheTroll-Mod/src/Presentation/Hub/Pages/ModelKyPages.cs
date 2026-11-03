@@ -1,12 +1,13 @@
+using System;
 using System.Collections.Generic;
 using System.Text;
-using System;
 using Kydl.Common;
-using Kydl.Ui;
 using KydlCore;
-using SteveTheTroll.Trolls.Combat.Infrastructure;
+using SteveTheTroll.Presentation.Hub.Registration;
+using SteveTheTroll.Presentation.Hub.ViewModels;
+using SteveTheTroll.Ui;
 
-namespace SteveTheTroll.Ui
+namespace SteveTheTroll.Presentation.Hub.Pages
 {
     /// <summary>
     /// T-098: the Slippers and Costume tabs as described pages: the 3D view is the one hosted element (KydlCore adds it and sets the text size), everything else is rows.

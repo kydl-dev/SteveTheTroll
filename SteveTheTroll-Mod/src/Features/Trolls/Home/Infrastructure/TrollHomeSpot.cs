@@ -1,8 +1,8 @@
 using Kydl.Common;
-using SteveTheTroll.Trolls.Taming.Infrastructure;
+using SteveTheTroll.Configuration;
 using UnityEngine;
 
-namespace SteveTheTroll.Trolls.Home.Infrastructure
+namespace SteveTheTroll.Features.Trolls.Home.Infrastructure
 {
     /// <summary>
     /// D-097 (user: "when you log out, they are brought as close as 15m from the bed, not right on top of the bed (I had to break down

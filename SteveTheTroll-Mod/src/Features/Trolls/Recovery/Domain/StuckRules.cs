@@ -1,8 +1,8 @@
-using System.Collections.Generic;
 using System;
-using SteveTheTroll.Trolls.Farming.Domain;
+using System.Collections.Generic;
+using SteveTheTroll.Features.Trolls.Farming.Domain;
 
-namespace SteveTheTroll.Trolls.Recovery.Domain
+namespace SteveTheTroll.Features.Trolls.Recovery.Domain
 {
     /// <summary>
     /// D-167 (user spec "Troll Movement - Stuck Detection and Recovery System"): the game-free numbers and decisions of the stuck detection and recovery. All distances are flat metres

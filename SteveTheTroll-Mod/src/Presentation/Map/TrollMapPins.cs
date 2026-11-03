@@ -1,10 +1,12 @@
 using System.Collections.Generic;
 using HarmonyLib;
 using Kydl.Common;
-using SteveTheTroll.Trolls.Registry.Infrastructure;
+using SteveTheTroll.Configuration;
+using SteveTheTroll.Features.Trolls.Registry.Infrastructure;
+using SteveTheTroll.Integrations.Unity;
 using UnityEngine;
 
-namespace SteveTheTroll.Ui
+namespace SteveTheTroll.Presentation.Map
 {
     /// <summary>
     /// D-081 (user: "add icons, of the head piece item, for showing each troll on the map (its last known location)"): one map pin per living

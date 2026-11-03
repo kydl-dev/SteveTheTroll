@@ -1,4 +1,4 @@
-using SteveTheTroll.Items.Costume;
+using SteveTheTroll.Features.Costume.Domain;
 
 namespace SteveTheTroll.Tests.Unit
 {

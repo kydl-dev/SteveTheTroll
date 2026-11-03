@@ -1,7 +1,7 @@
 using Kydl.Common;
 using UnityEngine;
 
-namespace SteveTheTroll.Testing
+namespace SteveTheTroll.Testing.TestHooks
 {
     /// <summary>D-166: TestLab hooks for the baked slipper skin (suite slipper-skin).</summary>
     internal static class SlipperTestHooks

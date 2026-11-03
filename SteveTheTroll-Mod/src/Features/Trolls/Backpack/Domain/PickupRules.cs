@@ -1,4 +1,4 @@
-namespace SteveTheTroll.Backpack.Domain
+namespace SteveTheTroll.Features.Trolls.Backpack.Domain
 {
     /// <summary>D-173 (Architecture V2, P6 pickup slice): what the pickup does with one dropped item next to a collecting troll.</summary>
     internal enum PickupAction

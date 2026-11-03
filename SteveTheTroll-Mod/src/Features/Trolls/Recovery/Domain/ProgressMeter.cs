@@ -1,6 +1,4 @@
-using System;
-
-namespace SteveTheTroll.Trolls.Recovery.Domain
+namespace SteveTheTroll.Features.Trolls.Recovery.Domain
 {
     /// <summary>
     /// Measures whether a troll really gets closer to its goal (spec 1a / 5): the timer only runs while movement is expected (not during attack animations, knockback,

@@ -1,6 +1,4 @@
-using SteveTheTroll.Backpack.Domain;
-
-namespace SteveTheTroll.Hubs.Domain
+namespace SteveTheTroll.Features.Hubs.Domain
 {
     /// <summary>
     /// D-135 / D-138 (user 2026-10-30): the Troll Hub as the user built it - the anchored stt_dumpbuild 30 of 23:04 (351 pieces; the placed sign, the armour stands, the

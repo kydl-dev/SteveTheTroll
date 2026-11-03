@@ -2,9 +2,12 @@ using System.Collections.Generic;
 using System.Reflection;
 using HarmonyLib;
 using Kydl.Common;
-using SteveTheTroll.Trolls.Combat.Infrastructure;
-using SteveTheTroll.Trolls.Home.Infrastructure;
-using SteveTheTroll.Trolls.Taming.Infrastructure;
+using SteveTheTroll.Bootstrap;
+using SteveTheTroll.Configuration;
+using SteveTheTroll.Features.Trolls.Combat.Infrastructure;
+using SteveTheTroll.Features.Trolls.Home.Infrastructure;
+using SteveTheTroll.Features.Trolls.Taming.Infrastructure;
+using SteveTheTroll.Integrations.Unity;
 using UnityEngine;
 
 namespace SteveTheTroll.Testing

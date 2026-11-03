@@ -1,18 +1,21 @@
+using Kydl.Core.Commands;
+using Kydl.Core.Features;
+using Kydl.Core.Identity;
+using Kydl.Core.Pipeline;
+using Kydl.Core.Results;
+using Kydl.Core.Time;
 using System.Collections.Generic;
 using Kydl.Common;
-using SteveTheTroll.Backpack.Domain;
-using Kydl.Core.Results;
-using SteveTheTroll.Trolls.Contracts;
-using SteveTheTroll.Trolls.Core;
-using SteveTheTroll.Trolls.Farming.Infrastructure;
-using SteveTheTroll.Trolls.Recovery.Application;
-using SteveTheTroll.Trolls.Recovery.Domain;
-using SteveTheTroll.Trolls.Recovery.Execution;
-using SteveTheTroll.Trolls.Registry.Infrastructure;
-using SteveTheTroll.Trolls.Taming.Infrastructure;
+using SteveTheTroll.Features.Trolls.Contracts;
+using SteveTheTroll.Features.Trolls.Core;
+using SteveTheTroll.Features.Trolls.Recovery.Application;
+using SteveTheTroll.Features.Trolls.Recovery.Domain;
+using SteveTheTroll.Features.Trolls.Recovery.Execution;
+using SteveTheTroll.Features.Trolls.Registry.Infrastructure;
+using SteveTheTroll.Features.Trolls.Taming.Infrastructure;
 using UnityEngine;
 
-namespace SteveTheTroll.Trolls.Recovery.Infrastructure
+namespace SteveTheTroll.Features.Trolls.Recovery.Infrastructure
 {
     /// <summary>
     /// D-167 (user spec "Troll Movement - Stuck Detection and Recovery System"): ONE stuck detection and recovery per troll, shared by the farming walk (TrollFarmer) and the walk to the hub

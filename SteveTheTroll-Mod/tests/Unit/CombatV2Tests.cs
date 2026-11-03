@@ -1,9 +1,9 @@
 using NUnit.Framework;
 using Kydl.Core.Results;
-using SteveTheTroll.Trolls.Combat.Application;
-using SteveTheTroll.Trolls.Combat.Domain;
-using SteveTheTroll.Trolls.Combat.Execution;
-using SteveTheTroll.Trolls.Contracts;
+using SteveTheTroll.Features.Trolls.Combat.Application;
+using SteveTheTroll.Features.Trolls.Combat.Domain;
+using SteveTheTroll.Features.Trolls.Combat.Execution;
+using SteveTheTroll.Features.Trolls.Contracts;
 
 namespace SteveTheTroll.Tests.Unit
 {

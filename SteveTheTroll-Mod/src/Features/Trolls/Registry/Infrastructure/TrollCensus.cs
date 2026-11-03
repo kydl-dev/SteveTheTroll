@@ -1,9 +1,10 @@
 using System.Collections.Generic;
 using Kydl.Common;
-using SteveTheTroll.Trolls.Taming.Infrastructure;
+using SteveTheTroll.Configuration;
+using SteveTheTroll.Features.Trolls.Taming.Infrastructure;
 using UnityEngine;
 
-namespace SteveTheTroll.Trolls.Registry.Infrastructure
+namespace SteveTheTroll.Features.Trolls.Registry.Infrastructure
 {
     /// <summary>
     /// D-085 (TEST-037: 11 trolls spawned around the bed while the cap was 6 - the game's max spawned counts only the trolls near ONE spawn

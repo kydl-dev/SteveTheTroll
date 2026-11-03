@@ -1,11 +1,10 @@
 using System.Collections.Generic;
-using HarmonyLib;
 using Kydl.Common;
-using SteveTheTroll.Trolls.Registry.Infrastructure;
-using SteveTheTroll.Trolls.Taming.Infrastructure;
+using SteveTheTroll.Features.Trolls.Taming.Infrastructure;
+using SteveTheTroll.Presentation.Notifications;
 using UnityEngine;
 
-namespace SteveTheTroll.Backpack.Infrastructure
+namespace SteveTheTroll.Features.Trolls.Backpack.Infrastructure
 {
     /// <summary>
     /// T-008c (D-062, user spec): when a tamed troll dies, everything in its backpack drops in the game's cargo crates (CargoCrate, as from
@@ -34,7 +33,7 @@ namespace SteveTheTroll.Backpack.Infrastructure
             int crates = Drop(items, troll.transform.position + Vector3.up);
             ModLog.Info("BackpackDeath: " + TrollTaming.Tag(troll) + " died - " + items.Count + " stack(s) dropped in " + crates + " cargo crate(s)");
             if (TrollTaming.Owner(troll) == (Player.m_localPlayer != null ? Player.m_localPlayer.GetPlayerID() : -1L))
-                Ui.Notify.Show(Loc.T("stevethetroll_backpack_dropped", __instance.GetHoverName(), crates.ToString()), Ui.Notify.Kind.Death);
+                Notify.Show(Loc.T("stevethetroll_backpack_dropped", __instance.GetHoverName(), crates.ToString()), Notify.Kind.Death);
         }
 
         // Expected outcome: the number of crates used (0 = dropped on the ground).

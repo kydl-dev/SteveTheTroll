@@ -1,6 +1,4 @@
-using SteveTheTroll.Hubs.Domain;
-
-namespace SteveTheTroll.Backpack.Domain
+namespace SteveTheTroll.Features.Trolls.Backpack.Domain
 {
     /// <summary>
     /// D-064: the user's troll depot (stt_dumpbuild 6, 2026-10-27 23:07, 14 pieces; the 2 stone_floor_2x2 support floors left out): a

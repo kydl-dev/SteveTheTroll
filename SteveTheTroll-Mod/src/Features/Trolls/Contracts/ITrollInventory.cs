@@ -1,4 +1,4 @@
-namespace SteveTheTroll.Trolls.Contracts
+namespace SteveTheTroll.Features.Trolls.Contracts
 {
     /// <summary>Architecture V2 (spec section 4, P6 - D-173): the troll's backpack as the behaviour sees it (the four chests live in the troll's ZDO, BackpackStore).</summary>
     internal interface ITrollInventory

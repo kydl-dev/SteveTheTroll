@@ -3,7 +3,7 @@ using System.Reflection;
 using Kydl.Common;
 using UnityEngine;
 
-namespace SteveTheTroll
+namespace SteveTheTroll.Integrations.Unity
 {
     /// <summary>
     /// Small images embedded in the DLL as resources (csproj EmbeddedResource with a LogicalName) and turned into sprites in game - for art that needs no

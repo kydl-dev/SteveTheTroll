@@ -1,11 +1,10 @@
 using System.Collections.Generic;
-using HarmonyLib;
 using Kydl.Common;
-using SteveTheTroll.Trolls.Combat.Domain;
-using SteveTheTroll.Trolls.Taming.Infrastructure;
-using UnityEngine;
+using SteveTheTroll.Configuration;
+using SteveTheTroll.Features.Trolls.Combat.Domain;
+using SteveTheTroll.Features.Trolls.Taming.Infrastructure;
 
-namespace SteveTheTroll.Trolls.Combat.Infrastructure
+namespace SteveTheTroll.Features.Trolls.Combat.Infrastructure
 {
     /// <summary>
     /// D-172 (user 2026-11-02: "Protect player pieces"): a tamed troll never damages a piece a player built. The troll's swings hit everything in their area - a rage

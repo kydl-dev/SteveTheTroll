@@ -1,7 +1,6 @@
 using System.Collections.Generic;
-using SteveTheTroll.Backpack.Domain;
 
-namespace SteveTheTroll.Hubs.Domain
+namespace SteveTheTroll.Features.Hubs.Domain
 {
     /// <summary>
     /// D-135 (user 2026-10-30): the pure rules of the Troll Hubs, unit-tested (HubRulesTests). Distances are flat metres.

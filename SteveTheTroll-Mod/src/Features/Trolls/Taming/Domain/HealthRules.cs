@@ -1,4 +1,4 @@
-namespace SteveTheTroll.Trolls.Taming.Domain
+namespace SteveTheTroll.Features.Trolls.Taming.Domain
 {
     /// <summary>D-160: the game-free decisions of the runtime health monitor (unit-tested; RuntimeHealth reads the game and reports). Problems are only reported, never "fixed".</summary>
     internal static class HealthRules

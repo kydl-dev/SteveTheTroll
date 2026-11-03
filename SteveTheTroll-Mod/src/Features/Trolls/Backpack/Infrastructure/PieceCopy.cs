@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace SteveTheTroll.Backpack.Infrastructure
+namespace SteveTheTroll.Features.Trolls.Backpack.Infrastructure
 {
     /// <summary>D-064: copies of a building piece's solid colliders (no networking, no WearNTear) for the troll depot frame.</summary>
     internal static class PieceCopy

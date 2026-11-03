@@ -1,9 +1,10 @@
 using System.Collections.Generic;
 using HarmonyLib;
 using Kydl.Common;
-using SteveTheTroll.Items.Slippers;
+using SteveTheTroll.Features.Costume.Domain;
+using SteveTheTroll.Features.Slippers.Infrastructure;
 
-namespace SteveTheTroll.Items.Costume
+namespace SteveTheTroll.Features.Costume.Infrastructure
 {
     /// <summary>
     /// D-076 (user 2026-10-28: "all the items have to get unlocked when Troll Hide (or any of the other items in the recipes) is being

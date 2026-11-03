@@ -1,4 +1,4 @@
-namespace SteveTheTroll.Trolls.Combat.Domain
+namespace SteveTheTroll.Features.Trolls.Combat.Domain
 {
     /// <summary>D-171 (P5): the game-free decisions of TrollRage (D-082 / D-084).</summary>
     internal static class RageRules

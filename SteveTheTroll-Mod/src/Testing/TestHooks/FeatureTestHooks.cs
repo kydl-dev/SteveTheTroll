@@ -1,12 +1,18 @@
+using Kydl.Core.Commands;
+using Kydl.Core.Features;
+using Kydl.Core.Identity;
+using Kydl.Core.Pipeline;
+using Kydl.Core.Results;
+using Kydl.Core.Time;
 using System.Collections.Generic;
 using HarmonyLib;
 using Kydl.Common;
-using SteveTheTroll.Hubs.Domain;
-using SteveTheTroll.Hubs.Infrastructure;
-using SteveTheTroll.Integrations.KydlCoreItems;
-using SteveTheTroll.Items.Costume;
+using SteveTheTroll.Bootstrap;
+using SteveTheTroll.Features.Costume.Infrastructure;
+using SteveTheTroll.Features.Hubs.Domain;
+using SteveTheTroll.Integrations.KydlCore;
 
-namespace SteveTheTroll.Testing
+namespace SteveTheTroll.Testing.TestHooks
 {
     /// <summary>
     /// TestLab hooks of the KydlDev spec port (MIGRATION_DECISIONS A4, B11, B13): which features run, which hub tabs and KY-Items entries SteveTheTroll has now.

@@ -1,7 +1,12 @@
 using Kydl.Core.Commands;
+using Kydl.Core.Features;
+using Kydl.Core.Identity;
+using Kydl.Core.Pipeline;
+using Kydl.Core.Results;
+using Kydl.Core.Time;
 using UnityEngine;
 
-namespace SteveTheTroll.Trolls.Orders.Commands
+namespace SteveTheTroll.Features.Trolls.Orders.Commands
 {
     /// <summary>D-170 (T-008d / D-065): break THIS source first, then farm on with the focus.</summary>
     internal sealed class BreakSourceCommand : ICommand<bool>

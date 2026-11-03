@@ -1,7 +1,8 @@
 using HarmonyLib;
 using Kydl.Common;
+using SteveTheTroll.Configuration;
 
-namespace SteveTheTroll.Items.Slippers
+namespace SteveTheTroll.Features.Slippers.Infrastructure
 {
     /// <summary>
     /// TEST-007: the game only counts armor and damage resistances of the helmet, chest, legs and shoulder slots (Player.GetBodyArmor,

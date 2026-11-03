@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace SteveTheTroll.Trolls.Combat.Domain
+namespace SteveTheTroll.Features.Trolls.Combat.Domain
 {
     /// <summary>
     /// D-171 (P5): the game-free decisions of TrollGuard (D-065 / D-078 / D-081): which creature that goes for the owner a troll takes on, and which one of those it fights.

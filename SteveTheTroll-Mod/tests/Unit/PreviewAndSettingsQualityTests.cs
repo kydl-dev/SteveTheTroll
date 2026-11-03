@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using System.Globalization;
-using SteveTheTroll.Backpack.Domain;
+using SteveTheTroll.Features.Trolls.Backpack.Domain;
 using SteveTheTroll.Ui;
 
 namespace SteveTheTroll.Tests.Unit

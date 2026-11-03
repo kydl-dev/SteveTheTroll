@@ -1,9 +1,9 @@
 using System.Collections.Generic;
 using Kydl.Common;
-using SteveTheTroll.Trolls.Farming.Domain;
+using SteveTheTroll.Features.Trolls.Farming.Domain;
 using UnityEngine;
 
-namespace SteveTheTroll.Trolls.Farming.Infrastructure
+namespace SteveTheTroll.Features.Trolls.Farming.Infrastructure
 {
     /// <summary>
     /// D-151 (user: "not have 2 that go for the same tree and one waits behind the first"): the reservation of the source a troll works on. Per client, which holds all own trolls

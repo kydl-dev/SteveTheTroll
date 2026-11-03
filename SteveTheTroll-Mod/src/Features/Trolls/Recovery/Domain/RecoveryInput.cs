@@ -1,4 +1,4 @@
-namespace SteveTheTroll.Trolls.Recovery.Domain
+namespace SteveTheTroll.Features.Trolls.Recovery.Domain
 {
     /// <summary>
     /// Architecture V2 (D-169): the facts of ONE recovery frame, read from the game by TrollRecovery and decided on by RecoveryPipeline. Immutable, game-free (no Unity types:

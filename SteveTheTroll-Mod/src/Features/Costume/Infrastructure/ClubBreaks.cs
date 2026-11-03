@@ -2,12 +2,12 @@ using System.Collections.Generic;
 using System.Reflection;
 using HarmonyLib;
 using Kydl.Common;
-using SteveTheTroll.Items.Costume;
-using SteveTheTroll.Trolls.Combat.Domain;
-using SteveTheTroll.Trolls.Taming.Domain;
+using SteveTheTroll.Configuration;
+using SteveTheTroll.Features.Trolls.Combat.Domain;
+using SteveTheTroll.Features.Trolls.Taming.Domain;
 using UnityEngine;
 
-namespace SteveTheTroll.Items.Club
+namespace SteveTheTroll.Features.Costume.Infrastructure
 {
     /// <summary>
     /// D-120 (user 2026-10-28: "Troll Club (even at higher levels) can chop / pickaxe: yggdrasil shoot, scorched trees, timberwood trees,

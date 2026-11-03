@@ -2,10 +2,11 @@ using System.Collections.Generic;
 using System.IO;
 using BepInEx;
 using Kydl.Common;
+using SteveTheTroll.Bootstrap;
 using SteveTheTroll.Ui;
 using UnityEngine;
 
-namespace SteveTheTroll.Hubs.Infrastructure
+namespace SteveTheTroll.Features.Hubs.Infrastructure
 {
     /// <summary>
     /// D-135: the Troll Hub sign editor (SignMenuView of the Unity project) in a KydlCore window. Opened with E on the sign or with the pen in the

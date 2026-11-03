@@ -1,10 +1,11 @@
 using System.Collections.Generic;
 using HarmonyLib;
 using Kydl.Common;
-using SteveTheTroll.Trolls.Taming.Infrastructure;
+using SteveTheTroll.Configuration;
+using SteveTheTroll.Features.Trolls.Taming.Infrastructure;
 using UnityEngine;
 
-namespace SteveTheTroll.World.Zones
+namespace SteveTheTroll.Features.Trolls.World.Infrastructure
 {
     /// <summary>
     /// D-084 (user: "small area around the trolls that are active so they farm all the time ... not follow the game rendering areas setting,

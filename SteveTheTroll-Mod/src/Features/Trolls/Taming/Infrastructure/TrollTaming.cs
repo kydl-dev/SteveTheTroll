@@ -2,12 +2,13 @@ using System.Collections.Generic;
 using HarmonyLib;
 using Jotunn.Managers;
 using Kydl.Common;
-using SteveTheTroll.Items.Costume;
-using SteveTheTroll.Items.Slippers;
-using SteveTheTroll.Trolls.Registry.Infrastructure;
+using SteveTheTroll.Configuration;
+using SteveTheTroll.Features.Costume.Infrastructure;
+using SteveTheTroll.Features.Slippers.Infrastructure;
+using SteveTheTroll.Features.Trolls.Registry.Infrastructure;
 using UnityEngine;
 
-namespace SteveTheTroll.Trolls.Taming.Infrastructure
+namespace SteveTheTroll.Features.Trolls.Taming.Infrastructure
 {
     /// <summary>
     /// T-008a (D-037 / D-038): the game's Troll gets the game's own Tameable (copied from the Wolf: effects, commandable = E follow / stay),

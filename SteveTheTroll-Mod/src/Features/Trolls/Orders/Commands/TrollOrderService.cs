@@ -1,8 +1,12 @@
-using Kydl.Common;
 using Kydl.Core.Commands;
+using Kydl.Core.Features;
+using Kydl.Core.Identity;
+using Kydl.Core.Pipeline;
 using Kydl.Core.Results;
+using Kydl.Core.Time;
+using Kydl.Common;
 
-namespace SteveTheTroll.Trolls.Orders.Commands
+namespace SteveTheTroll.Features.Trolls.Orders.Commands
 {
     /// <summary>D-170: the one dispatcher of the troll orders (built on first use, every handler registered once). Callers send commands here.</summary>
     internal static class TrollOrderService

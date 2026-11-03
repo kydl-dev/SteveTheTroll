@@ -1,9 +1,14 @@
-using System;
-using SteveTheTroll.Backpack.Domain;
+using Kydl.Core.Commands;
+using Kydl.Core.Features;
+using Kydl.Core.Identity;
+using Kydl.Core.Pipeline;
 using Kydl.Core.Results;
-using SteveTheTroll.Trolls.Contracts;
+using Kydl.Core.Time;
+using System;
+using SteveTheTroll.Features.Trolls.Backpack.Domain;
+using SteveTheTroll.Features.Trolls.Contracts;
 
-namespace SteveTheTroll.Backpack.Execution
+namespace SteveTheTroll.Features.Trolls.Backpack.Execution
 {
     /// <summary>
     /// D-173 (Architecture V2, P6 pickup slice): performs a PickupAction on the drop the adapter is working on. The delegates are bound once by BackpackPickup to its own

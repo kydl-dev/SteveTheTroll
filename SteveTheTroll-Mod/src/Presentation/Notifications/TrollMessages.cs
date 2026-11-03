@@ -1,8 +1,7 @@
-using HarmonyLib;
 using Kydl.Common;
-using SteveTheTroll.Trolls.Taming.Infrastructure;
+using SteveTheTroll.Features.Trolls.Taming.Infrastructure;
 
-namespace SteveTheTroll.Ui
+namespace SteveTheTroll.Presentation.Notifications
 {
     /// <summary>
     /// D-047: the game's own messages about OUR trolls (follow / stay / pet in Tameable.RPC_Command / Interact, "tamed" in Tameable.Tame)

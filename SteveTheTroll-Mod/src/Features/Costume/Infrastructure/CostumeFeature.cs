@@ -1,10 +1,16 @@
-using Kydl.Common;
+using Kydl.Core.Commands;
 using Kydl.Core.Features;
+using Kydl.Core.Identity;
+using Kydl.Core.Pipeline;
+using Kydl.Core.Results;
+using Kydl.Core.Time;
+using Kydl.Common;
 using KydlCore;
-using SteveTheTroll.Integrations.KydlCoreItems;
-using SteveTheTroll.Ui;
+using SteveTheTroll.Configuration;
+using SteveTheTroll.Integrations.KydlCore;
+using SteveTheTroll.Presentation.Hub.Registration;
 
-namespace SteveTheTroll.Items.Costume
+namespace SteveTheTroll.Features.Costume.Infrastructure
 {
     /// <summary>
     /// The troll costume (head, suit, trousers), the Troll Club and the set effects (MIGRATION_DECISIONS A4). Gate: [General] EnableAll AND [Costume] Enable,

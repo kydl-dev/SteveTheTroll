@@ -1,4 +1,4 @@
-namespace SteveTheTroll.Trolls.Orders.Domain
+namespace SteveTheTroll.Features.Trolls.Orders.Domain
 {
     /// <summary>D-170: what the attack key means (T-008d / D-065 / D-124).</summary>
     internal enum OrderKind

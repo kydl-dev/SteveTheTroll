@@ -1,4 +1,4 @@
-namespace SteveTheTroll.Backpack.Domain
+namespace SteveTheTroll.Features.Trolls.Backpack.Domain
 {
     /// <summary>
     /// T-008b (D-053, D-057): the user's backpack construction from stt_dumpbuild (2026-10-27 20:51, 43 pieces, radius 10 m; the 2 stone_floor_2x2

@@ -1,9 +1,9 @@
 using BepInEx.Configuration;
 using Kydl.Common;
-using SteveTheTroll.Trolls.Combat.Domain;
+using SteveTheTroll.Features.Trolls.Combat.Domain;
 using UnityEngine;
 
-namespace SteveTheTroll
+namespace SteveTheTroll.Configuration
 {
     /// <summary>
     /// All settings in one place (user rule, every mod):

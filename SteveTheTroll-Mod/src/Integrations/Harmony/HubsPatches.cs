@@ -1,9 +1,5 @@
 using HarmonyLib;
 using Kydl.Common;
-using SteveTheTroll.Backpack.Domain;
-using SteveTheTroll.Hubs.Domain;
-using SteveTheTroll.Hubs.Infrastructure;
-using SteveTheTroll.Items.Costume;
 using UnityEngine;
 
 namespace SteveTheTroll.Integrations.Harmony
@@ -15,13 +11,13 @@ namespace SteveTheTroll.Integrations.Harmony
     [HarmonyPatch(typeof(Player), nameof(Player.HaveRequirements), typeof(Piece), typeof(Player.RequirementMode))]
     static class HubPlacement_Visible
     {
-        static void Postfix(Player __instance, Piece piece, Player.RequirementMode mode, ref bool __result) { global::SteveTheTroll.Hubs.Infrastructure.HubPlacement.Visible.Postfix(__instance, piece, mode, ref __result); }
+        static void Postfix(Player __instance, Piece piece, Player.RequirementMode mode, ref bool __result) { global::SteveTheTroll.Features.Hubs.Infrastructure.HubPlacement.Visible.Postfix(__instance, piece, mode, ref __result); }
     }
 
     // HubPlacement.Place (Features/Hubs/Infrastructure/HubPlacement.cs)
     [HarmonyPatch(typeof(Player), "PlacePiece")]
     static class HubPlacement_Place
     {
-        static bool Prefix(Player __instance, Piece piece, Vector3 pos) { return global::SteveTheTroll.Hubs.Infrastructure.HubPlacement.Place.Prefix(__instance, piece, pos); }
+        static bool Prefix(Player __instance, Piece piece, Vector3 pos) { return global::SteveTheTroll.Features.Hubs.Infrastructure.HubPlacement.Place.Prefix(__instance, piece, pos); }
     }
 }

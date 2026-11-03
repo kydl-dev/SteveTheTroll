@@ -1,7 +1,7 @@
 using Kydl.Common;
 using UnityEngine;
 
-namespace SteveTheTroll.Testing
+namespace SteveTheTroll.Testing.TestHooks
 {
     /// <summary>D-171 (P7): TestLab hooks for the home features (suite tests bed-heal, hold-look).</summary>
     internal static class HomeTestHooks

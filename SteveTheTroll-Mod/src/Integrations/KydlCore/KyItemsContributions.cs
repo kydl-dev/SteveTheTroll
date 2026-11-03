@@ -3,8 +3,9 @@ using Jotunn.Managers;
 using Kydl.Common;
 using KydlCore;
 using UnityEngine;
+using Plugin = SteveTheTroll.Bootstrap.Plugin;
 
-namespace SteveTheTroll.Integrations.KydlCoreItems
+namespace SteveTheTroll.Integrations.KydlCore
 {
     /// <summary>
     /// SteveTheTroll's items and pieces in KydlCore's KY-Items registry (MIGRATION_DECISIONS B13, PLAN T-210 step 4): the slippers, the costume parts, the Troll

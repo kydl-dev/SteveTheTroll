@@ -1,13 +1,14 @@
 using System.Collections.Generic;
 using Kydl.Common;
-using SteveTheTroll.Trolls.Combat.Domain;
-using SteveTheTroll.Trolls.Farming.Infrastructure;
-using SteveTheTroll.Trolls.Orders.Infrastructure;
-using SteveTheTroll.Trolls.Taming.Domain;
-using SteveTheTroll.Trolls.Core;
+using SteveTheTroll.Configuration;
+using SteveTheTroll.Features.Trolls.Combat.Domain;
+using SteveTheTroll.Features.Trolls.Contracts;
+using SteveTheTroll.Features.Trolls.Core;
+using SteveTheTroll.Features.Trolls.Farming.Infrastructure;
+using SteveTheTroll.Features.Trolls.Orders.Infrastructure;
 using UnityEngine;
 
-namespace SteveTheTroll.Trolls.Combat.Infrastructure
+namespace SteveTheTroll.Features.Trolls.Combat.Infrastructure
 {
     /// <summary>
     /// D-084 (user: "When trolls are getting attacked, they should do 3 hits overhead into the ground and then go back to farming (no retreat,
@@ -110,7 +111,7 @@ namespace SteveTheTroll.Trolls.Combat.Infrastructure
         // D-175 (Architecture V2): the chase goes through the troll's movement capability (TrollContext), built once
         TrollContext _ctx;
 
-        SteveTheTroll.Trolls.Contracts.ITrollMovement Mv() { if (_ctx == null) _ctx = new TrollContext(GetComponent<Character>()); return _ctx.Capabilities.Movement; }
+        ITrollMovement Mv() { if (_ctx == null) _ctx = new TrollContext(GetComponent<Character>()); return _ctx.Capabilities.Movement; }
 
         internal bool Step(MonsterAI ai, float dt)
         {

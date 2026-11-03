@@ -1,12 +1,14 @@
 using Kydl.Common;
-using SteveTheTroll.Items.Slippers;
-using SteveTheTroll.Trolls.Farming.Infrastructure;
-using SteveTheTroll.Trolls.Orders.Commands;
-using SteveTheTroll.Trolls.Registry.Infrastructure;
-using SteveTheTroll.Trolls.Taming.Infrastructure;
+using SteveTheTroll.Features.Slippers.Infrastructure;
+using SteveTheTroll.Features.Trolls.Orders.Commands;
+using SteveTheTroll.Features.Trolls.Registry.Infrastructure;
+using SteveTheTroll.Features.Trolls.Taming.Infrastructure;
+using SteveTheTroll.Integrations.Unity;
+using SteveTheTroll.Presentation.Notifications;
+using SteveTheTroll.Ui;
 using UnityEngine;
 
-namespace SteveTheTroll.Ui
+namespace SteveTheTroll.Presentation.Hub.ViewModels
 {
     /// <summary>
     /// Game side of the F6 menu tabs (D-039 / D-043): the slippers' data from the item + recipe in ObjectDB, the 3D model (an inert copy of
