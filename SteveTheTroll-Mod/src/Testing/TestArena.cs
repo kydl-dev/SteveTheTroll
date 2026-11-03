@@ -23,8 +23,17 @@ namespace SteveTheTroll.Testing
             if (!_known)
             {
                 _known = true;
-                _start = p.transform.position;
-                _spot = Choose(_start);
+                // 2026-11-03 (ecosystem run): share the arena with every other mod's Kydl.Common.TestArena (same AppDomain keys), else a suite that moved the
+                // player before ours made us take ITS spot as the lab start
+                object st = System.AppDomain.CurrentDomain.GetData("Kydl.TestArena.Start"), sp = System.AppDomain.CurrentDomain.GetData("Kydl.TestArena.Spot");
+                if (st is Vector3 s0 && sp is Vector3 s1) { _start = s0; _spot = s1; }
+                else
+                {
+                    _start = p.transform.position;
+                    _spot = Choose(_start);
+                    System.AppDomain.CurrentDomain.SetData("Kydl.TestArena.Start", _start);
+                    System.AppDomain.CurrentDomain.SetData("Kydl.TestArena.Spot", _spot);
+                }
                 ModLog.Info("TestArena: lab start " + _start.ToString("F0") + " -> test spot " + _spot.ToString("F0") + " (" + Flat(_spot - _start).ToString("F0") + " m away, flattest dry area of 16 directions)");
             }
             Place(p, _spot, Quaternion.identity);         // D-172: always facing world +z - a test's dz > 0 is in front of the player
