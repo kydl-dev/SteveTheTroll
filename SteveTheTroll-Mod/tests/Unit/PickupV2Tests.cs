@@ -2,7 +2,7 @@ using NUnit.Framework;
 using SteveTheTroll.Backpack.Application;
 using SteveTheTroll.Backpack.Domain;
 using SteveTheTroll.Backpack.Execution;
-using SteveTheTroll.Core.Results;
+using Kydl.Core.Results;
 using SteveTheTroll.Trolls.Contracts;
 
 namespace SteveTheTroll.Tests.Unit

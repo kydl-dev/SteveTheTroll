@@ -1,5 +1,5 @@
 using NUnit.Framework;
-using SteveTheTroll.Core.Results;
+using Kydl.Core.Results;
 using SteveTheTroll.Trolls.Combat.Application;
 using SteveTheTroll.Trolls.Combat.Domain;
 using SteveTheTroll.Trolls.Combat.Execution;

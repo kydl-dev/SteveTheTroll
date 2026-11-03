@@ -53,10 +53,10 @@ namespace SteveTheTroll.Tests.Integration
         [Test] public void KydlCore_StaysAHardDependency()
         {
             string proj = File.ReadAllText(Path.Combine(TestPaths.ModDir, "SteveTheTroll.csproj"));
-            string plugin = File.ReadAllText(Path.Combine(Src, "Plugin.cs"));
+            string plugin = File.ReadAllText(Path.Combine(Src, "Bootstrap", "Plugin.cs"));
             Assert.That(proj, Does.Contain("<KydlUseCore>true</KydlUseCore>"));
             Assert.That(plugin, Does.Contain("[BepInDependency(KydlCore.Plugin.ModGuid"));
-            Assert.That(File.ReadAllText(Path.Combine(Src, "Ui", "HubTabs.cs")), Does.Contain("KyHub"));
+            Assert.That(File.ReadAllText(Path.Combine(Src, "Presentation", "Hub", "Registration", "HubTabs.cs")), Does.Contain("KyHub"));
         }
 
         // the V1 guard (D-169): the marker the lab wrapper searches for, and the lab suite proves V2 before anything else runs

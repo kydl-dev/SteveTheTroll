@@ -44,7 +44,7 @@ namespace SteveTheTroll.Tests.Integration
         [Test]
         public void PlayerConfig_HasDebugLogSwitch()
         {
-            var src = File.ReadAllText(Path.Combine(TestPaths.ModDir, "src", "ModSettings.cs"));
+            var src = File.ReadAllText(Path.Combine(TestPaths.Src, "Configuration", "ModSettings.cs"));
 
             Assert.That(Regex.IsMatch(src, @"Bind\(\s*""DebugLog""\s*,\s*""Enable""\s*,\s*false"), Is.True, "[DebugLog] Enable (off by default) is required in every mod");
         }
@@ -52,7 +52,7 @@ namespace SteveTheTroll.Tests.Integration
         [Test]
         public void PlayerConfig_HasEnableAll()
         {
-            var src = File.ReadAllText(Path.Combine(TestPaths.ModDir, "src", "ModSettings.cs"));
+            var src = File.ReadAllText(Path.Combine(TestPaths.Src, "Configuration", "ModSettings.cs"));
 
             Assert.That(Regex.IsMatch(src, @"Bind\(\s*""General""\s*,\s*""EnableAll""\s*,\s*true"), Is.True, "[General] EnableAll (on by default) is the global switch of every mod");
         }
@@ -61,7 +61,7 @@ namespace SteveTheTroll.Tests.Integration
         public void PlayerConfig_EverySectionHasEnable()
         {
             // PROJECT_RULES 11 (user, 2026-10-30): every functionality has its own [Section] Enable; General holds EnableAll, DebugLog holds its Enable
-            var src = File.ReadAllText(Path.Combine(TestPaths.ModDir, "src", "ModSettings.cs"));
+            var src = File.ReadAllText(Path.Combine(TestPaths.Src, "Configuration", "ModSettings.cs"));
             var sections = new HashSet<string>();
             var withEnable = new HashSet<string>();
             foreach (Match m in Regex.Matches(src, @"\.Bind\(\s*""(?<s>[^""]+)""\s*,\s*""(?<k>[^""]+)"""))
@@ -78,7 +78,7 @@ namespace SteveTheTroll.Tests.Integration
         [Test]
         public void PlayerConfig_HasTheThreeFunctionalitySwitches()
         {
-            var src = File.ReadAllText(Path.Combine(TestPaths.ModDir, "src", "ModSettings.cs"));
+            var src = File.ReadAllText(Path.Combine(TestPaths.Src, "Configuration", "ModSettings.cs"));
 
             foreach (var section in new[] { "Slippers", "Costume", "Trolls" })
                 Assert.That(Regex.IsMatch(src, @"Bind\(\s*""" + section + @"""\s*,\s*""Enable""\s*,\s*true"), Is.True, "[" + section + "] Enable (on by default) is the switch of that functionality");
@@ -87,7 +87,7 @@ namespace SteveTheTroll.Tests.Integration
         [Test]
         public void PlayerConfig_HasNoMenuKey()
         {
-            var src = File.ReadAllText(Path.Combine(TestPaths.ModDir, "src", "ModSettings.cs"));
+            var src = File.ReadAllText(Path.Combine(TestPaths.Src, "Configuration", "ModSettings.cs"));
 
             Assert.That(Regex.IsMatch(src, @"Bind\(\s*""[^""]*""\s*,\s*""MenuKey"""), Is.False, "no mod has its own menu key: the menu is tabs in the KY hub (F6, KydlCore)");
             Assert.That(Regex.IsMatch(src, @"ConfigEntry<KeyCode>\s+MenuKey"), Is.False, "no MenuKey entry (KydlCore owns the hub key)");
@@ -96,7 +96,7 @@ namespace SteveTheTroll.Tests.Integration
         [Test]
         public void ConfigDescriptions_DoNotTalkAboutOldVersions()
         {
-            var src = File.ReadAllText(Path.Combine(TestPaths.ModDir, "src", "ModSettings.cs"));
+            var src = File.ReadAllText(Path.Combine(TestPaths.Src, "Configuration", "ModSettings.cs"));
 
             foreach (Match m in Regex.Matches(src, @"Bind\([^;]*?""(?<d>[^""]{20,})"""))
                 Assert.That(Regex.IsMatch(m.Groups["d"].Value, @"\b(previous|formerly|renamed|old value|used to|before version)\b", RegexOptions.IgnoreCase), Is.False, m.Groups["d"].Value);

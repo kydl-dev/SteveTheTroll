@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using NUnit.Framework;
-using SteveTheTroll.Core.Results;
+using Kydl.Core.Results;
 using SteveTheTroll.Trolls.Contracts;
 using SteveTheTroll.Trolls.Recovery.Application;
 using SteveTheTroll.Trolls.Recovery.Domain;

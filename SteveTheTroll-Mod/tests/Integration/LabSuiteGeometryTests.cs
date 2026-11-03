@@ -68,7 +68,7 @@ namespace SteveTheTroll.Tests.Integration
 
         [Test] public void TheHook_UsesTheSameMinimum()
         {
-            string hooks = File.ReadAllText(Path.Combine(TestPaths.Src, "Testing", "TestHooks.cs"));
+            string hooks = File.ReadAllText(Path.Combine(TestPaths.Src, "Testing", "TestHooks", "TestHooks.cs"));
             Assert.That(hooks, Does.Contain("const float MinFromPlayer = 16f;"));
             Assert.That(hooks, Does.Contain("is not in front of the player"));
         }

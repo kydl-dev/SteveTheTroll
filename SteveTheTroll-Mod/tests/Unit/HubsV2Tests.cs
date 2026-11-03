@@ -1,5 +1,5 @@
 using NUnit.Framework;
-using SteveTheTroll.Core.Results;
+using Kydl.Core.Results;
 using SteveTheTroll.Hubs.Application;
 using SteveTheTroll.Hubs.Domain;
 
