@@ -3,6 +3,11 @@
 ## 2.0.0
 
 - Not tested in game yet.
+- The F6 tabs open as you progress: **Costume** once the Steve The Troll set bonus has been active for the first time,
+  **Troll Hub** once your first hub is built, **My trolls / Troll work / Trolls** once your first troll is tamed. This is
+  remembered on the character (survives a relog).
+- After your first hub is built, the Trolls tab shows the distance "from hub", not "from your bed".
+- The Fluffy Slippers have a thicker, rounder cream rim around the opening (it was a thin ribbon before); new mod icon.
 - Multiplayer: every player needs exactly the same SteveTheTroll version (2.0.0 joins only 2.0.0) and the same KydlCore
   version.
 - The feature switches now apply while you play: turning `[Slippers]`, `[Costume]`, `[Trolls]` or `[TrollHub]` `Enable`

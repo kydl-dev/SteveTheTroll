@@ -35,7 +35,8 @@ slippers: their recipes
 appear once you have put the slippers on for the first time. Press **F6** for the KY hub, the one menu of all KydlDev
 mods.
 SteveTheTroll adds tabs to it: the slippers in 3D with their stats, the costume, your trolls, their work list, hubs and
-settings.
+settings. The tabs open as you progress: Costume after the set bonus has been active once, Troll Hub after your first hub is
+built, My trolls / Troll work / Trolls after your first tamed troll.
 Needs the **KydlCore** mod (installed automatically by the mod manager).
 
 ## What the slippers do
