@@ -1,3 +1,5 @@
+// quality: data-table - about 350 pieces of measured coordinates, tuned in game; there is no logic to mutate. HubRulesTests checks the
+// rules built on it (counts, radius, floors). Kept out of quality.json "testable" (update-quality.ps1 skips files with this marker).
 namespace SteveTheTroll.Features.Hubs.Domain;
 
 /// <summary>

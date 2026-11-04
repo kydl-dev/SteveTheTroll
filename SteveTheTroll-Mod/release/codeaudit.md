@@ -12,15 +12,15 @@
 
 ## dupes
 == same name in several files
-  AddHub                       HubTabs.cs:135, TestHooks.cs:1047
-  Apply                        SignFonts.cs:86, DepotGround.cs:235, TrollDepot.cs:406
+  AddHub                       HubTabs.cs:135, TestHooks.Part3.cs:275
+  Apply                        SignFonts.cs:86, DepotGround.cs:235, TrollDepot.Part2.cs:28
   Begin                        TrollCounter.cs:172, TrollSlam.cs:37, TrollArrival.cs:60
   Build                        HubPrefab.cs:35, SlipperDropModel.cs:26, DepotPrefab.cs:131, TrollDepot.cs:313, HubTab.cs:30, TrollsKyPage.cs:24
   BusyReason                   IdleRules.cs:37, TrollIdle.cs:223
   Check                        HubRules.cs:29, TrollReturn.cs:82
   Decide                       Approach.cs:33, FarmGate.cs:75, OrderRules.cs:50
   FloorLift                    DepotData.cs:46, DepotPrefab.cs:36
-  Follow                       TrollCommands.cs:43, TestHooks.cs:1128
+  Follow                       TrollCommands.cs:43, TestHooks.Part3.cs:356
   Forget                       CostumeUnlock.cs:50, TrollGuard.cs:184
   HeldByOther                  TargetRules.cs:72, FarmReservations.cs:21
   Holds                        HomeRules.cs:37, TrollHold.cs:25
@@ -28,6 +28,7 @@
   InRange                      BackpackRules.cs:35, TrollBedHeal.cs:26
   Inside                       NoHitRules.cs:10, TrollNoHit.cs:36, BuildDumpCommand.cs:170
   Install                      CostumeItems.cs:100, HubPrefab.cs:30, SlipperItem.cs:50, DepotGround.cs:65, DepotPrefab.cs:30, TrollTaming.cs:104
+  IsHub                        HubUnlockRules.cs:12, HubPlacement.cs:79
   MakeModel                    CostumeMenuData.cs:154, SlipperMenuData.cs:71
   MeshSpan                     DepotPrefab.cs:76, SlipperTestHooks.cs:46
   Nearest                      HubGeometry.cs:13, HubRegistry.cs:130, HubSpeed.cs:44, GuardRules.cs:31, TrollOrders.cs:172
@@ -36,16 +37,16 @@
   Reachable                    DepotSpots.cs:194, IdleRules.cs:74
   Refresh                      HubRegistry.cs:57, SignFonts.cs:66, SlipperUpgradeCostPatch.cs:40, TrollRegistry.cs:190, TamedTrollStats.cs:46
   Release                      TrollDepot.cs:205, FarmReservations.cs:48
-  Remove                       TrollDepot.cs:669, HubTabs.cs:150
+  Remove                       TrollDepot.Part2.cs:291, HubTabs.cs:150
   ReservedByOther              DepotRules.cs:29, TrollDepot.cs:182
   SelfCheck                    BackpackStore.cs:59, TrollDefend.cs:42, TrollFarming.cs:71, ValheimTrollMovement.cs:59, TamedTrollSpeed.cs:47, TamedTrollStats.cs:33
   Shown                        TrollIdle.cs:182, TrollOrders.cs:314, TrollCommands.cs:36
   Slippers                     ModelKyPages.cs:58, CombatTestHooks.cs:322
   Target                       TrollReturn.cs:47, CombatTestHooks.cs:111
   TargetMethods                ClubBreaks.cs:30, SetTooltipPatch.cs:94, TrollFarmHits.cs:27, CostumePatches.cs:14, CostumePatches.cs:59, TrollsCombatPatches.cs:34
-  Track                        SlipperUpgradeCostPatch.cs:30, TrollZones.cs:495
+  Track                        SlipperUpgradeCostPatch.cs:30, TrollZones.Part2.cs:88
   Waypoint                     TargetRules.cs:54, FarmHomeTrip.cs:44
-  Within                       TrollZones.cs:457, ClearCommand.cs:138
+  Within                       TrollZones.Part2.cs:50, ClearCommand.cs:138
 
 == identical bodies (>=5 lines)
 
