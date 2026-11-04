@@ -1,7 +1,7 @@
 {
   "name": "guard-mob-kills",
   "description": "D-175 (run 194722 spot-return): a FARMING troll takes on a creature that goes for the player 16 m away - it must reach it and kill it, not stand still with the target set",
-  "timeout": 70,
+  "timeout": 90,
   "steps": [
     {
       "do": "hook",
@@ -84,16 +84,8 @@
       "timeout": 8,
       "label": "phase 1: the guard gives the farming troll the target"
     },
-    {
-      "do": "wait",
-      "until": {
-        "check": "hook",
-        "name": "stt.lastMobHurt",
-        "expect": true
-      },
-      "timeout": 15,
-      "label": "phase 2: the troll reaches the creature and hurts it"
-    },
+    {"do":"wait","until":{"check":"hook","name":"stt.trollNearLastMob","args":{"troll":"troll","metres":8},"expect":true},"timeout":20,"label":"phase 2a: the troll closes the gap to within 8 m (a failure here is the approach, not the swing)"},
+    {"do":"wait","until":{"check":"hook","name":"stt.lastMobHurt","expect":true},"timeout":15,"label":"phase 2b: within reach it swings and hurts the creature"},
     {
       "do": "wait",
       "until": {

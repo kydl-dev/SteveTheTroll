@@ -45,6 +45,7 @@
       "do": "wait",
       "seconds": 1
     },
+    {"do":"hook","name":"kc.hubIsOpen","expect":false,"label":"no blocking window is open when the key is pressed (fix8: a hub a failed test left open refused every press)"},
     {
       "do": "hook",
       "name": "stt.attackKeyPress",

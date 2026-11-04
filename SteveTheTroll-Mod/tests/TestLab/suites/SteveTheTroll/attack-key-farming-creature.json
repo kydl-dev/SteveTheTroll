@@ -1,4 +1,4 @@
-﻿{
+{
     "name":  "attack-key-farming-creature",
     "description":  "D-176: the attack key on a creature while the troll is FARMING - the order must end in a fight (TrollGuard.Engage starts the chase), not in a troll that holds the target and stands (the guard-mob-kills defect, reached through the key). The creature is frozen, so only the key can have given the target.",
     "timeout":  90,
@@ -130,7 +130,8 @@
                                },
                       "expect":  true
                   },
-                  {
+                  {"do":"hook","name":"kc.hubIsOpen","expect":false,"label":"no blocking window is open when the key is pressed (fix8: a hub a failed test left open refused every press)"},
+    {
                       "do":  "hook",
                       "name":  "stt.attackKeyPress",
                       "args":  {

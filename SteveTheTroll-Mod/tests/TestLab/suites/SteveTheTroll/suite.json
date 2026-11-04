@@ -103,6 +103,7 @@
     "counter-slam",
     "guard-mob",
     "guard-mob-kills",
+                  "guard-mob-kills-open",
     "guard-mob-nohit",
     "nohit-zone",
     "walls-two-star",
@@ -117,6 +118,7 @@
     "attack-key-tree-press",
     "attack-key-creature",
     "attack-key-farming-creature",
+                  "attack-key-ui-blocked",
     "attack-key-tree",
     "costume-after-slippers"
   ]

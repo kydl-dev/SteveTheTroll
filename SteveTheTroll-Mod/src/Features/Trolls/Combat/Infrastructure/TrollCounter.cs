@@ -211,9 +211,17 @@ internal sealed class TrollChase : MonoBehaviour
     private float _stuckFor, _detourUntil;
     private Vector3 _detourTo;
     private int _detours;
-    private bool _rightSide = true;
     private bool _lastMoveOk, _detourOpen;
     private float _detourFromDistance;
+
+    // D-176 (fix9, guard-mob-kills in a forest: real speed read 0.5 - 0.9 m/s between 0.0 samples, so the speed timer never reached 0.8 s and the stall was noticed 7 - 11 s late): the stall
+    // is ALSO judged by position - less than WindowMetres of net movement in WindowSeconds while out of reach is a stall, however the instantaneous speed looks.
+    // The detour side is chosen by what is free (a body-wide cast to both candidate points) and a side whose detour did not bring the troll closer is avoided next time
+    // (fix9: detour 1 to the right got closer, detour 2 to the left ran into Rock_4 1.1 m away and did not).
+    private const float WindowSeconds = 2f, WindowMetres = 1f, CastRadius = 0.8f, FailedSidePenalty = 4f;
+    private float _winStart, _windowMoved;
+    private Vector3 _winPos;
+    private bool _lastSideRight = true, _lastDetourFailed;
 
     /// The last reason the troll did not swing ("" = none yet).
     internal string LastBlocker { get; private set; } = "";
@@ -229,6 +237,10 @@ internal sealed class TrollChase : MonoBehaviour
         c._detours = 0;
         c._stuckFor = 0f;
         c._detourUntil = 0f;
+        c._winStart = Time.time;
+        c._winPos = troll.transform.position;
+        c._lastDetourFailed = false;
+        c._detourOpen = false;
         ModLog.Info("TrollChase: " + TrollOrders.Shown(troll) + " starts (" + (guard ? "guard / order" : "answers a hit") + ") at " + (target != null ? target.name : "?") + ", " +
                     (target != null ? Vector3.Distance(troll.transform.position, target.transform.position).ToString("F1") : "?") + " m away, speed " + troll.GetVelocity().magnitude.ToString("F1") + " m/s, in no-hit zone " +
                     TrollNoHit.InZone(troll.transform.position));
@@ -290,17 +302,34 @@ internal sealed class TrollChase : MonoBehaviour
         if (_detourOpen && Time.time >= _detourUntil)
         {
             _detourOpen = false;
+            _lastDetourFailed = !(flat.magnitude < _detourFromDistance - 0.5f);
             ModLog.Info("TrollChase: " + TrollOrders.Shown(me) + " detour " + _detours + " over - " + _target.name + " was " + _detourFromDistance.ToString("F1") + " m away, is " + flat.magnitude.ToString("F1") +
-                        " m now (" + (flat.magnitude < _detourFromDistance - 0.5f ? "closer" : "NOT closer") + ")");
+                        " m now (" + (_lastDetourFailed ? "NOT closer - the other side is preferred next" : "closer") + ")");
         }
 
         bool detouring = Time.time < _detourUntil;
         if (flat.magnitude > reach)
         {
             _stuckFor = me.GetVelocity().magnitude < StuckSpeed ? _stuckFor + dt : 0f;
-            if (!detouring && _stuckFor >= StuckSeconds)
+            bool windowStuck = false;
+            if (detouring)
             {
-                StartDetour(me, flat, point);
+                _winStart = Time.time;
+                _winPos = transform.position;
+            }
+            else if (Time.time - _winStart >= WindowSeconds)
+            {
+                Vector3 moved = transform.position - _winPos;
+                moved.y = 0f;
+                _windowMoved = moved.magnitude;
+                windowStuck = _windowMoved < WindowMetres;
+                _winStart = Time.time;
+                _winPos = transform.position;
+            }
+
+            if (!detouring && (_stuckFor >= StuckSeconds || windowStuck))
+            {
+                StartDetour(me, flat, point, windowStuck ? "moved only " + _windowMoved.ToString("F1") + " m in " + WindowSeconds.ToString("F0") + " s" : "speed under " + StuckSpeed.ToString("F1") + " m/s for " + StuckSeconds.ToString("F1") + " s");
                 detouring = true;
             }
 
@@ -310,6 +339,8 @@ internal sealed class TrollChase : MonoBehaviour
         else
         {
             _stuckFor = 0f;
+            _winStart = Time.time;
+            _winPos = transform.position;
             ai.StopMoving();
         }
 
@@ -357,11 +388,16 @@ internal sealed class TrollChase : MonoBehaviour
     }
 
     /// No progress towards the creature: names what is in the way and walks to a point beside the line (the side changes each time). Expected outcome: none.
-    private void StartDetour(Humanoid me, Vector3 flat, Vector3 point)
+    private void StartDetour(Humanoid me, Vector3 flat, Vector3 point, string trigger)
     {
         Vector3 dir = flat.normalized;
-        Vector3 side = Vector3.Cross(Vector3.up, dir) * (_rightSide ? 1f : -1f);
-        _rightSide = !_rightSide;
+        Vector3 right = Vector3.Cross(Vector3.up, dir);
+        Vector3 chest0 = transform.position + Vector3.up;
+        float freeRight = FreeRun(chest0, right * DetourSide + dir * 2f), freeLeft = FreeRun(chest0, -right * DetourSide + dir * 2f);
+        float scoreRight = freeRight - (_lastDetourFailed && _lastSideRight ? FailedSidePenalty : 0f), scoreLeft = freeLeft - (_lastDetourFailed && !_lastSideRight ? FailedSidePenalty : 0f);
+        bool goRight = Mathf.Abs(scoreRight - scoreLeft) < 0.25f ? !_lastSideRight : scoreRight > scoreLeft;
+        _lastSideRight = goRight;
+        Vector3 side = right * (goRight ? 1f : -1f);
         Vector3 to = transform.position + side * DetourSide + dir * 2f;
         to.y = ZoneSystem.instance != null ? ZoneSystem.instance.GetGroundHeight(to) : to.y;
         _detourTo = to;
@@ -378,10 +414,18 @@ internal sealed class TrollChase : MonoBehaviour
                 ? "nothing within 4 m, a body-wide cast finds " + hit.collider.name + " of " + hit.collider.transform.root.name + " at " + hit.distance.ToString("F1") + " m"
                 : "nothing in the straight line (4 m ray, 15 m body-wide cast)";
         Character body = me;
-        ModLog.Info("TrollChase: " + TrollOrders.Shown(me) + " makes no progress towards " + _target.name + " (" + flat.magnitude.ToString("F1") + " m; troll at " + transform.position.ToString("F0") +
+        ModLog.Info("TrollChase: " + TrollOrders.Shown(me) + " makes no progress towards " + _target.name + " (" + trigger + "; " + flat.magnitude.ToString("F1") + " m; troll at " + transform.position.ToString("F0") +
                     ", target at " + point.ToString("F0") + ") - " + blocker + " - the game's MoveTo reports arrived: " + _lastMoveOk + ", real speed " + body.GetVelocity().magnitude.ToString("F1") +
-                    " m/s, in attack " + me.InAttack() + ", staggered " + body.IsStaggering() + ", " + TrollHold.Describe(body) + ", " + TrollMoveDiag.Describe(body, point) + " - detour " + _detours + " to the " + (_rightSide ? "left" : "right") +
-                    ", walking to " + to.ToString("F0"));
+                    " m/s, in attack " + me.InAttack() + ", staggered " + body.IsStaggering() + ", " + TrollHold.Describe(body) + ", " + TrollMoveDiag.Describe(body, point) + " - detour " + _detours + " to the " + (goRight ? "right" : "left") +
+                    " (free run right " + freeRight.ToString("F1") + " m, left " + freeLeft.ToString("F1") + " m" + (_lastDetourFailed ? ", the side of the last failed detour is penalised" : "") + "), walking to " + to.ToString("F0"));
+    }
+
+    /// How far a body-wide cast from `from` along `offset` runs before it hits something (the whole length when nothing is in the way). Expected outcome: metres.
+    private static float FreeRun(Vector3 from, Vector3 offset)
+    {
+        float length = offset.magnitude;
+        RaycastHit hit;
+        return Physics.SphereCast(from, CastRadius, offset / length, out hit, length) ? hit.distance : length;
     }
 
     private float _nextNote;

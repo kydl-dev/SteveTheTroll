@@ -179,6 +179,32 @@ internal static class CombatTestHooks
         return c.GetHealth() < c.GetMaxHealth() - 0.01f;
     }
 
+    private static float _nextNearLog;
+
+    /// D-176 (guard-mob-kills: "never hurt" did not say where the chase stopped): true once the troll is within `metres` (flat) of the creature stt.spawnMob made last, or the creature is dead /
+    /// gone. Logs the distance once a second, so the log shows the approach (target assigned -> distance falls -> within reach -> swing -> damage -> dead). Expected outcome: true when near.
+    [TestHook("stt.trollNearLastMob")]
+    private static bool TrollNearLastMob(GameObject troll, float metres)
+    {
+        Character c = _lastMob != null ? _lastMob.GetComponent<Character>() : null;
+        if (c == null || c.IsDead())
+        {
+            return true;
+        }
+
+        Vector3 d = c.transform.position - troll.transform.position;
+        d.y = 0f;
+        if (Time.time >= _nextNearLog)
+        {
+            _nextNearLog = Time.time + 1f;
+            ModLog.Info("CombatTestHooks: the troll is " + d.magnitude.ToString("F1") + " m from the creature (wants " + metres.ToString("F1") + " m), real speed " +
+                        troll.GetComponent<Character>().GetVelocity().magnitude.ToString("F1") + " m/s");
+        }
+
+        MobTargetsPlayer(_lastMob);
+        return d.magnitude <= metres;
+    }
+
     /// D-175 (run 194722, spot-return: a wild Greyling went for the player, the guard gave the troll that target, and the troll then stood at 0.0 m/s for 75 s - it never reached
     /// the creature, never swung, never went back to work): the mob keeps going for the player (as an aggressive one does) and the answer says whether the TROLL killed it - "dead"
     /// or "alive". Logs where the troll is relative to the mob every 2 s, so a stalled troll shows. Expected outcome: "dead" once the mob is dead / gone.

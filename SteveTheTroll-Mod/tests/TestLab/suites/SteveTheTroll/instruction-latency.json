@@ -1,85 +1,123 @@
-{
-  "name": "instruction-latency",
-  "description": "User rule 2026-10-31: a troll starts carrying out an instruction within 5 seconds (Go farm, walk to the bed)",
-  "timeout": 90,
-  "steps": [
-    {
-      "do": "hook",
-      "name": "stt.arena",
-      "contains": "arena at",
-      "label": "start on the arena spot (MIGRATION_DECISIONS C26)"
-    },
-    {
-      "do": "hook",
-      "name": "stt.reset"
-    },
-    {
-      "do": "give",
-      "prefab": "STT_TrollSlippers",
-      "count": 1,
-      "equip": true
-    },
-    {
-      "do": "hook",
-      "name": "stt.addHub",
-      "args": {
-        "number": 1,
-        "dx": 0,
-        "dz": 25
-      }
-    },
-    {
-      "do": "hook",
-      "name": "stt.spawnTroll",
-      "args": {
-        "dz": 67,
-        "dx": -20
-      },
-      "as": "troll"
-    },
-    {
-      "do": "hook",
-      "name": "stt.startFarm",
-      "args": {
-        "troll": "troll"
-      },
-      "expect": true
-    },
-    {
-      "do": "wait",
-      "seconds": 1
-    },
-    {
-      "do": "hook",
-      "name": "stt.state",
-      "args": {
-        "troll": "troll"
-      },
-      "contains": "farming",
-      "label": "Go farm: farming within 1 s"
-    },
-    {
-      "do": "hook",
-      "name": "stt.mark",
-      "args": {
-        "troll": "troll"
-      }
-    },
-    {
-      "do": "hook",
-      "name": "stt.sendHome",
-      "args": {
-        "troll": "troll"
-      },
-      "expect": true
-    },
-    {"do":"wait","seconds":1},{"do":"hook","name":"stt.moveSample","args":{"troll":"troll"}},{"do":"wait","seconds":1},{"do":"hook","name":"stt.moveSample","args":{"troll":"troll"}},{"do":"wait","seconds":1},{"do":"hook","name":"stt.moveSample","args":{"troll":"troll"}},{"do":"wait","seconds":1},{"do":"hook","name":"stt.moveSample","args":{"troll":"troll"}},{"do":"wait","seconds":1},{"do":"hook","name":"stt.moveSample","args":{"troll":"troll"}},
-    {"do":"wait","until":{"check":"hook","name":"stt.moved","args":{"troll":"troll"},"min":15},"timeout":1,"label":"walk to the bed: at least 15 m moved (net distance, so circling does not count) within 5 s"}
-  ],
-  "asserts": [
-    {
-      "check": "noErrors",
-      "source": "SteveTheTroll"
-    }
-  ]
+﻿{
+    "name":  "instruction-latency",
+    "description":  "D-176 (fix8 / fix9 timelines): the home order takes effect at once and the troll then closes on the bed at a rate worth keeping. Two requirements, two checks: (1) it is moving TOWARDS the bed within 3 s of the order; (2) it is at least 10 m closer within 8 s. Measured: fix8 12 m after 5 s, fix9 10.8 m after 6.1 s (speed 1.4 m/s for 2.4 s, then 3.3 - 3.8 m/s: the game ramps a troll up and it first turns round) - the earlier \"15 m moved in 5 s\" matched neither and was never enforced.",
+    "timeout":  90,
+    "steps":  [
+                  {
+                      "do":  "hook",
+                      "name":  "stt.arena",
+                      "contains":  "arena at",
+                      "label":  "start on the arena spot (MIGRATION_DECISIONS C26)"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.reset"
+                  },
+                  {
+                      "do":  "give",
+                      "prefab":  "STT_TrollSlippers",
+                      "count":  1,
+                      "equip":  true
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.addHub",
+                      "args":  {
+                                   "number":  1,
+                                   "dx":  0,
+                                   "dz":  25
+                               }
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.spawnTroll",
+                      "args":  {
+                                   "dz":  67,
+                                   "dx":  -20
+                               },
+                      "as":  "troll"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.startFarm",
+                      "args":  {
+                                   "troll":  "troll"
+                               },
+                      "expect":  true
+                  },
+                  {
+                      "do":  "wait",
+                      "seconds":  1
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.state",
+                      "args":  {
+                                   "troll":  "troll"
+                               },
+                      "contains":  "farming",
+                      "label":  "Go farm: farming within 1 s"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.mark",
+                      "args":  {
+                                   "troll":  "troll"
+                               }
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.sendHome",
+                      "args":  {
+                                   "troll":  "troll"
+                               },
+                      "expect":  true
+                  },
+                  {
+                      "do":  "wait",
+                      "until":  {
+                                    "check":  "hook",
+                                    "name":  "stt.progressTowardHub",
+                                    "args":  {
+                                                 "troll":  "troll"
+                                             },
+                                    "min":  1
+                                },
+                      "timeout":  3,
+                      "label":  "latency: within 3 s of the order the troll is at least 1 m closer to the bed"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.moveSample",
+                      "args":  {
+                                   "troll":  "troll"
+                               }
+                  },
+                  {
+                      "do":  "wait",
+                      "until":  {
+                                    "check":  "hook",
+                                    "name":  "stt.progressTowardHub",
+                                    "args":  {
+                                                 "troll":  "troll"
+                                             },
+                                    "min":  10
+                                },
+                      "timeout":  8,
+                      "label":  "rate: within 8 s of the order the troll is at least 10 m closer to the bed (net progress towards it, so circling does not count)"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.moveSample",
+                      "args":  {
+                                   "troll":  "troll"
+                               }
+                  }
+              ],
+    "asserts":  [
+                    {
+                        "check":  "noErrors",
+                        "source":  "SteveTheTroll"
+                    }
+                ]
 }

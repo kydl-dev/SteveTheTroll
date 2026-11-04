@@ -102,6 +102,7 @@
       "expect": 1,
       "label": "the tree is untouched before the press (damage after it belongs to the order)"
     },
+    {"do":"hook","name":"kc.hubIsOpen","expect":false,"label":"no blocking window is open when the key is pressed (fix8: a hub a failed test left open refused every press)"},
     {
       "do": "pressKey",
       "key": "Mouse3"

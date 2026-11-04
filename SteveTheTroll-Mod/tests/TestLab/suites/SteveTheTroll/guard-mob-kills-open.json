@@ -1,0 +1,153 @@
+﻿{
+    "name":  "guard-mob-kills-open",
+    "description":  "D-176 (fix9 analysis: run an unobstructed and an obstacle-heavy approach): the same guard fight as guard-mob-kills, with the trees, rocks and logs within 40 m of the fight spot removed first - on open ground the troll must reach the creature and kill it without any detour",
+    "timeout":  90,
+    "steps":  [
+                  {
+                      "do":  "hook",
+                      "name":  "stt.arena",
+                      "contains":  "arena at",
+                      "label":  "start on the arena spot (MIGRATION_DECISIONS C26)"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.reset"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.clearTrolls"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.arenaFurther",
+                      "args":  {
+                                   "metres":  35
+                               },
+                      "label":  "the fight is outside the 15 m bed no-hit zone (the bed stays at the arena spot)"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.clearAround",
+                      "args":  {
+                                   "radius":  40
+                               },
+                      "label":  "open ground: no tree, rock or log around the fight (the obstructed twin is guard-mob-kills)"
+                  },
+                  {
+                      "do":  "give",
+                      "prefab":  "STT_TrollSlippers",
+                      "count":  1,
+                      "equip":  true
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.addHub",
+                      "args":  {
+                                   "number":  1,
+                                   "dx":  0,
+                                   "dz":  25
+                               }
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.spawnTroll",
+                      "args":  {
+                                   "dx":  -14,
+                                   "dz":  8
+                               },
+                      "as":  "troll"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.startFarm",
+                      "args":  {
+                                   "troll":  "troll"
+                               }
+                  },
+                  {
+                      "do":  "wait",
+                      "seconds":  2
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.spawnMob",
+                      "args":  {
+                                   "prefab":  "Greydwarf",
+                                   "dx":  -2,
+                                   "dz":  18
+                               },
+                      "as":  "mob"
+                  },
+                  {
+                      "do":  "wait",
+                      "until":  {
+                                    "check":  "hook",
+                                    "name":  "stt.guardTargetOf",
+                                    "args":  {
+                                                 "mob":  "mob",
+                                                 "troll":  "troll"
+                                             },
+                                    "expect":  "Greydwarf"
+                                },
+                      "timeout":  8,
+                      "label":  "phase 1: the guard gives the farming troll the target"
+                  },
+                  {
+                      "do":  "wait",
+                      "until":  {
+                                    "check":  "hook",
+                                    "name":  "stt.trollNearLastMob",
+                                    "args":  {
+                                                 "troll":  "troll",
+                                                 "metres":  8
+                                             },
+                                    "expect":  true
+                                },
+                      "timeout":  20,
+                      "label":  "phase 2a: the troll closes the gap to within 8 m (a failure here is the approach, not the swing)"
+                  },
+                  {
+                      "do":  "wait",
+                      "until":  {
+                                    "check":  "hook",
+                                    "name":  "stt.lastMobHurt",
+                                    "expect":  true
+                                },
+                      "timeout":  15,
+                      "label":  "phase 2b: within reach it swings and hurts the creature"
+                  },
+                  {
+                      "do":  "wait",
+                      "until":  {
+                                    "check":  "hook",
+                                    "name":  "stt.guardKillLast",
+                                    "args":  {
+                                                 "troll":  "troll"
+                                             },
+                                    "expect":  "dead"
+                                },
+                      "timeout":  25,
+                      "label":  "phase 3: the creature is dead"
+                  }
+              ],
+    "asserts":  [
+                    {
+                        "check":  "logContains",
+                        "source":  "SteveTheTroll",
+                        "text":  "attacks Greydwarf",
+                        "expect":  true,
+                        "label":  "the guard gave the troll the target"
+                    },
+                    {
+                        "check":  "logContains",
+                        "source":  "SteveTheTroll",
+                        "text":  "done (enemy dead",
+                        "expect":  true,
+                        "label":  "the troll itself killed it (TrollChase)"
+                    },
+                    {
+                        "check":  "noErrors",
+                        "source":  "SteveTheTroll"
+                    }
+                ]
+}
