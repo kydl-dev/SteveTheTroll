@@ -42,16 +42,38 @@ internal static class HubPlacement
 
         _next = Time.time + 2f;
         Player p = Player.m_localPlayer;
-        if (p == null || Unlocked(p) || !SetActive(p))
+        if (p == null)
         {
             return false;
         }
 
-        p.m_customData[UnlockKey] = "1";
-        ModLog.Info("HubPlacement: the set bonus is active for the first time - Troll Hub unlocked for " +
-                    p.GetPlayerName());
-        Notify.Show(Loc.T("stevethetroll_hub_msg_unlocked"), Notify.Kind.Good);
-        return true;
+        bool now = false;
+        if (!Unlocked(p))
+        {
+            if (!SetActive(p))
+            {
+                return false;
+            }
+
+            p.m_customData[UnlockKey] = "1";
+            now = true;
+            ModLog.Info("HubPlacement: the set bonus is active for the first time - Troll Hub unlocked for " +
+                        p.GetPlayerName());
+        }
+
+        // the game's own "new piece" popup (also for a character that unlocked the hub before this was added)
+        if (!PieceLearning.Learn(p, HubData.PrefabName) && now && !PieceLearning.KnowsPiece(p, HubPiece()))
+        {
+            Notify.Show(Loc.T("stevethetroll_hub_msg_unlocked"), Notify.Kind.Good);
+        }
+
+        return now;
+    }
+
+    private static Piece HubPiece()
+    {
+        GameObject go = ZNetScene.instance != null ? ZNetScene.instance.GetPrefab(HubData.PrefabName) : null;
+        return go != null ? go.GetComponent<Piece>() : null;
     }
 
     private static bool IsHub(Piece piece)
@@ -97,7 +119,9 @@ internal static class HubPlacement
 
             if (mode == Player.RequirementMode.IsKnown)
             {
-                __result = true; // known materials are not required to SEE the hub once unlocked
+                // not in the build menu before the set bonus has been active once (the game's material rule would show it earlier);
+                // once unlocked, known materials are not required to SEE it
+                __result = Unlocked(__instance);
             }
         }
     }

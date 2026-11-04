@@ -3,6 +3,8 @@
 ## 2.0.0
 
 - Not tested in game yet.
+- The Troll Hub piece shows in the build menu only after the Steve The Troll set bonus has been active once, and it is then
+  learned with the game's normal "new piece" message.
 - The F6 tabs open as you progress: **Costume** once the Steve The Troll set bonus has been active for the first time,
   **Troll Hub** once your first hub is built, **My trolls / Troll work / Trolls** once your first troll is tamed. This is
   remembered on the character (survives a relog).
