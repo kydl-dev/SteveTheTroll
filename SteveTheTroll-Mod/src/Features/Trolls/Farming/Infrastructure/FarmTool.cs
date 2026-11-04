@@ -91,6 +91,21 @@ internal sealed class FarmTool
                             e.GetType().Name);
             } // last resort: the game's own item setup
 
+            // D-175 (review): "tried" means an attempt was made, not that a tool came back - say which one the troll has now (the farmer still waits GiveUpNoWeaponSeconds for it)
+            ItemDrop.ItemData got = TrollWeapons.Pick(me, Attack.AttackType.Vertical, true) ??
+                                    TrollWeapons.Pick(me, Attack.AttackType.Horizontal, true);
+            if (got != null)
+            {
+                ModLog.Info("TrollFarmer: " + TrollTaming.Tag(_troll) + " default items gave it " +
+                            got.m_shared.m_name + " - a usable farming tool");
+            }
+            else
+            {
+                ModLog.Warn("TrollFarmer: " + TrollTaming.Tag(_troll) +
+                            " default items gave it no usable farming tool - waits up to " +
+                            GiveUpNoWeaponSeconds.ToString("0") + " s");
+            }
+
             return _triedDefaults;
         }
 

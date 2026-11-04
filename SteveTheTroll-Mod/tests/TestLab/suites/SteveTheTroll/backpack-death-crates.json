@@ -45,15 +45,7 @@
       "do": "wait",
       "seconds": 1
     },
-    {
-      "do": "hook",
-      "name": "stt.fillAndKill",
-      "args": {
-        "troll": "troll"
-      },
-      "min": 1,
-      "label": "filled and killed in one frame (the troll near its hub would unload in between, D-175)"
-    },
+    {"do":"hook","name":"stt.fillAndKill","args":{"troll":"troll"},"label":"filled and killed in one frame (the troll near its hub would unload in between, D-175) (that it was filled is enforced by the crates assert: no stacks, no crates)"},
     {
       "do": "wait",
       "seconds": 3

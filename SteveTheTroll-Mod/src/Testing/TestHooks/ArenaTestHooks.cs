@@ -138,6 +138,8 @@ internal static class ArenaTestHooks
         return to;
     }
 
+    /// TERRAIN ONLY (D-176: the name promises more than it checks): it samples world-generator heights and water, nothing else - trees, rocks, logs and stumps are NOT checked
+    /// (stt.clearAround removes them near the player, but not along the route). A test that needs a walkable route must say what it removes itself.
     /// D-174 (review: "a 400-metre return test should not depend on randomly generated terrain being passable"): of 16 directions from the arena spot, the one whose straight
     /// line of `metres` has the gentlest terrain and no water (WorldGenerator heights - valid where nothing is loaded; sampled every 10 m), and teleports the player to its end
     /// (the game's distant teleport finds the floor). Expected outcome: a description; throws when no direction is dry.
@@ -192,7 +194,7 @@ internal static class ArenaTestHooks
         _further = true;
         _furtherSpot = to;
         p.TeleportTo(to, Quaternion.identity, true);
-        string info = "clear route " + metres.ToString("F0") + " m, direction " + best + " of 16, steepest 10 m step " +
+        string info = "terrain-only route (heights and water; obstacles not checked) " + metres.ToString("F0") + " m, direction " + best + " of 16, steepest 10 m step " +
                       bestSteep.ToString("F1") + " m, player to " + to.ToString("F0");
         ModLog.Info("ArenaTestHooks: " + info);
         return info;
@@ -201,7 +203,7 @@ internal static class ArenaTestHooks
     /// D-173 (run 155357: far-troll-goes-home, 400 m out, the full troll was "not sent to the depot: fighting" - a wild creature there; fighting wins over unloading by
     /// design, D-149): removes wild creatures (not tamed, not players) within `radius` m of the player. Expected outcome: how many were removed.
     [TestHook("stt.clearMobs")]
-    private static int ClearMobs(float radius)
+    internal static int ClearMobs(float radius)
     {
         Player p = Player.m_localPlayer;
         int n = 0;
@@ -230,6 +232,25 @@ internal static class ArenaTestHooks
 
         ModLog.Info("ArenaTestHooks: " + n + " wild creature(s) removed within " + radius.ToString("F0") +
                     " m of the player");
+        return n;
+    }
+
+    /// D-175: how many living wild creatures (not tamed, not players) are within `radius` m of the player - the precondition a test that needs an enemy-free arena states
+    /// explicitly (after stt.clearMobs, which reports what it removed, not what is left). Expected outcome: the count.
+    [TestHook("stt.wildMobsNear")]
+    private static int WildMobsNear(float radius)
+    {
+        Player p = Player.m_localPlayer;
+        int n = 0;
+        foreach (Character c in Character.GetAllCharacters())
+        {
+            if (c != null && !c.IsPlayer() && !c.IsTamed() && !c.IsDead() &&
+                Flat(c.transform.position - p.transform.position) <= radius)
+            {
+                n++;
+            }
+        }
+
         return n;
     }
 

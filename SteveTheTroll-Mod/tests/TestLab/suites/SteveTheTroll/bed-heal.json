@@ -53,15 +53,7 @@
         "damage": 300
       }
     },
-    {
-      "do": "hook",
-      "name": "stt.trollMissingHealth",
-      "args": {
-        "troll": "troll"
-      },
-      "min": 1,
-      "label": "hurt"
-    },
+    {"do":"wait","until":{"check":"hook","name":"stt.trollMissingHealth","args":{"troll":"troll"},"min":1},"timeout":1,"label":"hurt"},
     {
       "do": "wait",
       "until": {

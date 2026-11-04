@@ -74,10 +74,23 @@
       "do": "wait",
       "until": {
         "check": "hook",
-        "name": "stt.plantedUntouched",
-        "expect": 0
+        "name": "stt.farmAttacks",
+        "args": {
+          "troll": "troll"
+        },
+        "min": 1
       },
-      "timeout": 60
+      "timeout": 60,
+      "label": "the troll itself swings first (D-176: the damage counter also counts recovery rage and debris)"
+    },
+    {
+      "do": "wait",
+      "until": {
+        "check": "hook",
+        "name": "stt.plantedHitByTroll",
+        "min": 1
+      },
+      "timeout": 20
     }
   ],
   "asserts": [
@@ -89,10 +102,32 @@
       "label": "the no-weapon path ran"
     },
     {
+      "check": "logContains",
+      "source": "SteveTheTroll",
+      "text": "default items gave it",
+      "expect": true,
+      "label": "the default items gave a usable farming tool (D-175: FarmTool checks the result)"
+    },
+    {
       "check": "hook",
       "name": "stt.plantedUntouched",
       "expect": 0,
       "label": "farms after the default items"
+    },
+    {
+      "check": "hook",
+      "name": "stt.plantedHitByTroll",
+      "min": 1,
+      "label": "the planted tree took a hit from the troll (a falling log of the test before does not count)"
+    },
+    {
+      "check": "hook",
+      "name": "stt.farmAttacks",
+      "args": {
+        "troll": "troll"
+      },
+      "min": 1,
+      "label": "the troll itself swung (D-175: a tree damaged by anything else does not count)"
     },
     {
       "check": "noErrors",

@@ -21,6 +21,24 @@ internal static class TrollHold
     private static float _nextLog;
     private static readonly Dictionary<int, float> LastLook = new();
 
+    /// D-176 (diagnostics): why a troll is or is not held right now - the player's distance, when it last looked at the troll, and HomeRules' answer. Expected outcome: a short text.
+    internal static string Describe(Character c)
+    {
+        Player near = Player.m_localPlayer;
+        if (near == null || c == null)
+        {
+            return "no local player";
+        }
+
+        float range = ModSettings.HoldNearPlayerRange.Value;
+        float dist = Vector3.Distance(near.transform.position, c.transform.position);
+        float seen;
+        bool looked = LastLook.TryGetValue(c.GetInstanceID(), out seen);
+        bool holds = HomeRules.Holds(range, false, false, dist, looked, Time.time - seen, HoldGraceSeconds);
+        return "hold " + (holds ? "ON" : "off") + " (player " + dist.ToString("F1") + " m away, range " + range.ToString("F1") + " m, looked " +
+               (looked ? (Time.time - seen).ToString("F1") + " s ago" : "never") + ")";
+    }
+
     /// Expected outcome: true = the troll stands still this AI step.
     internal static bool Holds(MonsterAI ai)
     {

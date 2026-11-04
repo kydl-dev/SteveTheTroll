@@ -59,25 +59,14 @@
       "do": "wait",
       "until": {
         "check": "hook",
-        "name": "stt.mobTargetsPlayer",
+        "name": "stt.guardTargetOf",
         "args": {
-          "mob": "mob"
-        },
-        "expect": true
-      },
-      "timeout": 5
-    },
-    {
-      "do": "wait",
-      "until": {
-        "check": "hook",
-        "name": "stt.targetOf",
-        "args": {
+          "mob": "mob",
           "troll": "troll"
         },
         "expect": "Greydwarf"
       },
-      "timeout": 5
+      "timeout": 8
     }
   ],
   "asserts": [

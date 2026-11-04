@@ -49,7 +49,30 @@ internal static class CombatTestHooks
         Vector3 at = Player.m_localPlayer.transform.position + new Vector3(dx, 0f, dz);
         at.y = ZoneSystem.instance.GetGroundHeight(at) + 0.3f;
         ModLog.Info("CombatTestHooks: " + prefab + " spawned at " + at.ToString("F0"));
-        return Object.Instantiate(pf, at, Quaternion.identity);
+        // D-175 (run 192749, guard-mob: the Greydwarf stood with its back to the player - Quaternion.identity - could not see it, and its own AI dropped the target the hook had
+        // just set, so no guard scan ever saw a hunter): a wild creature the test sets on the player looks at the player, as an aggressive one would
+        Vector3 toPlayer = Player.m_localPlayer.transform.position - at;
+        toPlayer.y = 0f;
+        Quaternion face = toPlayer.sqrMagnitude > 0.01f ? Quaternion.LookRotation(toPlayer) : Quaternion.identity;
+        GameObject spawned = Object.Instantiate(pf, at, face);
+        _lastMob = spawned;
+        return spawned;
+    }
+
+    /// D-176 (review of attack-key-creature: a hostile Greydwarf went for the player and TrollGuard gave the troll the target BEFORE the key was pressed, so the test passed without the key doing anything):
+    /// the creature keeps its body and colliders (the key ray and the troll can still hit it) but its AI is off and it has no target, so nothing but the key can give the troll one. Expected outcome: true when frozen.
+    [TestHook("stt.freezeMob")]
+    private static bool FreezeMob(GameObject mob)
+    {
+        MonsterAI ai = mob != null ? mob.GetComponent<MonsterAI>() : null;
+        if (ai == null)
+        {
+            return false;
+        }
+
+        TargetOf(ai) = null;
+        ai.enabled = false;
+        return !ai.enabled;
     }
 
     /// The creature `attacker` hits the local player for `damage` (blunt). Expected outcome: the player's health afterwards.
@@ -106,6 +129,13 @@ internal static class CombatTestHooks
         return TrollOrders.AimOverride != null;
     }
 
+    /// The name of the creature TrollGuard holds as the troll's forced target ("" = none). Only a hunter of the owner or an order sets one, so it shows the attack key's own effect. Expected outcome: the name.
+    [TestHook("stt.forcedTargetOf")]
+    private static string ForcedTargetOf(GameObject troll)
+    {
+        return TrollGuard.ForcedName(troll != null ? troll.GetComponent<Character>() : null);
+    }
+
     /// The prefab name of the creature the troll's AI targets ("" = none).
     [TestHook("stt.targetOf")]
     private static string Target(GameObject troll)
@@ -113,6 +143,72 @@ internal static class CombatTestHooks
         MonsterAI ai = troll.GetComponent<MonsterAI>();
         Character t = ai != null ? TargetOf(ai) : null;
         return t != null ? Utils.GetPrefabName(t.gameObject) : "";
+    }
+
+    /// D-175 (guard-mob): the mob goes for the player AT EVERY POLL (the game's own AI may drop a target it cannot sense; the real TrollGuard scan runs 4 times a second and
+    /// only needs to see it once) and the answer is what the troll targets. The guard's own scan still decides - nothing here calls it. Expected outcome: the prefab name the troll targets.
+    [TestHook("stt.guardTargetOf")]
+    private static string GuardTargetOf(GameObject mob, GameObject troll)
+    {
+        MobTargetsPlayer(mob);
+        return Target(troll);
+    }
+
+    private static float _nextKillLog;
+    private static GameObject _lastMob;
+
+    /// stt.guardKill for the creature stt.spawnMob made last: a named parameter cannot be resolved once the creature is destroyed (the lab says 'not found'), and a kill destroys it.
+    /// Expected outcome: "dead" once it is dead / gone, else "alive".
+    [TestHook("stt.guardKillLast")]
+    private static string GuardKillLast(GameObject troll)
+    {
+        return GuardKill(_lastMob, troll);
+    }
+
+    /// The creature stt.spawnMob made last has lost health, or is dead / gone (a kill destroys it, so it cannot be named as a hook parameter). Expected outcome: true once it was hurt.
+    [TestHook("stt.lastMobHurt")]
+    private static bool LastMobHurt()
+    {
+        Character c = _lastMob != null ? _lastMob.GetComponent<Character>() : null;
+        if (c == null || c.IsDead())
+        {
+            return true;
+        }
+
+        MobTargetsPlayer(_lastMob); // it keeps going for the player at every poll, as in guardKill
+        return c.GetHealth() < c.GetMaxHealth() - 0.01f;
+    }
+
+    /// D-175 (run 194722, spot-return: a wild Greyling went for the player, the guard gave the troll that target, and the troll then stood at 0.0 m/s for 75 s - it never reached
+    /// the creature, never swung, never went back to work): the mob keeps going for the player (as an aggressive one does) and the answer says whether the TROLL killed it - "dead"
+    /// or "alive". Logs where the troll is relative to the mob every 2 s, so a stalled troll shows. Expected outcome: "dead" once the mob is dead / gone.
+    [TestHook("stt.guardKill")]
+    private static string GuardKill(GameObject mob, GameObject troll)
+    {
+        Character c = mob != null ? mob.GetComponent<Character>() : null;
+        if (c == null || c.IsDead())
+        {
+            return "dead";
+        }
+
+        MobTargetsPlayer(mob);
+        if (Time.time >= _nextKillLog && troll != null)
+        {
+            _nextKillLog = Time.time + 2f;
+            Vector3 d = mob.transform.position - troll.transform.position;
+            d.y = 0f;
+            MonsterAI ai = troll.GetComponent<MonsterAI>();
+            Character t = ai != null ? TargetOf(ai) : null;
+            TrollChase chase = troll.GetComponent<TrollChase>();
+            ModLog.Info("CombatTestHooks: guard-kill - the " + Utils.GetPrefabName(mob) + " is " + d.magnitude.ToString("F1") +
+                        " m from the troll, no-hit zone " + TrollNoHit.InZone(troll.transform.position) + ", swings " + (chase != null ? chase.Swings.ToString() : "-") + ", last blocker '" +
+                        (chase != null ? chase.LastBlocker : "") + "', its target '" + (t != null ? Utils.GetPrefabName(t.gameObject) : "") + "', forced " +
+                        TrollGuard.HasForced(troll.GetComponent<Character>()) + ", farmer " +
+                        (troll.GetComponent<TrollFarmer>() != null) + ", combat " + CombatState(troll) + ", mob health " +
+                        c.GetHealth().ToString("F0"));
+        }
+
+        return "alive";
     }
 
     /// What combat drives the troll now: rage / slam / chase / none.

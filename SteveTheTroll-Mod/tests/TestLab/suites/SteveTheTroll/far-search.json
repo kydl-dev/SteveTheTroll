@@ -21,12 +21,7 @@
         "dz": 0
       }
     },
-    {
-      "do": "hook",
-      "name": "stt.farMetres",
-      "max": 500,
-      "label": "the 700 m tree is beyond the long range (any answer is -1 or at most 500 m)"
-    },
+    {"do":"wait","until":{"check":"hook","name":"stt.farMetres","max":500},"timeout":1,"label":"the 700 m tree is beyond the long range (any answer is -1 or at most 500 m)"},
     {
       "do": "hook",
       "name": "stt.addFarTree",

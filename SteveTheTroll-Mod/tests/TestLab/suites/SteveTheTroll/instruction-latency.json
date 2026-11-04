@@ -77,15 +77,7 @@
       "do": "wait",
       "seconds": 5
     },
-    {
-      "do": "hook",
-      "name": "stt.moved",
-      "args": {
-        "troll": "troll"
-      },
-      "min": 15,
-      "label": "walk to the bed: at least 15 m moved (net distance, so circling does not count) within 5 s"
-    }
+    {"do":"wait","until":{"check":"hook","name":"stt.moved","args":{"troll":"troll"},"min":15},"timeout":1,"label":"walk to the bed: at least 15 m moved (net distance, so circling does not count) within 5 s"}
   ],
   "asserts": [
     {

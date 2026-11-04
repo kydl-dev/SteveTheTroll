@@ -42,7 +42,8 @@ internal static class TrollGuard
     // the troll must fight, re-applied before each AI step (Keep) until it is dead, tamed or further than KeepRange.
     private static readonly Dictionary<int, Character> Forced = new();
     private static readonly List<Character> Attackers = new();
-    private static float _next;
+    private static float _next, _nextDropLog;
+    private static int _dropped;
 
     private static readonly List<KeyValuePair<Character, MonsterAI>> Mine = new();
     private static readonly List<Character> Hunters = new();
@@ -158,14 +159,64 @@ internal static class TrollGuard
         Forced[troll.GetInstanceID()] = creature;
         if (Target(ai) == creature)
         {
+            Engage(troll, creature); // D-176: already its target (TrollGuard got there first) is a success - the order must still end in a fight
+            return true;
+        }
+
+        bool applied = ApplyTarget(ai, creature);
+        if (applied)
+        {
+            Engage(troll, creature);
+        }
+
+        ModLog.Info("TrollGuard: " + TrollTaming.Tag(troll) + " ordered / hit - attacks " + creature.name + " (" +
+                    Vector3.Distance(troll.transform.position, creature.transform.position).ToString("F1") + " m)" +
+                    (applied ? "" : " - the AI did not take the target"));
+        return applied;
+    }
+
+    /// D-176 (guard-mob-kills: a farming troll with the target set stood next to the mob and never swung; the same for an attack-key order): ONE way from "has the target" to "fights":
+    /// a farming troll walks to the creature and swings itself (TrollChase). Not inside the bed no-hit zone (TrollNoHit: the troll cannot swing there; the troll or the creature in the
+    /// circle) and not when a chase for that creature runs already. Expected outcome: true when a chase was started.
+    internal static bool Engage(Character troll, Character creature)
+    {
+        if (troll == null || creature == null || troll.GetComponent<TrollFarmer>() == null)
+        {
             return false;
         }
 
-        SetTarget(ai, creature);
-        ai.Alert();
-        ModLog.Info("TrollGuard: " + TrollTaming.Tag(troll) + " ordered / hit - attacks " + creature.name + " (" +
-                    Vector3.Distance(troll.transform.position, creature.transform.position).ToString("F1") + " m)");
+        if (TrollNoHit.InZone(troll.transform.position) || TrollNoHit.InZone(creature.transform.position))
+        {
+            return false;
+        }
+
+        TrollChase running = troll.GetComponent<TrollChase>();
+        if (running != null && running.Target == creature)
+        {
+            return false;
+        }
+
+        TrollChase.Begin(troll, creature, true);
         return true;
+    }
+
+    /// D-175 (review of the flaky guard-mob run): SetTarget can refuse in some AI states (alerted / sight) and Alert does not check anything, so a target was reported as taken
+    /// that the AI never held. The field is set directly when SetTarget refuses (as Keep does before every AI step) and the result is verified. Expected outcome: true when the AI targets `target` now.
+    private static bool ApplyTarget(MonsterAI ai, Character target)
+    {
+        if (ai == null || target == null)
+        {
+            return false;
+        }
+
+        SetTarget(ai, target);
+        if (Target(ai) != target)
+        {
+            Target(ai) = target;
+        }
+
+        ai.Alert();
+        return Target(ai) == target;
     }
 
     private static int Trim()
@@ -198,6 +249,30 @@ internal static class TrollGuard
         return true;
     }
 
+    /// The name of the forced target ("" = none). Only TrollGuard (a creature that hunts the owner) and an order (attack key / hit) set one - the game's own AI never does.
+    internal static string ForcedName(Character troll)
+    {
+        Character f;
+        return troll != null && Forced.TryGetValue(troll.GetInstanceID(), out f) && f != null ? Utils.GetPrefabName(f.gameObject) : ""; // the prefab name, as stt.targetOf reports it (f.name is "Greydwarf(Clone)")
+    }
+
+    /// D-176 (diagnostics): what the troll holds now - the game AI's target, the forced target and the running chase, side by side (a lost target shows which part lost it).
+    internal static string Describe(Character troll)
+    {
+        MonsterAI ai = troll != null ? troll.GetComponent<MonsterAI>() : null;
+        Character ait = ai != null ? Target(ai) : null;
+        Character f2 = null;
+        if (troll != null)
+        {
+            Forced.TryGetValue(troll.GetInstanceID(), out f2);
+        }
+
+        TrollChase chase = troll != null ? troll.GetComponent<TrollChase>() : null;
+        return "AI target " + (ait != null ? ait.name : "none") + ", forced target " + (f2 != null ? f2.name : "none") + ", chase " +
+               (chase != null && chase.Target != null ? chase.Target.name + " (" + chase.Swings + " swing(s))" : "none") + ", farmer " +
+               (troll != null && troll.GetComponent<TrollFarmer>() != null);
+    }
+
     /// D-084: the troll has a forced target from the player's defence (TrollDefend / the attack key). Expected outcome: true when it has one.
     internal static bool HasForced(Character troll)
     {
@@ -226,6 +301,15 @@ internal static class TrollGuard
 
         if (Target(ai) != t)
         {
+            // D-176 (attack-key-creature, run 213113: the target was gone a few frames after it was set): the game's AI dropped the forced target between two steps - counted and logged
+            _dropped++;
+            if (Time.time >= _nextDropLog)
+            {
+                _nextDropLog = Time.time + 5f;
+                ModLog.Info("TrollGuard: " + TrollTaming.Tag(ai) + " the game's AI dropped the forced target " + t.name + " (" + (Target(ai) == null ? "none" : Target(ai).name) +
+                            " instead; " + _dropped + " time(s) so far) - applied again");
+            }
+
             Target(ai) = t;
         }
 
@@ -294,14 +378,26 @@ internal static class TrollGuard
 
         Trim();
         Forced[id] = nearest;
-        SetTarget(ai, nearest);
-        ai.Alert();
+        if (!ApplyTarget(ai, nearest))
+        {
+            ModLog.Warn("TrollGuard: " + TrollTaming.Tag(troll) + " - the AI did not take " + nearest.name +
+                        " as its target");
+            return false;
+        }
+
         TrollFarmer farmer = troll.GetComponent<TrollFarmer>();
+        // D-176: inside the bed no-hit zone (TrollNoHit) the troll cannot swing, so there is nothing to chase for - the troll or the creature in the circle: the guard target stays (as before), no chase
+        bool noHit = TrollNoHit.InZone(troll.transform.position) || TrollNoHit.InZone(nearest.transform.position);
+        if (farmer != null)
+        {
+            Engage(troll, nearest); // until it is dead / gone; the end hands the troll back to the farmer
+        }
+
         ModLog.Info("TrollGuard: " + TrollTaming.Tag(troll) + " attacks " + nearest.name + " (" + best.ToString("F1") +
                     " m) - it targets " + (Target(nearest.GetComponent<MonsterAI>()) == troll
                         ? "the troll"
                         : owner.GetPlayerName())
-                    + ", " + Attackers.Count + " attacker(s)" + (farmer != null ? ", farming paused" : ""));
+                    + ", " + Attackers.Count + " attacker(s)" + (farmer != null ? ", farming paused" : "") + (farmer != null && noHit ? ", no chase (bed no-hit zone)" : ""));
         TrollDefend.UnderAttack(Target(nearest.GetComponent<MonsterAI>()) == troll
             ? TrollOrders.Shown(troll)
             : owner.GetPlayerName()); // D-068: the one that is attacked

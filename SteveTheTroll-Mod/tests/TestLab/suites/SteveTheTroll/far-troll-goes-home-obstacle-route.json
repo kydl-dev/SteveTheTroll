@@ -68,17 +68,8 @@
       "expect": 1,
       "label": "the test hub is the troll's"
     },
-    {
-      "do": "hook",
-      "name": "stt.wallAcross",
-      "args": {
-        "troll": "troll",
-        "ahead": 12,
-        "length": 24
-      },
-      "min": 12,
-      "label": "24 m wall line 12 m in front of the troll, across its way home"
-    },
+    {"do":"hook","name":"stt.wallAcross","args":{"troll":"troll","ahead":12,"length":24},"label":"24 m wall line 12 m in front of the troll, across its way home (the wall count is enforced by the next step)"},
+    {"do":"wait","until":{"check":"hook","name":"stt.wallsAlive","min":12},"timeout":1,"label":"12 walls (6 per layer, two high) stand across the way home"},
     {
       "do": "wait",
       "seconds": 1

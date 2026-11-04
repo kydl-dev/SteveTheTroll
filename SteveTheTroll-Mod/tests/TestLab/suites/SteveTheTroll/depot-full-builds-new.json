@@ -37,15 +37,7 @@
       },
       "as": "depot"
     },
-    {
-      "do": "hook",
-      "name": "stt.depotFill",
-      "args": {
-        "frame": "depot"
-      },
-      "min": 1,
-      "label": "the existing depot is full"
-    },
+    {"do":"hook","name":"stt.depotFill","args":{"frame":"depot"},"label":"the existing depot is full (enforced by the depotCount assert: a second depot is built only when the first is full)"},
     {
       "do": "hook",
       "name": "stt.spawnTroll",

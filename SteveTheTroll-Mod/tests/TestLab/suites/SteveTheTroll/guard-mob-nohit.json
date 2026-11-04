@@ -1,0 +1,90 @@
+{
+  "name": "guard-mob-nohit",
+  "description": "D-176 (guard-mob-kills, run 211553): the bed no-hit zone (15 m, TrollNoHit) stays - a creature inside it is not chased (no 30 s stand with 998 refused swings), the troll keeps the guard target, and the creature is not hurt",
+  "timeout": 70,
+  "steps": [
+    {
+      "do": "hook",
+      "name": "stt.arena",
+      "contains": "arena at",
+      "label": "start on the arena spot (MIGRATION_DECISIONS C26)"
+    },
+    {
+      "do": "hook",
+      "name": "stt.reset"
+    },
+    {
+      "do": "hook",
+      "name": "stt.clearTrolls"
+    },
+    {
+      "do": "give",
+      "prefab": "STT_TrollSlippers",
+      "count": 1,
+      "equip": true
+    },
+    {
+      "do": "hook",
+      "name": "stt.addHub",
+      "args": {
+        "number": 1,
+        "dx": 0,
+        "dz": 25
+      }
+    },
+    {
+      "do": "hook",
+      "name": "stt.spawnTroll",
+      "args": {
+        "dx": -14,
+        "dz": 8
+      },
+      "as": "troll"
+    },
+    {
+      "do": "hook",
+      "name": "stt.startFarm",
+      "args": {
+        "troll": "troll"
+      }
+    },
+    {
+      "do": "wait",
+      "seconds": 2
+    },
+    {
+      "do": "hook",
+      "name": "stt.spawnMob",
+      "args": {
+        "prefab": "Greydwarf",
+        "dx": -2,
+        "dz": 5
+      },
+      "as": "mob"
+    },
+    {
+      "do": "wait",
+      "until": {
+        "check": "hook",
+        "name": "stt.guardTargetOf",
+        "args": {
+          "mob": "mob",
+          "troll": "troll"
+        },
+        "expect": "Greydwarf"
+      },
+      "timeout": 8,
+      "label": "the guard still gives the troll the target inside the zone"
+    },
+    {
+      "do": "wait",
+      "seconds": 10,
+      "label": "the troll cannot hit the creature inside the bed circle"
+    }
+  ],
+  "asserts": [
+    { "check": "hook", "name": "stt.lastMobHurt", "expect": false, "label": "the no-hit zone held: the creature is not hurt" },
+    { "check": "logContains", "source": "SteveTheTroll", "text": "no chase (bed no-hit zone)", "expect": true, "label": "the guard did not start a chase it cannot finish" },
+    { "check": "noErrors", "source": "SteveTheTroll" }
+  ]
+}

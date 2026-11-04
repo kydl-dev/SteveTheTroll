@@ -391,6 +391,12 @@ internal static class RecoveryTestHooks
         return _trollHits;
     }
 
+    /// D-175: is this the tree of stt.walledTree. Expected outcome: true for that tree.
+    internal static bool IsWalledTree(GameObject g)
+    {
+        return g != null && g == _tree;
+    }
+
     /// 1 while the tree still stands untouched.
     [TestHook("stt.treeStands")]
     private static int TreeStands(GameObject tree)

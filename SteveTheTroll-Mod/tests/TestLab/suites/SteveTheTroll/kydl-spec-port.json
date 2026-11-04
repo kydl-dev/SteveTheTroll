@@ -25,7 +25,7 @@
     { "do": "hook", "name": "stt.hubIcon", "expect": "stevethetroll_hub_icon", "label": "T-200: the Troll Hub build icon is the HUB sign" },
     { "do": "hook", "name": "kc.hubOpen", "args": { "mod": "com.kydldev.SteveTheTroll" }, "expect": true },
     { "do": "wait", "seconds": 1 },
-    { "do": "hook", "name": "kc.hubTabCount", "args": { "mod": "com.kydldev.SteveTheTroll" }, "min": 7, "label": "7 tabs in the hub" },
+    {"do":"wait","until":{"check":"hook","name":"kc.hubTabCount","args":{"mod":"com.kydldev.SteveTheTroll"},"min":7},"timeout":1,"label":"7 tabs in the hub"},
     { "do": "hook", "name": "kc.hubClose" }
   ],
   "asserts": [

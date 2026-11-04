@@ -106,7 +106,9 @@ internal static class TrollOrderHandlers
             bool ordered = TrollGuard.Order(c.Troll, c.Target);
             ModLog.Verbose("TrollOrderHandlers: " + TrollTaming.Tag(c.Troll) + " attack order on " +
                            (c.Target != null ? c.Target.name : "?") + " - TrollGuard took it " + ordered);
-            return OperationResponse<bool>.Success(ordered);
+            return ordered
+                ? OperationResponse<bool>.Success(true)
+                : OperationResponse<bool>.Rejected("the troll's AI did not take the target (no AI / not the owner / target refused)");
         }
     }
 

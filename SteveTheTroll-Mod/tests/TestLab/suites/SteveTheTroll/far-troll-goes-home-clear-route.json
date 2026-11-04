@@ -41,6 +41,14 @@
     },
     {
       "do": "hook",
+      "name": "stt.clearAround",
+      "args": {
+        "radius": 30
+      },
+      "label": "no tree, rock or stump around the spot the troll starts from (D-176: a stalled start in run 222441 had nothing else to blame)"
+    },
+    {
+      "do": "hook",
       "name": "stt.clearMobs",
       "args": {
         "radius": 80
@@ -59,6 +67,15 @@
     {
       "do": "wait",
       "seconds": 2
+    },
+    {
+      "do": "hook",
+      "name": "stt.stepAside",
+      "args": {
+        "dx": 10,
+        "dz": 0
+      },
+      "label": "the player stands out of the troll's way and out of its hold range (D-176: TrollHold froze it with the player 2.4 m away)"
     },
     {
       "do": "hook",
@@ -115,16 +132,16 @@
     },
     {
       "do": "wait",
-      "seconds": 15
-    },
-    {
-      "do": "hook",
-      "name": "stt.moved",
-      "args": {
-        "troll": "troll"
+      "until": {
+        "check": "hook",
+        "name": "stt.progressTowardHub",
+        "args": {
+          "troll": "troll"
+        },
+        "min": 30
       },
-      "min": 30,
-      "label": "15 s later it has walked at least 30 m toward home"
+      "timeout": 45,
+      "label": "within 45 s it is at least 30 m CLOSER to its hub (D-176: stt.moved counted any movement and its min was never enforced)"
     },
     {
       "do": "wait",

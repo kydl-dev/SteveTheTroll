@@ -15,7 +15,7 @@ Status "Automated" here is only true after the TestLab run named in `_agent\TEST
 | Farming, far search, spot return, recovery | IdleRules, FarmGate, StuckRules, Recovery* | - | farm-chops-tree, far-search, spot-return, recovery-walled-tree, unarmed-farm, noweapon-farm | - | Automated |
 | Backpack, depots, pickup, death crates | Backpack*, DepotRules, DepotPlanner | - | backpack-*, depot-*, full-* | - | Automated |
 | Hubs: choice, manual, walk back | HubRules, Hub pipelines | - | hub-* | - | Automated |
-| Combat: defend, rage, counter, guard, walls, no-hit | Combat rules | - | defend-rage, counter-slam, guard-mob, walls-two-star, nohit-zone | - | Automated |
+| Combat: defend, rage, counter, guard, walls, no-hit | Combat rules | - | defend-rage, counter-slam, guard-mob, guard-mob-kills, guard-mob-nohit, walls-two-star, nohit-zone | - | Automated |
 | Orders (attack key) | OrderRules | - | attack-key-* | real Mouse 4 | Automated + Manual |
 | Ownership / multiplayer | - | - | ownership-handover | real 2-player test | Automated (virtual) + Gap (real) |
 | Slipper figures on the feet | FitGeometry (Unity EditMode) | - | slipper-skin | look | Automated + Manual |

@@ -63,6 +63,15 @@
     },
     {
       "do": "hook",
+      "name": "stt.freezeMob",
+      "args": {
+        "mob": "mob"
+      },
+      "expect": true,
+      "label": "D-176: nothing but the key can give the troll this target (TrollGuard cannot see a hunter)"
+    },
+    {
+      "do": "hook",
       "name": "stt.spawnTroll",
       "args": {
         "dx": -14,
@@ -84,6 +93,29 @@
     },
     {
       "do": "hook",
+      "name": "stt.forcedTargetOf",
+      "args": {
+        "troll": "troll"
+      },
+      "expect": "",
+      "label": "no forced target before the key (only the key or a hunter of the player sets one; the troll's own AI may well target a creature it sees)"
+    },
+    {
+      "do": "hook",
+      "name": "stt.aimAt",
+      "args": {
+        "target": "mob"
+      },
+      "expect": true
+    },
+    {
+      "do": "hook",
+      "name": "stt.aimedAt",
+      "contains": "Greydwarf",
+      "label": "the key ray resolves the creature (aimedAt uses up the one-shot aim)"
+    },
+    {
+      "do": "hook",
       "name": "stt.aimAt",
       "args": {
         "target": "mob"
@@ -101,6 +133,19 @@
       "do": "wait",
       "until": {
         "check": "hook",
+        "name": "stt.forcedTargetOf",
+        "args": {
+          "troll": "troll"
+        },
+        "expect": "Greydwarf"
+      },
+      "timeout": 5,
+      "label": "the key gave the troll the forced target"
+    },
+    {
+      "do": "wait",
+      "until": {
+        "check": "hook",
         "name": "stt.targetOf",
         "args": {
           "troll": "troll"
@@ -111,6 +156,22 @@
     }
   ],
   "asserts": [
+    {
+      "check": "hook",
+      "name": "stt.forcedTargetOf",
+      "args": {
+        "troll": "troll"
+      },
+      "expect": "Greydwarf",
+      "label": "the order is still held"
+    },
+    {
+      "check": "logContains",
+      "source": "SteveTheTroll",
+      "text": "key record - press by a test",
+      "expect": true,
+      "label": "the key press was recorded"
+    },
     {
       "check": "hook",
       "name": "stt.targetOf",

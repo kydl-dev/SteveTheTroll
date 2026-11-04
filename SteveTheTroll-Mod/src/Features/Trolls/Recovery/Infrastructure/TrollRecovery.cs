@@ -4,6 +4,7 @@ using KydlCore.Common;
 using KydlCore.Core;
 using SteveTheTroll.Features.Trolls.Contracts;
 using SteveTheTroll.Features.Trolls.Core;
+using SteveTheTroll.Features.Trolls.Home.Infrastructure;
 using SteveTheTroll.Features.Trolls.Farming.Domain;
 using SteveTheTroll.Features.Trolls.Recovery.Application;
 using SteveTheTroll.Features.Trolls.Recovery.Domain;
@@ -268,6 +269,12 @@ internal sealed partial class TrollRecovery : MonoBehaviour
             ModLog.Verbose("TrollRecovery: " + TrollTaming.Tag(this) + " decided " + response.Value + " -> " + done);
         }
 
+        if (now >= _nextSnapshot && M.Stage == RecoveryStage.Travel && _meter.SustainedSeconds < 1f && _meter.StuckSeconds > 0.5f)
+        {
+            _nextSnapshot = now + 5f;
+            ModLog.Info("TrollRecovery: " + TrollTaming.Tag(this) + " not getting anywhere - " + Snapshot(d));
+        }
+
         if (now >= _nextLog && (M.Stage != RecoveryStage.Travel || _meter.StuckSeconds > 1f))
         {
             _nextLog = now + LogSeconds;
@@ -362,6 +369,20 @@ internal sealed partial class TrollRecovery : MonoBehaviour
         return f.magnitude;
     }
 
+    /// D-176 (diagnostics): everything about a troll that is not getting anywhere, in one line - where it is and where it goes, how fast it really moves, the stage, the last obstruction
+    /// the probe found, detours done, whether it is in an attack / staggered, and whether TrollHold is stopping it. Expected outcome: the text.
+    private string Snapshot(float d)
+    {
+        Character body = GetComponent<Character>();
+        Vector3 p = transform.position;
+        return "at " + p.ToString("F0") + ", goal " + _goal.ToString("F0") + ", " + d.ToString("F1") + " m to go, real speed " +
+               (body != null ? body.GetVelocity().magnitude.ToString("F1") : "?") + " m/s, stage " + M.Stage + ", detours " + M.DetoursDone + ", raged " + M.Raged +
+               ", last obstruction " + _obstacleName + " (" + _kind + "), in attack " + (body is Humanoid h && h.InAttack()) + ", staggered " + (body != null && body.IsStaggering()) +
+               ", " + TrollHold.Describe(body);
+    }
+
+    private float _nextSnapshot;
+
     private void CycleFailed(float d)
     {
         string tag = TrollTaming.Tag(this);
@@ -378,6 +399,7 @@ internal sealed partial class TrollRecovery : MonoBehaviour
         }
         else
         {
+            ModLog.Info("TrollRecovery: " + tag + " cycle state - " + Snapshot(d));
             ModLog.Info("TrollRecovery: " + tag + " complete recovery cycle failed (" + failed + " so far, " +
                         d.ToString("F1") + " m from its goal) - " + (_canAbandon
                             ? "one more cycle, turning " + (M.RightFirst ? "right" : "left") + " first"

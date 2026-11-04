@@ -9,6 +9,7 @@ using SteveTheTroll.Features.Trolls.Backpack.Domain;
 using SteveTheTroll.Features.Trolls.Backpack.Infrastructure;
 using SteveTheTroll.Features.Trolls.Farming.Infrastructure;
 using SteveTheTroll.Features.Trolls.Home.Infrastructure;
+using SteveTheTroll.Features.Trolls.Orders.Infrastructure;
 using SteveTheTroll.Features.Trolls.Orders.Commands;
 using SteveTheTroll.Features.Trolls.Registry.Infrastructure;
 using SteveTheTroll.Features.Trolls.Taming.Infrastructure;
@@ -55,6 +56,7 @@ internal static partial class TestHooks
     [TestHook("stt.reset")]
     private static string Reset()
     {
+        TrollOrders.ResetTestInput();
         Player p = Player.m_localPlayer;
         if (p == null)
         {
@@ -234,6 +236,27 @@ internal static partial class TestHooks
         }
 
         return Mathf.RoundToInt(HubGeometry.Flat(troll.transform.position - was));
+    }
+
+    /// D-176 (far-troll-goes-home-clear-route: "moved >= 30" did not say whether it moved TOWARD home): flat metres the troll is closer to its hub than it was at stt.mark
+    /// (negative = further away). Query only - safe to poll in `wait until` with `min`. Throws when stt.mark was not called or the troll has no hub.
+    [TestHook("stt.progressTowardHub")]
+    private static int ProgressTowardHub(GameObject troll)
+    {
+        Vector3 was;
+        if (!Marks.TryGetValue(troll.GetInstanceID(), out was))
+        {
+            throw new Exception("stt.mark was not called");
+        }
+
+        HubRegistry.All(true);
+        HubInfo hub = HubRegistry.For(troll.GetComponent<Character>());
+        if (hub == null)
+        {
+            throw new Exception("the troll has no hub");
+        }
+
+        return Mathf.RoundToInt(HubGeometry.Flat(hub.Pos - was) - HubGeometry.Flat(hub.Pos - troll.transform.position));
     }
 
     /// Flat metres from the troll to the hub it would use (-1 = none).

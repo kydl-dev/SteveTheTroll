@@ -14,6 +14,23 @@
       "name": "stt.reset"
     },
     {
+      "do": "hook",
+      "name": "stt.clearMobs",
+      "args": {
+        "radius": 80
+      },
+      "label": "D-175: this test is about unloading, not fighting (run 194722: a wild Greyling attacked at the start, fighting wins over unloading by design) - the arena starts without wild creatures; guard-mob-kills covers the fight"
+    },
+    {
+      "do": "hook",
+      "name": "stt.wildMobsNear",
+      "args": {
+        "radius": 80
+      },
+      "expect": 0,
+      "label": "no wild creature left within 80 m"
+    },
+    {
       "do": "give",
       "prefab": "STT_TrollSlippers",
       "count": 1,

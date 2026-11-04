@@ -37,12 +37,7 @@
       "do": "wait",
       "seconds": 1
     },
-    {
-      "do": "hook",
-      "name": "stt.wallsAlive",
-      "min": 24,
-      "label": "the whole ring stands (12 walls, two high)"
-    },
+    {"do":"wait","until":{"check":"hook","name":"stt.wallsAlive","min":24},"timeout":1,"label":"the whole ring stands (12 walls, two high)"},
     {
       "do": "hook",
       "name": "stt.spawnTroll",

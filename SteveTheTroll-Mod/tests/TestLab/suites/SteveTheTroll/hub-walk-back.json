@@ -41,15 +41,7 @@
       },
       "as": "troll"
     },
-    {
-      "do": "hook",
-      "name": "stt.returnDistance",
-      "args": {
-        "troll": "troll"
-      },
-      "min": 1001,
-      "label": "the only hub is about 1030 m from the troll (past the 1000 m reach; the troll stands about 32 m in front of the player so TrollHold, which pauses a troll the player looks at within 4 m, does not apply)"
-    },
+    {"do":"wait","until":{"check":"hook","name":"stt.returnDistance","args":{"troll":"troll"},"min":1001},"timeout":1,"label":"the only hub is about 1030 m from the troll (past the 1000 m reach; the troll stands about 32 m in front of the player so TrollHold, which pauses a troll the player looks at within 4 m, does not apply)"},
     {
       "do": "hook",
       "name": "stt.returnCheck",

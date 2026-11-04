@@ -16,6 +16,8 @@ namespace SteveTheTroll.Testing.TestHooks;
 internal static class FarmingTestHooks
 {
     private static readonly List<GameObject> Planted = new();
+    private static readonly List<Vector3> PlantedAt = new();
+    private const float DebrisRadius = 4f;
 
     /// A Beech tree `dx`,`dz` metres from the player, on the ground. Expected outcome: the tree (bind it with "as").
     [TestHook("stt.plantTree")]
@@ -32,6 +34,7 @@ internal static class FarmingTestHooks
 
         GameObject tree = Object.Instantiate(prefab, at, Quaternion.identity);
         Planted.Add(tree);
+        PlantedAt.Add(at);
         ModLog.Info("FarmingTestHooks: tree planted at " + at.ToString("F0") + " (" +
                     new Vector2(dx, dz).magnitude.ToString("F1") + " m from the player)");
         return tree;
@@ -62,6 +65,19 @@ internal static class FarmingTestHooks
         return n;
     }
 
+    /// D-175: is this one of the trees stt.plantTree made. Expected outcome: true for a planted tree.
+    internal static bool IsPlanted(GameObject g)
+    {
+        return g != null && Planted.Contains(g);
+    }
+
+    /// Hits a tamed creature (not debris) did to the planted trees since stt.reset. Expected outcome: the count.
+    [TestHook("stt.plantedHitByTroll")]
+    private static int PlantedHitByTroll()
+    {
+        return TreeDamageLog.TrollHitsOnPlanted;
+    }
+
     /// Swings the troll's farmer started (StartAttack accepted). Expected outcome: -1 without a farmer.
     [TestHook("stt.farmAttacks")]
     private static int FarmAttacks(GameObject troll)
@@ -73,6 +89,7 @@ internal static class FarmingTestHooks
     /// Removes the planted trees (stt.reset). Expected outcome: how many were removed.
     internal static int ClearPlanted()
     {
+        TreeDamageLog.TrollHitsOnPlanted = 0;
         int n = 0;
         foreach (GameObject g in Planted)
         {
@@ -95,6 +112,45 @@ internal static class FarmingTestHooks
             n++;
         }
 
+        // D-176 (noweapon-farm, run 222441: the previous test's felled tree left a stump 2.5 m from the same planting spot; it blocked the next troll, recovery raged at it and the rage swing hit the tree):
+        // what a planted tree leaves behind (stump, logs) goes with it - only within a few metres of where the test planted, never the world around
+        int debris = 0;
+        foreach (Vector3 at in PlantedAt)
+        {
+            foreach (ZNetView v in Object.FindObjectsByType<ZNetView>(FindObjectsSortMode.None))
+            {
+                if (v == null || !v.IsValid())
+                {
+                    continue;
+                }
+
+                GameObject g = v.gameObject;
+                Vector3 d = g.transform.position - at;
+                d.y = 0f;
+                if (d.magnitude > DebrisRadius)
+                {
+                    continue;
+                }
+
+                bool leftover = g.GetComponent<TreeLog>() != null || g.GetComponent<TreeBase>() != null ||
+                                (g.GetComponent<Destructible>() != null && g.GetComponent<Piece>() == null && g.GetComponent<Character>() == null);
+                if (!leftover)
+                {
+                    continue;
+                }
+
+                v.ClaimOwnership();
+                ZNetScene.instance.Destroy(g);
+                debris++;
+            }
+        }
+
+        if (PlantedAt.Count > 0)
+        {
+            ModLog.Info("FarmingTestHooks: " + n + " planted tree(s) removed, " + debris + " stump / log / debris object(s) within " + DebrisRadius.ToString("F0") + " m of the planting spots removed");
+        }
+
+        PlantedAt.Clear();
         Planted.Clear();
         return n;
     }

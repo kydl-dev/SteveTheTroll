@@ -102,6 +102,8 @@
     "defend-rage",
     "counter-slam",
     "guard-mob",
+    "guard-mob-kills",
+    "guard-mob-nohit",
     "nohit-zone",
     "walls-two-star",
     "attack-key-nothing",
@@ -114,6 +116,7 @@
     "recovery-walled-tree",
     "attack-key-tree-press",
     "attack-key-creature",
+    "attack-key-farming-creature",
     "attack-key-tree",
     "costume-after-slippers"
   ]
