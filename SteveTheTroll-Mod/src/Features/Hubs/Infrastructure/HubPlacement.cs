@@ -50,7 +50,7 @@ internal static class HubPlacement
         bool now = false;
         if (!Unlocked(p))
         {
-            if (!SetActive(p))
+            if (!HubUnlockRules.ShouldUnlock(false, SetActive(p)))
             {
                 return false;
             }
@@ -78,7 +78,7 @@ internal static class HubPlacement
 
     private static bool IsHub(Piece piece)
     {
-        return piece != null && piece.gameObject.name.StartsWith(HubData.PrefabName);
+        return piece != null && HubUnlockRules.IsHub(piece.gameObject.name, HubData.PrefabName);
     }
 
     /// Height difference of the ground under the hub's footprint (9 x 9 samples). Expected outcome: metres.
@@ -112,17 +112,11 @@ internal static class HubPlacement
     {
         internal static void Postfix(Player __instance, Piece piece, Player.RequirementMode mode, ref bool __result)
         {
-            if (!IsHub(piece))
-            {
-                return;
-            }
-
-            if (mode == Player.RequirementMode.IsKnown)
-            {
-                // not in the build menu before the set bonus has been active once (the game's material rule would show it earlier);
-                // once unlocked, known materials are not required to SEE it
-                __result = Unlocked(__instance);
-            }
+            // not in the build menu before the set bonus has been active once (the game's material rule would show it earlier);
+            // once unlocked, known materials are not required to SEE it
+            bool isHub = IsHub(piece);
+            __result = HubUnlockRules.KnownAnswer(__result, isHub, mode == Player.RequirementMode.IsKnown,
+                isHub && Unlocked(__instance));
         }
     }
 
