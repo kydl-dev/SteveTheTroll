@@ -5,6 +5,7 @@ using SteveTheTroll.Features.Trolls.Combat.Domain;
 using SteveTheTroll.Features.Trolls.Contracts;
 using SteveTheTroll.Features.Trolls.Core;
 using SteveTheTroll.Features.Trolls.Home.Infrastructure;
+using SteveTheTroll.Features.Trolls.Movement.Infrastructure;
 using SteveTheTroll.Features.Trolls.Farming.Infrastructure;
 using SteveTheTroll.Features.Trolls.Orders.Infrastructure;
 using UnityEngine;
@@ -378,8 +379,8 @@ internal sealed class TrollChase : MonoBehaviour
                 : "nothing in the straight line (4 m ray, 15 m body-wide cast)";
         Character body = me;
         ModLog.Info("TrollChase: " + TrollOrders.Shown(me) + " makes no progress towards " + _target.name + " (" + flat.magnitude.ToString("F1") + " m; troll at " + transform.position.ToString("F0") +
-                    ", target at " + point.ToString("F0") + ") - " + blocker + " - the game's MoveTo said " + _lastMoveOk + ", real speed " + body.GetVelocity().magnitude.ToString("F1") +
-                    " m/s, in attack " + me.InAttack() + ", staggered " + body.IsStaggering() + ", " + TrollHold.Describe(body) + " - detour " + _detours + " to the " + (_rightSide ? "left" : "right") +
+                    ", target at " + point.ToString("F0") + ") - " + blocker + " - the game's MoveTo reports arrived: " + _lastMoveOk + ", real speed " + body.GetVelocity().magnitude.ToString("F1") +
+                    " m/s, in attack " + me.InAttack() + ", staggered " + body.IsStaggering() + ", " + TrollHold.Describe(body) + ", " + TrollMoveDiag.Describe(body, point) + " - detour " + _detours + " to the " + (_rightSide ? "left" : "right") +
                     ", walking to " + to.ToString("F0"));
     }
 

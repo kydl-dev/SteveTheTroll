@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using HarmonyLib;
 using KydlCore.Common;
+using KydlCore.Features.Hub.Contracts;
 using SteveTheTroll.Configuration;
 using SteveTheTroll.Features.Hubs.Domain;
 using SteveTheTroll.Features.Hubs.Infrastructure;
@@ -57,6 +58,14 @@ internal static partial class TestHooks
     private static string Reset()
     {
         TrollOrders.ResetTestInput();
+        // D-176 (fix8: kydl-spec-port failed with the KY hub open, its closing step never ran, and every later key press was refused "a menu is open"): a test starts with no
+        // window of the mod open, whatever the test before it left. The failing test still fails - only the next one is no longer poisoned.
+        if (KyHub.IsOpen)
+        {
+            KyHub.Close();
+            ModLog.Info("TestHooks: stt.reset closed the KY hub that the test before left open");
+        }
+
         Player p = Player.m_localPlayer;
         if (p == null)
         {
@@ -236,6 +245,27 @@ internal static partial class TestHooks
         }
 
         return Mathf.RoundToInt(HubGeometry.Flat(troll.transform.position - was));
+    }
+
+    /// D-176 (instruction-latency, fix8: 12 m of 15 m in 5 s with no way to see why): one timeline sample - flat metres moved since stt.mark, net metres gained towards the hub, real
+    /// speed and the order of the troll (the test calls it once a second). Expected outcome: the text.
+    [TestHook("stt.moveSample")]
+    private static string MoveSample(GameObject troll)
+    {
+        Vector3 was;
+        if (!Marks.TryGetValue(troll.GetInstanceID(), out was))
+        {
+            throw new Exception("stt.mark was not called");
+        }
+
+        Character c = troll.GetComponent<Character>();
+        HubRegistry.All(true);
+        HubInfo hub = HubRegistry.For(c);
+        float gained = hub != null ? HubGeometry.Flat(hub.Pos - was) - HubGeometry.Flat(hub.Pos - troll.transform.position) : float.NaN;
+        string s = "moved " + HubGeometry.Flat(troll.transform.position - was).ToString("F1") + " m, " + gained.ToString("F1") + " m closer to the hub, real speed " +
+                   c.GetVelocity().magnitude.ToString("F1") + " m/s";
+        ModLog.Info("TestHooks: moveSample - " + s);
+        return s;
     }
 
     /// D-176 (far-troll-goes-home-clear-route: "moved >= 30" did not say whether it moved TOWARD home): flat metres the troll is closer to its hub than it was at stt.mark

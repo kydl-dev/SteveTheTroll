@@ -5,6 +5,7 @@ using KydlCore.Core;
 using SteveTheTroll.Features.Trolls.Contracts;
 using SteveTheTroll.Features.Trolls.Core;
 using SteveTheTroll.Features.Trolls.Home.Infrastructure;
+using SteveTheTroll.Features.Trolls.Movement.Infrastructure;
 using SteveTheTroll.Features.Trolls.Farming.Domain;
 using SteveTheTroll.Features.Trolls.Recovery.Application;
 using SteveTheTroll.Features.Trolls.Recovery.Domain;
@@ -378,7 +379,7 @@ internal sealed partial class TrollRecovery : MonoBehaviour
         return "at " + p.ToString("F0") + ", goal " + _goal.ToString("F0") + ", " + d.ToString("F1") + " m to go, real speed " +
                (body != null ? body.GetVelocity().magnitude.ToString("F1") : "?") + " m/s, stage " + M.Stage + ", detours " + M.DetoursDone + ", raged " + M.Raged +
                ", last obstruction " + _obstacleName + " (" + _kind + "), in attack " + (body is Humanoid h && h.InAttack()) + ", staggered " + (body != null && body.IsStaggering()) +
-               ", " + TrollHold.Describe(body);
+               ", " + TrollHold.Describe(body) + ", " + TrollMoveDiag.Describe(body, _goal);
     }
 
     private float _nextSnapshot;

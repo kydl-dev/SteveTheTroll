@@ -25,7 +25,10 @@
     { "do": "hook", "name": "stt.hubIcon", "expect": "stevethetroll_hub_icon", "label": "T-200: the Troll Hub build icon is the HUB sign" },
     { "do": "hook", "name": "kc.hubOpen", "args": { "mod": "com.kydldev.SteveTheTroll" }, "expect": true },
     { "do": "wait", "seconds": 1 },
-    {"do":"wait","until":{"check":"hook","name":"kc.hubTabCount","args":{"mod":"com.kydldev.SteveTheTroll"},"min":7},"timeout":1,"label":"7 tabs in the hub"},
+    {"do":"wait","until":{"check":"hook","name":"kc.hubTabCount","args":{"mod":"com.kydldev.SteveTheTroll"},"expect":2},"timeout":1,"label":"a fresh profile shows 2 tabs: Settings and Slippers (first-time gates, 2026-11-04: Costume after the set bonus, Troll Hub after the first hub, the three troll tabs after the first tame)"},
+    {"do":"hook","name":"stt.tabGates","args":{"open":true},"expect":3,"label":"the three first-time gates open"},
+    {"do":"wait","until":{"check":"hook","name":"kc.hubTabCount","args":{"mod":"com.kydldev.SteveTheTroll"},"min":7},"timeout":8,"label":"within 8 s (HubTabs.Tick runs every 2 s) all 7 tabs are in the hub"},
+    {"do":"hook","name":"stt.tabGates","args":{"open":false},"expect":0,"label":"the gates are closed again for the tests after this one"},
     { "do": "hook", "name": "kc.hubClose" }
   ],
   "asserts": [
