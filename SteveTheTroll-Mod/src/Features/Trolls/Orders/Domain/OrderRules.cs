@@ -17,36 +17,24 @@ internal enum OrderKind
 }
 
 /// <summary>D-170: the facts of one attack-key frame, read by TrollOrders. Readonly struct (read every frame), game-free.</summary>
-internal readonly struct OrderInput
+internal struct OrderInput
 {
-    internal bool KeyPressed { get; }
-    internal bool PlayerAlive { get; }
+    internal bool KeyPressed { get; set; }
+    internal bool PlayerAlive { get; set; }
 
     /// A menu, the KY hub, chat, the console or a text input is open.
-    internal bool UiBlocked { get; }
+    internal bool UiBlocked { get; set; }
 
     /// An own tamed troll is within the order range.
-    internal bool HasTroll { get; }
+    internal bool HasTroll { get; set; }
 
     /// This client owns (steers) that troll now (after taking it over, D-066).
-    internal bool CanSteer { get; }
+    internal bool CanSteer { get; set; }
 
-    internal bool HasCreature { get; }
-    internal bool HasSource { get; }
-    internal bool SourceIsWall { get; }
+    internal bool HasCreature { get; set; }
+    internal bool HasSource { get; set; }
+    internal bool SourceIsWall { get; set; }
 
-    internal OrderInput(bool keyPressed, bool playerAlive, bool uiBlocked, bool hasTroll, bool canSteer,
-        bool hasCreature, bool hasSource, bool sourceIsWall)
-    {
-        KeyPressed = keyPressed;
-        PlayerAlive = playerAlive;
-        UiBlocked = uiBlocked;
-        HasTroll = hasTroll;
-        CanSteer = canSteer;
-        HasCreature = hasCreature;
-        HasSource = hasSource;
-        SourceIsWall = sourceIsWall;
-    }
 
     public override string ToString()
     {

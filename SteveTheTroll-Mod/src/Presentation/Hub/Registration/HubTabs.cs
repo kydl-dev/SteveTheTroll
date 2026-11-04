@@ -4,6 +4,8 @@ using KydlCore.Common;
 using KydlCore.Features.Hub.Contracts;
 using SteveTheTroll.Bootstrap;
 using SteveTheTroll.Configuration;
+using SteveTheTroll.Features.Hubs.Infrastructure;
+using SteveTheTroll.Features.Trolls.Taming.Infrastructure;
 using SteveTheTroll.Presentation.Hub.Pages;
 using SteveTheTroll.Ui;
 
@@ -49,20 +51,79 @@ internal static class HubTabs
         return !KyHub.HasTab(Plugin.ModGuid, SettingsId);
     }
 
+    // User 2026-11-04 (tab gating): Costume appears once the costume set has been active for the first time; Troll Hub once the first hub is
+    // built; My trolls / Troll work / Trolls once the first troll is tamed. The marks are kept on the character (Player.m_customData), so
+    // they survive a relog. A feature's Start only says the tab is WANTED; Tick() adds it as soon as its gate is open.
+    internal const string HubBuiltKey = "stt_hub_built";
+    private static bool _wantCostume, _wantTrolls, _wantHub;
+    private static float _nextTick;
+
+    internal static bool CostumeGateOpen(Player p)
+    {
+        return HubPlacement.Unlocked(p);        // the set bonus has been active once (HubPlacement.Tick marks it)
+    }
+
+    internal static bool TrollsGateOpen(Player p)
+    {
+        return p != null && p.m_customData != null && p.m_customData.ContainsKey(TrollTamingPatch.FirstTameKey);
+    }
+
+    internal static bool HubGateOpen(Player p)
+    {
+        return p != null && p.m_customData != null && p.m_customData.ContainsKey(HubBuiltKey);
+    }
+
+    /// Plugin.Update (every 2 s): marks the first hub built, then adds the wanted tabs whose gate is open. Expected outcome: true when a tab was added now.
+    internal static bool Tick()
+    {
+        if (UnityEngine.Time.time < _nextTick)
+        {
+            return false;
+        }
+
+        _nextTick = UnityEngine.Time.time + 2f;
+        Player p = Player.m_localPlayer;
+        if (p == null || p.m_customData == null)
+        {
+            return false;
+        }
+
+        if (!HubGateOpen(p) && ModSettings.HubsOn && HubRegistry.Own(p.GetPlayerID()).Count > 0)
+        {
+            p.m_customData[HubBuiltKey] = "1";
+            ModLog.Info("HubTabs: the first hub is built - the Troll Hub tab opens");
+        }
+
+        bool added = false;
+        if (_wantCostume && CostumeGateOpen(p) && !KyHub.HasTab(Plugin.ModGuid, CostumeId)) { added |= AddPage(CostumeId, "stevethetroll_tab_costume", ModelKyPages.Costume, 1, 3); }
+        if (_wantTrolls && TrollsGateOpen(p) && !KyHub.HasTab(Plugin.ModGuid, TrollsId)) { added |= AddTrollPages(); }
+        if (_wantHub && HubGateOpen(p) && !KyHub.HasTab(Plugin.ModGuid, HubId)) { added |= AddHubPage(); }
+        return added;
+    }
+
     /// The Slippers tab (SlippersFeature.Start). Expected outcome: it is registered.
     internal static bool AddSlippers()
     {
         return AddPage(SlippersId, "stevethetroll_tab_slippers", ModelKyPages.Slippers, 0, 3);
     }
 
-    /// The Costume tab (CostumeFeature.Start). Expected outcome: it is registered.
+    /// The Costume tab (CostumeFeature.Start): registered now when the costume set has been active once, else when it first is (Tick). Expected outcome: true (wanted).
     internal static bool AddCostume()
     {
-        return AddPage(CostumeId, "stevethetroll_tab_costume", ModelKyPages.Costume, 1, 3);
+        _wantCostume = true;
+        Player p = Player.m_localPlayer;
+        return !CostumeGateOpen(p) || AddPage(CostumeId, "stevethetroll_tab_costume", ModelKyPages.Costume, 1, 3);
     }
 
-    /// My trolls / Troll work / Trolls (TrollsFeature.Start; T-098: described, not built - KydlCore draws these). Expected outcome: all three are registered.
+    /// My trolls / Troll work / Trolls (TrollsFeature.Start; T-098: described, not built - KydlCore draws these): registered once a troll has been tamed. Expected outcome: true (wanted).
     internal static bool AddTrolls()
+    {
+        _wantTrolls = true;
+        Player p = Player.m_localPlayer;
+        return !TrollsGateOpen(p) || AddTrollPages();
+    }
+
+    private static bool AddTrollPages()
     {
         bool mine = AddPage(MyTrollsId, "stevethetroll_tab_mytrolls", TrollListKyPages.MyTrolls, 2, 2);
         bool work = AddPage(WorkId, "stevethetroll_tab_troll", TrollListKyPages.Work, 3, 2);
@@ -70,8 +131,15 @@ internal static class HubTabs
         return mine && work && all;
     }
 
-    /// The Troll Hub tab (HubsFeature.Start). Expected outcome: it is registered.
+    /// The Troll Hub tab (HubsFeature.Start): registered once the first hub is built. Expected outcome: true (wanted).
     internal static bool AddHub()
+    {
+        _wantHub = true;
+        Player p = Player.m_localPlayer;
+        return !HubGateOpen(p) || AddHubPage();
+    }
+
+    private static bool AddHubPage()
     {
         HubTab.Tab = KyHub.AddPage(Plugin.ModGuid, HubId, Loc.T("stevethetroll_hub_tab"), HubTab.Build, 5);
         ModLog.Verbose("HubTabs: tab " + HubId + " " + (HubTab.Tab != null ? "added" : "FAILED"));
@@ -84,6 +152,9 @@ internal static class HubTabs
         int left = 0;
         foreach (string id in ids)
         {
+            if (id == CostumeId) { _wantCostume = false; }
+            if (id == TrollsId) { _wantTrolls = false; }
+            if (id == HubId) { _wantHub = false; }
             KyHub.RemoveTab(Plugin.ModGuid, id);
             if (id == HubId)
             {

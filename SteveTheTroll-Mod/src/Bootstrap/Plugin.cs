@@ -24,6 +24,7 @@ using SteveTheTroll.Features.Trolls.Registry.Infrastructure;
 using SteveTheTroll.Features.Trolls.Taming.Infrastructure;
 using SteveTheTroll.Features.Trolls.World.Infrastructure;
 using SteveTheTroll.Presentation.Hub.Commands;
+using SteveTheTroll.Presentation.Hub.Registration;
 using SteveTheTroll.Presentation.Map;
 using SteveTheTroll.Testing;
 using SteveTheTroll.Testing.Commands;
@@ -173,6 +174,7 @@ public class Plugin : BaseUnityPlugin
         Run("TrollGuard", () => TrollGuard.Tick()); // D-065 / D-084: creatures going for the player near a troll
         Run("TrollHome", () => TrollHome.Tick()); // T-008e: slippers off -> own trolls wait at the bed
         Run("HubPlacement", () => HubPlacement.Tick()); // D-135: set bonus active once -> Troll Hub unlocked
+        Run("HubTabs", () => HubTabs.Tick()); // 2026-11-04: Costume / Troll Hub / troll tabs open when their first-time gate is met
         Run("HubSpeed", () => HubSpeed.Tick()); // D-135: half-speed notice
         Run("HubSignMenu", () => HubSignMenu.Tick()); // D-135: Escape closes the sign editor
         Run("TrollIdle", () => TrollIdle.Tick()); // D-062: no job for 2 min -> farms on its own

@@ -125,7 +125,7 @@ internal sealed class ViewerSettings
     private static float Fix(string name, float v, float min, float max, float def, ref int changed, Action<string> log)
     {
         float r = float.IsNaN(v) || float.IsInfinity(v) ? def : Math.Max(min, Math.Min(max, v));
-        if (r != v)
+        if (!(Math.Abs(r - v) <= 1e-6f))   // changed (a NaN or infinite value always counts as changed)
         {
             changed++;
             if (log != null)

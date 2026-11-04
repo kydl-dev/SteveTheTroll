@@ -24,7 +24,7 @@
     { "do": "setConfig", "values": { "Trolls/Enable": true } },
     { "do": "wait", "until": { "check": "hook", "name": "stt.featureRunning", "args": { "id": "hubs" }, "expect": true }, "timeout": 5 },
     { "do": "hook", "name": "stt.featureRunning", "args": { "id": "trolls" }, "expect": true, "label": "trolls back" },
-    { "do": "hook", "name": "stt.hasTab", "args": { "id": "trollhub" }, "expect": true, "label": "Troll Hub tab back" }
+    { "do": "hook", "name": "stt.hasTab", "args": { "id": "trollhub" }, "expect": false, "label": "Troll Hub tab stays closed until the first hub is built" }
   ],
   "asserts": [
     { "check": "noErrors", "source": "SteveTheTroll" }

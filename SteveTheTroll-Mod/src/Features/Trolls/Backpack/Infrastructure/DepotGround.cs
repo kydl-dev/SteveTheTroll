@@ -59,7 +59,7 @@ internal static class DepotGround
     /// Pure: half side of an axis-aligned square that holds a rectangle of half sizes halfX / halfZ turned any way (= its half diagonal).
     internal static float LevelRadius(float halfX, float halfZ)
     {
-        return Mathf.Sqrt(halfX * halfX + halfZ * halfZ);
+        return LevelRules.Radius(halfX, halfZ);
     }
 
     internal static void Install()

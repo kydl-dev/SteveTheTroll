@@ -4,6 +4,7 @@ using KydlCore.Common;
 using KydlCore.Core;
 using SteveTheTroll.Features.Trolls.Contracts;
 using SteveTheTroll.Features.Trolls.Core;
+using SteveTheTroll.Features.Trolls.Farming.Domain;
 using SteveTheTroll.Features.Trolls.Recovery.Application;
 using SteveTheTroll.Features.Trolls.Recovery.Domain;
 using SteveTheTroll.Features.Trolls.Recovery.Execution;
@@ -241,8 +242,11 @@ internal sealed class TrollRecovery : MonoBehaviour
 
         // D-169: decide (pipeline: alive / owner checks, then the machine), then perform (executor: ownership checked again at the boundary)
         OperationResponse<RecoveryDecision> response =
-            _pipeline.Evaluate(new RecoveryInput(now, stuck, sustained, rageable, headOn, legDone, alive,
-                _ctx.IsOwner));
+            _pipeline.Evaluate(new RecoveryInput
+            {
+                Now = now, StuckSeconds = stuck, SustainedSeconds = sustained, Rageable = rageable, HeadOn = headOn,
+                LegDone = legDone, IsAlive = alive, IsOwner = _ctx.IsOwner
+            });
         if (!response.IsSuccess)
         {
             if (response.Status != _lastStatus)
@@ -467,8 +471,8 @@ internal sealed class TrollRecovery : MonoBehaviour
         {
             Vector3 mf = transform.forward;
             Vector3 of = ch.transform.forward;
-            headOn = StuckRules.HeadOn(transform.position.x, transform.position.z, mf.x, mf.z, ch.transform.position.x,
-                ch.transform.position.z, of.x, of.z);
+            headOn = StuckRules.HeadOn(new GroundPoint(transform.position.x, transform.position.z), new GroundPoint(mf.x, mf.z),
+                new GroundPoint(ch.transform.position.x, ch.transform.position.z), new GroundPoint(of.x, of.z));
             if (headOn)
             {
                 _other = ch;

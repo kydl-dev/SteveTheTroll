@@ -5,32 +5,20 @@ using SteveTheTroll.Features.Hubs.Domain;
 namespace SteveTheTroll.Features.Hubs.Application;
 
 /// <summary>D-173 (P7): the facts for the walk back to the hub (D-162), read by TrollReturn. Readonly struct, game-free.</summary>
-internal readonly struct HubReturnInput
+internal struct HubReturnInput
 {
-    internal bool TrollOwner { get; }
-    internal bool HasHub { get; }
+    internal bool TrollOwner { get; set; }
+    internal bool HasHub { get; set; }
 
     /// Flat metres to the hub (-1 = no hub).
-    internal float Distance { get; }
+    internal float Distance { get; set; }
 
-    internal bool FollowOrder { get; }
-    internal bool Arriving { get; }
-    internal bool OwnerWears { get; }
-    internal bool Fighting { get; }
-    internal bool Unloading { get; }
+    internal bool FollowOrder { get; set; }
+    internal bool Arriving { get; set; }
+    internal bool OwnerWears { get; set; }
+    internal bool Fighting { get; set; }
+    internal bool Unloading { get; set; }
 
-    internal HubReturnInput(bool trollOwner, bool hasHub, float distance, bool followOrder, bool arriving,
-        bool ownerWears, bool fighting, bool unloading)
-    {
-        TrollOwner = trollOwner;
-        HasHub = hasHub;
-        Distance = distance;
-        FollowOrder = followOrder;
-        Arriving = arriving;
-        OwnerWears = ownerWears;
-        Fighting = fighting;
-        Unloading = unloading;
-    }
 }
 
 /// <summary>

@@ -221,9 +221,9 @@ public static class SlipperFit
                 continue;
             }
 
+            System.Array.Clear(index, 0, index.Length);   // slots not set below stay on bone 0 (the foot)
             for (int k = 0; k < 4; k++)
             {
-                index[k] = 0;
                 if (k >= n)
                 {
                     w[k] = 0f;

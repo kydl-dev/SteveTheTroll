@@ -82,8 +82,11 @@ internal static class TrollOrders
             }
         }
 
-        OperationResponse<OrderKind> decision = Pipeline.Evaluate(new OrderInput(pressed, alive, blocked, troll != null,
-            steer, creature != null, source != null, source != null && TrollWalls.IsWall(source)));
+        OperationResponse<OrderKind> decision = Pipeline.Evaluate(new OrderInput
+        {
+            KeyPressed = pressed, PlayerAlive = alive, UiBlocked = blocked, HasTroll = troll != null, CanSteer = steer,
+            HasCreature = creature != null, HasSource = source != null, SourceIsWall = source != null && TrollWalls.IsWall(source)
+        });
         if (!decision.IsSuccess)
         {
             if (decision.Reason == OrderPipeline.NoTroll)

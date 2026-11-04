@@ -100,21 +100,16 @@ internal sealed class TrollInfo
 
         CultureInfo c = CultureInfo.InvariantCulture;
         var t = new TrollInfo { Id = f[0], Name = f[1], Status = f[2], Focus = f[3], Farming = f[4] };
-        bool ok = float.TryParse(f[5], NumberStyles.Float, c, out t.Health) & float.TryParse(f[6], NumberStyles.Float,
-                                                                                c, out t.MaxHealth)
-                                                                            & int.TryParse(f[7], NumberStyles.Integer,
-                                                                                c, out t.Stars) & float.TryParse(f[8],
-                                                                                NumberStyles.Float, c,
-                                                                                out t.DamageFactor)
-                                                                            & float.TryParse(f[9], NumberStyles.Float,
-                                                                                c, out t.X) & float.TryParse(f[10],
-                                                                                NumberStyles.Float, c, out t.Y)
-                                                                            & float.TryParse(f[11], NumberStyles.Float,
-                                                                                c, out t.Z) & float.TryParse(f[12],
-                                                                                NumberStyles.Float, c,
-                                                                                out t.BedDistance)
-                                                                            & long.TryParse(f[13], NumberStyles.Integer,
-                                                                                c, out t.LastSeenTicks);
+        // every field is parsed even when an earlier one failed (so all out values are set): '&&' with the result last
+        bool ok = float.TryParse(f[5], NumberStyles.Float, c, out t.Health);
+        ok = float.TryParse(f[6], NumberStyles.Float, c, out t.MaxHealth) && ok;
+        ok = int.TryParse(f[7], NumberStyles.Integer, c, out t.Stars) && ok;
+        ok = float.TryParse(f[8], NumberStyles.Float, c, out t.DamageFactor) && ok;
+        ok = float.TryParse(f[9], NumberStyles.Float, c, out t.X) && ok;
+        ok = float.TryParse(f[10], NumberStyles.Float, c, out t.Y) && ok;
+        ok = float.TryParse(f[11], NumberStyles.Float, c, out t.Z) && ok;
+        ok = float.TryParse(f[12], NumberStyles.Float, c, out t.BedDistance) && ok;
+        ok = long.TryParse(f[13], NumberStyles.Integer, c, out t.LastSeenTicks) && ok;
         if (f.Length >= MidFields)
         {
             t.Attacks = f[14];
@@ -123,8 +118,8 @@ internal sealed class TrollInfo
 
         if (f.Length >= PackFields)
         {
-            ok &= int.TryParse(f[16], NumberStyles.Integer, c, out t.BackpackUsed) &
-                  int.TryParse(f[17], NumberStyles.Integer, c, out t.BackpackSlots);
+            ok = int.TryParse(f[16], NumberStyles.Integer, c, out t.BackpackUsed) && ok;
+            ok = int.TryParse(f[17], NumberStyles.Integer, c, out t.BackpackSlots) && ok;
             if (t.BackpackUsed < 0 || t.BackpackSlots < 0)
             {
                 ok = false;

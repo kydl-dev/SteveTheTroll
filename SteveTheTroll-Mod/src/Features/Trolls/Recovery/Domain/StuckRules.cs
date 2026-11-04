@@ -209,11 +209,11 @@ internal static class StuckRules
     }
 
     /// Spec 4: two trolls blocked head on. `other` stands in front of me, close, and its facing (odx, odz) points against mine (mdx, mdz; unit vectors).
-    internal static bool HeadOn(float mx, float mz, float mdx, float mdz, float ox, float oz, float odx, float odz)
+    internal static bool HeadOn(GroundPoint me, GroundPoint myFacing, GroundPoint other, GroundPoint otherFacing)
     {
-        float gx = mx + mdx * 10f, gz = mz + mdz * 10f;
-        bool inFront = TargetRules.Blocked(mx, mz, gx, gz, ox, oz, HeadOnAhead, HeadOnHalfWidth);
-        return inFront && mdx * odx + mdz * odz <= HeadOnOpposed;
+        var goal = new GroundPoint(me.X + myFacing.X * 10f, me.Z + myFacing.Z * 10f);
+        bool inFront = TargetRules.Blocked(me, goal, other, HeadOnAhead, HeadOnHalfWidth);
+        return inFront && myFacing.X * otherFacing.X + myFacing.Z * otherFacing.Z <= HeadOnOpposed;
     }
 
     /// Spec 4: the head-on turn is over once the two are this far apart.

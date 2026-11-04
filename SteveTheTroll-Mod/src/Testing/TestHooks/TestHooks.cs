@@ -548,8 +548,7 @@ internal static class TestHooks
         Vector3 at = p.transform.position + new Vector3(dx, 0f, dz);
         Vector3 pos;
         string item;
-        bool found = TrollFarming.FindFar(p.transform.position, ModSettings.FarmLongRange.Value,
-            ModSettings.FarmMaxRange.Value, 10,
+        bool found = TrollFarming.FindFar(p.transform.position, new TrollFarming.SearchRange(ModSettings.FarmLongRange.Value, ModSettings.FarmMaxRange.Value), 10,
             new[] { new TrollFocus.Goal("Wood") }, q => HubGeometry.Flat(q - at) > 3f, out pos, out item);
         int d = found ? Mathf.RoundToInt(HubGeometry.Flat(pos - p.transform.position)) : -1;
         ModLog.Info("TestHooks: far search for the synthetic tree at " + at.ToString("F0") + " - " +
@@ -802,8 +801,7 @@ internal static class TestHooks
         Player p = Player.m_localPlayer;
         Vector3 pos;
         string item;
-        bool found = TrollFarming.FindFar(p.transform.position, ModSettings.FarmLongRange.Value,
-            ModSettings.FarmMaxRange.Value, 10,
+        bool found = TrollFarming.FindFar(p.transform.position, new TrollFarming.SearchRange(ModSettings.FarmLongRange.Value, ModSettings.FarmMaxRange.Value), 10,
             new[] { new TrollFocus.Goal("Wood") }, null, out pos, out item);
         return found ? Mathf.RoundToInt(HubGeometry.Flat(pos - p.transform.position)) + " m " + item : "none";
     }
@@ -815,8 +813,7 @@ internal static class TestHooks
         Player p = Player.m_localPlayer;
         Vector3 pos;
         string item;
-        bool found = TrollFarming.FindFar(p.transform.position, ModSettings.FarmLongRange.Value,
-            ModSettings.FarmMaxRange.Value, 10,
+        bool found = TrollFarming.FindFar(p.transform.position, new TrollFarming.SearchRange(ModSettings.FarmLongRange.Value, ModSettings.FarmMaxRange.Value), 10,
             new[] { new TrollFocus.Goal("Wood") }, null, out pos, out item);
         return found ? Mathf.RoundToInt(HubGeometry.Flat(pos - p.transform.position)) : -1;
     }

@@ -6,43 +6,31 @@ namespace SteveTheTroll.Features.Trolls.Recovery.Domain;
 ///     the goal and positions stay in the adapter; the domain only needs times and yes/no facts). A readonly struct: built
 ///     every AI frame without allocating.
 /// </summary>
-internal readonly struct RecoveryInput
+internal struct RecoveryInput
 {
     /// Game time in seconds.
-    internal float Now { get; }
+    internal float Now { get; set; }
 
     /// Seconds without progress towards the goal (ProgressMeter).
-    internal float StuckSeconds { get; }
+    internal float StuckSeconds { get; set; }
 
     /// Seconds of continuous progress.
-    internal float SustainedSeconds { get; }
+    internal float SustainedSeconds { get; set; }
 
     /// The obstruction ahead may be attacked (StuckRules.Rageable).
-    internal bool Rageable { get; }
+    internal bool Rageable { get; set; }
 
     /// A tamed troll stands in front, facing me (StuckRules.HeadOn).
-    internal bool HeadOn { get; }
+    internal bool HeadOn { get; set; }
 
     /// The running detour leg is over (StuckRules.LegDone / HeadOnClear).
-    internal bool LegDone { get; }
+    internal bool LegDone { get; set; }
 
-    internal bool IsAlive { get; }
+    internal bool IsAlive { get; set; }
 
     /// This client owns the troll (only the owner decides and acts).
-    internal bool IsOwner { get; }
+    internal bool IsOwner { get; set; }
 
-    internal RecoveryInput(float now, float stuckSeconds, float sustainedSeconds, bool rageable, bool headOn,
-        bool legDone, bool isAlive, bool isOwner)
-    {
-        Now = now;
-        StuckSeconds = stuckSeconds;
-        SustainedSeconds = sustainedSeconds;
-        Rageable = rageable;
-        HeadOn = headOn;
-        LegDone = legDone;
-        IsAlive = isAlive;
-        IsOwner = isOwner;
-    }
 
     public override string ToString()
     {

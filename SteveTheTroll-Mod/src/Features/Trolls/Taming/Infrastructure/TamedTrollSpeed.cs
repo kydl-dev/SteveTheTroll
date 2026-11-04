@@ -262,7 +262,7 @@ internal static class TamedTrollSpeed
 
             float was = anim.speed;
             float now = TamingRules.FreeAnimSpeed(was, f);
-            if (now != was)
+            if (!Mathf.Approximately(now, was))
             {
                 anim.speed = now;
             }

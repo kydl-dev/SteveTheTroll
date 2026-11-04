@@ -118,11 +118,35 @@ for p in upper.data.polygons: p.use_smooth = True
 log.append(f"upper: {len(upper.data.vertices)} verts, {len(upper.data.polygons)} faces, {inside} lining faces")
 
 # ---- the rim: a cream plush ring round the opening ----
-bpy.ops.mesh.primitive_torus_add(location=(0, OPEN_Y, top_z(0.30) - 0.004), major_radius=1.0, minor_radius=0.0185, major_segments=56, minor_segments=14)
-rim = bpy.context.active_object; rim.name = "SlipperRim"
-rim.scale = (OPEN_RX + 0.006, OPEN_RY + 0.006, 0.85)
-bpy.ops.object.shade_smooth()
-bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)      # the origin back to the slipper's origin: the parts are moved together later
+# 2026-11-04: the old torus (major 1.0, minor 0.0185) was SCALED to the opening by (0.066, 0.086, 0.85), which scaled the tube too: 2.4 mm wide, 3 cm tall = a
+# slim ribbon in game (user: "the white margin is very slim"). Now the tube is built round with its real radius along the ellipse of the opening.
+RIM_R = 0.018                  # tube radius (m): a 3.6 cm fluffy ring
+RIM_PUSH = 0.012               # the ring centre sits this far outside the old opening, so the hole stays as wide as before and the ring ends at the upper's edge
+RIM_RX, RIM_RY = OPEN_RX + 0.006 + RIM_PUSH, OPEN_RY + 0.006 + RIM_PUSH
+RIM_SEG, RIM_RING = 64, 16
+rim_mesh = bpy.data.meshes.new("SlipperRim")
+rim_bm = bmesh.new()
+rim_rows = []
+for i in range(RIM_SEG):
+    a = 2 * math.pi * i / RIM_SEG
+    cx, cy = RIM_RX * math.cos(a), RIM_RY * math.sin(a)
+    nx, ny = math.cos(a) / RIM_RX, math.sin(a) / RIM_RY                          # outward normal of the ellipse
+    nl = math.hypot(nx, ny); nx, ny = nx / nl, ny / nl
+    row = []
+    for j in range(RIM_RING):
+        b = 2 * math.pi * j / RIM_RING
+        row.append(rim_bm.verts.new((cx + nx * RIM_R * math.cos(b), OPEN_Y + cy + ny * RIM_R * math.cos(b), top_z(0.30) - 0.004 + RIM_R * math.sin(b))))
+    rim_rows.append(row)
+for i in range(RIM_SEG):
+    r0, r1 = rim_rows[i], rim_rows[(i + 1) % RIM_SEG]
+    for j in range(RIM_RING):
+        rim_bm.faces.new((r0[j], r1[j], r1[(j + 1) % RIM_RING], r0[(j + 1) % RIM_RING]))
+bmesh.ops.recalc_face_normals(rim_bm, faces=rim_bm.faces[:])
+rim_bm.to_mesh(rim_mesh); rim_bm.free()
+rim = bpy.data.objects.new("SlipperRim", rim_mesh)
+bpy.context.scene.collection.objects.link(rim)
+bpy.context.view_layer.objects.active = rim
+for p in rim.data.polygons: p.use_smooth = True
 rim.data.materials.append(M["rim"])
 
 # ---- the sole: black, a little wider than the upper, with grip dots under it ----

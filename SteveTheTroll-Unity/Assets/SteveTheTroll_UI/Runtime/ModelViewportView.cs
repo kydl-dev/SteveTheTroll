@@ -51,7 +51,7 @@ internal static class ModelViewportView
             return frame;
         }
 
-        new Viewport(title, modelId, scene, settings, frame, hint, reset);
+        _ = new Viewport(title, modelId, scene, settings, frame, hint, reset);
         return frame;
     }
 
@@ -115,7 +115,7 @@ internal static class ModelViewportView
             _image.RegisterCallback<PointerCaptureOutEvent>(e => EndDrag("capture lost"));
             frame.RegisterCallback<WheelEvent>(OnWheel);
             frame.RegisterCallback<GeometryChangedEvent>(e => OnResized(frame));
-            frame.RegisterCallback<DetachFromPanelEvent>(e => Dispose());
+            frame.RegisterCallback<DetachFromPanelEvent>(e => Teardown());
 
             bool shown = _scene.Show(_modelId);
             _orbit.Reset();
@@ -277,7 +277,7 @@ internal static class ModelViewportView
             }
         }
 
-        private void Dispose()
+        private void Teardown()
         {
             _image.image = null;
             _scene.Dispose();

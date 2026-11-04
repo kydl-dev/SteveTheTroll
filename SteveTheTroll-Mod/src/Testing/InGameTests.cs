@@ -337,8 +337,7 @@ internal static partial class InGameTests
         Vector3 pos;
         string item;
         long t0 = Stopwatch.GetTimestamp();
-        bool found = TrollFarming.FindFar(p.transform.position, ModSettings.FarmLongRange.Value,
-            ModSettings.FarmMaxRange.Value, 10,
+        bool found = TrollFarming.FindFar(p.transform.position, new TrollFarming.SearchRange(ModSettings.FarmLongRange.Value, ModSettings.FarmMaxRange.Value), 10,
             new[] { new TrollFocus.Goal("Wood") }, null, out pos, out item);
         double ms = (Stopwatch.GetTimestamp() - t0) * 1000.0 / Stopwatch.Frequency;
         string detail = "Wood between " + ModSettings.FarmMaxRange.Value.ToString("0") + " and " +

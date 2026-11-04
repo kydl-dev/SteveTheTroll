@@ -363,8 +363,11 @@ internal sealed class TrollFarmer : MonoBehaviour
             fighting = alive && ai.GetTargetCreature() != null;
         // the weapon is read only when the gate can get that far (as before D-170: not while dead, following, fighting or going home)
         _weapon = alive && !home && !follow && !fighting ? _tool.For(_me, _target) : null;
-        var input = new FarmGateInput(alive, _ctx.IsOwner, follow, _home && IsFull, fighting, rec != null && rec.Busy,
-            Time.time >= _nextFullCheck && !IsFull, home, _weapon != null);
+        var input = new FarmGateInput
+        {
+            Alive = alive, IsOwner = _ctx.IsOwner, FollowOrder = follow, Unloading = _home && IsFull, Fighting = fighting,
+            RecoveryBusy = rec != null && rec.Busy, FullCheckDue = Time.time >= _nextFullCheck && !IsFull, Home = home, HasWeapon = _weapon != null
+        };
         // D-170: decide, then perform; RecoveryDrives / CheckFull that did not drive fall through to the next priority (as the old code did)
         for (int pass = 0; pass < 3; pass++)
         {
@@ -649,7 +652,7 @@ internal sealed class TrollFarmer : MonoBehaviour
             { ModSettings.FarmQuickRange.Value, ModSettings.FarmRange.Value, ModSettings.FarmMaxRange.Value };
         OperationResponse<SelectionHit> hit = TargetSelection.FirstHit(ranges, goals, (range, goal) =>
         {
-            _target = TrollFarming.FindIn(_cands, transform.position, transform.position, goal, tier, range, out _hit,
+            _target = TrollFarming.FindIn(_cands, new TrollFarming.SearchSphere(transform.position, range), transform.position, goal, tier, out _hit,
                 skip);
             return _target != null;
         });

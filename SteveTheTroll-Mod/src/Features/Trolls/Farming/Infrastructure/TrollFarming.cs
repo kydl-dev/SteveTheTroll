@@ -267,13 +267,31 @@ internal static class TrollFarming
     internal static GameObject Find(Vector3 center, Vector3 from, TrollFocus.Goal goal, int tier, float range,
         out Collider hit, Func<GameObject, bool> skip = null)
     {
-        return FindIn(Gather(center, range, new List<Candidate>()), center, from, goal, tier, range, out hit, skip);
+        return FindIn(Gather(center, range, new List<Candidate>()), new SearchSphere(center, range), from, goal, tier, out hit, skip);
     }
 
     /// The best source of the goal among gathered candidates within range of center (see Find). Expected outcome: the source or null.
-    internal static GameObject FindIn(List<Candidate> cands, Vector3 center, Vector3 from, TrollFocus.Goal goal,
-        int tier, float range, out Collider hit, Func<GameObject, bool> skip = null)
+    /// <summary>The ball a search looks in: its centre and radius in metres.</summary>
+    internal readonly struct SearchSphere
     {
+        internal SearchSphere(Vector3 center, float range) { Center = center; Range = range; }
+        internal Vector3 Center { get; }
+        internal float Range { get; }
+    }
+
+    /// <summary>The long-range search band: sources up to Range metres from the troll, but beyond NearRange (the near search covers that).</summary>
+    internal readonly struct SearchRange
+    {
+        internal SearchRange(float range, float nearRange) { Range = range; NearRange = nearRange; }
+        internal float Range { get; }
+        internal float NearRange { get; }
+    }
+
+    internal static GameObject FindIn(List<Candidate> cands, SearchSphere area, Vector3 from, TrollFocus.Goal goal,
+        int tier, out Collider hit, Func<GameObject, bool> skip = null)
+    {
+        Vector3 center = area.Center;
+        float range = area.Range;
         string item = goal.Item;
         hit = null;
         GameObject best = null;
@@ -377,9 +395,10 @@ internal static class TrollFarming
 
     /// Nearest farm source beyond `nearRange` and within `range` of `from` that yields a goal, the goals in priority order (the first goal that has any source wins).
     /// `skip` gets the source's position (no-hit area, hub leash, positions given up). Expected outcome: true with its position and the item it yields.
-    internal static bool FindFar(Vector3 from, float range, float nearRange, int tier,
+    internal static bool FindFar(Vector3 from, SearchRange band, int tier,
         IEnumerable<TrollFocus.Goal> goals, Func<Vector3, bool> skip, out Vector3 pos, out string item)
     {
+        float range = band.Range, nearRange = band.NearRange;
         pos = Vector3.zero;
         item = "";
         ZDOMan man = ZDOMan.instance;

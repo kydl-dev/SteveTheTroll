@@ -116,3 +116,6 @@ CLAUDE.md
 /*-Mod/tests/.nuget/
 /*-Mod/tests/_quality/
 /*-Mod/assets/*.dll
+
+# SonarQube scanner work files (H30/H31)
+**/tests/_quality/sonar-coverage/

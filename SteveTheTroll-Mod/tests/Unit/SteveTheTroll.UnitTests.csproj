@@ -70,6 +70,7 @@
     <Compile Include="..\..\src\Features\Hubs\Infrastructure\HubGeometry.cs" Link="Mod\Hubs\HubGeometry.cs" />
     <Compile Include="..\..\src\Features\Trolls\Home\Domain\*.cs" Link="Mod\Home\%(Filename)%(Extension)" />
     <Compile Include="..\..\src\Features\Trolls\Farming\Domain\TargetRules.cs" Link="Mod\TargetRules.cs" />
+    <Compile Include="..\..\src\Features\Trolls\Farming\Domain\GroundPoint.cs" Link="Mod\GroundPoint.cs" />
     <Compile Include="..\..\src\Features\Hubs\Domain\HubData.cs" Link="Mod\HubData.cs" />
     <!-- T-201: costume unlock after the first slipper equip -->
     <Compile Include="..\..\src\Features\Costume\Domain\*.cs" Link="Mod\Costume\%(Filename)%(Extension)" />

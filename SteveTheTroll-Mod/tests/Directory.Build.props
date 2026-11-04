@@ -36,7 +36,7 @@
     <Using Include="NUnit.Framework" />
     <Compile Include="$(MSBuildThisFileDirectory)Common\*.cs" LinkBase="Common" />
     <!-- Kydl.Core (shared pure contracts, MIGRATION_DECISIONS A9) is linked into every test project: the mod's pure files use it -->
-    <Compile Include="$(MSBuildThisFileDirectory)..\..\..\KydlCore\KydlCore-Mod\src\Shared\Core\**\*.cs" Link="Kydl\Core\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="$(MSBuildThisFileDirectory)..\..\..\KydlCore\KydlCore-Mod\src\Shared\Core\**\*.cs" Link="Kydl\Core\%(RecursiveDir)%(Filename)%(Extension)" Condition="'$(KydlQuality)' != 'true'" />
     <Reference Include="BepInEx"><HintPath>$(ValheimRefs)\BepInEx.dll</HintPath><Private>true</Private></Reference>
     <Reference Include="System.Web.Extensions" />
   </ItemGroup>
@@ -45,6 +45,8 @@
        reference so Stryker.NET finds the code to mutate. Normal test runs keep using the built DLL in <Mod>-Mod\assets. -->
   <ItemGroup Condition="'$(KydlQuality)' == 'true'">
     <ProjectReference Include="$(MSBuildThisFileDirectory)..\*.csproj" />
+    <!-- the mod's types use KydlCore: reference the DLL instead of the linked sources (they would clash) -->
+    <Reference Include="KydlCore"><HintPath>$(MSBuildThisFileDirectory)..\..\..\KydlCore\KydlCore-Mod\assets\KydlCore.dll</HintPath></Reference>
   </ItemGroup>
 
 </Project>

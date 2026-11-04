@@ -32,44 +32,32 @@ internal enum FarmAction
 }
 
 /// <summary>D-170: the facts the gate needs, read by TrollFarmer. Readonly struct, game-free.</summary>
-internal readonly struct FarmGateInput
+internal struct FarmGateInput
 {
-    internal bool Alive { get; }
-    internal bool IsOwner { get; }
-    internal bool FollowOrder { get; }
+    internal bool Alive { get; set; }
+    internal bool IsOwner { get; set; }
+    internal bool FollowOrder { get; set; }
 
     /// On its way to unload (home and full): a follow order does not stop it (D-149).
-    internal bool Unloading { get; }
+    internal bool Unloading { get; set; }
 
-    internal bool Fighting { get; }
-    internal bool RecoveryBusy { get; }
+    internal bool Fighting { get; set; }
+    internal bool RecoveryBusy { get; set; }
 
     /// The full check is due and the troll is not full yet.
-    internal bool FullCheckDue { get; }
+    internal bool FullCheckDue { get; set; }
 
-    internal bool Home { get; }
-    internal bool HasWeapon { get; }
+    internal bool Home { get; set; }
+    internal bool HasWeapon { get; set; }
 
-    internal FarmGateInput(bool alive, bool isOwner, bool followOrder, bool unloading, bool fighting, bool recoveryBusy,
-        bool fullCheckDue, bool home, bool hasWeapon)
-    {
-        Alive = alive;
-        IsOwner = isOwner;
-        FollowOrder = followOrder;
-        Unloading = unloading;
-        Fighting = fighting;
-        RecoveryBusy = recoveryBusy;
-        FullCheckDue = fullCheckDue;
-        Home = home;
-        HasWeapon = hasWeapon;
-    }
 
     /// The same facts with a fall-through flag cleared (RecoveryDrives / CheckFull that did not drive). Expected outcome: a copy with that flag false.
     internal FarmGateInput Without(FarmAction done)
     {
-        return new FarmGateInput(Alive, IsOwner, FollowOrder, Unloading, Fighting,
-            done == FarmAction.RecoveryDrives ? false : RecoveryBusy,
-            done == FarmAction.CheckFull ? false : FullCheckDue, Home, HasWeapon);
+        var copy = this;
+        if (done == FarmAction.RecoveryDrives) copy.RecoveryBusy = false;
+        if (done == FarmAction.CheckFull) copy.FullCheckDue = false;
+        return copy;
     }
 
     public override string ToString()

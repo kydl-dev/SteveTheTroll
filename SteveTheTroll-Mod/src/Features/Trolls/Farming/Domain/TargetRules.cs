@@ -26,9 +26,9 @@ internal static class TargetRules
     internal const float SpotSearchMetres = 12f;
 
     /// Another troll stands on the line from me to the goal, in front of me, and not at the goal itself. Expected outcome: false when it is behind, beside, beyond or AT the goal.
-    internal static bool Blocked(float mx, float mz, float gx, float gz, float ox, float oz, float ahead,
-        float halfWidth)
+    internal static bool Blocked(GroundPoint me, GroundPoint goal, GroundPoint other, float ahead, float halfWidth)
     {
+        float mx = me.X, mz = me.Z, gx = goal.X, gz = goal.Z, ox = other.X, oz = other.Z;
         float dx = gx - mx, dz = gz - mz;
         float len = (float)Math.Sqrt(dx * dx + dz * dz);
         if (len < 0.5f)
@@ -51,24 +51,21 @@ internal static class TargetRules
 
     /// The point beside the other troll, on the side AWAY from the line it stands on (exactly on the line: the walker's right), and a metre past it.
     /// Two trolls meeting head on each pick their own right, so they pass each other.
-    internal static void Waypoint(float mx, float mz, float gx, float gz, float ox, float oz, float side, out float wx,
-        out float wz)
+    internal static GroundPoint Waypoint(GroundPoint me, GroundPoint goal, GroundPoint other, float side)
     {
+        float mx = me.X, mz = me.Z, gx = goal.X, gz = goal.Z, ox = other.X, oz = other.Z;
         float dx = gx - mx, dz = gz - mz;
         float len = (float)Math.Sqrt(dx * dx + dz * dz);
         if (len < 0.0001f)
         {
-            wx = ox;
-            wz = oz;
-            return;
+            return other;
         }
 
         dx /= len;
         dz /= len;
         float lateral = dx * (oz - mz) - dz * (ox - mx);
         float sgn = lateral > 0f ? -1f : 1f;
-        wx = ox + -dz * sgn * side + dx;
-        wz = oz + dx * sgn * side + dz;
+        return new GroundPoint(ox + -dz * sgn * side + dx, oz + dx * sgn * side + dz);
     }
 
     /// A target reserved by ANOTHER troll that refreshed it recently. holder 0 = nobody.

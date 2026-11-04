@@ -44,14 +44,16 @@ internal sealed class FarmFriendDetour
             }
 
             Vector3 o = c.transform.position;
-            if (!TargetRules.Blocked(p.x, p.z, goal.x, goal.z, o.x, o.z, TargetRules.Ahead, TargetRules.HalfWidth))
+            var me = new GroundPoint(p.x, p.z);
+            var goalPoint = new GroundPoint(goal.x, goal.z);
+            var other = new GroundPoint(o.x, o.z);
+            if (!TargetRules.Blocked(me, goalPoint, other, TargetRules.Ahead, TargetRules.HalfWidth))
             {
                 continue;
             }
 
-            float wx, wz;
-            TargetRules.Waypoint(p.x, p.z, goal.x, goal.z, o.x, o.z, TargetRules.Side, out wx, out wz);
-            _detourTo = new Vector3(wx, p.y, wz);
+            GroundPoint way = TargetRules.Waypoint(me, goalPoint, other, TargetRules.Side);
+            _detourTo = new Vector3(way.X, p.y, way.Z);
             _detourUntil = Time.time + DetourSeconds;
             _detours++;
             if (Time.time >= _nextLog)

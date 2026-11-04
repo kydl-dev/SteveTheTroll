@@ -184,10 +184,10 @@ def fluff(obj, count, length, mat_index_only=None):
     s.count = count
     s.hair_length = length
     s.child_type = 'INTERPOLATED'
-    s.child_percent = 12 if hasattr(s, "child_percent") else 12
+    s.child_percent = 12
     s.rendered_child_count = 12
     s.root_radius, s.tip_radius = 0.0012, 0.0002
-    s.material = 1 if obj == body else 1
+    s.material = 1
     s.roughness_1 = 0.4
     s.roughness_endpoint = 0.3
     return ps

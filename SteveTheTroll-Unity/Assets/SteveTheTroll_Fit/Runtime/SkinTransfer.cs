@@ -15,7 +15,7 @@ namespace SteveTheTroll.Fit;
 ///     of its Neighbours nearest source vertices (FitGeometry.NearestK / BlendWeights). Shared by the mod and the Unity
 ///     fit scene.
 /// </summary>
-public sealed class SkinTransfer
+public sealed class SkinTransfer : System.IDisposable
 {
     public const int Neighbours = 4;
     private readonly HashSet<Transform> _allowed;

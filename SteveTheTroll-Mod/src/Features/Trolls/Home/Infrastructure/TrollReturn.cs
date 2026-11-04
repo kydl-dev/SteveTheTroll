@@ -103,11 +103,13 @@ internal sealed class TrollReturn : MonoBehaviour
 
         TrollFarmer farmer = c.GetComponent<TrollFarmer>();
         ZNetView view = c.GetComponent<ZNetView>();
-        OperationResponse<bool> start = Returns.Start(new HubReturnInput(
-            view != null && view.IsValid() && view.IsOwner(), hub != null, d, ai.GetFollowTarget() != null,
-            c.GetComponent<TrollArrival>() != null,
-            TrollHome.OwnerWears(c), ai.GetTargetCreature() != null || c.GetComponent<TrollRage>() != null,
-            farmer != null && farmer.Unloading));
+        OperationResponse<bool> start = Returns.Start(new HubReturnInput
+        {
+            TrollOwner = view != null && view.IsValid() && view.IsOwner(), HasHub = hub != null, Distance = d,
+            FollowOrder = ai.GetFollowTarget() != null, Arriving = c.GetComponent<TrollArrival>() != null,
+            OwnerWears = TrollHome.OwnerWears(c), Fighting = ai.GetTargetCreature() != null || c.GetComponent<TrollRage>() != null,
+            Unloading = farmer != null && farmer.Unloading
+        });
         if (!start.IsSuccess || !start.Value)
         {
             return false;
@@ -156,9 +158,11 @@ internal sealed class TrollReturn : MonoBehaviour
                         GetComponent<TrollChase>() != null || GetComponent<TrollSlam>() != null;
         ZNetView view = GetComponent<ZNetView>();
         // D-173 (Architecture V2, P7): HubReturnPipeline.Step decides (owner, hub, then HubRules.ReturnNext)
-        OperationResponse<HubRules.ReturnStep> step = Returns.Step(new HubReturnInput(
-            view != null && view.IsValid() && view.IsOwner(), _hub != null, d, ai.GetFollowTarget() != null, false,
-            true, fighting, false));
+        OperationResponse<HubRules.ReturnStep> step = Returns.Step(new HubReturnInput
+        {
+            TrollOwner = view != null && view.IsValid() && view.IsOwner(), HasHub = _hub != null, Distance = d,
+            FollowOrder = ai.GetFollowTarget() != null, Arriving = false, OwnerWears = true, Fighting = fighting, Unloading = false
+        });
         if (step.Status == ResponseStatus.Rejected)
         {
             return false; // another client owns the troll: its AI runs there

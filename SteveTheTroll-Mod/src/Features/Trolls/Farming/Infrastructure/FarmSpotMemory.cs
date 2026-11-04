@@ -77,11 +77,11 @@ internal sealed class FarmSpotMemory
             d.y = 0f;
             if (d.sqrMagnitude <= FarBadRadius * FarBadRadius)
             {
-                return d.sqrMagnitude <= FarBadRadius * FarBadRadius;
+                return true;
             }
         }
 
-        return _badFar.Count < 0;
+        return false;
     }
 
     /// D-163: the nearest source beyond FarmMaxRange (up to FarmLongRange) the game knows of, outside the bed's no-hit ring, inside the hub's farm leash, not a given-up place.
@@ -97,7 +97,7 @@ internal sealed class FarmSpotMemory
                                                TrollNoHit.Inside(bedPos, p, noHitR))
                                            || (hub != null &&
                                                !HubRules.FarmAllowed(true, HubGeometry.Flat(p - hub.Pos)));
-        bool found = TrollFarming.FindFar(from, ModSettings.FarmLongRange.Value, ModSettings.FarmMaxRange.Value, tier,
+        bool found = TrollFarming.FindFar(from, new TrollFarming.SearchRange(ModSettings.FarmLongRange.Value, ModSettings.FarmMaxRange.Value), tier,
             goals, farSkip, out pos, out item);
         ModLog.Verbose("TrollFarmer: " + TrollTaming.Tag(_troll) + " long-range search: " + TrollFarming.LastFar);
         return found;

@@ -13,6 +13,12 @@ namespace SteveTheTroll.Ui;
 /// </summary>
 internal sealed class ViewerOrbit
 {
+    /// <summary>True when two view values differ by more than rounding noise (a NaN always differs).</summary>
+    private static bool Differs(float a, float b)
+    {
+        return !(Math.Abs(a - b) <= 1e-6f);
+    }
+
     private const float Tiny = 1e-6f; // a pan smaller than this (view heights) is rounding, not a move
     private readonly Action<string> _log;
     private readonly ViewerSettings _settings;
@@ -41,7 +47,7 @@ internal sealed class ViewerOrbit
         float yaw = ViewerMath.WrapYaw(_settings.StartYaw);
         float pitch = ViewerMath.ClampPitch(_settings.StartPitch, _settings.PitchLimit);
         bool panned = PanX != 0f || PanY != 0f || PanZ != 0f;
-        bool changed = yaw != Yaw || pitch != Pitch || Zoom != 1f || panned;
+        bool changed = Differs(yaw, Yaw) || Differs(pitch, Pitch) || Differs(Zoom, 1f) || panned;
         Yaw = yaw;
         Pitch = pitch;
         Zoom = 1f;
@@ -106,7 +112,7 @@ internal sealed class ViewerOrbit
 
         float yaw = ViewerMath.WrapYaw(Yaw - dx * _settings.RotateSpeed);
         float pitch = ViewerMath.ClampPitch(Pitch + dy * _settings.RotateSpeed, _settings.PitchLimit);
-        bool changed = yaw != Yaw || pitch != Pitch;
+        bool changed = Differs(yaw, Yaw) || Differs(pitch, Pitch);
         Yaw = yaw;
         Pitch = pitch;
         return changed;
@@ -116,7 +122,7 @@ internal sealed class ViewerOrbit
     internal bool StepZoom(float steps)
     {
         float z = ViewerMath.StepZoom(Zoom, steps, _settings.ZoomStep, _settings.ZoomMin, _settings.ZoomMax);
-        bool changed = z != Zoom;
+        bool changed = Differs(z, Zoom);
         Log("ViewerOrbit: zoom " + F(Zoom) + " -> " + F(z) + " (" + F(steps) + " step(s), range " +
             F(_settings.ZoomMin) + ".." + F(_settings.ZoomMax) + ")" + (changed ? "" : " - at the limit"));
         Zoom = z;

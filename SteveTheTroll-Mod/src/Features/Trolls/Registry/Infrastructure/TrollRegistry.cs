@@ -347,6 +347,14 @@ internal static class TrollRegistry
     /// D-162 (user: "in the page where it says troll distance to bed, say hub when there are hubs"): the distance is to the troll's hub (named) when it has one, else to the bed.
     private static void SetDestination(TrollInfo t, Vector3 pos, HubInfo hub)
     {
+        if (hub == null && ModSettings.HubsOn && Player.m_localPlayer != null)
+        {
+            // user 2026-11-04: once the first hub is built the Trolls tab says "from hub", never "from your bed" - also for a troll the
+            // assignment rules leave without a hub (too far from every hub): the distance is then to the nearest own hub
+            float nearestDist;
+            hub = HubRegistry.Nearest(Player.m_localPlayer.GetPlayerID(), pos, out nearestDist);
+        }
+
         if (hub != null)
         {
             t.Dest = hub.Name;

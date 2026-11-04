@@ -28,7 +28,7 @@ internal sealed class ProgressMeter
         Best = distance;
         StuckSeconds = 0f;
         SustainedSeconds = 0f;
-        if (SeriesBest == float.MaxValue)
+        if (SeriesBest >= float.MaxValue)
         {
             SeriesBest = distance;
             _sinceSeries = 0f;

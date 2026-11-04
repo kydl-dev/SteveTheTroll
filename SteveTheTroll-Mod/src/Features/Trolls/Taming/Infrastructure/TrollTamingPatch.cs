@@ -103,7 +103,7 @@ internal static class TrollTamingPatch
             return; // D-145: a tamed troll needs no diagnostic (it was 179 lines per test run)
         }
 
-        if (t.m_tamingTime != ModSettings.TameSeconds.Value)
+        if (!Mathf.Approximately(t.m_tamingTime, ModSettings.TameSeconds.Value))
         {
             ModLog.Verbose("TrollTamingPatch: " + TrollTaming.Tag(troll) + " taming time " + t.m_tamingTime + " -> " +
                            ModSettings.TameSeconds.Value + " s (Tunable changed)");
