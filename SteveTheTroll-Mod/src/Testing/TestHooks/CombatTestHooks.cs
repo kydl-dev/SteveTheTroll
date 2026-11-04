@@ -166,8 +166,9 @@ internal static class CombatTestHooks
     }
 
     /// The creature stt.spawnMob made last has lost health, or is dead / gone (a kill destroys it, so it cannot be named as a hook parameter). Expected outcome: true once it was hurt.
+    /// D-176 (addendum to fix9: "lastMobHurt returns only a boolean - poll diagnostics during the combat wait"): with `troll` given, the combat snapshot is logged every 2 s while it is polled.
     [TestHook("stt.lastMobHurt")]
-    private static bool LastMobHurt()
+    private static bool LastMobHurt(GameObject troll = null)
     {
         Character c = _lastMob != null ? _lastMob.GetComponent<Character>() : null;
         if (c == null || c.IsDead())
@@ -176,7 +177,47 @@ internal static class CombatTestHooks
         }
 
         MobTargetsPlayer(_lastMob); // it keeps going for the player at every poll, as in guardKill
+        if (troll != null)
+        {
+            LogSnapshot(troll, "waiting for the first hit");
+        }
+
         return c.GetHealth() < c.GetMaxHealth() - 0.01f;
+    }
+
+    private static float _nextSnapshotLog;
+
+    /// D-176: one line that places a guard fight on the decision tree - AI target, forced target, combat state (chase / rage / none), farmer, troll-to-creature distance, both
+    /// no-hit states, the chase's swings / last blocker, and the creature's health. Logged at most every 2 s. Expected outcome: none.
+    private static void LogSnapshot(GameObject troll, string phase)
+    {
+        if (Time.time < _nextSnapshotLog)
+        {
+            return;
+        }
+
+        _nextSnapshotLog = Time.time + 2f;
+        Character t = troll != null ? troll.GetComponent<Character>() : null;
+        Character m = _lastMob != null ? _lastMob.GetComponent<Character>() : null;
+        if (t == null)
+        {
+            ModLog.Info("CombatTestHooks: snapshot (" + phase + ") - the troll is gone");
+            return;
+        }
+
+        string mob = "creature gone";
+        if (m != null)
+        {
+            Vector3 d = m.transform.position - t.transform.position;
+            d.y = 0f;
+            mob = "creature " + d.magnitude.ToString("F1") + " m away, health " + m.GetHealth().ToString("F0") + " / " + m.GetMaxHealth().ToString("F0") + ", creature in no-hit zone " +
+                  TrollNoHit.InZone(m.transform.position);
+        }
+
+        TrollChase ch = troll.GetComponent<TrollChase>();
+        ModLog.Info("CombatTestHooks: snapshot (" + phase + ") - " + TrollGuard.Describe(t) + ", combat state " + CombatState(troll) + ", " + mob + ", troll in no-hit zone " +
+                    TrollNoHit.InZone(t.transform.position) + ", troll speed " + t.GetVelocity().magnitude.ToString("F1") + " m/s" +
+                    (ch != null ? ", chase swings " + ch.Swings + ", last blocker '" + ch.LastBlocker + "'" : ", no chase"));
     }
 
     private static float _nextNearLog;
@@ -202,6 +243,7 @@ internal static class CombatTestHooks
         }
 
         MobTargetsPlayer(_lastMob);
+        LogSnapshot(troll, "approach");
         return d.magnitude <= metres;
     }
 

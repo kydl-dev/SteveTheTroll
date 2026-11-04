@@ -90,7 +90,33 @@
                                     "expect":  "Greydwarf"
                                 },
                       "timeout":  8,
-                      "label":  "phase 1: the guard gives the farming troll the target"
+                      "label":  "phase 1a: the game AI of the farming troll targets the creature (the AI target field only - not yet proof of a guard order)"
+                  },
+                  {
+                      "do":  "wait",
+                      "until":  {
+                                    "check":  "hook",
+                                    "name":  "stt.forcedTargetOf",
+                                    "args":  {
+                                                 "troll":  "troll"
+                                             },
+                                    "expect":  "Greydwarf"
+                                },
+                      "timeout":  3,
+                      "label":  "phase 1b: TrollGuard registered the creature as the forced target"
+                  },
+                  {
+                      "do":  "wait",
+                      "until":  {
+                                    "check":  "hook",
+                                    "name":  "stt.combatState",
+                                    "args":  {
+                                                 "troll":  "troll"
+                                             },
+                                    "expect":  "chase"
+                                },
+                      "timeout":  3,
+                      "label":  "phase 1c: a TrollChase drives the troll (not farming, not standing)"
                   },
                   {
                       "do":  "wait",
@@ -111,7 +137,10 @@
                       "until":  {
                                     "check":  "hook",
                                     "name":  "stt.lastMobHurt",
-                                    "expect":  true
+                                    "expect":  true,
+                                    "args":  {
+                                                 "troll":  "troll"
+                                             }
                                 },
                       "timeout":  15,
                       "label":  "phase 2b: within reach it swings and hurts the creature"
