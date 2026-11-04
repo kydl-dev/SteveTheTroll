@@ -31,4 +31,16 @@ public class CostumeUnlockTests
     [TestCase("", false)]
     [TestCase(null, false)]
     public void FootBones(string bone, bool expected) { Assert.That((bool)ModAssembly.Call(F, "IsFootBone", bone), Is.EqualTo(expected)); }
+
+    // 2026-11-04: no costume shoes - the visible legs under the trousers are the shins and the feet (not the upper legs, the hips or the spine)
+    [TestCase("LeftFoot", true)]
+    [TestCase("RightToeBase", true)]
+    [TestCase("LeftLeg", true)]
+    [TestCase("RightLeg", true)]
+    [TestCase("LeftUpLeg", false)]
+    [TestCase("RightUpLeg", false)]
+    [TestCase("Hips", false)]
+    [TestCase("", false)]
+    [TestCase(null, false)]
+    public void LowerLegBones(string bone, bool expected) { Assert.That((bool)ModAssembly.Call(F, "IsLowerLegBone", bone), Is.EqualTo(expected)); }
 }

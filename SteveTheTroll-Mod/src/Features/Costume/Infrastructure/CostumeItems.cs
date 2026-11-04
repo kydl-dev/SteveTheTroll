@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using HarmonyLib;
 using Jotunn.Configs;
@@ -26,7 +26,7 @@ namespace SteveTheTroll.Features.Costume.Infrastructure;
 ///     <- ArmorTrollLeatherChest: child "attach_skin" = CostumeChestParts/ attach_skin ( skinned, the game swaps in the
 ///         wearer's bones)
 ///  - legs
-///     <- ArmorTrollLeatherLegs: child "attach_skin" = CostumeLegsParts/ attach_skin (+ plush feet, hidden while the
+///     <- ArmorTrollLeatherLegs: child "attach_skin" = CostumeLegsParts/ attach_skin (no feet of its own: the player's own legs show, see CostumeBareFeet; formerly hidden while the
 ///         slippers are worn)
 ///         - club
 ///     <- SledgeIron ( two-handed slam, knockback, stagger) : the meshes under "attach" swapped for ClubParts/ attach/
@@ -296,13 +296,8 @@ internal static partial class CostumeItems
         string collider = FitCollider(item.ItemPrefab, ground);
         if (type == ItemDrop.ItemData.ItemType.Legs)
         {
-            Transform feet = mine.transform.Find("CostumeFeet");
-            if (feet != null)
-            {
-                feet.gameObject.AddComponent<CostumeFeet>();
-            }
-
-            ModLog.Check("CostumeItems: legs have the plush feet", feet != null ? 1 : 0, 1, 0, "");
+            // 2026-11-04 (user): the costume has no shoes of its own - the legs piece must NOT carry plush feet (the player's own feet show, see CostumeBareFeet)
+            ModLog.Check("CostumeItems: legs have no plush feet", mine.transform.Find("CostumeFeet") == null ? 1 : 0, 1, 0, "");
         }
 
         ItemDrop.ItemData.SharedData s = item.ItemDrop.m_itemData.m_shared;
@@ -415,52 +410,6 @@ internal static partial class CostumeItems
         }
 
         return doomed.Count;
-    }
-}
-
-/// <summary>
-///     D-074: the costume legs' plush feet show only while the wearer has NOT the Fluffy Slippers on (the slippers are the
-///     feet then).
-///     Sits on the "CostumeFeet" renderer inside the legs' attach_skin copy that VisEquipment puts under the character.
-/// </summary>
-internal sealed class CostumeFeet : MonoBehaviour
-{
-    private int _logged = -1;
-    private Renderer _r;
-    private VisEquipment _vis;
-
-    private void Awake()
-    {
-        _r = GetComponent<Renderer>();
-    }
-
-    private void LateUpdate()
-    {
-        if (_r == null)
-        {
-            return;
-        }
-
-        if (_vis == null)
-        {
-            _vis = GetComponentInParent<VisEquipment>();
-        }
-
-        SlipperWearer w = null;
-        bool slippers = _vis != null && _vis.TryGetComponent(out w) && w.On;
-        if (_r.enabled == !slippers)
-        {
-            return;
-        }
-
-        _r.enabled = !slippers;
-        int state = slippers ? 1 : 0;
-        if (_logged != state)
-        {
-            _logged = state;
-            ModLog.Verbose("CostumeFeet: " + (_vis != null ? _vis.name : "?") + " plush feet " +
-                           (slippers ? "hidden (slippers worn)" : "shown"));
-        }
     }
 }
 

@@ -19,7 +19,7 @@ HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 REF = os.path.join(HERE, "reference")
 
 Z_HEM = float(os.environ.get("STT_PANTS_HEM", "0.17"))       # the trousers end above the slipper's ankle opening
-Z_TOP = float(os.environ.get("STT_PANTS_TOP", "0.98"))       # waistband top (the belt sits on it)
+Z_TOP = float(os.environ.get("STT_PANTS_TOP", "1.04"))       # waistband top (the belt sits on it; it overlaps the chest's hem)
 MARGIN = float(os.environ.get("STT_PANTS_MARGIN", "0.018"))  # fabric margin beside the body (m)
 INNER = 0.006                                                # margin on the side facing the other leg
 CLOTH = float(os.environ.get("STT_PANTS_CLOTH", "0.012"))    # cloth thickness (m), grows INWARD so the outer surface stays where the fit put it
@@ -217,6 +217,41 @@ if os.environ.get("STT_DEBUG"):
     for k, e in sorted(bands.items()): log.append(f"  outside {k}: {e[0]} pts, worst {e[1] * 100:.1f} cm, e.g. x {e[2]:.2f} y {e[3]:.2f}")
     fn = [f.normal.dot(f.center - Vector((0, f.center.y, 0.6))) for f in pants.data.polygons]
     log.append(f"  normals pointing outward: {sum(1 for v in fn if v > 0)} of {len(fn)}")
+
+# ---- the waist goes OVER the chest (user 2026-11-04: "the chest is cutting into the yellow cloth ... the pants should go above the chest piece") ----
+# The costume's chest (Costume_Top_Mesh, a plush bag down to z 0.70) is wider than the body at the hips, so it swallowed the belt and flaps. The body is hidden while the costume is
+# worn, so the waist of the pants is pushed radially OUT to the chest's own surface + CHEST_OVER, fading in from CHEST_Z0 to CHEST_Z1 (the legs below stay body-tight).
+CHEST_BLEND = os.environ.get("STT_CHEST_BLEND", os.path.join(HERE, "source", "costume_v2.blend"))
+CHEST_OVER = float(os.environ.get("STT_CHEST_OVER", "0.025"))
+CHEST_Z0, CHEST_Z1 = 0.80, 0.92
+if os.path.exists(CHEST_BLEND):
+    with bpy.data.libraries.load(CHEST_BLEND, link=False) as (src, dst):
+        dst.objects = [n for n in src.objects if n == "Costume_Top_Mesh"]
+    chest = dst.objects[0]
+    scene.collection.objects.link(chest); bpy.context.view_layer.update()
+    cb = bmesh.new(); cb.from_mesh(chest.evaluated_get(bpy.context.evaluated_depsgraph_get()).to_mesh()); cb.transform(chest.matrix_world)
+    ctree = BVHTree.FromBMesh(cb); cb.free()
+    bpy.data.objects.remove(chest)
+    AX_Y = J["Hips"].y
+    moved = 0; worst_push = 0.0
+    for v in pants.data.vertices:
+        if v.co.z < CHEST_Z0: continue
+        dx, dy = v.co.x, v.co.y - AX_Y
+        r = math.hypot(dx, dy)
+        if r < 1e-4: continue
+        d = Vector((dx / r, dy / r, 0.0))
+        hit = ctree.ray_cast(Vector((0.0, AX_Y, v.co.z)), d, 1.0)[0]      # from the middle outwards: the first surface is the torso (the arms hang further out)
+        if hit is None: continue
+        rc = math.hypot(hit.x, hit.y - AX_Y)
+        t = min(1.0, (v.co.z - CHEST_Z0) / (CHEST_Z1 - CHEST_Z0)); t = t * t * (3 - 2 * t)
+        need = rc + CHEST_OVER
+        if need > r:
+            push = (need - r) * t
+            v.co.x = d.x * (r + push); v.co.y = AX_Y + d.y * (r + push)
+            moved += 1; worst_push = max(worst_push, push)
+    log.append(f"waist over the chest: {moved} pants vertices pushed out, up to {worst_push * 100:.1f} cm")
+else:
+    log.append("WARNING: costume_v2.blend not found, waist not fitted over the chest")
 
 # ---- a real cloth shell: thickness grows inward, hem and waistband get an edge ----
 bpy.context.view_layer.objects.active = pants

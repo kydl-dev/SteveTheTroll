@@ -51,14 +51,22 @@ def show_only(scene, objs):
 # --- costume icons (the player faces +Y: a 3/4 front view looks along -Y, slightly from the right and above)
 bpy.ops.wm.open_mainfile(filepath=COSTUME)
 scene = bpy.context.scene; setup(scene)
+# 2026-11-04 (user): the legs icon shows the CURRENT pants (pants_model.py's CostumeLegs, no shoes), not the old suit legs
+PANTS = argv[3] if len(argv) > 3 else os.path.join(os.path.dirname(COSTUME), "pants_v3.blend")
+if os.path.exists(PANTS):
+    with bpy.data.libraries.load(PANTS, link=False) as (src, dst): dst.objects = ["CostumeLegs"]
+    for o in dst.objects: scene.collection.objects.link(o)
+    GROUPS["legs"] = ("CostumeLegs",)
+    log.append(f"legs icon from {PANTS}")
 meshes = [o for o in scene.objects if o.type == "MESH"]
 sel = {k: [o for o in meshes if member(o, v)] for k, v in GROUPS.items()}
+feet = [o for o in meshes if o.name.startswith("Costume_Feet_")]       # only the whole-mascot icon keeps the plush feet
 for k, objs in sel.items(): log.append(f"{k}: {len(objs)} object(s)")
 three_q = (-0.45, -1.0, -0.25)
 show_only(scene, sel["head"]); frame(scene, sel["head"], three_q, "CostumeHelmetIcon")
 show_only(scene, sel["chest"]); frame(scene, sel["chest"], three_q, "CostumeChestIcon")
 show_only(scene, sel["legs"]); frame(scene, sel["legs"], three_q, "CostumeLegsIcon")
-whole = sel["head"] + sel["chest"] + sel["legs"]
+whole = sel["head"] + sel["chest"] + sel["legs"] + feet
 show_only(scene, whole); frame(scene, whole, (-0.25, -1.0, -0.12), "SteveTheTrollSetIcon", margin=1.0)
 
 # --- club icon: lying diagonally, seen from the side

@@ -138,8 +138,9 @@ internal static partial class InGameTests
                         sh.m_setStatusEffect != null && recipe && col && sh.m_icons != null && sh.m_icons.Length > 0;
             if (n == CostumeItems.LegsName)
             {
-                Transform skin = drop.transform.Find("attach_skin/CostumeFeet");
-                good &= skin != null && skin.GetComponent<CostumeFeet>() != null;
+                // 2026-11-04: the costume has no shoes - the legs piece carries the trousers only, the player's own legs / feet show (CostumeBareFeet)
+                Transform skin = drop.transform.Find("attach_skin");
+                good &= skin != null && skin.Find("CostumeFeet") == null;
             }
 
             sb.Append(n + " armor " + sh.m_armor + " +" + sh.m_armorPerLevel + " q" + sh.m_maxQuality + " set '" +

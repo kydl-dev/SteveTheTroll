@@ -91,9 +91,9 @@ namespace SteveTheTroll.EditorTools
 
                 var chest = Skinned(costume, "CostumeChest", body, src, bw, strong, mat => mat == "straw_yellow" ? (System.Func<string, bool>)(n => Collar.Contains(n)) : ChestBone);
                 var legs = Skinned(pants, "CostumeLegs", body, src, bw, strong, mat => mat == "straw_yellow" ? (System.Func<string, bool>)(n => Belt.Contains(n)) : n => Legs.Contains(n), true);
-                var feet = Skinned(costume, "CostumeFeet", body, src, bw, strong, mat => n => Feet.Contains(n), true);       // D-160: each foot only follows its own side too
                 SkinPrefab("CostumeChestParts", visual, armature, body, new[] { chest });
-                SkinPrefab("CostumeLegsParts", visual, armature, body, new[] { legs, feet });
+                // 2026-11-04 (user): the costume has NO shoes of its own any more - the player's own legs and feet are shown (CostumeBareFeet in the mod); the plush feet stay only in the F6 viewer
+                SkinPrefab("CostumeLegsParts", visual, armature, body, new[] { legs });
 
                 var helmetJoint = Find(player.transform, "Helmet_attach");
                 RigidPrefab("CostumeHelmetParts", costume, "CostumeHelmet", helmetJoint.worldToLocalMatrix, Quaternion.identity);
@@ -101,7 +101,7 @@ namespace SteveTheTroll.EditorTools
                 RigidPrefab("ClubParts", club, "Club", Matrix4x4.identity, Quaternion.Euler(90f, 0f, 0f));
                 // D-080 ground looks (the item lying on the ground): suit / trousers + feet laid on their back, half size
                 GroundPrefab("CostumeChestGround", fbxOf, new[] { "CostumeChest" }, 0.5f, true);
-                GroundPrefab("CostumeLegsGround", fbxOf, new[] { "CostumeLegs", "CostumeFeet" }, 0.5f, true);
+                GroundPrefab("CostumeLegsGround", fbxOf, new[] { "CostumeLegs" }, 0.5f, true);
                 // D-080 the F6 Costume tab's 3D model: the whole mascot standing (static)
                 GroundPrefab("CostumeViewer", fbxOf, new[] { "CostumeHelmet", "CostumeChest", "CostumeLegs", "CostumeFeet" }, 1f, false);
             }

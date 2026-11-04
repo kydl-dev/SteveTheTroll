@@ -1,20 +1,15 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using KydlCore.Common;
-using SteveTheTroll.Features.Slippers.Infrastructure;
 using UnityEngine;
 
 namespace SteveTheTroll.Features.Costume.Infrastructure;
 
 /// <summary>
-///     D-089 (user: "give the character his feet back when the slippers are active ... being invisible is weird"): the
-///     whole costume hides the
-///     player's body (D-079) and the slippers hide the costume's plush feet, so the slippers stood empty. This draws ONLY
-///     the player's own
-///     feet (the body triangles skinned to the foot / toe bones, ankles included) while the body is hidden and the
-///     slippers are worn: same
-///     bones, same materials and skin colour as the body. Sits on the character next to VisEquipment (added by
-///     CostumeBodyPatch).
+///     D-089 / 2026-11-04 (user: the costume has no shoes of its own, just show the player's legs): the whole costume hides the
+///     player's body (D-079), so this draws ONLY the player's own shins and feet (the body triangles skinned to the lower-leg, foot
+///     and toe bones) while the body is hidden, with or without the slippers: same bones, same materials and skin colour as the body.
+///     Sits on the character next to VisEquipment (added by CostumeBodyPatch).
 /// </summary>
 internal sealed class CostumeBareFeet : MonoBehaviour
 {
@@ -37,8 +32,8 @@ internal sealed class CostumeBareFeet : MonoBehaviour
         }
 
         _body = _vis != null ? _vis.m_bodyModel : null;
-        SlipperWearer w = null;
-        bool show = _body != null && _body.forceRenderingOff && _vis.TryGetComponent(out w) && w.On;
+        // 2026-11-04 (user): the costume has no shoes of its own - whenever the costume hides the body, the player's own legs and feet show below the trousers (with or without the slippers)
+        bool show = _body != null && _body.forceRenderingOff;
         if (show && !_failed && (_feet == null || _builtFrom != _body.sharedMesh))
         {
             Build();
@@ -59,7 +54,7 @@ internal sealed class CostumeBareFeet : MonoBehaviour
         {
             _logged = state;
             ModLog.Verbose("CostumeBareFeet: " + name + " own feet " +
-                           (show ? "shown (costume + slippers)" : "hidden"));
+                           (show ? "shown (costume hides the body)" : "hidden"));
         }
 
         if (!show)
@@ -112,7 +107,7 @@ internal sealed class CostumeBareFeet : MonoBehaviour
         int footBones = 0;
         for (int i = 0; i < bones.Length; i++)
         {
-            if (bones[i] != null && IsFootBone(bones[i].name))
+            if (bones[i] != null && IsLowerLegBone(bones[i].name))
             {
                 foot[i] = true;
                 footBones++;
@@ -203,6 +198,13 @@ internal sealed class CostumeBareFeet : MonoBehaviour
     {
         return !string.IsNullOrEmpty(bone) && (bone.IndexOf("Foot", StringComparison.OrdinalIgnoreCase) >= 0 ||
                                                bone.IndexOf("Toe", StringComparison.OrdinalIgnoreCase) >= 0);
+    }
+
+    /// The bones of the visible part under the trousers: the feet (IsFootBone) and the shins (LeftLeg / RightLeg, not the upper legs). The trousers enclose the whole body, so shin parts inside them are never seen.
+    internal static bool IsLowerLegBone(string bone)
+    {
+        return IsFootBone(bone) || (!string.IsNullOrEmpty(bone) && bone.EndsWith("Leg", StringComparison.OrdinalIgnoreCase) &&
+                                    bone.IndexOf("Up", StringComparison.OrdinalIgnoreCase) < 0);
     }
 
     private static float FootWeight(BoneWeight w, bool[] foot)
