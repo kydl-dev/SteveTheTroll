@@ -68,7 +68,7 @@ public class ModContentTests
         var texts = Texts();
         Dictionary<string, string> where;
         var used = UsedKeys(out where);
-        Assert.That(used.Count, Is.GreaterThan(50), "the scan found the code's text keys");
+        Assert.That(used, Has.Count.GreaterThan(50), "the scan found the code's text keys");
         var missing = used.Where(k => !texts.ContainsKey(k)).Select(k => k + " (" + where[k] + ")").ToList();
         Assert.That(missing, Is.Empty, "text keys used in code but missing in UiText.En - the player would see the raw key");
     }
@@ -124,7 +124,7 @@ public class ModContentTests
     public void Bundle_EveryNameTheCodeLoads_IsInTheBundle()
     {
         var names = BundleNames();
-        Assert.That(names.Count, Is.GreaterThanOrEqualTo(15));
+        Assert.That(names, Has.Count.GreaterThanOrEqualTo(15));
         var files = ManifestAssets().Select(p => Path.GetFileNameWithoutExtension(p)).ToList();
         var missing = names.Where(n => !files.Contains(n)).ToList();
         Assert.That(missing, Is.Empty, "asset names the mod loads but the bundle does not have (rebuild the bundle: Valheim > Build AssetBundles)");
@@ -137,9 +137,12 @@ public class ModContentTests
     {
         var built = Path.Combine(BundleDir, Bundle);
         var shipped = Path.Combine(TestPaths.ModDir, "Assets", Bundle);
-        Assert.That(File.Exists(built), Is.True, built);
-        Assert.That(File.Exists(shipped), Is.True, shipped + " (copied by Valheim > Build AssetBundles (and copy to Mod))");
-        Assert.That(File.ReadAllBytes(shipped), Is.EqualTo(File.ReadAllBytes(built)), "the mod ships an older / other bundle than the Unity build");
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(File.Exists(built), Is.True, built);
+            Assert.That(File.Exists(shipped), Is.True, shipped + " (copied by Valheim > Build AssetBundles (and copy to Mod))");
+            Assert.That(File.ReadAllBytes(shipped), Is.EqualTo(File.ReadAllBytes(built)), "the mod ships an older / other bundle than the Unity build");
+        }
     }
 
     [Test]

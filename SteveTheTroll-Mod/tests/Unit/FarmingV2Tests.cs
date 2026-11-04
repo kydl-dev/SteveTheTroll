@@ -27,22 +27,36 @@ public class FarmingV2Tests
     [Test] public void Gate_Dead_Stops_BeforeEverything() { Assert.That(FarmGateRules.Decide(G(alive: false, follow: true, fighting: true, recovery: true)), Is.EqualTo(FarmAction.Stop)); }
     [Test] public void Gate_FollowOrder_Stops_UnlessUnloading()
     {
-        Assert.That(FarmGateRules.Decide(G(follow: true, fighting: true)), Is.EqualTo(FarmAction.StopFollow));
-        Assert.That(FarmGateRules.Decide(G(follow: true, unloading: true, home: true)), Is.EqualTo(FarmAction.GoHome), "D-149: a full troll on its way to the depot ignores the follow order");
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(FarmGateRules.Decide(G(follow: true, fighting: true)), Is.EqualTo(FarmAction.StopFollow));
+            Assert.That(FarmGateRules.Decide(G(follow: true, unloading: true, home: true)), Is.EqualTo(FarmAction.GoHome), "D-149: a full troll on its way to the depot ignores the follow order");
+        }
     }
     [Test] public void Gate_Fight_BeforeRecovery() { Assert.That(FarmGateRules.Decide(G(fighting: true, recovery: true)), Is.EqualTo(FarmAction.YieldToFight)); }
     [Test] public void Gate_Recovery_BeforeFullCheck() { Assert.That(FarmGateRules.Decide(G(recovery: true, fullDue: true)), Is.EqualTo(FarmAction.RecoveryDrives)); }
     [Test] public void Gate_FullCheck_BeforeHome_D159() { Assert.That(FarmGateRules.Decide(G(fullDue: true, home: true)), Is.EqualTo(FarmAction.CheckFull)); }
     [Test] public void Gate_Home_BeforeWeapon() { Assert.That(FarmGateRules.Decide(G(home: true, weapon: false)), Is.EqualTo(FarmAction.GoHome)); }
-    [Test] public void Gate_NoWeapon_ThenWork() { Assert.That(FarmGateRules.Decide(G(weapon: false)), Is.EqualTo(FarmAction.NoWeapon)); Assert.That(FarmGateRules.Decide(G()), Is.EqualTo(FarmAction.Work)); }
+    [Test] public void Gate_NoWeapon_ThenWork() {
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(FarmGateRules.Decide(G(weapon: false)), Is.EqualTo(FarmAction.NoWeapon)); Assert.That(FarmGateRules.Decide(G()), Is.EqualTo(FarmAction.Work));
+        }
+    }
     [Test] public void Gate_FallThrough_ClearsOnlyThatFlag()
     {
         var i = G(recovery: true, fullDue: true, home: true);
-        Assert.That(FarmGateRules.MayFallThrough(FarmAction.RecoveryDrives), Is.True);
-        Assert.That(FarmGateRules.MayFallThrough(FarmAction.GoHome), Is.False);
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(FarmGateRules.MayFallThrough(FarmAction.RecoveryDrives), Is.True);
+            Assert.That(FarmGateRules.MayFallThrough(FarmAction.GoHome), Is.False);
+        }
         var j = i.Without(FarmAction.RecoveryDrives);
-        Assert.That(FarmGateRules.Decide(j), Is.EqualTo(FarmAction.CheckFull));
-        Assert.That(FarmGateRules.Decide(j.Without(FarmAction.CheckFull)), Is.EqualTo(FarmAction.GoHome));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(FarmGateRules.Decide(j), Is.EqualTo(FarmAction.CheckFull));
+            Assert.That(FarmGateRules.Decide(j.Without(FarmAction.CheckFull)), Is.EqualTo(FarmAction.GoHome));
+        }
     }
 
     // the old TrollFarmer.Step order, as the reference (each "return" of the old code = one action)
@@ -75,8 +89,11 @@ public class FarmingV2Tests
     [Test] public void Approach_Far_Walks_EvenWhenStuck_D063() { Assert.That(ApproachRules.Decide(false, 5f, 2f, 99f), Is.EqualTo(ApproachAction.Walk)); }
     [Test] public void Approach_RightAtIt_WalksHalfASecond_ThenSwings_D062()
     {
-        Assert.That(ApproachRules.Decide(false, 2.8f, 2f, 0.5f), Is.EqualTo(ApproachAction.Walk));
-        Assert.That(ApproachRules.Decide(false, 2.8f, 2f, 0.51f), Is.EqualTo(ApproachAction.AtTarget));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(ApproachRules.Decide(false, 2.8f, 2f, 0.5f), Is.EqualTo(ApproachAction.Walk));
+            Assert.That(ApproachRules.Decide(false, 2.8f, 2f, 0.51f), Is.EqualTo(ApproachAction.AtTarget));
+        }
     }
     [Test] public void ApproachMeter_ResetsOnRealGain()
     {
@@ -84,9 +101,12 @@ public class FarmingV2Tests
         m.Update(10f, 0.1f); m.Update(9.9f, 0.5f);
         Assert.That(m.StuckSeconds, Is.EqualTo(0.5f).Within(1e-4));
         m.Update(9.7f, 0.1f);
-        Assert.That(m.StuckSeconds, Is.EqualTo(0f));
-        Assert.That(m.Reset(), Is.EqualTo(0f));
-        Assert.That(m.LastDistance, Is.EqualTo(float.MaxValue));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(m.StuckSeconds, Is.EqualTo(0f));
+            Assert.That(m.Reset(), Is.EqualTo(0f));
+            Assert.That(m.LastDistance, Is.EqualTo(float.MaxValue));
+        }
     }
 
     // ---- SwingLadder: parity with the old counters ----
@@ -118,8 +138,12 @@ public class FarmingV2Tests
             seen.Add(a);
             if (a == SwingAction.Swing) l.Swung();
         }
-        Assert.That(seen.FindAll(a => a == SwingAction.StepForward).Count, Is.EqualTo(3));
-        Assert.That(seen[seen.Count - 1], Is.EqualTo(SwingAction.GiveUp));
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(seen.FindAll(a => a == SwingAction.StepForward).Count, Is.EqualTo(3));
+            Assert.That(seen[seen.Count - 1], Is.EqualTo(SwingAction.GiveUp));
+        }
     }
     [Test] public void Ladder_DamageResetsToTryOne()
     {
@@ -127,8 +151,11 @@ public class FarmingV2Tests
         l.Next(1u); l.Swung(); l.Next(1u); l.Swung(); l.Next(1u);      // dry 2 -> step
         Assert.That(l.Try, Is.EqualTo(2));
         l.Next(5u); l.Swung(); l.Next(9u);                              // the source changed: damage
-        Assert.That(l.Try, Is.EqualTo(1));
-        Assert.That(l.Dry, Is.EqualTo(0));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(l.Try, Is.EqualTo(1));
+            Assert.That(l.Dry, Is.EqualTo(0));
+        }
     }
     [Test] public void Ladder_EqualsTheOldCounters_OnRandomRuns()
     {
@@ -156,13 +183,21 @@ public class FarmingV2Tests
         var goals = new[] { "Wood", "Stone" };
         // Stone exists at 20 m, Wood only at 50 m: Stone within the quick range wins (same as the old nested loops)
         var hit = TargetSelection.FirstHit(ranges, goals, (r, g) => (g == "Stone" && r >= 20f) || (g == "Wood" && r >= 50f));
-        Assert.That(hit.IsSuccess, Is.True);
-        Assert.That(goals[hit.Value.GoalIndex], Is.EqualTo("Stone"));
-        Assert.That(hit.Value.RangeIndex, Is.EqualTo(0));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(hit.IsSuccess, Is.True);
+            Assert.That(goals[hit.Value.GoalIndex], Is.EqualTo("Stone"));
+            Assert.That(hit.Value.RangeIndex, Is.EqualTo(0));
+        }
         var both = TargetSelection.FirstHit(ranges, goals, (r, g) => r >= 50f);
         Assert.That(goals[both.Value.GoalIndex], Is.EqualTo("Wood"), "same range: focus first");
     }
-    [Test] public void Selection_Nothing_Ignored() { var r = TargetSelection.FirstHit(new[] { 1f }, new[] { "x" }, (a, b) => a < 0f); Assert.That(r.Status, Is.EqualTo(ResponseStatus.Ignored)); Assert.That(r.Reason, Is.EqualTo(TargetSelection.NothingFound)); }
+    [Test] public void Selection_Nothing_Ignored() { var r = TargetSelection.FirstHit(new[] { 1f }, new[] { "x" }, (a, b) => a < 0f);
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(r.Status, Is.EqualTo(ResponseStatus.Ignored)); Assert.That(r.Reason, Is.EqualTo(TargetSelection.NothingFound));
+        }
+    }
     [Test] public void Selection_MissingArgs_Failed() { Assert.That(TargetSelection.FirstHit<string>(null, new[] { "x" }, (a, b) => true).Status, Is.EqualTo(ResponseStatus.Failed)); }
     [Test] public void Selection_StopsAtTheFirstHit()
     {
@@ -174,7 +209,12 @@ public class FarmingV2Tests
     // ---- pipeline + executor ----
     sealed class Owner : ITrollOwnership { public bool IsValid { get { return Mine; } } public bool IsOwner { get { return Mine; } } internal bool Mine = true; }
 
-    [Test] public void Pipeline_NotOwner_Rejected() { var r = new FarmingPipeline().Evaluate(G(owner: false)); Assert.That(r.Status, Is.EqualTo(ResponseStatus.Rejected)); Assert.That(r.Reason, Is.EqualTo(FarmingPipeline.NotOwner)); }
+    [Test] public void Pipeline_NotOwner_Rejected() { var r = new FarmingPipeline().Evaluate(G(owner: false));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(r.Status, Is.EqualTo(ResponseStatus.Rejected)); Assert.That(r.Reason, Is.EqualTo(FarmingPipeline.NotOwner));
+        }
+    }
     [Test] public void Pipeline_Owner_Decides() { Assert.That(new FarmingPipeline().Evaluate(G(home: true)).Value, Is.EqualTo(FarmAction.GoHome)); }
 
     [Test] public void Executor_MapsActions_AndReturnsWhetherItDrove()
@@ -185,20 +225,29 @@ public class FarmingV2Tests
             Stop = () => { log.Add("stop"); return false; }, GoHome = () => { log.Add("home"); return true; }, Work = () => { log.Add("work"); return true; },
             Swing = () => { log.Add("swing"); return true; }, StepForward = () => { log.Add("step"); return true; }, GiveUp = () => { log.Add("giveup"); return true; },
         });
-        Assert.That(x.Execute(FarmAction.Stop).Value, Is.False);
-        Assert.That(x.Execute(FarmAction.GoHome).Value, Is.True);
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(x.Execute(FarmAction.Stop).Value, Is.False);
+            Assert.That(x.Execute(FarmAction.GoHome).Value, Is.True);
+        }
         x.Execute(FarmAction.Work); x.Execute(SwingAction.Swing); x.Execute(SwingAction.StepForward); x.Execute(SwingAction.GiveUp);
-        Assert.That(log, Is.EqualTo(new[] { "stop", "home", "work", "swing", "step", "giveup" }));
-        Assert.That(x.Execute(FarmAction.NoWeapon).Status, Is.EqualTo(ResponseStatus.Ignored), "nothing bound");
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(log, Is.EqualTo(new[] { "stop", "home", "work", "swing", "step", "giveup" }));
+            Assert.That(x.Execute(FarmAction.NoWeapon).Status, Is.EqualTo(ResponseStatus.Ignored), "nothing bound");
+        }
     }
     [Test] public void Executor_NotOwner_PerformsNothing()
     {
         int ran = 0;
         var o = new Owner { Mine = false };
         var x = new FarmingExecutor(o, new FarmingActions { Work = () => { ran++; return true; }, Swing = () => { ran++; return true; } });
-        Assert.That(x.Execute(FarmAction.Work).Status, Is.EqualTo(ResponseStatus.Rejected));
-        Assert.That(x.Execute(SwingAction.Swing).Status, Is.EqualTo(ResponseStatus.Rejected));
-        Assert.That(x.Execute(FarmAction.NoWeapon).Status, Is.EqualTo(ResponseStatus.Rejected), "not owner beats 'nothing bound'");
-        Assert.That(ran, Is.EqualTo(0));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(x.Execute(FarmAction.Work).Status, Is.EqualTo(ResponseStatus.Rejected));
+            Assert.That(x.Execute(SwingAction.Swing).Status, Is.EqualTo(ResponseStatus.Rejected));
+            Assert.That(x.Execute(FarmAction.NoWeapon).Status, Is.EqualTo(ResponseStatus.Rejected), "not owner beats 'nothing bound'");
+            Assert.That(ran, Is.EqualTo(0));
+        }
     }
 }

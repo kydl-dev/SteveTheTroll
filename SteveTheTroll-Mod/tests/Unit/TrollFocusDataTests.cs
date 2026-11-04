@@ -66,8 +66,11 @@ public class TrollFocusDataTests
     [Test]
     public void SourceMatches_NoSourceList_AnyPrefab()
     {
-        Assert.That(TrollFocus.SourceMatches(new TrollFocus.Goal("Wood"), null), Is.True);
-        Assert.That(TrollFocus.SourceMatches(new TrollFocus.Goal("Wood", null), "x"), Is.True);
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(TrollFocus.SourceMatches(new TrollFocus.Goal("Wood"), null), Is.True);
+            Assert.That(TrollFocus.SourceMatches(new TrollFocus.Goal("Wood", null), "x"), Is.True);
+        }
     }
 
     [Test]

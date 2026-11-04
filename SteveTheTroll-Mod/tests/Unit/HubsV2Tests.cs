@@ -13,14 +13,24 @@ public class HubsV2Tests
     static HubAssignmentInput A(bool on = true, long owner = 7L, int manual = 0, float manualD = -1f, int nearest = 2, float nearestD = 300f, bool auto = true)
     { return new HubAssignmentInput(on, owner, manual, manualD, nearest, nearestD, auto); }
 
-    [Test] public void Assign_NearestWithinReach() { var r = new HubAssignmentPipeline().Evaluate(A()); Assert.That(r.IsSuccess, Is.True); Assert.That(r.Value, Is.EqualTo(2)); }
+    [Test] public void Assign_NearestWithinReach() { var r = new HubAssignmentPipeline().Evaluate(A());
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(r.IsSuccess, Is.True); Assert.That(r.Value, Is.EqualTo(2));
+        }
+    }
     [Test] public void Assign_SameAsPick()
     {
         var p = new HubAssignmentPipeline();
         foreach (var c in new[] { A(manual: 4, manualD: 50f), A(manual: 4, manualD: -1f), A(nearestD: HubRules.AutoReach + 1f), A(auto: false), A(nearest: 0) })
             Assert.That(p.Evaluate(c).Value, Is.EqualTo(HubRules.Pick(c.Manual, c.ManualDistance, c.NearestNumber, c.NearestDistance, c.Auto)));
     }
-    [Test] public void Assign_HubsOff_Ignored() { var r = new HubAssignmentPipeline().Evaluate(A(on: false)); Assert.That(r.Status, Is.EqualTo(ResponseStatus.Ignored)); Assert.That(r.Reason, Is.EqualTo(HubAssignmentPipeline.HubsOff)); }
+    [Test] public void Assign_HubsOff_Ignored() { var r = new HubAssignmentPipeline().Evaluate(A(on: false));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(r.Status, Is.EqualTo(ResponseStatus.Ignored)); Assert.That(r.Reason, Is.EqualTo(HubAssignmentPipeline.HubsOff));
+        }
+    }
     [Test] public void Assign_NoOwner_Ignored() { Assert.That(new HubAssignmentPipeline().Evaluate(A(owner: 0L)).Reason, Is.EqualTo(HubAssignmentPipeline.NoOwner)); }
 
     static HubReturnInput R(bool owner = true, bool hub = true, float d = 1100f, bool follow = false, bool arriving = false, bool wears = true, bool fighting = false, bool unloading = false)
@@ -43,11 +53,19 @@ public class HubsV2Tests
     [Test] public void Step_SameAsReturnNext()
     {
         var p = new HubReturnPipeline();
-        Assert.That(p.Step(R(follow: true)).Value, Is.EqualTo(HubRules.ReturnStep.Cancel));
-        Assert.That(p.Step(R(fighting: true)).Value, Is.EqualTo(HubRules.ReturnStep.Yield));
-        Assert.That(p.Step(R(d: HubRules.FarmLeash)).Value, Is.EqualTo(HubRules.ReturnStep.Done));
-        Assert.That(p.Step(R(d: 1000f)).Value, Is.EqualTo(HubRules.ReturnStep.Walk));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(p.Step(R(follow: true)).Value, Is.EqualTo(HubRules.ReturnStep.Cancel));
+            Assert.That(p.Step(R(fighting: true)).Value, Is.EqualTo(HubRules.ReturnStep.Yield));
+            Assert.That(p.Step(R(d: HubRules.FarmLeash)).Value, Is.EqualTo(HubRules.ReturnStep.Done));
+            Assert.That(p.Step(R(d: 1000f)).Value, Is.EqualTo(HubRules.ReturnStep.Walk));
+        }
     }
-    [Test] public void Step_LostHub_Ignored() { var r = new HubReturnPipeline().Step(R(hub: false, d: -1f)); Assert.That(r.Status, Is.EqualTo(ResponseStatus.Ignored)); Assert.That(r.Reason, Is.EqualTo(HubReturnPipeline.NoHub)); }
+    [Test] public void Step_LostHub_Ignored() { var r = new HubReturnPipeline().Step(R(hub: false, d: -1f));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(r.Status, Is.EqualTo(ResponseStatus.Ignored)); Assert.That(r.Reason, Is.EqualTo(HubReturnPipeline.NoHub));
+        }
+    }
     [Test] public void Step_NotOwner_Rejected() { Assert.That(new HubReturnPipeline().Step(R(owner: false)).Status, Is.EqualTo(ResponseStatus.Rejected)); }
 }

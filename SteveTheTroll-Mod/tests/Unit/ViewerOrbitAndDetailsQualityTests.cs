@@ -20,18 +20,24 @@ public class ViewerOrbitAndDetailsQualityTests
     public void Reset_AfterAPanAlongUpOnly_IsAChange()
     {
         var o = new ViewerOrbit(Flat());
-        Assert.That(o.Pan(0f, 10f, 100f), Is.True);
-        Assert.That(o.PanX, Is.EqualTo(0f).Within(1e-6)); Assert.That(o.PanZ, Is.EqualTo(0f).Within(1e-6)); Assert.That(o.PanY, Is.Not.EqualTo(0f));
-        Assert.That(o.Reset(), Is.True, "only PanY was off");
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(o.Pan(0f, 10f, 100f), Is.True);
+            Assert.That(o.PanX, Is.EqualTo(0f).Within(1e-6)); Assert.That(o.PanZ, Is.EqualTo(0f).Within(1e-6)); Assert.That(o.PanY, Is.Not.EqualTo(0f));
+            Assert.That(o.Reset(), Is.True, "only PanY was off");
+        }
     }
 
     [Test]
     public void Reset_AfterAPanAlongRightOnly_IsAChange()
     {
         var o = new ViewerOrbit(Flat());
-        Assert.That(o.Pan(10f, 0f, 100f), Is.True);
-        Assert.That(o.PanY, Is.EqualTo(0f).Within(1e-6)); Assert.That(o.PanX, Is.Not.EqualTo(0f));
-        Assert.That(o.Reset(), Is.True, "only PanX was off");
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(o.Pan(10f, 0f, 100f), Is.True);
+            Assert.That(o.PanY, Is.EqualTo(0f).Within(1e-6)); Assert.That(o.PanX, Is.Not.EqualTo(0f));
+            Assert.That(o.Reset(), Is.True, "only PanX was off");
+        }
     }
 
     [Test]
@@ -39,8 +45,11 @@ public class ViewerOrbitAndDetailsQualityTests
     {
         var o = new ViewerOrbit(Flat());
         o.Drag(0f, 10f);
-        Assert.That(o.Yaw, Is.EqualTo(0f));
-        Assert.That(o.Reset(), Is.True);
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(o.Yaw, Is.EqualTo(0f));
+            Assert.That(o.Reset(), Is.True);
+        }
     }
 
     [Test]
@@ -48,8 +57,11 @@ public class ViewerOrbitAndDetailsQualityTests
     {
         var o = new ViewerOrbit(Flat());
         o.Drag(10f, 0f);
-        Assert.That(o.Pitch, Is.EqualTo(0f));
-        Assert.That(o.Reset(), Is.True);
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(o.Pitch, Is.EqualTo(0f));
+            Assert.That(o.Reset(), Is.True);
+        }
     }
 
     [Test]
@@ -58,11 +70,17 @@ public class ViewerOrbitAndDetailsQualityTests
         var log = new List<string>();
         var o = new ViewerOrbit(Flat(), log.Add);
         log.Clear();
-        Assert.That(o.Reset(), Is.False);
-        Assert.That(log, Is.EqualTo(new[] { "ViewerOrbit: reset to " + o + " (already there)" }));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(o.Reset(), Is.False);
+            Assert.That(log, Is.EqualTo(new[] { "ViewerOrbit: reset to " + o + " (already there)" }));
+        }
         o.StepZoom(1f); log.Clear();
-        Assert.That(o.Reset(), Is.True);
-        Assert.That(log, Is.EqualTo(new[] { "ViewerOrbit: reset to " + o }));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(o.Reset(), Is.True);
+            Assert.That(log, Is.EqualTo(new[] { "ViewerOrbit: reset to " + o }));
+        }
     }
 
     // ---- Pan ----
@@ -75,9 +93,12 @@ public class ViewerOrbitAndDetailsQualityTests
         ViewerMath.CameraAxes(o.Yaw, o.Pitch, out float rx, out float ry, out float rz, out float ux, out float uy, out float uz);
         Assert.That(o.Pan(10f, 20f, 100f), Is.True);
         const float k = 1f / 100f;
-        Assert.That(o.PanX, Is.EqualTo((-rx * 10f + ux * 20f) * k).Within(1e-5));
-        Assert.That(o.PanY, Is.EqualTo((-ry * 10f + uy * 20f) * k).Within(1e-5));
-        Assert.That(o.PanZ, Is.EqualTo((-rz * 10f + uz * 20f) * k).Within(1e-5));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(o.PanX, Is.EqualTo((-rx * 10f + ux * 20f) * k).Within(1e-5));
+            Assert.That(o.PanY, Is.EqualTo((-ry * 10f + uy * 20f) * k).Within(1e-5));
+            Assert.That(o.PanZ, Is.EqualTo((-rz * 10f + uz * 20f) * k).Within(1e-5));
+        }
     }
 
     [Test]
@@ -89,9 +110,12 @@ public class ViewerOrbitAndDetailsQualityTests
         float x = o.PanX;
         Assert.That(x, Is.EqualTo(0.8f).Within(1e-5));
         log.Clear();
-        Assert.That(o.Pan(-1000f, 0f, 100f), Is.False, "already at the limit");
-        Assert.That(o.PanX, Is.EqualTo(x));
-        Assert.That(log, Is.EqualTo(new[] { "ViewerOrbit: pan at the limit (0.8 view heights), view " + o }));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(o.Pan(-1000f, 0f, 100f), Is.False, "already at the limit");
+            Assert.That(o.PanX, Is.EqualTo(x));
+            Assert.That(log, Is.EqualTo(new[] { "ViewerOrbit: pan at the limit (0.8 view heights), view " + o }));
+        }
     }
 
     [Test]
@@ -100,9 +124,12 @@ public class ViewerOrbitAndDetailsQualityTests
         var log = new List<string>();
         var o = new ViewerOrbit(Flat(), log.Add);
         log.Clear();
-        Assert.That(o.Pan(float.NaN, 1f, 100f), Is.False);
-        Assert.That(o.Pan(1f, float.NaN, 100f), Is.False);
-        Assert.That(log, Is.EqualTo(new[] { "ViewerOrbit: pan with NaN ignored", "ViewerOrbit: pan with NaN ignored" }));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(o.Pan(float.NaN, 1f, 100f), Is.False);
+            Assert.That(o.Pan(1f, float.NaN, 100f), Is.False);
+            Assert.That(log, Is.EqualTo(new[] { "ViewerOrbit: pan with NaN ignored", "ViewerOrbit: pan with NaN ignored" }));
+        }
     }
 
     [Test]
@@ -112,8 +139,11 @@ public class ViewerOrbitAndDetailsQualityTests
         var o = new ViewerOrbit(Flat(), log.Add);
         Assert.That(o.Pan(0.1f, 0f, 1f), Is.True);
         log.Clear();
-        Assert.That(o.Pan(1f, 1f, 0f), Is.False);
-        Assert.That(log, Is.EqualTo(new[] { "ViewerOrbit: pan ignored, frame height 0 px is not usable" }));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(o.Pan(1f, 1f, 0f), Is.False);
+            Assert.That(log, Is.EqualTo(new[] { "ViewerOrbit: pan ignored, frame height 0 px is not usable" }));
+        }
     }
 
     [Test]
@@ -129,8 +159,11 @@ public class ViewerOrbitAndDetailsQualityTests
     public void Drag_TiltUsesTheRotateSpeed()
     {
         var o = new ViewerOrbit(new ViewerSettings { StartYaw = 0f, StartPitch = 0f, RotateSpeed = 0.5f });
-        Assert.That(o.Drag(0f, 10f), Is.True);
-        Assert.That(o.Pitch, Is.EqualTo(5f).Within(1e-5));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(o.Drag(0f, 10f), Is.True);
+            Assert.That(o.Pitch, Is.EqualTo(5f).Within(1e-5));
+        }
     }
 
     [Test]
@@ -139,10 +172,13 @@ public class ViewerOrbitAndDetailsQualityTests
         var log = new List<string>();
         var o = new ViewerOrbit(Flat(), log.Add);
         log.Clear();
-        Assert.That(o.Drag(float.NaN, 1f), Is.False);
-        Assert.That(o.Drag(1f, float.NaN), Is.False);
-        Assert.That(log, Is.EqualTo(new[] { "ViewerOrbit: drag with NaN ignored", "ViewerOrbit: drag with NaN ignored" }));
-        Assert.That(o.Yaw, Is.EqualTo(0f));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(o.Drag(float.NaN, 1f), Is.False);
+            Assert.That(o.Drag(1f, float.NaN), Is.False);
+            Assert.That(log, Is.EqualTo(new[] { "ViewerOrbit: drag with NaN ignored", "ViewerOrbit: drag with NaN ignored" }));
+            Assert.That(o.Yaw, Is.EqualTo(0f));
+        }
     }
 
     [Test]
@@ -152,12 +188,15 @@ public class ViewerOrbitAndDetailsQualityTests
         var o = new ViewerOrbit(new ViewerSettings { ZoomStep = 2f, ZoomMax = 2f }, log.Add);
         log.Clear();
         Assert.That(o.StepZoom(1f), Is.True);
-        Assert.That(o.StepZoom(1f), Is.False);
-        Assert.That(log, Is.EqualTo(new[]
+        using (Assert.EnterMultipleScope())
         {
+            Assert.That(o.StepZoom(1f), Is.False);
+            Assert.That(log, Is.EqualTo(new[]
+            {
             "ViewerOrbit: zoom 1 -> 2 (1 step(s), range 0.5..2)",
             "ViewerOrbit: zoom 2 -> 2 (1 step(s), range 0.5..2) - at the limit",
         }));
+        }
     }
 
     [Test]

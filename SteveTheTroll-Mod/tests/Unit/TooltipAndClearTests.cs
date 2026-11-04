@@ -24,7 +24,12 @@ public class TooltipAndClearTests
     }
 
     [Test] public void SetTooltip_NoStamina_Unchanged() { Assert.That(Compact("a\nb: +1"), Is.EqualTo("a\nb: +1")); }
-    [Test] public void SetTooltip_Empty_NoThrow() { Assert.That(Compact(null), Is.EqualTo("")); Assert.That(Compact(""), Is.EqualTo("")); }
+    [Test] public void SetTooltip_Empty_NoThrow() {
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(Compact(null), Is.EqualTo("")); Assert.That(Compact(""), Is.EqualTo(""));
+        }
+    }
     [Test] public void SetTooltip_PositiveModifier_HasPlus() { Assert.That((string)ModAssembly.Call(Tip, "Compact", "Run stamina usage: x", "L", 0.25f), Is.EqualTo("L: <color=orange>+25%</color>")); }
 
     [TestCase("$se_runstamina: -50%", true)]
@@ -69,8 +74,11 @@ public class TooltipAndClearTests
     public void ClearCircle_FlatDistance_Inclusive()
     {
         var c = new Vector3(100f, 30f, -50f);
-        Assert.That((bool)ModAssembly.Call(Clear, "Within", c, new Vector3(400f, 500f, 350f), 500f), Is.True, "300 / 400 = exactly 500 m flat, height ignored");
-        Assert.That((bool)ModAssembly.Call(Clear, "Within", c, new Vector3(400.1f, 30f, 350f), 500f), Is.False);
-        Assert.That((bool)ModAssembly.Call(Clear, "Within", c, c, 1f), Is.True);
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That((bool)ModAssembly.Call(Clear, "Within", c, new Vector3(400f, 500f, 350f), 500f), Is.True, "300 / 400 = exactly 500 m flat, height ignored");
+            Assert.That((bool)ModAssembly.Call(Clear, "Within", c, new Vector3(400.1f, 30f, 350f), 500f), Is.False);
+            Assert.That((bool)ModAssembly.Call(Clear, "Within", c, c, 1f), Is.True);
+        }
     }
 }

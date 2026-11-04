@@ -15,10 +15,10 @@ public class BackpackDataTests
     public void FortyOnePieces_FourReinforcedChests_NoStoneFloors()
     {
         var p = Pieces();
-        Assert.That(p.Length, Is.EqualTo(41));
+        Assert.That(p, Has.Length.EqualTo(41));
         foreach (var o in p) Assert.That(F(o, "Prefab"), Is.Not.EqualTo("stone_floor_2x2"), "support floors are not part of the backpack");
         var chests = (int[])ModAssembly.GetStatic(T, "Chests");
-        Assert.That(chests.Length, Is.EqualTo(4));
+        Assert.That(chests, Has.Length.EqualTo(4));
         foreach (var i in chests) Assert.That(F(p.GetValue(i), "Prefab"), Is.EqualTo("piece_chest"));
     }
 
@@ -40,8 +40,12 @@ public class BackpackDataTests
         // pivot y 1.5 in the dump: the floor beams (dump y 0.5) are 1 m below the pivot, the roof beams (2.5) 1 m above
         float minY = 1e9f, maxY = -1e9f;
         foreach (var o in Pieces()) { float y = (float)F(o, "Y"); minY = Math.Min(minY, y); maxY = Math.Max(maxY, y); }
-        Assert.That(minY, Is.EqualTo(-1f).Within(1e-3));
-        Assert.That(maxY, Is.EqualTo(1f).Within(1e-3));
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(minY, Is.EqualTo(-1f).Within(1e-3));
+            Assert.That(maxY, Is.EqualTo(1f).Within(1e-3));
+        }
     }
 
     [Test]
@@ -63,12 +67,21 @@ public class BackpackDataTests
         foreach (var o in Pieces())
         {
             float y = (float)F(o, "Y"), z = (float)F(o, "Z");
-            if ((string)F(o, "Prefab") == "woodiron_beam_45") { struts++; Assert.That(z, Is.EqualTo(0f).Within(1e-4), "struts at the pivot plane"); Assert.That(Math.Abs(y), Is.LessThan(0.02f)); }
+            if ((string)F(o, "Prefab") == "woodiron_beam_45") { struts++;
+                using (Assert.EnterMultipleScope())
+                {
+                    Assert.That(z, Is.EqualTo(0f).Within(1e-4), "struts at the pivot plane"); Assert.That(Math.Abs(y), Is.LessThan(0.02f));
+                }
+            }
             maxZ = Math.Max(maxZ, z); minZ = Math.Min(minZ, z);
         }
-        Assert.That(struts, Is.EqualTo(2));
-        Assert.That(minZ, Is.GreaterThanOrEqualTo(-1e-4f), "nothing sits inside the troll (behind the struts)");
-        Assert.That(maxZ, Is.GreaterThan(3f), "the cage reaches ~4 m away from the troll's back");
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(struts, Is.EqualTo(2));
+            Assert.That(minZ, Is.GreaterThanOrEqualTo(-1e-4f), "nothing sits inside the troll (behind the struts)");
+            Assert.That(maxZ, Is.GreaterThan(3f), "the cage reaches ~4 m away from the troll's back");
+        }
     }
 
     [Test]
@@ -79,8 +92,11 @@ public class BackpackDataTests
         {
             if ((string)F(o, "Prefab") == "piece_chest") continue;
             float x = (float)F(o, "X"), z = (float)F(o, "Z");
-            Assert.That(Math.Abs(x - Math.Round(x)), Is.LessThan(1e-3), (string)F(o, "Prefab") + " x " + x);
-            Assert.That(Math.Abs(z - Math.Round(z)), Is.LessThan(1e-3), (string)F(o, "Prefab") + " z " + z);
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(Math.Abs(x - Math.Round(x)), Is.LessThan(1e-3), (string)F(o, "Prefab") + " x " + x);
+                Assert.That(Math.Abs(z - Math.Round(z)), Is.LessThan(1e-3), (string)F(o, "Prefab") + " z " + z);
+            }
         }
     }
 

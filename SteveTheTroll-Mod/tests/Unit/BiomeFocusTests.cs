@@ -27,8 +27,11 @@ public class BiomeFocusTests
     {
         var l = TrollFocus.ChoicesFor(biome, "");
         Assert.That(l, Does.Contain(item));
-        Assert.That(l[0], Is.EqualTo(TrollFocus.None));
-        Assert.That(l.Count, Is.GreaterThan(TrollFocus.Choices.Count));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(l[0], Is.EqualTo(TrollFocus.None));
+            Assert.That(l.Count, Is.GreaterThan(TrollFocus.Choices.Count));
+        }
     }
 
     [Test]
@@ -38,16 +41,22 @@ public class BiomeFocusTests
     public void DeepNorth_BothItems_Once()
     {
         var l = TrollFocus.ChoicesFor("DeepNorth", "Frostwood");
-        Assert.That(l.FindAll(v => v == "Frostwood").Count, Is.EqualTo(1));
-        Assert.That(l.Count, Is.EqualTo(TrollFocus.Choices.Count + 2));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(l.FindAll(v => v == "Frostwood").Count, Is.EqualTo(1));
+            Assert.That(l.Count, Is.EqualTo(TrollFocus.Choices.Count + 2));
+        }
     }
 
     [Test]
     public void LeftTheBiome_KeepsShowingItsFocus()
     {
         var l = TrollFocus.ChoicesFor("Meadows", "Blackwood");
-        Assert.That(l[l.Count - 1], Is.EqualTo("Blackwood"));
-        Assert.That(l.Count, Is.EqualTo(TrollFocus.Choices.Count + 1));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(l[l.Count - 1], Is.EqualTo("Blackwood"));
+            Assert.That(l.Count, Is.EqualTo(TrollFocus.Choices.Count + 1));
+        }
     }
 
     [Test]
@@ -60,8 +69,11 @@ public class BiomeFocusTests
     [TestCase("GoldOre", "stevethetroll_focus_goldore")]
     public void BiomeItems_KeptAndNamed(string v, string key)
     {
-        Assert.That(TrollFocus.Normalize(v), Is.EqualTo(v));
-        Assert.That(TrollFocus.KeyOf(v), Is.EqualTo(key));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(TrollFocus.Normalize(v), Is.EqualTo(v));
+            Assert.That(TrollFocus.KeyOf(v), Is.EqualTo(key));
+        }
     }
 
     [Test]
@@ -83,8 +95,11 @@ public class BiomeFocusTests
         var t = new TrollInfo { Id = "1:5", Name = "Steve", Biome = "AshLands", BackpackUsed = 3, BackpackSlots = 24 };
         var back = TrollInfo.Decode(t.Encode());
         Assert.That(back, Is.Not.Null);
-        Assert.That(back.Biome, Is.EqualTo("AshLands"));
-        Assert.That(back.BackpackUsed, Is.EqualTo(3));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(back.Biome, Is.EqualTo("AshLands"));
+            Assert.That(back.BackpackUsed, Is.EqualTo(3));
+        }
     }
 
     [Test]
@@ -95,7 +110,10 @@ public class BiomeFocusTests
         old = old.Substring(0, old.LastIndexOf(TrollInfo.Sep));       // D-162: the destination, then the biome
         var back = TrollInfo.Decode(old);
         Assert.That(back, Is.Not.Null);
-        Assert.That(back.Biome, Is.EqualTo(""));
-        Assert.That(back.BackpackSlots, Is.EqualTo(24));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(back.Biome, Is.EqualTo(""));
+            Assert.That(back.BackpackSlots, Is.EqualTo(24));
+        }
     }
 }

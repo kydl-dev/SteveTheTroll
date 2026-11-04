@@ -72,15 +72,21 @@ public class TamingRulesEdgeTests
     {
         var into = new System.Collections.Generic.List<int> { 1, 2 };
         int added = AddDistinct(into, new System.Collections.Generic.List<int> { 4, 4, 5, 4 });
-        Assert.That(added, Is.EqualTo(2));
-        Assert.That(into, Is.EqualTo(new[] { 1, 2, 4, 5 }));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(added, Is.EqualTo(2));
+            Assert.That(into, Is.EqualTo(new[] { 1, 2, 4, 5 }));
+        }
     }
 
     [Test]
     public void AddDistinct_NothingFound_AddsNothing()
     {
         var into = new System.Collections.Generic.List<int> { 7, 8 };
-        Assert.That(AddDistinct(into, new System.Collections.Generic.List<int>()), Is.EqualTo(0));
-        Assert.That(into.Count, Is.EqualTo(2));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(AddDistinct(into, new System.Collections.Generic.List<int>()), Is.EqualTo(0));
+            Assert.That(into.Count, Is.EqualTo(2));
+        }
     }
 }

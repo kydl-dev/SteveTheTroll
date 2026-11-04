@@ -16,9 +16,12 @@ public class HubRulesTests
 
     [Test] public void NextNumber_FillsTheGap()
     {
-        Assert.That(HubRules.NextNumber(new List<int>()), Is.EqualTo(1));
-        Assert.That(HubRules.NextNumber(new List<int> { 1, 2 }), Is.EqualTo(3));
-        Assert.That(HubRules.NextNumber(new List<int> { 1, 3 }), Is.EqualTo(2));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(HubRules.NextNumber(new List<int>()), Is.EqualTo(1));
+            Assert.That(HubRules.NextNumber(new List<int> { 1, 2 }), Is.EqualTo(3));
+            Assert.That(HubRules.NextNumber(new List<int> { 1, 3 }), Is.EqualTo(2));
+        }
     }
 
     // D-162: walk back to the hub - starts beyond 1000 m, goes on until inside 950 m, never without a hub
@@ -80,15 +83,21 @@ public class HubRulesTests
 
     [Test] public void Data_RecipeAndParts()
     {
-        Assert.That(HubData.Parts.Length, Is.EqualTo(351));
-        Assert.That(HubData.Lanterns.Length, Is.EqualTo(4));
-        Assert.That(HubData.Recipe.Length, Is.EqualTo(5));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(HubData.Parts, Has.Length.EqualTo(351));
+            Assert.That(HubData.Lanterns, Has.Length.EqualTo(4));
+            Assert.That(HubData.Recipe, Has.Length.EqualTo(5));
+        }
         int stone = 0; foreach (var c in HubData.Recipe) if (c.Item == "Stone") stone = c.Amount;
         Assert.That(stone, Is.EqualTo(50));
         foreach (var p in HubData.Parts)
         {
-            Assert.That(System.Math.Sqrt(p.X * p.X + p.Z * p.Z), Is.LessThanOrEqualTo(HubData.Radius), p.Prefab);
-            Assert.That(p.Y, Is.LessThanOrEqualTo(HubData.Height), p.Prefab);
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(System.Math.Sqrt(p.X * p.X + p.Z * p.Z), Is.LessThanOrEqualTo(HubData.Radius), p.Prefab);
+                Assert.That(p.Y, Is.LessThanOrEqualTo(HubData.Height), p.Prefab);
+            }
         }
     }
 }

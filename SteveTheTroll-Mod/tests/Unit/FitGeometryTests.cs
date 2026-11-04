@@ -42,9 +42,12 @@ public class FitGeometryTests
     [Test]
     public void Constants_AreTheDocumentedLimits()
     {
-        Assert.That(Const("MaxFootTurnDeg"), Is.EqualTo(75f));
-        Assert.That(Const("JumpDeg"), Is.EqualTo(45f));
-        Assert.That(Const("ToeBlendWidth"), Is.EqualTo(0.03f));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(Const("MaxFootTurnDeg"), Is.EqualTo(75f));
+            Assert.That(Const("JumpDeg"), Is.EqualTo(45f));
+            Assert.That(Const("ToeBlendWidth"), Is.EqualTo(0.03f));
+        }
     }
 
     // ---------------- Flat ----------------
@@ -103,10 +106,13 @@ public class FitGeometryTests
     [Test]
     public void YawDeg_IsTheHeadingFromForward()
     {
-        Assert.That(F("YawDeg", Vector3.forward), Is.EqualTo(0f).Within(Eps));
-        Assert.That(F("YawDeg", new Vector3(1f, 0f, 0f)), Is.EqualTo(90f).Within(Eps));
-        Assert.That(F("YawDeg", new Vector3(-2f, 0f, 0f)), Is.EqualTo(-90f).Within(Eps));
-        Assert.That(Mathf.Abs(F("YawDeg", new Vector3(0f, 0f, -1f))), Is.EqualTo(180f).Within(Eps));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(F("YawDeg", Vector3.forward), Is.EqualTo(0f).Within(Eps));
+            Assert.That(F("YawDeg", new Vector3(1f, 0f, 0f)), Is.EqualTo(90f).Within(Eps));
+            Assert.That(F("YawDeg", new Vector3(-2f, 0f, 0f)), Is.EqualTo(-90f).Within(Eps));
+            Assert.That(Mathf.Abs(F("YawDeg", new Vector3(0f, 0f, -1f))), Is.EqualTo(180f).Within(Eps));
+        }
     }
 
     [Test]
@@ -143,25 +149,34 @@ public class FitGeometryTests
     {
         var toe = new Vector3(0.01f, -0.15f, 0f);
         var shin = new Vector3(0f, -0.3f, -0.2f);
-        Assert.That(Yaw(V("Flat", toe, Fwd)), Is.EqualTo(90f).Within(1e-2f), "precondition: the flattened toe points sideways");
-        Assert.That(Mathf.Abs(Yaw(V("FootForward", toe, shin, Fwd))), Is.LessThan(10f));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(Yaw(V("Flat", toe, Fwd)), Is.EqualTo(90f).Within(1e-2f), "precondition: the flattened toe points sideways");
+            Assert.That(Mathf.Abs(Yaw(V("FootForward", toe, shin, Fwd))), Is.LessThan(10f));
+        }
     }
 
     [Test]
     public void FootForward_FootTurnedPastTheLimit_IsClampedTo75()
     {
-        // (exactly 90 deg is ambiguous by design: the lateral axis has no front/back there, either +-75 is right)
-        Assert.That(Yaw(V("FootForward", V("RotateY", ToeAhead, 85f), KneeToFoot, Fwd)), Is.EqualTo(75f).Within(1e-2f));
-        Assert.That(Yaw(V("FootForward", V("RotateY", ToeAhead, -88f), KneeToFoot, Fwd)), Is.EqualTo(-75f).Within(1e-2f));
-        Assert.That(Yaw(V("FootForward", V("RotateY", ToeAhead, 74f), KneeToFoot, Fwd)), Is.EqualTo(74f).Within(1e-2f));
+        using (Assert.EnterMultipleScope())
+        {
+            // (exactly 90 deg is ambiguous by design: the lateral axis has no front/back there, either +-75 is right)
+            Assert.That(Yaw(V("FootForward", V("RotateY", ToeAhead, 85f), KneeToFoot, Fwd)), Is.EqualTo(75f).Within(1e-2f));
+            Assert.That(Yaw(V("FootForward", V("RotateY", ToeAhead, -88f), KneeToFoot, Fwd)), Is.EqualTo(-75f).Within(1e-2f));
+            Assert.That(Yaw(V("FootForward", V("RotateY", ToeAhead, 74f), KneeToFoot, Fwd)), Is.EqualTo(74f).Within(1e-2f));
+        }
     }
 
     [Test]
     public void FootForward_ClampIsMeasuredFromThePlayersForward()
     {
         var pf = Dir(100f);
-        Assert.That(Yaw(V("FootForward", V("RotateY", ToeAhead, 100f + 85f), KneeToFoot, pf)), Is.EqualTo(175f).Within(1e-2f));
-        Assert.That(Yaw(V("FootForward", V("RotateY", ToeAhead, 100f + 20f), KneeToFoot, pf)), Is.EqualTo(120f).Within(1e-2f));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(Yaw(V("FootForward", V("RotateY", ToeAhead, 100f + 85f), KneeToFoot, pf)), Is.EqualTo(175f).Within(1e-2f));
+            Assert.That(Yaw(V("FootForward", V("RotateY", ToeAhead, 100f + 20f), KneeToFoot, pf)), Is.EqualTo(120f).Within(1e-2f));
+        }
     }
 
     [Test]
@@ -242,9 +257,12 @@ public class FitGeometryTests
     [Test]
     public void FigureYawDeg_IsFootHeadingPlusYaw()
     {
-        Assert.That(F("FigureYawDeg", new Vector3(1f, 0f, 0f), 10f), Is.EqualTo(100f).Within(Eps));
-        Assert.That(F("FigureYawDeg", new Vector3(0f, 0.5f, 1f), -12f), Is.EqualTo(-12f).Within(Eps));
-        Assert.That(F("FigureYawDeg", Vector3.up, 5f), Is.EqualTo(5f).Within(Eps));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(F("FigureYawDeg", new Vector3(1f, 0f, 0f), 10f), Is.EqualTo(100f).Within(Eps));
+            Assert.That(F("FigureYawDeg", new Vector3(0f, 0.5f, 1f), -12f), Is.EqualTo(-12f).Within(Eps));
+            Assert.That(F("FigureYawDeg", Vector3.up, 5f), Is.EqualTo(5f).Within(Eps));
+        }
     }
 
     // ---------------- slipper skin weights (D-025) ----------------
@@ -252,8 +270,11 @@ public class FitGeometryTests
     [Test]
     public void ToeAlong_IsTheDistanceInFrontOfTheToeJoint()
     {
-        Assert.That(F("ToeAlong", new Vector3(1f, 5f, 2.25f), new Vector3(1f, 0f, 2f), Fwd), Is.EqualTo(0.25f).Within(Eps));
-        Assert.That(F("ToeAlong", new Vector3(0f, 0f, 1.9f), new Vector3(3f, 0f, 2f), Fwd), Is.EqualTo(-0.1f).Within(Eps));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(F("ToeAlong", new Vector3(1f, 5f, 2.25f), new Vector3(1f, 0f, 2f), Fwd), Is.EqualTo(0.25f).Within(Eps));
+            Assert.That(F("ToeAlong", new Vector3(0f, 0f, 1.9f), new Vector3(3f, 0f, 2f), Fwd), Is.EqualTo(-0.1f).Within(Eps));
+        }
     }
 
     [TestCase(-1f, 0f)]
@@ -284,16 +305,22 @@ public class FitGeometryTests
     [Test]
     public void LogScaleFactor_MakesTheLongestAxisTheWantedLength()
     {
-        Assert.That(F("LogScaleFactor", new Vector3(0.1f, 0.5f, 0.2f), 2f, 0.5f, 0.28f), Is.EqualTo(0.14f).Within(Eps));
-        Assert.That(F("LogScaleFactor", new Vector3(0.9f, 0.1f, 0.2f), 1f, 0.5f, 0.36f), Is.EqualTo(0.2f).Within(Eps));
-        Assert.That(F("LogScaleFactor", new Vector3(0.1f, 0.2f, 0.4f), 1f, 1f, 0.2f), Is.EqualTo(0.5f).Within(Eps));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(F("LogScaleFactor", new Vector3(0.1f, 0.5f, 0.2f), 2f, 0.5f, 0.28f), Is.EqualTo(0.14f).Within(Eps));
+            Assert.That(F("LogScaleFactor", new Vector3(0.9f, 0.1f, 0.2f), 1f, 0.5f, 0.36f), Is.EqualTo(0.2f).Within(Eps));
+            Assert.That(F("LogScaleFactor", new Vector3(0.1f, 0.2f, 0.4f), 1f, 1f, 0.2f), Is.EqualTo(0.5f).Within(Eps));
+        }
     }
 
     [Test]
     public void LogScaleFactor_NoSize_LeavesTheScale()
     {
-        Assert.That(F("LogScaleFactor", Vector3.zero, 1f, 0.5f, 0.28f), Is.EqualTo(1f));
-        Assert.That(F("LogScaleFactor", new Vector3(1f, 1f, 1f), 0f, 0.5f, 0.28f), Is.EqualTo(1f));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(F("LogScaleFactor", Vector3.zero, 1f, 0.5f, 0.28f), Is.EqualTo(1f));
+            Assert.That(F("LogScaleFactor", new Vector3(1f, 1f, 1f), 0f, 0.5f, 0.28f), Is.EqualTo(1f));
+        }
     }
 
     [Test]
@@ -330,10 +357,13 @@ public class FitGeometryTests
     [Test]
     public void FlipStep_FirstFrameIsZero_ThenTheTurnInDegrees()
     {
-        Assert.That(F("FlipStep", Vector3.zero, Dir(130f)), Is.EqualTo(0f));
-        Assert.That(F("FlipStep", Vector3.forward, new Vector3(1f, 0f, 0f)), Is.EqualTo(90f).Within(1e-3f));
-        Assert.That(F("FlipStep", Dir(10f), Dir(-170f)), Is.EqualTo(180f).Within(1e-2f));
-        Assert.That(F("FlipStep", Dir(5f), Dir(5f)), Is.EqualTo(0f).Within(1e-2f));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(F("FlipStep", Vector3.zero, Dir(130f)), Is.EqualTo(0f));
+            Assert.That(F("FlipStep", Vector3.forward, new Vector3(1f, 0f, 0f)), Is.EqualTo(90f).Within(1e-3f));
+            Assert.That(F("FlipStep", Dir(10f), Dir(-170f)), Is.EqualTo(180f).Within(1e-2f));
+            Assert.That(F("FlipStep", Dir(5f), Dir(5f)), Is.EqualTo(0f).Within(1e-2f));
+        }
     }
 
     [TestCase(0f, false)]

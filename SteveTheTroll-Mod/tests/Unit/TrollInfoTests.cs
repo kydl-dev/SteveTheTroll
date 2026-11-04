@@ -20,14 +20,17 @@ public class TrollInfoTests
     {
         var t = TrollInfo.Decode(Sample().Encode());
         Assert.That(t, Is.Not.Null);
-        Assert.That(t.Id, Is.EqualTo("a1b2c3"));
-        Assert.That(t.Name, Is.EqualTo("Steve"));
-        Assert.That(t.Focus, Is.EqualTo("CopperOre"));
-        Assert.That(t.Health, Is.EqualTo(1234.5f).Within(0.01));
-        Assert.That(t.Stars, Is.EqualTo(1));
-        Assert.That(t.Z, Is.EqualTo(-268.2f).Within(0.01));
-        Assert.That(t.BedDistance, Is.EqualTo(35.5f).Within(0.01));
-        Assert.That(t.LastSeenTicks, Is.EqualTo(638000000000000000L));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(t.Id, Is.EqualTo("a1b2c3"));
+            Assert.That(t.Name, Is.EqualTo("Steve"));
+            Assert.That(t.Focus, Is.EqualTo("CopperOre"));
+            Assert.That(t.Health, Is.EqualTo(1234.5f).Within(0.01));
+            Assert.That(t.Stars, Is.EqualTo(1));
+            Assert.That(t.Z, Is.EqualTo(-268.2f).Within(0.01));
+            Assert.That(t.BedDistance, Is.EqualTo(35.5f).Within(0.01));
+            Assert.That(t.LastSeenTicks, Is.EqualTo(638000000000000000L));
+        }
     }
 
     [Test]
@@ -37,8 +40,11 @@ public class TrollInfoTests
         s.Attacks = "Punch~Blunt=180,Chop=300~4;Log swing~Blunt=210~6";
         s.Resists = "Blunt=Normal,Pierce=Resistant";
         var t = TrollInfo.Decode(s.Encode());
-        Assert.That(t.Attacks, Is.EqualTo(s.Attacks));
-        Assert.That(t.Resists, Is.EqualTo(s.Resists));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(t.Attacks, Is.EqualTo(s.Attacks));
+            Assert.That(t.Resists, Is.EqualTo(s.Resists));
+        }
         string old = string.Join("|", s.Encode().Split('|'), 0, 14);
         var o = TrollInfo.Decode(old);
         Assert.That(o, Is.Not.Null, "14-field lines from before D-044");
@@ -50,9 +56,12 @@ public class TrollInfoTests
     {
         var rows = TrollDetailsBuilder.Attacks("Punch~Blunt=180,Chop=300,Pickaxe=120~4;broken;Throw~Blunt=150~0", K);
         Assert.That(rows.Count, Is.EqualTo(2));
-        Assert.That(rows[0].Key, Is.EqualTo("Punch"));
-        Assert.That(rows[0].Value, Is.EqualTo("180 Blunt, 300 Chop, 120 Pickaxe (stevethetroll_troll_every 4 s)"));
-        Assert.That(rows[1].Value, Is.EqualTo("150 Blunt"));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(rows[0].Key, Is.EqualTo("Punch"));
+            Assert.That(rows[0].Value, Is.EqualTo("180 Blunt, 300 Chop, 120 Pickaxe (stevethetroll_troll_every 4 s)"));
+            Assert.That(rows[1].Value, Is.EqualTo("150 Blunt"));
+        }
     }
 
     [Test]
@@ -77,8 +86,11 @@ public class TrollInfoTests
     {
         var t = Sample();
         t.Name = "";
-        Assert.That(t.Shown(K), Is.EqualTo("stevethetroll_troll_default 2"));
-        Assert.That(Sample().Shown(K), Is.EqualTo("Steve"));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(t.Shown(K), Is.EqualTo("stevethetroll_troll_default 2"));
+            Assert.That(Sample().Shown(K), Is.EqualTo("Steve"));
+        }
     }
 
     [Test]
@@ -88,16 +100,22 @@ public class TrollInfoTests
         long now = t.LastSeenTicks + TimeSpan.TicksPerMinute * 12;
         var g = TrollDetailsBuilder.Build(t, K, now);
         Assert.That(g.Count, Is.EqualTo(4), "general, damage, resistances, position");
-        Assert.That(g[0].Rows[0].Value, Is.EqualTo("stevethetroll_status_staying (stevethetroll_troll_lastseen 12 min)"));
-        Assert.That(g[0].Rows[1].Value, Is.EqualTo("*"));
-        Assert.That(g[0].Rows[2].Value, Is.EqualTo("1235 / 1800").Or.EqualTo("1234 / 1800"));
-        Assert.That(g[3].Rows[0].Value, Is.EqualTo("412 / 77 / -268"));
-        Assert.That(g[3].Rows[1].Value, Is.EqualTo("36 m").Or.EqualTo("35 m"));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(g[0].Rows[0].Value, Is.EqualTo("stevethetroll_status_staying (stevethetroll_troll_lastseen 12 min)"));
+            Assert.That(g[0].Rows[1].Value, Is.EqualTo("*"));
+            Assert.That(g[0].Rows[2].Value, Is.EqualTo("1235 / 1800").Or.EqualTo("1234 / 1800"));
+            Assert.That(g[3].Rows[0].Value, Is.EqualTo("412 / 77 / -268"));
+            Assert.That(g[3].Rows[1].Value, Is.EqualTo("36 m").Or.EqualTo("35 m"));
+        }
         t.Loaded = true; t.BedDistance = -1f; t.Stars = 0;
         g = TrollDetailsBuilder.Build(t, K, now);
-        Assert.That(g[0].Rows[0].Value, Is.EqualTo("stevethetroll_status_staying"));
-        Assert.That(g[0].Rows[1].Value, Is.EqualTo("-"));
-        Assert.That(g[3].Rows[1].Value, Is.EqualTo("stevethetroll_troll_nobed"));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(g[0].Rows[0].Value, Is.EqualTo("stevethetroll_status_staying"));
+            Assert.That(g[0].Rows[1].Value, Is.EqualTo("-"));
+            Assert.That(g[3].Rows[1].Value, Is.EqualTo("stevethetroll_troll_nobed"));
+        }
     }
 
     [Test]

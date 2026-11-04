@@ -21,9 +21,12 @@ public class CostumeDetailsBuilderTests
     {
         var g = CostumeDetailsBuilder.Build(CostumeData.Sample(), K);
         Assert.That(g.Count, Is.EqualTo(5), "set + 3 pieces + club");
-        Assert.That(g[0].Title, Is.EqualTo("stevethetroll_details_set: Steve The Troll"));
-        Assert.That(Row(g, 0, "stevethetroll_details_set_worn").Value, Is.EqualTo("3 / 4"));
-        Assert.That(Row(g, 0, "stevethetroll_details_set_effects").Value, Does.Contain("-50 % stamina use"));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(g[0].Title, Is.EqualTo("stevethetroll_details_set: Steve The Troll"));
+            Assert.That(Row(g, 0, "stevethetroll_details_set_worn").Value, Is.EqualTo("3 / 4"));
+            Assert.That(Row(g, 0, "stevethetroll_details_set_effects").Value, Does.Contain("-50 % stamina use"));
+        }
     }
 
     [Test]
@@ -33,9 +36,12 @@ public class CostumeDetailsBuilderTests
         for (int i = 1; i <= 3; i++)
         {
             var armor = Row(g, i, "stevethetroll_details_armor");
-            Assert.That(armor.Value, Is.EqualTo("20"));
-            Assert.That(armor.MaxValue, Is.EqualTo("35"));
-            Assert.That(Row(g, i, "stevethetroll_details_upgrade").Value, Is.EqualTo("2 Troll hide, 2 Blueberries"));
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(armor.Value, Is.EqualTo("20"));
+                Assert.That(armor.MaxValue, Is.EqualTo("35"));
+                Assert.That(Row(g, i, "stevethetroll_details_upgrade").Value, Is.EqualTo("2 Troll hide, 2 Blueberries"));
+            }
         }
         Assert.That(Row(g, 1, "stevethetroll_details_worn").Value, Is.EqualTo("stevethetroll_details_not_worn"), "the head is not worn in the sample");
     }
@@ -44,10 +50,13 @@ public class CostumeDetailsBuilderTests
     public void Club_DamageAtQualityFour()
     {
         var g = CostumeDetailsBuilder.Build(CostumeData.Sample(), K);
-        Assert.That(Row(g, 4, "stevethetroll_details_blunt").MaxValue, Is.EqualTo("255"));
-        Assert.That(Row(g, 4, "stevethetroll_details_chop").MaxValue, Is.EqualTo("110"));
-        Assert.That(Row(g, 4, "stevethetroll_details_pickaxe").MaxValue, Is.EqualTo("110"));
-        Assert.That(Row(g, 4, "stevethetroll_details_upgrade").Value, Is.EqualTo("5 Core wood, 5 Fine wood"));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(Row(g, 4, "stevethetroll_details_blunt").MaxValue, Is.EqualTo("255"));
+            Assert.That(Row(g, 4, "stevethetroll_details_chop").MaxValue, Is.EqualTo("110"));
+            Assert.That(Row(g, 4, "stevethetroll_details_pickaxe").MaxValue, Is.EqualTo("110"));
+            Assert.That(Row(g, 4, "stevethetroll_details_upgrade").Value, Is.EqualTo("5 Core wood, 5 Fine wood"));
+        }
     }
 
     [Test]

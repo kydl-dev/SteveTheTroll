@@ -53,14 +53,20 @@ public class ArchitectureRulesTests
 
     [Test] public void PureLayers_ReferenceNoGameOrEngine()
     {
-        Assert.That(PureFiles(), Is.Not.Empty, "src/Features/<F>/{Domain,Application,Execution}");
-        Assert.That(Violations(PureFiles()), Is.Empty, "the domain decides without the game - move game reads into the feature's Infrastructure adapter");
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(PureFiles(), Is.Not.Empty, "src/Features/<F>/{Domain,Application,Execution}");
+            Assert.That(Violations(PureFiles()), Is.Empty, "the domain decides without the game - move game reads into the feature's Infrastructure adapter");
+        }
     }
 
     [Test] public void KydlCoreContracts_ArePure()
     {
-        Assert.That(Directory.Exists(SharedCore), Is.True, SharedCore);
-        Assert.That(Violations(Directory.GetFiles(SharedCore, "*.cs", SearchOption.AllDirectories)), Is.Empty, "KydlCore\\KydlCore-Mod\\src\\Shared\\Core must stay pure");
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(Directory.Exists(SharedCore), Is.True, SharedCore);
+            Assert.That(Violations(Directory.GetFiles(SharedCore, "*.cs", SearchOption.AllDirectories)), Is.Empty, "KydlCore\\KydlCore-Mod\\src\\Shared\\Core must stay pure");
+        }
     }
 
     [Test] public void HarmonyPatches_LiveOnlyIn_IntegrationsHarmony()
@@ -76,10 +82,13 @@ public class ArchitectureRulesTests
     {
         string plugin = File.ReadAllText(Path.Combine(Src, "Bootstrap", "Plugin.cs"));
         string proj = File.ReadAllText(Directory.GetFiles(TestPaths.ModDir, "*.csproj").Single());
-        Assert.That(proj, Does.Not.Contain("KydlUseCore"), "the shared code lives in KydlCore.dll; the old build switch is gone");
-        Assert.That(plugin, Does.Contain("[BepInDependency(KydlCore.Bootstrap.Plugin.ModGuid"));
-        Assert.That(Regex.IsMatch(plugin, @"\[NetworkCompatibility\(CompatibilityLevel\.(EveryoneMustHaveMod|VersionCheckOnly), VersionStrictness\.Patch\)\]"), Is.True,
-            "MIGRATION_DECISIONS: exact versions (Patch); EveryoneMustHaveMod for shared-world mods, VersionCheckOnly for client-only mods");
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(proj, Does.Not.Contain("KydlUseCore"), "the shared code lives in KydlCore.dll; the old build switch is gone");
+            Assert.That(plugin, Does.Contain("[BepInDependency(KydlCore.Bootstrap.Plugin.ModGuid"));
+            Assert.That(Regex.IsMatch(plugin, @"\[NetworkCompatibility\(CompatibilityLevel\.(EveryoneMustHaveMod|VersionCheckOnly), VersionStrictness\.Patch\)\]"), Is.True,
+                "MIGRATION_DECISIONS: exact versions (Patch); EveryoneMustHaveMod for shared-world mods, VersionCheckOnly for client-only mods");
+        }
     }
 
     [Test] public void EveryFeature_HasAnAdapterImplementingIFeature()
@@ -103,8 +112,11 @@ public class ArchitectureRulesTests
         Assert.That(File.ReadAllText(Path.Combine(Src, "Core", "Architecture.cs")), Does.Contain("Marker = \"STT-ARCH-V2\"").And.Contain("Version = 2"));
         string suite = File.ReadAllText(Path.Combine(TestPaths.SuiteDir, "suite.json"));
         var first = Regex.Match(suite, @"""tests""\s*:\s*\[\s*""([^""]+)""");
-        Assert.That(first.Groups[1].Value, Is.EqualTo("architecture-v2"));
-        Assert.That(File.Exists(Path.Combine(TestPaths.SuiteDir, "architecture-v2.json")), Is.True);
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(first.Groups[1].Value, Is.EqualTo("architecture-v2"));
+            Assert.That(File.Exists(Path.Combine(TestPaths.SuiteDir, "architecture-v2.json")), Is.True);
+        }
     }
 
     // D-170: every order command has exactly one handler (the dispatcher would answer Failed for a command without one)
@@ -114,7 +126,7 @@ public class ArchitectureRulesTests
         try { types = ModAssembly.Load().GetTypes(); }
         catch (System.Reflection.ReflectionTypeLoadException e) { types = e.Types.Where(t => t != null).ToArray(); }
         var commands = types.Where(t => t.Namespace == "SteveTheTroll.Features.Trolls.Orders.Commands" && t.Name.EndsWith("Command") && !t.IsInterface).ToList();
-        Assert.That(commands.Count, Is.EqualTo(6));
+        Assert.That(commands, Has.Count.EqualTo(6));
         foreach (var c in commands)
         {
             int handlers = types.Count(h => h.GetInterfaces().Any(i => i.IsGenericType && i.Name.StartsWith("ICommandHandler") && i.GetGenericArguments()[0] == c));
@@ -126,8 +138,11 @@ public class ArchitectureRulesTests
     [Test] public void P9_OneMoveToDelegate_NoOrderFacade()
     {
         var all = Directory.GetFiles(Src, "*.cs", SearchOption.AllDirectories).Select(File.ReadAllText).ToList();
-        Assert.That(all.Sum(t => Regex.Matches(t, @"AccessTools\.Method\(typeof\(BaseAI\), ""MoveTo""\)").Count), Is.EqualTo(1));
-        Assert.That(all.Count(t => Regex.IsMatch(t, @"TrollFarming\.(Begin|BeginOn|SendHome|BeginUnload)\(")), Is.EqualTo(0));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(all.Sum(t => Regex.Matches(t, @"AccessTools\.Method\(typeof\(BaseAI\), ""MoveTo""\)").Count), Is.EqualTo(1));
+            Assert.That(all.Count(t => Regex.IsMatch(t, @"TrollFarming\.(Begin|BeginOn|SendHome|BeginUnload)\(")), Is.EqualTo(0));
+        }
     }
 
     // D-175: behaviour components walk / turn through the movement capability (TrollContext); no Step(...) takes the game's MoveTo / LookAt delegates as parameters any more

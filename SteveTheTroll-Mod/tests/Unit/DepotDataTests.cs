@@ -20,19 +20,26 @@ public class DepotDataTests
             Assert.That(n, Is.Not.EqualTo("stone_floor_2x2"));
             if (n == "wood_pole") poles++; else if (n == "wood_floor") floors++;
         }
-        Assert.That(poles, Is.EqualTo(6));
-        Assert.That(floors, Is.EqualTo(2));
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(poles, Is.EqualTo(6));
+            Assert.That(floors, Is.EqualTo(2));
+        }
     }
 
     [Test]
     public void FourChests_MirroredAndOnTheGround()
     {
         var chests = Get("Chests");
-        Assert.That(chests.Length, Is.EqualTo(4));
+        Assert.That(chests, Has.Length.EqualTo(4));
         foreach (var c in chests)
         {
-            Assert.That((string)F(c, "Prefab"), Is.EqualTo("piece_chest"));
-            Assert.That((float)F(c, "Y"), Is.EqualTo(0f));
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That((string)F(c, "Prefab"), Is.EqualTo("piece_chest"));
+                Assert.That((float)F(c, "Y"), Is.EqualTo(0f));
+            }
             float x = (float)F(c, "X"), z = (float)F(c, "Z");
             bool mirror = false;
             foreach (var m in chests) if (Math.Abs((float)F(m, "X") + x) < 1e-4 && Math.Abs((float)F(m, "Z") - z) < 1e-4) mirror = true;
@@ -49,11 +56,25 @@ public class DepotDataTests
         foreach (var p in Get("Frame"))
         {
             string at = (float)F(p, "X") + "/" + (float)F(p, "Z");
-            if ((string)F(p, "Prefab") == "wood_pole") { Assert.That(poles.Add(at), Is.True, "two poles at " + at); Assert.That((float)F(p, "Y"), Is.EqualTo(0.5f)); }
-            else { Assert.That(floors.Add(at), Is.True, "two floors at " + at); Assert.That((float)F(p, "Y"), Is.EqualTo(1f)); }
+            if ((string)F(p, "Prefab") == "wood_pole") {
+                using (Assert.EnterMultipleScope())
+                {
+                    Assert.That(poles.Add(at), Is.True, "two poles at " + at); Assert.That((float)F(p, "Y"), Is.EqualTo(0.5f));
+                }
+            }
+            else {
+                using (Assert.EnterMultipleScope())
+                {
+                    Assert.That(floors.Add(at), Is.True, "two floors at " + at); Assert.That((float)F(p, "Y"), Is.EqualTo(1f));
+                }
+            }
         }
-        Assert.That(poles, Is.EquivalentTo(new[] { "-2/-1", "0/-1", "2/-1", "-2/1", "0/1", "2/1" }));
-        Assert.That(floors, Is.EquivalentTo(new[] { "-1/0", "1/0" }));
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(poles, Is.EquivalentTo(new[] { "-2/-1", "0/-1", "2/-1", "-2/1", "0/1", "2/1" }));
+            Assert.That(floors, Is.EquivalentTo(new[] { "-1/0", "1/0" }));
+        }
     }
 
     [Test]

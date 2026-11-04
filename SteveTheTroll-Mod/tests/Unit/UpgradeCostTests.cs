@@ -25,8 +25,11 @@ public class UpgradeCostTests
     [Test]
     public void Vanilla_AsksEightAtQualityFour_Precondition()
     {
-        Assert.That(Vanilla(4, 5, 2, false), Is.EqualTo(8));
-        Assert.That(Vanilla(3, 5, 2, false), Is.EqualTo(4));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(Vanilla(4, 5, 2, false), Is.EqualTo(8));
+            Assert.That(Vanilla(3, 5, 2, false), Is.EqualTo(4));
+        }
     }
 
     [TestCase(2)]
@@ -40,8 +43,11 @@ public class UpgradeCostTests
     [Test]
     public void Craft_CostsBaseAmount()
     {
-        Assert.That(Amount(1, 5, 2, false), Is.EqualTo(5));
-        Assert.That(Amount(0, 6, 2, false), Is.EqualTo(6));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(Amount(1, 5, 2, false), Is.EqualTo(5));
+            Assert.That(Amount(0, 6, 2, false), Is.EqualTo(6));
+        }
     }
 
     [Test]

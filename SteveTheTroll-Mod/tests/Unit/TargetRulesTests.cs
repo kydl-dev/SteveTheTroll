@@ -40,7 +40,12 @@ public class TargetRulesTests
         return new[] { Coord(way, "X"), Coord(way, "Z") };
     }
 
-    [Test] public void Waypoint_OtherSlightlyRight_GoesLeftOfIt() { var w = Way(0.5f, 2f); Assert.That(w[0], Is.LessThan(0.5f - 2f)); Assert.That(w[1], Is.EqualTo(3f).Within(1e-3f)); }
+    [Test] public void Waypoint_OtherSlightlyRight_GoesLeftOfIt() { var w = Way(0.5f, 2f);
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(w[0], Is.LessThan(0.5f - 2f)); Assert.That(w[1], Is.EqualTo(3f).Within(1e-3f));
+        }
+    }
     [Test] public void Waypoint_OtherSlightlyLeft_GoesRightOfIt() { var w = Way(-0.5f, 2f); Assert.That(w[0], Is.GreaterThan(-0.5f + 2f)); }
     [Test] public void Waypoint_OtherExactlyOnTheLine_TakesTheWalkersRight() { var w = Way(0f, 2f); Assert.That(w[0], Is.LessThan(-2f)); }
     [Test] public void Waypoint_IsBesideTheOther_NotOnTheLine() { var w = Way(0f, 2f); Assert.That(System.Math.Abs(w[0]), Is.GreaterThan(1.8f)); }

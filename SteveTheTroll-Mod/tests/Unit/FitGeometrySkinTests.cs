@@ -37,10 +37,13 @@ public class FitGeometrySkinTests
     {
         var pts = new[] { new Vector3(0f, 0f, 0f), new Vector3(1f, 0f, 0f), new Vector3(0.2f, 0f, 0f), new Vector3(5f, 0f, 0f) };
         int[] idx; float[] dist;
-        Assert.That(Nearest(new Vector3(0.05f, 0f, 0f), pts, 2, out idx, out dist), Is.EqualTo(2));
-        Assert.That(idx, Is.EqualTo(new[] { 0, 2 }));
-        Assert.That(dist[0], Is.EqualTo(0.05f).Within(Eps));
-        Assert.That(dist[1], Is.EqualTo(0.15f).Within(Eps));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(Nearest(new Vector3(0.05f, 0f, 0f), pts, 2, out idx, out dist), Is.EqualTo(2));
+            Assert.That(idx, Is.EqualTo(new[] { 0, 2 }));
+            Assert.That(dist[0], Is.EqualTo(0.05f).Within(Eps));
+            Assert.That(dist[1], Is.EqualTo(0.15f).Within(Eps));
+        }
     }
 
     [Test]
@@ -48,9 +51,12 @@ public class FitGeometrySkinTests
     {
         var pts = new[] { new Vector3(3f, 0f, 0f), new Vector3(2f, 0f, 0f), new Vector3(1f, 0f, 0f), new Vector3(0f, 0f, 0f) };
         int[] idx; float[] dist;
-        Assert.That(Nearest(Vector3.zero, pts, 3, out idx, out dist), Is.EqualTo(3));
-        Assert.That(idx, Is.EqualTo(new[] { 3, 2, 1 }));
-        Assert.That(dist, Is.EqualTo(new[] { 0f, 1f, 2f }).Within(Eps));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(Nearest(Vector3.zero, pts, 3, out idx, out dist), Is.EqualTo(3));
+            Assert.That(idx, Is.EqualTo(new[] { 3, 2, 1 }));
+            Assert.That(dist, Is.EqualTo(new[] { 0f, 1f, 2f }).Within(Eps));
+        }
     }
 
     [Test]
@@ -68,17 +74,23 @@ public class FitGeometrySkinTests
     public void NearestK_FewerPointsThanK_ReturnsAllOfThem()
     {
         int[] idx; float[] dist;
-        Assert.That(Nearest(Vector3.zero, new[] { Vector3.up * 2f, Vector3.up }, 4, out idx, out dist), Is.EqualTo(2));
-        Assert.That(idx.Take(2), Is.EqualTo(new[] { 1, 0 }));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(Nearest(Vector3.zero, new[] { Vector3.up * 2f, Vector3.up }, 4, out idx, out dist), Is.EqualTo(2));
+            Assert.That(idx.Take(2), Is.EqualTo(new[] { 1, 0 }));
+        }
     }
 
     [Test]
     public void NearestK_NothingToSearch_ReturnsZero()
     {
         int[] idx; float[] dist;
-        Assert.That(Nearest(Vector3.zero, null, 4, out idx, out dist), Is.EqualTo(0));
-        Assert.That(Nearest(Vector3.zero, new Vector3[0], 4, out idx, out dist), Is.EqualTo(0));
-        Assert.That(Nearest(Vector3.zero, new[] { Vector3.one }, 0, out idx, out dist), Is.EqualTo(0));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(Nearest(Vector3.zero, null, 4, out idx, out dist), Is.EqualTo(0));
+            Assert.That(Nearest(Vector3.zero, new Vector3[0], 4, out idx, out dist), Is.EqualTo(0));
+            Assert.That(Nearest(Vector3.zero, new[] { Vector3.one }, 0, out idx, out dist), Is.EqualTo(0));
+        }
     }
 
     [Test]
@@ -112,10 +124,13 @@ public class FitGeometrySkinTests
     public void BlendWeights_OneVertex_CopiesItsWeights()
     {
         int[] b; float[] w;
-        Assert.That(Blend(new[] { W(3, 0.7f, 5, 0.3f) }, new[] { 0 }, new[] { 0.01f }, 1, 4, out b, out w), Is.EqualTo(2));
-        Assert.That(b.Take(2), Is.EqualTo(new[] { 3, 5 }));
-        Assert.That(w[0], Is.EqualTo(0.7f).Within(Eps));
-        Assert.That(w[1], Is.EqualTo(0.3f).Within(Eps));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(Blend(new[] { W(3, 0.7f, 5, 0.3f) }, new[] { 0 }, new[] { 0.01f }, 1, 4, out b, out w), Is.EqualTo(2));
+            Assert.That(b.Take(2), Is.EqualTo(new[] { 3, 5 }));
+            Assert.That(w[0], Is.EqualTo(0.7f).Within(Eps));
+            Assert.That(w[1], Is.EqualTo(0.3f).Within(Eps));
+        }
     }
 
     [Test]
@@ -124,20 +139,26 @@ public class FitGeometrySkinTests
         Assert.That(Const("SkinBlendEps"), Is.EqualTo(0.002f));
         int[] b; float[] w;
         var src = new[] { W(9, 1f), W(1, 1f), W(2, 1f) };
-        Assert.That(Blend(src, new[] { 1, 2 }, new[] { 0f, 0.018f }, 2, 4, out b, out w), Is.EqualTo(2));
-        Assert.That(b.Take(2), Is.EqualTo(new[] { 1, 2 }));
-        Assert.That(w[0], Is.EqualTo(500f / 550f).Within(Eps));          // 1 / 0.002 vs 1 / 0.02
-        Assert.That(w[1], Is.EqualTo(50f / 550f).Within(Eps));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(Blend(src, new[] { 1, 2 }, new[] { 0f, 0.018f }, 2, 4, out b, out w), Is.EqualTo(2));
+            Assert.That(b.Take(2), Is.EqualTo(new[] { 1, 2 }));
+            Assert.That(w[0], Is.EqualTo(500f / 550f).Within(Eps));          // 1 / 0.002 vs 1 / 0.02
+            Assert.That(w[1], Is.EqualTo(50f / 550f).Within(Eps));
+        }
     }
 
     [Test]
     public void BlendWeights_SameBoneFromSeveralVertices_IsSummed()
     {
         int[] b; float[] w;
-        Assert.That(Blend(new[] { W(1, 0.5f, 2, 0.5f), W(1, 1f) }, new[] { 0, 1 }, new[] { 0f, 0f }, 2, 4, out b, out w), Is.EqualTo(2));
-        Assert.That(b.Take(2), Is.EqualTo(new[] { 1, 2 }));
-        Assert.That(w[0], Is.EqualTo(0.75f).Within(Eps));
-        Assert.That(w[1], Is.EqualTo(0.25f).Within(Eps));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(Blend(new[] { W(1, 0.5f, 2, 0.5f), W(1, 1f) }, new[] { 0, 1 }, new[] { 0f, 0f }, 2, 4, out b, out w), Is.EqualTo(2));
+            Assert.That(b.Take(2), Is.EqualTo(new[] { 1, 2 }));
+            Assert.That(w[0], Is.EqualTo(0.75f).Within(Eps));
+            Assert.That(w[1], Is.EqualTo(0.25f).Within(Eps));
+        }
     }
 
     [Test]
@@ -145,13 +166,16 @@ public class FitGeometrySkinTests
     {
         var src = new[] { W(1, 0.4f, 2, 0.3f, 3, 0.2f, 4, 0.1f), W(5, 0.05f, 6, 0.95f) };
         int[] b; float[] w;
-        Assert.That(Blend(src, new[] { 0, 1 }, new[] { 0f, 0f }, 2, 6, out b, out w), Is.EqualTo(4));
-        Assert.That(b.Take(4), Is.EqualTo(new[] { 6, 1, 2, 3 }));
-        Assert.That(w.Take(4).Sum(), Is.EqualTo(1f).Within(Eps));
-        Assert.That(w[0], Is.EqualTo(0.95f / 1.85f).Within(Eps));
-        Assert.That(w[4], Is.EqualTo(0f), "never more than 4 bones");
-        Assert.That(Blend(src, new[] { 0, 1 }, new[] { 0f, 0f }, 2, 2, out b, out w), Is.EqualTo(2));
-        Assert.That(b, Is.EqualTo(new[] { 6, 1 }));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(Blend(src, new[] { 0, 1 }, new[] { 0f, 0f }, 2, 6, out b, out w), Is.EqualTo(4));
+            Assert.That(b.Take(4), Is.EqualTo(new[] { 6, 1, 2, 3 }));
+            Assert.That(w.Take(4).Sum(), Is.EqualTo(1f).Within(Eps));
+            Assert.That(w[0], Is.EqualTo(0.95f / 1.85f).Within(Eps));
+            Assert.That(w[4], Is.EqualTo(0f), "never more than 4 bones");
+            Assert.That(Blend(src, new[] { 0, 1 }, new[] { 0f, 0f }, 2, 2, out b, out w), Is.EqualTo(2));
+            Assert.That(b, Is.EqualTo(new[] { 6, 1 }));
+        }
         Assert.That(w[0] + w[1], Is.EqualTo(1f).Within(Eps));
     }
 
@@ -159,29 +183,38 @@ public class FitGeometrySkinTests
     public void BlendWeights_AllFourSlotsOfAVertexCount()
     {
         int[] b; float[] w;
-        Assert.That(Blend(new[] { W(1, 0.25f, 2, 0.25f, 3, 0.25f, 4, 0.25f) }, new[] { 0 }, new[] { 0.01f }, 1, 4, out b, out w), Is.EqualTo(4));
-        Assert.That(b, Is.EqualTo(new[] { 1, 2, 3, 4 }), "equal weights: in the order met");
-        Assert.That(w, Is.EqualTo(new[] { 0.25f, 0.25f, 0.25f, 0.25f }).Within(Eps));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(Blend(new[] { W(1, 0.25f, 2, 0.25f, 3, 0.25f, 4, 0.25f) }, new[] { 0 }, new[] { 0.01f }, 1, 4, out b, out w), Is.EqualTo(4));
+            Assert.That(b, Is.EqualTo(new[] { 1, 2, 3, 4 }), "equal weights: in the order met");
+            Assert.That(w, Is.EqualTo(new[] { 0.25f, 0.25f, 0.25f, 0.25f }).Within(Eps));
+        }
     }
 
     [Test]
     public void BlendWeights_BoneZeroIsABone()
     {
         int[] b; float[] w;
-        Assert.That(Blend(new[] { W(0, 1f) }, new[] { 0 }, new[] { 0f }, 1, 4, out b, out w), Is.EqualTo(1));
-        Assert.That(b[0], Is.EqualTo(0));
-        Assert.That(w[0], Is.EqualTo(1f).Within(Eps));
-        Assert.That(Blend(new[] { W(2, 0.5f, 0, 0.5f) }, new[] { 0 }, new[] { 0f }, 1, 4, out b, out w), Is.EqualTo(2));
-        Assert.That(b.Take(2), Is.EqualTo(new[] { 2, 0 }));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(Blend(new[] { W(0, 1f) }, new[] { 0 }, new[] { 0f }, 1, 4, out b, out w), Is.EqualTo(1));
+            Assert.That(b[0], Is.EqualTo(0));
+            Assert.That(w[0], Is.EqualTo(1f).Within(Eps));
+            Assert.That(Blend(new[] { W(2, 0.5f, 0, 0.5f) }, new[] { 0 }, new[] { 0f }, 1, 4, out b, out w), Is.EqualTo(2));
+            Assert.That(b.Take(2), Is.EqualTo(new[] { 2, 0 }));
+        }
     }
 
     [Test]
     public void BlendWeights_ZeroWeightsAndNoVertices_GiveNothing()
     {
         int[] b; float[] w;
-        Assert.That(Blend(new[] { W(1, 0f) }, new[] { 0 }, new[] { 0f }, 1, 4, out b, out w), Is.EqualTo(0));
-        Assert.That(Blend(new[] { W(1, 1f) }, new int[0], new float[0], 0, 4, out b, out w), Is.EqualTo(0));
-        Assert.That(Blend(new[] { W(1, 0.6f, 7, 0f) }, new[] { 0 }, new[] { 0f }, 1, 4, out b, out w), Is.EqualTo(1), "a 0 weight is no bone");
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(Blend(new[] { W(1, 0f) }, new[] { 0 }, new[] { 0f }, 1, 4, out b, out w), Is.EqualTo(0));
+            Assert.That(Blend(new[] { W(1, 1f) }, new int[0], new float[0], 0, 4, out b, out w), Is.EqualTo(0));
+            Assert.That(Blend(new[] { W(1, 0.6f, 7, 0f) }, new[] { 0 }, new[] { 0f }, 1, 4, out b, out w), Is.EqualTo(1), "a 0 weight is no bone");
+        }
     }
 
     [Test]
@@ -228,28 +261,37 @@ public class FitGeometrySkinTests
     public void FrameAxes_AheadAndRight_GiveForwardAndUp()
     {
         Vector3 f, u;
-        Assert.That(Frame(new Vector3(1f, 2f, 3f), new Vector3(1f, 2f, 3.5f), new Vector3(1.2f, 2f, 3f), out f, out u), Is.True);
-        Assert.That((f - Vector3.forward).magnitude, Is.LessThan(Eps));
-        Assert.That((u - Vector3.up).magnitude, Is.LessThan(Eps));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(Frame(new Vector3(1f, 2f, 3f), new Vector3(1f, 2f, 3.5f), new Vector3(1.2f, 2f, 3f), out f, out u), Is.True);
+            Assert.That((f - Vector3.forward).magnitude, Is.LessThan(Eps));
+            Assert.That((u - Vector3.up).magnitude, Is.LessThan(Eps));
+        }
     }
 
     [Test]
     public void FrameAxes_TiltedSlipper_UpTiltsWithIt()
     {
         Vector3 f, u;
-        Assert.That(Frame(Vector3.zero, new Vector3(0f, -1f, 1f), new Vector3(1f, 0f, 0f), out f, out u), Is.True);   // toe pitched down 45 deg
-        Assert.That((f - new Vector3(0f, -1f, 1f).normalized).magnitude, Is.LessThan(Eps));
-        Assert.That((u - new Vector3(0f, 1f, 1f).normalized).magnitude, Is.LessThan(Eps));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(Frame(Vector3.zero, new Vector3(0f, -1f, 1f), new Vector3(1f, 0f, 0f), out f, out u), Is.True);   // toe pitched down 45 deg
+            Assert.That((f - new Vector3(0f, -1f, 1f).normalized).magnitude, Is.LessThan(Eps));
+            Assert.That((u - new Vector3(0f, 1f, 1f).normalized).magnitude, Is.LessThan(Eps));
+        }
     }
 
     [Test]
     public void FrameAxes_PointsInALine_FalseAndDefaults()
     {
         Vector3 f, u;
-        Assert.That(Frame(Vector3.zero, Vector3.forward, Vector3.forward * 2f, out f, out u), Is.False);
-        Assert.That(f, Is.EqualTo(Vector3.forward));
-        Assert.That(u, Is.EqualTo(Vector3.up));
-        Assert.That(Frame(Vector3.one, Vector3.one, Vector3.zero, out f, out u), Is.False, "b on a");
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(Frame(Vector3.zero, Vector3.forward, Vector3.forward * 2f, out f, out u), Is.False);
+            Assert.That(f, Is.EqualTo(Vector3.forward));
+            Assert.That(u, Is.EqualTo(Vector3.up));
+            Assert.That(Frame(Vector3.one, Vector3.one, Vector3.zero, out f, out u), Is.False, "b on a");
+        }
     }
 
     [Test]

@@ -54,10 +54,13 @@ public class PreviewAndSettingsQualityTests
             Line("FillLight", 9f, ViewerSettings.FillLightMin, ViewerSettings.FillLightMax),
             Line("Ambient", 9f, ViewerSettings.AmbientMin, ViewerSettings.AmbientMax),
         };
-        Assert.That(changed, Is.EqualTo(14), "StartPitch 89 stays inside PitchLimit 89: no 15th fix");
-        Assert.That(log.GetRange(0, 14), Is.EqualTo(expected));
-        Assert.That(log[14], Is.EqualTo("ViewerSettings: " + s + " (14 value(s) put into range)"));
-        Assert.That(log.Count, Is.EqualTo(15));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(changed, Is.EqualTo(14), "StartPitch 89 stays inside PitchLimit 89: no 15th fix");
+            Assert.That(log.GetRange(0, 14), Is.EqualTo(expected));
+            Assert.That(log[14], Is.EqualTo("ViewerSettings: " + s + " (14 value(s) put into range)"));
+            Assert.That(log.Count, Is.EqualTo(15));
+        }
     }
 
     static string Line(string name, float v, float min, float max)
@@ -69,8 +72,11 @@ public class PreviewAndSettingsQualityTests
     public void Clamp_InRange_NoFixLine_OnlyTheSummary()
     {
         var log = new List<string>();
-        Assert.That(new ViewerSettings().Clamp(log.Add), Is.EqualTo(0));
-        Assert.That(log, Is.EqualTo(new[] { "ViewerSettings: " + new ViewerSettings() + " (0 value(s) put into range)" }));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(new ViewerSettings().Clamp(log.Add), Is.EqualTo(0));
+            Assert.That(log, Is.EqualTo(new[] { "ViewerSettings: " + new ViewerSettings() + " (0 value(s) put into range)" }));
+        }
     }
 
     [Test]
@@ -78,10 +84,13 @@ public class PreviewAndSettingsQualityTests
     {
         var up = new ViewerSettings { PitchLimit = 30f, StartPitch = 30f };
         var down = new ViewerSettings { PitchLimit = 30f, StartPitch = -30f };
-        Assert.That(up.Clamp(), Is.EqualTo(0));
-        Assert.That(down.Clamp(), Is.EqualTo(0));
-        Assert.That(up.StartPitch, Is.EqualTo(30f));
-        Assert.That(down.StartPitch, Is.EqualTo(-30f));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(up.Clamp(), Is.EqualTo(0));
+            Assert.That(down.Clamp(), Is.EqualTo(0));
+            Assert.That(up.StartPitch, Is.EqualTo(30f));
+            Assert.That(down.StartPitch, Is.EqualTo(-30f));
+        }
     }
 
     [Test]
@@ -89,9 +98,12 @@ public class PreviewAndSettingsQualityTests
     {
         var s = new ViewerSettings { PitchLimit = 30f, StartPitch = -45f };
         var log = new List<string>();
-        Assert.That(s.Clamp(log.Add), Is.EqualTo(1));
-        Assert.That(s.StartPitch, Is.EqualTo(-30f));
-        Assert.That(log[0], Is.EqualTo("ViewerSettings: StartPitch -45 is outside PitchLimit 30, using -30"));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(s.Clamp(log.Add), Is.EqualTo(1));
+            Assert.That(s.StartPitch, Is.EqualTo(-30f));
+            Assert.That(log[0], Is.EqualTo("ViewerSettings: StartPitch -45 is outside PitchLimit 30, using -30"));
+        }
     }
 
     // ---- CostumeData (the Unity preview sample = the game's items) ----
@@ -104,24 +116,30 @@ public class PreviewAndSettingsQualityTests
     public void Sample_ClubNumbers_AreTheGames()
     {
         var d = CostumeData.Sample();
-        Assert.That(new[] { d.ClubBlunt, d.ClubChop, d.ClubPickaxe, d.ClubBluntPerLevel, d.ClubChopPerLevel, d.ClubPickaxePerLevel },
-            Is.EqualTo(new[] { Const("ClubBlunt"), Const("ClubChop"), Const("ClubPickaxe"), Const("ClubBluntPerLevel"), Const("ClubChopPerLevel"), Const("ClubPickaxePerLevel") }));
-        Assert.That(d.ClubMaxQuality, Is.EqualTo((int)ModAssembly.GetStatic(Items, "MaxQuality")));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(new[] { d.ClubBlunt, d.ClubChop, d.ClubPickaxe, d.ClubBluntPerLevel, d.ClubChopPerLevel, d.ClubPickaxePerLevel },
+                    Is.EqualTo(new[] { Const("ClubBlunt"), Const("ClubChop"), Const("ClubPickaxe"), Const("ClubBluntPerLevel"), Const("ClubChopPerLevel"), Const("ClubPickaxePerLevel") }));
+            Assert.That(d.ClubMaxQuality, Is.EqualTo((int)ModAssembly.GetStatic(Items, "MaxQuality")));
+        }
     }
 
     [Test]
     public void Sample_SetEffects_AreTheGames()
     {
         var d = CostumeData.Sample();
-        Assert.That(d.SetEffects, Is.EqualTo(new[]
+        using (Assert.EnterMultipleScope())
         {
+            Assert.That(d.SetEffects, Is.EqualTo(new[]
+                {
             "+" + F(Const("SetSpeed") * 100f) + " % movement speed",
             "+" + F(Const("SetCarryPercent") * 100f) + " % carry weight",
             F(Const("SetStamina") * 100f) + " % stamina use",
             "Up to " + (int)ModAssembly.GetStatic(Items, "SetTrollLimit") + " tamed trolls",
             "-" + F(Const("SetStaggerResistance") * 100f) + " % stagger",
         }));
-        Assert.That(d.SetSize, Is.EqualTo((int)ModAssembly.GetStatic(Items, "SetSize")));
+            Assert.That(d.SetSize, Is.EqualTo((int)ModAssembly.GetStatic(Items, "SetSize")));
+        }
     }
 
     // the mod's English texts (UiText is compiled into the mod, not linked here)
@@ -131,14 +149,17 @@ public class PreviewAndSettingsQualityTests
     public void Sample_NamesAndTexts_AreTheEnglishTexts()
     {
         var d = CostumeData.Sample();
-        Assert.That(d.SetName, Is.EqualTo(En("stevethetroll_se_set")));
-        Assert.That(d.ClubName, Is.EqualTo(En("stevethetroll_club")));
-        Assert.That(d.SetDescription, Is.Not.Empty);
-        Assert.That(d.ClubDescription, Is.Not.Empty);
-        Assert.That(d.Station, Is.EqualTo("Workbench"));
-        Assert.That(d.Pieces.ConvertAll(p => p.Name), Is.EqualTo(new[] { En("stevethetroll_costume_helmet"), En("stevethetroll_costume_chest"), En("stevethetroll_costume_legs") }));
-        Assert.That(d.Pieces.ConvertAll(p => p.SlotKey), Is.EqualTo(new[] { "stevethetroll_details_slot_helmet", "stevethetroll_details_slot_chest", "stevethetroll_details_slot_legs" }));
-        Assert.That(d.Pieces.ConvertAll(p => p.WornQuality), Is.EqualTo(new[] { 0, 1, 1 }), "the sample head is not worn, suit and trousers are");
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(d.SetName, Is.EqualTo(En("stevethetroll_se_set")));
+            Assert.That(d.ClubName, Is.EqualTo(En("stevethetroll_club")));
+            Assert.That(d.SetDescription, Is.Not.Empty);
+            Assert.That(d.ClubDescription, Is.Not.Empty);
+            Assert.That(d.Station, Is.EqualTo("Workbench"));
+            Assert.That(d.Pieces.ConvertAll(p => p.Name), Is.EqualTo(new[] { En("stevethetroll_costume_helmet"), En("stevethetroll_costume_chest"), En("stevethetroll_costume_legs") }));
+            Assert.That(d.Pieces.ConvertAll(p => p.SlotKey), Is.EqualTo(new[] { "stevethetroll_details_slot_helmet", "stevethetroll_details_slot_chest", "stevethetroll_details_slot_legs" }));
+            Assert.That(d.Pieces.ConvertAll(p => p.WornQuality), Is.EqualTo(new[] { 0, 1, 1 }), "the sample head is not worn, suit and trousers are");
+        }
     }
 
     [Test]
@@ -155,15 +176,21 @@ public class PreviewAndSettingsQualityTests
     {
         var d = new CostumeData();
         var p = new CostumeData.Piece();
-        Assert.That(new[] { d.SetName, d.SetDescription, d.ClubName, d.ClubDescription, d.Station, p.Name, p.SlotKey }, Is.All.Empty);
-        Assert.That(new[] { d.SetSize, d.ClubMaxQuality, d.StationLevel, p.MaxQuality }, Is.EqualTo(new[] { 4, 1, 1, 1 }));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(new[] { d.SetName, d.SetDescription, d.ClubName, d.ClubDescription, d.Station, p.Name, p.SlotKey }, Is.All.Empty);
+            Assert.That(new[] { d.SetSize, d.ClubMaxQuality, d.StationLevel, p.MaxQuality }, Is.EqualTo(new[] { 4, 1, 1, 1 }));
+        }
     }
 
     [Test]
     public void ToString_SampleAndPiece()
     {
         var d = CostumeData.Sample();
-        Assert.That(d.ToString(), Is.EqualTo("costume 3 piece(s), set 'Steve The Troll' 3/4 worn, 5 effect(s), club 'Troll Club' 150/50/50"));
-        Assert.That(d.Pieces[1].ToString(), Is.EqualTo("Troll Mascot Suit (armor 20 +5/q, max q4, worn q1, recipe 3)"));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(d.ToString(), Is.EqualTo("costume 3 piece(s), set 'Steve The Troll' 3/4 worn, 5 effect(s), club 'Troll Club' 150/50/50"));
+            Assert.That(d.Pieces[1].ToString(), Is.EqualTo("Troll Mascot Suit (armor 20 +5/q, max q4, worn q1, recipe 3)"));
+        }
     }
 }

@@ -48,8 +48,11 @@ public class LabSuiteGeometryTests
         string suite = File.ReadAllText(Path.Combine(SuiteDir, "suite.json"));
         var listed = Regex.Matches(Regex.Match(suite, @"""tests""\s*:\s*\[(?<t>[^\]]*)\]").Groups["t"].Value, @"""([^""]+)""").Cast<Match>().Select(m => m.Groups[1].Value).ToList();
         var files = Directory.GetFiles(SuiteDir, "*.json").Select(Path.GetFileNameWithoutExtension).Where(n => n != "suite").ToList();
-        Assert.That(listed, Is.Unique);
-        Assert.That(files.Except(listed), Is.Empty, "test files not in suite.json");
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(listed, Is.Unique);
+            Assert.That(files.Except(listed), Is.Empty, "test files not in suite.json");
+        }
         Assert.That(listed.Except(files), Is.Empty, "suite.json names without a file");
     }
 

@@ -21,26 +21,45 @@ public class OrdersV2Tests
     [Test] public void Rules_CreatureBeatsSource() { Assert.That(OrderRules.Decide(I(creature: true, source: true)), Is.EqualTo(OrderKind.Attack)); }
     [Test] public void Rules_Wall_Source_Nothing()
     {
-        Assert.That(OrderRules.Decide(I(source: true, wall: true)), Is.EqualTo(OrderKind.BreakWall));
-        Assert.That(OrderRules.Decide(I(source: true)), Is.EqualTo(OrderKind.BreakSource));
-        Assert.That(OrderRules.Decide(I()), Is.EqualTo(OrderKind.FarmFocus));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(OrderRules.Decide(I(source: true, wall: true)), Is.EqualTo(OrderKind.BreakWall));
+            Assert.That(OrderRules.Decide(I(source: true)), Is.EqualTo(OrderKind.BreakSource));
+            Assert.That(OrderRules.Decide(I()), Is.EqualTo(OrderKind.FarmFocus));
+        }
     }
 
-    [Test] public void Pipeline_NoKey_Ignored_Silently() { var r = new OrderPipeline().Evaluate(I(key: false, troll: false)); Assert.That(r.Status, Is.EqualTo(ResponseStatus.Ignored)); Assert.That(r.Reason, Is.EqualTo(OrderPipeline.NoKey)); }
+    [Test] public void Pipeline_NoKey_Ignored_Silently() { var r = new OrderPipeline().Evaluate(I(key: false, troll: false));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(r.Status, Is.EqualTo(ResponseStatus.Ignored)); Assert.That(r.Reason, Is.EqualTo(OrderPipeline.NoKey));
+        }
+    }
     [Test] public void Pipeline_DeadOrMenu_Ignored()
     {
-        Assert.That(new OrderPipeline().Evaluate(I(alive: false)).Reason, Is.EqualTo(OrderPipeline.Dead));
-        Assert.That(new OrderPipeline().Evaluate(I(blocked: true)).Reason, Is.EqualTo(OrderPipeline.Blocked));
-        Assert.That(new OrderPipeline().Evaluate(I(blocked: true)).Status, Is.EqualTo(ResponseStatus.Ignored));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(new OrderPipeline().Evaluate(I(alive: false)).Reason, Is.EqualTo(OrderPipeline.Dead));
+            Assert.That(new OrderPipeline().Evaluate(I(blocked: true)).Reason, Is.EqualTo(OrderPipeline.Blocked));
+            Assert.That(new OrderPipeline().Evaluate(I(blocked: true)).Status, Is.EqualTo(ResponseStatus.Ignored));
+        }
     }
     [Test] public void Pipeline_NoTroll_Rejected_BeforeSteer()
     {
         var r = new OrderPipeline().Evaluate(I(troll: false, steer: false));
-        Assert.That(r.Status, Is.EqualTo(ResponseStatus.Rejected));
-        Assert.That(r.Reason, Is.EqualTo(OrderPipeline.NoTroll));
-        Assert.That(new OrderPipeline().Evaluate(I(steer: false)).Reason, Is.EqualTo(OrderPipeline.NoSteer));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(r.Status, Is.EqualTo(ResponseStatus.Rejected));
+            Assert.That(r.Reason, Is.EqualTo(OrderPipeline.NoTroll));
+            Assert.That(new OrderPipeline().Evaluate(I(steer: false)).Reason, Is.EqualTo(OrderPipeline.NoSteer));
+        }
     }
-    [Test] public void Pipeline_Valid_Decides() { var r = new OrderPipeline().Evaluate(I(source: true)); Assert.That(r.IsSuccess, Is.True); Assert.That(r.Value, Is.EqualTo(OrderKind.BreakSource)); }
+    [Test] public void Pipeline_Valid_Decides() { var r = new OrderPipeline().Evaluate(I(source: true));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(r.IsSuccess, Is.True); Assert.That(r.Value, Is.EqualTo(OrderKind.BreakSource));
+        }
+    }
 
     // the old Tick, as the reference: each early "return false" = not Success; otherwise the branch taken
     static string Old(bool key, bool alive, bool blocked, bool troll, bool steer, bool creature, bool source, bool wall)

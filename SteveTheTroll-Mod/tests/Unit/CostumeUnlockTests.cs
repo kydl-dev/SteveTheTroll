@@ -16,7 +16,12 @@ public class CostumeUnlockTests
     [Test] public void NothingKnown_Locked() { Assert.That(All(Four, new HashSet<string>()), Is.False); }
     [Test] public void ItemNotInGame_Locked() { Assert.That(All(new[] { "$h", null }, new HashSet<string> { "$h" }), Is.False); }
     [Test] public void NoItems_Locked() { Assert.That(All(new string[0], new HashSet<string> { "$h" }), Is.False); }
-    [Test] public void NullInputs_Locked_NoThrow() { Assert.That(All(null, null), Is.False); Assert.That(All(Four, null), Is.False); }
+    [Test] public void NullInputs_Locked_NoThrow() {
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(All(null, null), Is.False); Assert.That(All(Four, null), Is.False);
+        }
+    }
 
     [TestCase("LeftFoot", true)]
     [TestCase("RightToeBase", true)]

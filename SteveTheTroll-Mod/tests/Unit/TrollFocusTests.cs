@@ -78,18 +78,24 @@ public class TrollFocusTests
     {
         var order = TrollFocus.SearchOrder("TinOre");
         Assert.That(order.Count, Is.EqualTo(11));
-        Assert.That(order[0].Item, Is.EqualTo("TinOre"));
-        Assert.That(order[0].Sources.Length, Is.EqualTo(0), "the focus item comes from any source");
-        Assert.That(TrollFocus.SearchOrder("").Count, Is.EqualTo(10));
-        Assert.That(TrollFocus.SearchOrder("Bogus").Count, Is.EqualTo(10));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(order[0].Item, Is.EqualTo("TinOre"));
+            Assert.That(order[0].Sources.Length, Is.EqualTo(0), "the focus item comes from any source");
+            Assert.That(TrollFocus.SearchOrder("").Count, Is.EqualTo(10));
+            Assert.That(TrollFocus.SearchOrder("Bogus").Count, Is.EqualTo(10));
+        }
     }
 
     [Test]
     public void Shown_EnglishName()
     {
         System.Func<string, string> text = k => k == "stevethetroll_focus_corewood" ? "Core wood" : k;
-        Assert.That(TrollFocus.Shown("RoundLog", text), Is.EqualTo("Core wood"));
-        Assert.That(TrollFocus.Shown("", text), Is.EqualTo("-"));
-        Assert.That(TrollFocus.Shown("Stone", text), Is.EqualTo("Stone"));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(TrollFocus.Shown("RoundLog", text), Is.EqualTo("Core wood"));
+            Assert.That(TrollFocus.Shown("", text), Is.EqualTo("-"));
+            Assert.That(TrollFocus.Shown("Stone", text), Is.EqualTo("Stone"));
+        }
     }
 }

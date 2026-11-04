@@ -61,8 +61,11 @@ public class TrollDetailsGoldenTests
         Assert.That(rows, Does.Contain("stevethetroll_troll_farming = -"));
         Assert.That(rows, Does.Contain("stevethetroll_troll_bed = stevethetroll_troll_nobed"));
         int attacks = System.Array.IndexOf(rows, "# stevethetroll_troll_attacks"), resists = System.Array.IndexOf(rows, "# stevethetroll_troll_resists");
-        Assert.That(rows[attacks + 1], Is.EqualTo("- = stevethetroll_troll_noattacks"));
-        Assert.That(rows[resists + 1], Is.EqualTo("- = stevethetroll_troll_noattacks"));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(rows[attacks + 1], Is.EqualTo("- = stevethetroll_troll_noattacks"));
+            Assert.That(rows[resists + 1], Is.EqualTo("- = stevethetroll_troll_noattacks"));
+        }
     }
 
     [Test]
@@ -72,8 +75,11 @@ public class TrollDetailsGoldenTests
         t.Resists = "=Weak,Fire,Poison=Immune";
         var rows = Flat(TrollDetailsBuilder.Build(t, K, 0L));
         int at = System.Array.IndexOf(rows, "# stevethetroll_troll_resists");
-        Assert.That(rows[at + 1], Is.EqualTo("Poison = Immune"));
-        Assert.That(rows[at + 2], Does.StartWith("# "));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(rows[at + 1], Is.EqualTo("Poison = Immune"));
+            Assert.That(rows[at + 2], Does.StartWith("# "));
+        }
     }
 
     [Test]
@@ -86,7 +92,12 @@ public class TrollDetailsGoldenTests
     }
 
     // D-096 backpack fill
-    [Test] public void Backpack_Unknown_Dash() { Assert.That(TrollDetailsBuilder.Backpack(new TrollInfo(), K), Is.EqualTo("-")); Assert.That(TrollDetailsBuilder.Backpack(null, K), Is.EqualTo("-")); }
+    [Test] public void Backpack_Unknown_Dash() {
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(TrollDetailsBuilder.Backpack(new TrollInfo(), K), Is.EqualTo("-")); Assert.That(TrollDetailsBuilder.Backpack(null, K), Is.EqualTo("-"));
+        }
+    }
     [Test] public void Backpack_Empty() { Assert.That(TrollDetailsBuilder.Backpack(new TrollInfo { BackpackSlots = 96 }, K), Is.EqualTo("0 / 96 stacks")); }
     [Test] public void Backpack_BrokenText_StillNumbers() { Assert.That(TrollDetailsBuilder.Backpack(new TrollInfo { BackpackUsed = 3, BackpackSlots = 96 }, k => "{5}"), Is.EqualTo("3 / 96")); }
 
@@ -95,9 +106,12 @@ public class TrollDetailsGoldenTests
     {
         var back = TrollInfo.Decode(Live().Encode());
         Assert.That(back, Is.Not.Null);
-        Assert.That(back.BackpackUsed, Is.EqualTo(12));
-        Assert.That(back.BackpackSlots, Is.EqualTo(96));
-        Assert.That(back.Attacks, Is.EqualTo("Punch~Blunt=180,Chop=300~4"), "the 16-field part still read");
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(back.BackpackUsed, Is.EqualTo(12));
+            Assert.That(back.BackpackSlots, Is.EqualTo(96));
+            Assert.That(back.Attacks, Is.EqualTo("Punch~Blunt=180,Chop=300~4"), "the 16-field part still read");
+        }
     }
 
     [Test]
@@ -113,7 +127,12 @@ public class TrollDetailsGoldenTests
         Assert.That(back.BackpackSlots, Is.EqualTo(0));
     }
 
-    [Test] public void Backpack_BadNumbers_Rejected() { Assert.That(TrollInfo.Decode(Live().Encode().Replace("|12|96", "|x|96")), Is.Null); Assert.That(TrollInfo.Decode(Live().Encode().Replace("|12|96", "|-1|96")), Is.Null); }
+    [Test] public void Backpack_BadNumbers_Rejected() {
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(TrollInfo.Decode(Live().Encode().Replace("|12|96", "|x|96")), Is.Null); Assert.That(TrollInfo.Decode(Live().Encode().Replace("|12|96", "|-1|96")), Is.Null);
+        }
+    }
 
     [Test]
     public void NoText_NoGroups() { Assert.That(TrollDetailsBuilder.Build(Live(), null, 0L), Is.Empty); }

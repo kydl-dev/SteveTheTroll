@@ -153,10 +153,13 @@ public class BreakRulesTests
 
     [Test] public void Constants()
     {
-        Assert.That(ModAssembly.GetStatic(T, "GlobalTameCap"), Is.EqualTo(15));
-        Assert.That(ModAssembly.GetStatic(T, "SetStaggerResistance"), Is.EqualTo(0.75f));
-        Assert.That(ModAssembly.GetStatic(T, "WadeDepth"), Is.EqualTo(1.5f));
-        Assert.That(ModAssembly.GetStatic(T, "WadeFactor"), Is.EqualTo(3f));
-        Assert.That(ModAssembly.GetStatic(T, "WaterKeepDistance"), Is.EqualTo(15f));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(ModAssembly.GetStatic(T, "GlobalTameCap"), Is.EqualTo(15));
+            Assert.That(ModAssembly.GetStatic(T, "SetStaggerResistance"), Is.EqualTo(0.75f));
+            Assert.That(ModAssembly.GetStatic(T, "WadeDepth"), Is.EqualTo(1.5f));
+            Assert.That(ModAssembly.GetStatic(T, "WadeFactor"), Is.EqualTo(3f));
+            Assert.That(ModAssembly.GetStatic(T, "WaterKeepDistance"), Is.EqualTo(15f));
+        }
     }
 }

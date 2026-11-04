@@ -48,16 +48,22 @@ public class FitGeometrySafeFrameTests
 
         var chosen = Safe(skin, foot, 40f, out usedFoot);
 
-        Assert.That(usedFoot, Is.EqualTo(wantFoot));
-        Assert.That(Quaternion.Angle(chosen, wantFoot ? foot : skin), Is.LessThan(0.01f));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(usedFoot, Is.EqualTo(wantFoot));
+            Assert.That(Quaternion.Angle(chosen, wantFoot ? foot : skin), Is.LessThan(0.01f));
+        }
     }
 
     [Test]
     public void WithinMeters_IsTrueUpToAndIncludingTheLimit()
     {
-        Assert.That(Within(Vector3.zero, new Vector3(0.1f, 0f, 0f), 0.12f), Is.True);
-        Assert.That(Within(Vector3.zero, new Vector3(0.12f, 0f, 0f), 0.12f), Is.True);
-        Assert.That(Within(Vector3.zero, new Vector3(0.1f, 0.1f, 0f), 0.12f), Is.False);
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(Within(Vector3.zero, new Vector3(0.1f, 0f, 0f), 0.12f), Is.True);
+            Assert.That(Within(Vector3.zero, new Vector3(0.12f, 0f, 0f), 0.12f), Is.True);
+            Assert.That(Within(Vector3.zero, new Vector3(0.1f, 0.1f, 0f), 0.12f), Is.False);
+        }
     }
 
     static bool Rebind(float tiltedFor, bool grounded, float speed, bool settling)
@@ -81,7 +87,12 @@ public class FitGeometrySafeFrameTests
     [Test] public void UprightForward_FlatSocket_IsKept() { Near(Upright(new Vector3(0, 0, 1), Vector3.up, Vector3.right), new Vector3(0, 0, 1)); }
     [Test] public void UprightForward_TiltedFootSocket_IsFlattened() { Near(Upright(new Vector3(0, 0.7f, 0.7f), Vector3.up, Vector3.right), new Vector3(0, 0, 1)); }
     [Test] public void UprightForward_PointingStraightUp_UsesFallback() { Near(Upright(Vector3.up, Vector3.up, new Vector3(1, 0.5f, 0)), new Vector3(1, 0, 0)); }
-    [Test] public void UprightForward_IsUnitAndPerpendicularToUp() { var f = Upright(new Vector3(3, 5, 4), new Vector3(0.1f, 1, 0), Vector3.right); Assert.That(f.magnitude, Is.EqualTo(1f).Within(1e-4f)); Assert.That(Vector3.Dot(f, new Vector3(0.1f, 1, 0).normalized), Is.EqualTo(0f).Within(1e-4f)); }
+    [Test] public void UprightForward_IsUnitAndPerpendicularToUp() { var f = Upright(new Vector3(3, 5, 4), new Vector3(0.1f, 1, 0), Vector3.right);
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(f.magnitude, Is.EqualTo(1f).Within(1e-4f)); Assert.That(Vector3.Dot(f, new Vector3(0.1f, 1, 0).normalized), Is.EqualTo(0f).Within(1e-4f));
+        }
+    }
     [Test] public void UprightForward_TiltedPlayerUp_StaysInThatPlane() { var up = new Vector3(0, 1, 1).normalized; var f = Upright(new Vector3(0, 0, 1), up, Vector3.right); Assert.That(Vector3.Dot(f, up), Is.EqualTo(0f).Within(1e-4f)); }
 
     // D-157: StepHeading limits how far the facing turns in one frame

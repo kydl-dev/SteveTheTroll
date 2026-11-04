@@ -39,7 +39,10 @@ public class DepotLifecycleTests
     {
         var s = new Sim();
         s.Empty = 4; s.Check();                                       // Container.Save with the window open: waits
-        Assert.That(s.Removed, Is.EqualTo(0)); Assert.That(s.Retry.Count, Is.EqualTo(1));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(s.Removed, Is.EqualTo(0)); Assert.That(s.Retry.Count, Is.EqualTo(1));
+        }
         s.InUse = false; s.Check();                                   // SetInUse(false): still reserved by a troll
         Assert.That(s.Removed, Is.EqualTo(0));
         for (int i = 0; i < 25; i++) s.Tick(5f);                      // the reservation (until t = 100 s) runs out while Tick keeps asking

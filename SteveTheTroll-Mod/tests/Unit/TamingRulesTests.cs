@@ -57,9 +57,12 @@ public class TamingRulesTests
     [Test]
     public void CountDown_SubtractsAndStopsAtZero()
     {
-        Assert.That((float)ModAssembly.Call(T, "CountDown", 60f, 3f), Is.EqualTo(57f).Within(1e-4));
-        Assert.That((float)ModAssembly.Call(T, "CountDown", 2f, 3f), Is.EqualTo(0f));
-        Assert.That((float)ModAssembly.Call(T, "CountDown", 10f, -5f), Is.EqualTo(10f));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That((float)ModAssembly.Call(T, "CountDown", 60f, 3f), Is.EqualTo(57f).Within(1e-4));
+            Assert.That((float)ModAssembly.Call(T, "CountDown", 2f, 3f), Is.EqualTo(0f));
+            Assert.That((float)ModAssembly.Call(T, "CountDown", 10f, -5f), Is.EqualTo(10f));
+        }
     }
 
     [Test]
@@ -79,57 +82,75 @@ public class TamingRulesTests
     [Test]
     public void Defends_Within30Only()
     {
-        Assert.That((bool)ModAssembly.Call(T, "Defends", 30f, 30f), Is.True);
-        Assert.That((bool)ModAssembly.Call(T, "Defends", 30.1f, 30f), Is.False);
-        Assert.That((bool)ModAssembly.Call(T, "Defends", -1f, 30f), Is.False);
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That((bool)ModAssembly.Call(T, "Defends", 30f, 30f), Is.True);
+            Assert.That((bool)ModAssembly.Call(T, "Defends", 30.1f, 30f), Is.False);
+            Assert.That((bool)ModAssembly.Call(T, "Defends", -1f, 30f), Is.False);
+        }
     }
 
     [Test]
     public void SpawnBoost_TryEveryNSeconds_FullChance()
     {
-        Assert.That((float)ModAssembly.Call(T, "BoostedInterval", 4000f, 120f), Is.EqualTo(120f), "the game's troll entry: 4000 s -> 120 s");
-        Assert.That((float)ModAssembly.Call(T, "BoostedInterval", 60f, 120f), Is.EqualTo(60f), "a shorter game interval stays");
-        Assert.That((float)ModAssembly.Call(T, "BoostedInterval", 4000f, 0.2f), Is.EqualTo(1f), "never below 1 s");
-        Assert.That((float)ModAssembly.Call(T, "BoostedInterval", 4000f, 0f), Is.EqualTo(4000f), "0 = off");
-        Assert.That((float)ModAssembly.Call(T, "BoostedChance", 5f, 120f), Is.EqualTo(100f));
-        Assert.That((float)ModAssembly.Call(T, "BoostedChance", 5f, 0f), Is.EqualTo(5f), "0 = off");
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That((float)ModAssembly.Call(T, "BoostedInterval", 4000f, 120f), Is.EqualTo(120f), "the game's troll entry: 4000 s -> 120 s");
+            Assert.That((float)ModAssembly.Call(T, "BoostedInterval", 60f, 120f), Is.EqualTo(60f), "a shorter game interval stays");
+            Assert.That((float)ModAssembly.Call(T, "BoostedInterval", 4000f, 0.2f), Is.EqualTo(1f), "never below 1 s");
+            Assert.That((float)ModAssembly.Call(T, "BoostedInterval", 4000f, 0f), Is.EqualTo(4000f), "0 = off");
+            Assert.That((float)ModAssembly.Call(T, "BoostedChance", 5f, 120f), Is.EqualTo(100f));
+            Assert.That((float)ModAssembly.Call(T, "BoostedChance", 5f, 0f), Is.EqualTo(5f), "0 = off");
+        }
     }
 
     [Test]
     public void SegmentT_NearestPointOnALog()
     {
-        Assert.That((float)ModAssembly.Call(T, "SegmentT", 0f, 0f, 10f, 0f, 3f, 5f), Is.EqualTo(0.3f).Within(1e-4), "beside the log");
-        Assert.That((float)ModAssembly.Call(T, "SegmentT", 0f, 0f, 10f, 0f, -4f, 1f), Is.EqualTo(0f), "before its start");
-        Assert.That((float)ModAssembly.Call(T, "SegmentT", 0f, 0f, 10f, 0f, 14f, -2f), Is.EqualTo(1f), "past its end");
-        Assert.That((float)ModAssembly.Call(T, "SegmentT", 2f, 2f, 2f, 2f, 9f, 9f), Is.EqualTo(0f), "zero length");
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That((float)ModAssembly.Call(T, "SegmentT", 0f, 0f, 10f, 0f, 3f, 5f), Is.EqualTo(0.3f).Within(1e-4), "beside the log");
+            Assert.That((float)ModAssembly.Call(T, "SegmentT", 0f, 0f, 10f, 0f, -4f, 1f), Is.EqualTo(0f), "before its start");
+            Assert.That((float)ModAssembly.Call(T, "SegmentT", 0f, 0f, 10f, 0f, 14f, -2f), Is.EqualTo(1f), "past its end");
+            Assert.That((float)ModAssembly.Call(T, "SegmentT", 2f, 2f, 2f, 2f, 9f, 9f), Is.EqualTo(0f), "zero length");
+        }
     }
 
     [Test]
     public void Slam_CrowdOnly_WithCooldown()
     {
-        Assert.That((bool)ModAssembly.Call(T, "Slam", 3, 3, -1f, 15f), Is.True, "3 attackers, never slammed");
-        Assert.That((bool)ModAssembly.Call(T, "Slam", 2, 3, -1f, 15f), Is.False, "2 is no crowd");
-        Assert.That((bool)ModAssembly.Call(T, "Slam", 5, 3, 10f, 15f), Is.False, "cooldown");
-        Assert.That((bool)ModAssembly.Call(T, "Slam", 5, 3, 16f, 15f), Is.True);
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That((bool)ModAssembly.Call(T, "Slam", 3, 3, -1f, 15f), Is.True, "3 attackers, never slammed");
+            Assert.That((bool)ModAssembly.Call(T, "Slam", 2, 3, -1f, 15f), Is.False, "2 is no crowd");
+            Assert.That((bool)ModAssembly.Call(T, "Slam", 5, 3, 10f, 15f), Is.False, "cooldown");
+            Assert.That((bool)ModAssembly.Call(T, "Slam", 5, 3, 16f, 15f), Is.True);
+        }
     }
 
     [Test]
     public void DefendsOwner_SlippersOrRaid()
     {
-        Assert.That((bool)ModAssembly.Call(T, "DefendsOwner", true, false), Is.True);
-        Assert.That((bool)ModAssembly.Call(T, "DefendsOwner", false, true), Is.True, "raid: defends without slippers");
-        Assert.That((bool)ModAssembly.Call(T, "DefendsOwner", false, false), Is.False, "waits at the bed");
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That((bool)ModAssembly.Call(T, "DefendsOwner", true, false), Is.True);
+            Assert.That((bool)ModAssembly.Call(T, "DefendsOwner", false, true), Is.True, "raid: defends without slippers");
+            Assert.That((bool)ModAssembly.Call(T, "DefendsOwner", false, false), Is.False, "waits at the bed");
+        }
     }
 
     [Test]
     public void BoostedStars_HalfNone_QuarterOne_QuarterTwo()
     {
-        Assert.That((int)ModAssembly.Call(T, "BoostedStars", 0f), Is.EqualTo(0));
-        Assert.That((int)ModAssembly.Call(T, "BoostedStars", 0.4999f), Is.EqualTo(0));
-        Assert.That((int)ModAssembly.Call(T, "BoostedStars", 0.5f), Is.EqualTo(1));
-        Assert.That((int)ModAssembly.Call(T, "BoostedStars", 0.7499f), Is.EqualTo(1));
-        Assert.That((int)ModAssembly.Call(T, "BoostedStars", 0.75f), Is.EqualTo(2));
-        Assert.That((int)ModAssembly.Call(T, "BoostedStars", 0.9999f), Is.EqualTo(2));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That((int)ModAssembly.Call(T, "BoostedStars", 0f), Is.EqualTo(0));
+            Assert.That((int)ModAssembly.Call(T, "BoostedStars", 0.4999f), Is.EqualTo(0));
+            Assert.That((int)ModAssembly.Call(T, "BoostedStars", 0.5f), Is.EqualTo(1));
+            Assert.That((int)ModAssembly.Call(T, "BoostedStars", 0.7499f), Is.EqualTo(1));
+            Assert.That((int)ModAssembly.Call(T, "BoostedStars", 0.75f), Is.EqualTo(2));
+            Assert.That((int)ModAssembly.Call(T, "BoostedStars", 0.9999f), Is.EqualTo(2));
+        }
         int[] count = new int[3];
         for (int i = 0; i < 1000; i++) count[(int)ModAssembly.Call(T, "BoostedStars", i / 1000f)]++;
         Assert.That(count, Is.EqualTo(new[] { 500, 250, 250 }));
@@ -138,17 +159,23 @@ public class TamingRulesTests
     [Test]
     public void FarmDamage_HigherOfChopAndPickaxe()
     {
-        Assert.That((float)ModAssembly.Call(T, "FarmDamage", 120f, 0f), Is.EqualTo(120f));
-        Assert.That((float)ModAssembly.Call(T, "FarmDamage", 30f, 90f), Is.EqualTo(90f));
-        Assert.That((float)ModAssembly.Call(T, "FarmDamage", 0f, 0f), Is.EqualTo(0f));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That((float)ModAssembly.Call(T, "FarmDamage", 120f, 0f), Is.EqualTo(120f));
+            Assert.That((float)ModAssembly.Call(T, "FarmDamage", 30f, 90f), Is.EqualTo(90f));
+            Assert.That((float)ModAssembly.Call(T, "FarmDamage", 0f, 0f), Is.EqualTo(0f));
+        }
     }
 
     [Test]
     public void NextName_LowestFree()
     {
-        Assert.That(ModAssembly.Call(T, "NextName", "Steve", new string[0]), Is.EqualTo("Steve 1"));
-        Assert.That(ModAssembly.Call(T, "NextName", "Steve", new[] { "Steve 1", "Steve 3", "Spencer 2" }), Is.EqualTo("Steve 2"));
-        Assert.That(ModAssembly.Call(T, "NextName", "Spencer", new[] { "Steve 1", "Spencer 1" }), Is.EqualTo("Spencer 2"));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(ModAssembly.Call(T, "NextName", "Steve", new string[0]), Is.EqualTo("Steve 1"));
+            Assert.That(ModAssembly.Call(T, "NextName", "Steve", new[] { "Steve 1", "Steve 3", "Spencer 2" }), Is.EqualTo("Steve 2"));
+            Assert.That(ModAssembly.Call(T, "NextName", "Spencer", new[] { "Steve 1", "Spencer 1" }), Is.EqualTo("Spencer 2"));
+        }
     }
 
     // D-050: a fallen log / ore rock always beats a standing tree, a tree always beats a stump / sapling; distance only inside a tier
@@ -156,10 +183,13 @@ public class TamingRulesTests
     public void SourceScore_TierBeforeDistance()
     {
         float log = (float)ModAssembly.Call(T, "SourceScore", 0, 49f), tree = (float)ModAssembly.Call(T, "SourceScore", 1, 1f), other = (float)ModAssembly.Call(T, "SourceScore", 2, 0f);
-        Assert.That(log, Is.LessThan(tree), "a log 49 m away before a tree 1 m away");
-        Assert.That(tree, Is.LessThan(other));
-        Assert.That((float)ModAssembly.Call(T, "SourceScore", 0, 3f), Is.LessThan((float)ModAssembly.Call(T, "SourceScore", 0, 5f)));
-        Assert.That((float)ModAssembly.Call(T, "SourceScore", -1, 0f), Is.EqualTo(float.MaxValue));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(log, Is.LessThan(tree), "a log 49 m away before a tree 1 m away");
+            Assert.That(tree, Is.LessThan(other));
+            Assert.That((float)ModAssembly.Call(T, "SourceScore", 0, 3f), Is.LessThan((float)ModAssembly.Call(T, "SourceScore", 0, 5f)));
+            Assert.That((float)ModAssembly.Call(T, "SourceScore", -1, 0f), Is.EqualTo(float.MaxValue));
+        }
     }
 
     [TestCase(true, false, false, 0.3f, 0)]
@@ -175,9 +205,12 @@ public class TamingRulesTests
     [Test]
     public void Percent_Clamped()
     {
-        Assert.That((int)ModAssembly.Call(T, "Percent", 30f, 60f), Is.EqualTo(50));
-        Assert.That((int)ModAssembly.Call(T, "Percent", 90f, 60f), Is.EqualTo(0));
-        Assert.That((int)ModAssembly.Call(T, "Percent", -5f, 60f), Is.EqualTo(100));
-        Assert.That((int)ModAssembly.Call(T, "Percent", 5f, 0f), Is.EqualTo(100));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That((int)ModAssembly.Call(T, "Percent", 30f, 60f), Is.EqualTo(50));
+            Assert.That((int)ModAssembly.Call(T, "Percent", 90f, 60f), Is.EqualTo(0));
+            Assert.That((int)ModAssembly.Call(T, "Percent", -5f, 60f), Is.EqualTo(100));
+            Assert.That((int)ModAssembly.Call(T, "Percent", 5f, 0f), Is.EqualTo(100));
+        }
     }
 }
