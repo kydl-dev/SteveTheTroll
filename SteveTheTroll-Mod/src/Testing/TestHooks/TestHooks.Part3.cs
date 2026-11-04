@@ -46,6 +46,14 @@ internal static partial class TestHooks
         return found ? Mathf.RoundToInt(HubGeometry.Flat(pos - p.transform.position)) : -1;
     }
 
+    /// D-176 (far-search: `max` on a wait-until is not a documented comparison): true when no long-range wood source is found, or the nearest is at most `maxMetres` away.
+    [TestHook("stt.farMetresWithin")]
+    private static bool FarMetresWithin(int maxMetres)
+    {
+        int m = FarMetres();
+        return m < 0 || m <= maxMetres;
+    }
+
     /// The troll remembers a farm spot `dx`,`dz` metres from the player, as if it had broken a tree there.
     [TestHook("stt.rememberSpot")]
     private static bool RememberSpot(GameObject troll, float dx, float dz)
