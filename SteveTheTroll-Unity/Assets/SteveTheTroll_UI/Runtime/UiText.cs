@@ -87,6 +87,7 @@ internal static class UiText
         { "stevethetroll_viewer_reset", "Reset" },
         { "stevethetroll_viewer_unavailable", "3D view not available here" },
         { "stevethetroll_details_unavailable", "No item data (load a world first)." },
+        { "stevethetroll_costume_locked", "Craft all four Troll costume items (head, suit, trousers and club) to see the set here." },
         { "stevethetroll_details_general", "General" },
         { "stevethetroll_details_crafting", "Crafting" },
         { "stevethetroll_details_slot", "Slot" },

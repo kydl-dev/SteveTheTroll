@@ -95,8 +95,10 @@ internal static class ModelKyPages
         var page = new KyPage();
         if (d == null)
         {
-            page.Section("").Note(text("stevethetroll_details_unavailable"));
-            page.State = "none";
+            // in a world but the set is not crafted yet (D-088): say that, not "load a world first"
+            bool inWorld = Player.m_localPlayer != null && ObjectDB.instance != null;
+            page.Section("").Note(text(inWorld ? "stevethetroll_costume_locked" : "stevethetroll_details_unavailable"));
+            page.State = inWorld ? "locked" : "none";
             return page;
         }
 
