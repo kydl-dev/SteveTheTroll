@@ -41,7 +41,7 @@ namespace SteveTheTroll.Bootstrap;
 /// </summary>
 [BepInPlugin(ModGuid, ModName, ModVersion)]
 [BepInDependency(Main.ModGuid)]
-[BepInDependency(KydlCore.Bootstrap.Plugin.ModGuid, "0.1.0")]
+[BepInDependency(KydlCore.Bootstrap.Plugin.ModGuid, "1.0.0")]
 // shared world state (tamed trolls, ZDOs, items, pieces, RPCs): everyone needs the mod, the exact same version (MIGRATION_DECISIONS network rule)
 [NetworkCompatibility(CompatibilityLevel.EveryoneMustHaveMod, VersionStrictness.Patch)]
 public class Plugin : BaseUnityPlugin

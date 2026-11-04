@@ -8,7 +8,7 @@ _agent/CATCHUP.txt
 secrets/
 *.token
 
-# --- references live in E:\Projects\Valheim\Claude\ref (never in this repo); an old per-project copy stays ignored ---
+# --- references live in <workspace>\Claude\ref (never in this repo); an old per-project copy stays ignored ---
 /*-Mod/ref/
 /*-Tests/.nuget/
 /*-Unity/ref/
@@ -119,3 +119,6 @@ CLAUDE.md
 
 # SonarQube scanner work files (H30/H31)
 **/tests/_quality/sonar-coverage/
+
+# logs
+*.log
