@@ -82,11 +82,13 @@
                   },
                   {
                       "do":  "hook",
-                      "name":  "stt.startFarm",
+                      "name":  "stt.farmOn",
                       "args":  {
-                                   "troll":  "troll"
+                                   "troll":  "troll",
+                                   "source":  "tree"
                                },
-                      "expect":  true
+                      "expect":  true,
+                      "label":  "2026-11-05 (final gate run 3 / focus: \"start farming\" took a world Beech 43 m out, off the line - the friend was never passed): the farmer is ordered onto the planted tree, so the friend stands on its line every time"
                   },
                   {
                       "do":  "wait",

@@ -14,9 +14,11 @@ namespace SteveTheTroll.Features.Trolls.Farming.Infrastructure;
 /// </summary>
 internal sealed class FarmFriendDetour
 {
-    private const float DetourSeconds = 1.2f, DetourCheckSeconds = 0.25f, LogSeconds = 10f;
+    // 2026-11-05: two legs (TargetRules.SideStep, then Waypoint), each at most DetourSeconds; a leg ends early within ArriveMetres of its point
+    private const float DetourSeconds = 1.5f, DetourCheckSeconds = 0.25f, LogSeconds = 10f, ArriveMetres = 0.8f;
     private int _detours;
-    private Vector3 _detourTo;
+    private Vector3 _detourTo, _secondLeg;
+    private bool _onFirstLeg;
     private float _detourUntil, _nextCheck, _nextLog, _nextNearLog;
 
     /// Expected outcome: true = walk to `around` this frame (a friendly troll stands in the way, or the detour still runs).
@@ -25,8 +27,32 @@ internal sealed class FarmFriendDetour
         around = goal;
         if (Time.time < _detourUntil)
         {
+            Vector3 left = _detourTo - self.transform.position;
+            left.y = 0f;
+            if (_onFirstLeg && left.magnitude <= ArriveMetres)
+            {
+                _onFirstLeg = false; // sideways step done: now parallel past the friend
+                _detourTo = _secondLeg;
+                _detourUntil = Time.time + DetourSeconds;
+            }
+            else if (!_onFirstLeg && left.magnitude <= ArriveMetres)
+            {
+                _detourUntil = 0f; // past the friend: straight on to the goal
+                return false;
+            }
+
             around = _detourTo;
-            return Time.time < _detourUntil;
+            return true;
+        }
+
+        if (_onFirstLeg)
+        {
+            // the sideways leg ran out of time before it arrived: the second leg still follows, so the walker never turns back into the friend
+            _onFirstLeg = false;
+            _detourTo = _secondLeg;
+            _detourUntil = Time.time + DetourSeconds;
+            around = _detourTo;
+            return true;
         }
 
         if (Time.time < _nextCheck)
@@ -54,8 +80,11 @@ internal sealed class FarmFriendDetour
                 continue;
             }
 
+            GroundPoint step = TargetRules.SideStep(me, goalPoint, other, TargetRules.Side);
             GroundPoint way = TargetRules.Waypoint(me, goalPoint, other, TargetRules.Side);
-            _detourTo = new Vector3(way.X, p.y, way.Z);
+            _detourTo = new Vector3(step.X, p.y, step.Z);
+            _secondLeg = new Vector3(way.X, p.y, way.Z);
+            _onFirstLeg = true;
             _detourUntil = Time.time + DetourSeconds;
             _detours++;
             if (Time.time >= _nextLog)
@@ -64,7 +93,7 @@ internal sealed class FarmFriendDetour
                 ModLog.Info("TrollFarmer: " + TrollTaming.Tag(self.transform) + " steps around " + TrollTaming.Tag(c) +
                             " standing " + new Vector2(o.x - p.x, o.z - p.z).magnitude.ToString("F1") +
                             " m ahead on the way to "
-                            + targetName + " (" + _detours + " detour(s) so far)");
+                            + targetName + " - sideways " + TargetRules.Side.ToString("0") + " m, then past it (" + _detours + " detour(s) so far)");
             }
 
             around = _detourTo;

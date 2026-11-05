@@ -79,6 +79,8 @@ internal sealed class TrollReturn : MonoBehaviour
         return h;
     }
 
+    private static readonly System.Collections.Generic.Dictionary<int, float> WhyLogged = new System.Collections.Generic.Dictionary<int, float>();
+
     internal static bool Check(Character c, MonsterAI ai)
     {
         if (c == null || ai == null)
@@ -112,6 +114,20 @@ internal sealed class TrollReturn : MonoBehaviour
         });
         if (!start.IsSuccess || !start.Value)
         {
+            // 2026-11-05 (final gate run 3, hub-walk-back: a troll 1 km from its hub did not walk back and nothing said why): the refusal names every input, once per 10 s per troll
+            float next;
+            int key = c.GetInstanceID();
+            if (!WhyLogged.TryGetValue(key, out next) || Time.time >= next)
+            {
+                WhyLogged[key] = Time.time + 10f;
+                Character prey = ai.GetTargetCreature();
+                ModLog.Info("TrollReturn: " + TrollTaming.Tag(c) + " is " + d.ToString("F0") + " m from " + hub.Name + " but does not walk back - owner here " +
+                            (view != null && view.IsValid() && view.IsOwner()) + ", follow order " + (ai.GetFollowTarget() != null) + ", arriving " +
+                            (c.GetComponent<TrollArrival>() != null) + ", owner wears slippers " + TrollHome.OwnerWears(c) + ", AI target " +
+                            (prey != null ? prey.name : "none") + ", rage " + (c.GetComponent<TrollRage>() != null) + ", unloading " + (farmer != null && farmer.Unloading) +
+                            (start.IsSuccess ? "" : ", pipeline error"));
+            }
+
             return false;
         }
 

@@ -70,6 +70,26 @@ internal static class TargetRules
         return new GroundPoint(ox + -dz * sgn * side + dx, oz + dx * sgn * side + dz);
     }
 
+    /// 2026-11-05 (final gate runs, farm-friend-detour: from 3.2 m behind the friend the walker went diagonally to Waypoint and its path passed ~2.2 m from the friend's
+    /// centre - inside two troll bodies - so every detour nudged the friend on towards the tree): the FIRST leg of a detour is a step straight sideways, side m off the
+    /// walking line on the same side Waypoint uses; the second leg (Waypoint) then runs parallel to the line, side m from the friend.
+    internal static GroundPoint SideStep(GroundPoint me, GroundPoint goal, GroundPoint other, float side)
+    {
+        float mx = me.X, mz = me.Z, gx = goal.X, gz = goal.Z, ox = other.X, oz = other.Z;
+        float dx = gx - mx, dz = gz - mz;
+        float len = (float)Math.Sqrt(dx * dx + dz * dz);
+        if (len < 0.0001f)
+        {
+            return me;
+        }
+
+        dx /= len;
+        dz /= len;
+        float lateral = dx * (oz - mz) - dz * (ox - mx);
+        float sgn = lateral > 0f ? -1f : 1f;
+        return new GroundPoint(mx + -dz * sgn * side, mz + dx * sgn * side);
+    }
+
     /// A target reserved by ANOTHER troll that refreshed it recently. holder 0 = nobody.
     internal static bool HeldByOther(int holder, float heldAt, int me, float now, float ttl)
     {
