@@ -45,7 +45,7 @@ internal sealed class SpawnHold : MonoBehaviour
         if (_body != null)
         {
             _body.isKinematic = false;
-            _body.velocity = Vector3.zero;
+            _body.linearVelocity = Vector3.zero;
         }
 
         ModLog.Info("SpawnHold: " + name + (ready ? " set down on the terrain collider at " + transform.position.ToString("F0") : " released WITHOUT a terrain collider under it") +
