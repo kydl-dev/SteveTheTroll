@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
@@ -74,7 +74,8 @@ public class LabSuiteGeometryTests
 
     [Test] public void TheHook_UsesTheSameMinimum()
     {
-        string hooks = File.ReadAllText(Path.Combine(TestPaths.Src, "Testing", "TestHooks", "TestHooks.cs"));
+        // the class is split over TestHooks*.cs (class-size gate), so read all its parts
+        string hooks = string.Concat(Directory.GetFiles(Path.Combine(TestPaths.Src, "Testing", "TestHooks"), "TestHooks*.cs").Select(File.ReadAllText));
         Assert.That(hooks, Does.Contain("const float MinFromPlayer = 16f;"));
         Assert.That(hooks, Does.Contain("is not in front of the player"));
     }
