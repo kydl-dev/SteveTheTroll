@@ -2,7 +2,11 @@
 
 ## 2.0.0
 
-- Tested in game with the full TestLab suite (62 tests, run fix15 2026-11-05: all green).
+- Tested in game with the full TestLab suite (63 tests): 3 green runs in a row on 2026-11-05, plus the ecosystem run with all 12 KydlDev mods loaded together.
+- After a fight (a creature attacking you, or a counter-attack) a troll goes back to the tree or rock you ordered it to break, instead of the nearest one.
+- A troll whose swings miss a creature at the edge of its reach steps closer instead of swinging at the air.
+- A troll on its way to a tree steps sideways around a friendly troll in its path instead of pushing it ahead.
+- Known issue: with lower graphics settings, a troll far away from you can stop moving until you come closer. It is not lost (it keeps its backpack and stays on the map). Fixed in the next update.
 - The Troll Hub piece shows in the build menu only after the Steve The Troll set bonus has been active once, and it is then
   learned with the game's normal "new piece" message.
 - The F6 tabs open as you progress: **Costume** once the Steve The Troll set bonus has been active for the first time,
