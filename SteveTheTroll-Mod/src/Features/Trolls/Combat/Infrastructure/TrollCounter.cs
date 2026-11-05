@@ -137,13 +137,10 @@ internal static class TrollCounter
         }
 
         TrollFarmer f = troll.GetComponent<TrollFarmer>();
-        if (f != null)
-        {
-            f.Retarget();
-        }
+        bool ordered = f != null && f.Retarget();
 
         ModLog.Info("TrollCounter: " + TrollOrders.Shown(troll) + " back to " +
-                    (f != null ? "farming (nearest source from here)" : "what it did") + ", ignores hits for " +
+                    (f == null ? "what it did" : ordered ? "its ordered source" : "farming (nearest source from here)") + ", ignores hits for " +
                     ModSettings.CounterIgnoreSeconds.Value.ToString("0") + " s");
         return s.IgnoreUntil;
     }
@@ -165,13 +162,10 @@ internal static class TrollCounter
         }
 
         TrollFarmer f = troll.GetComponent<TrollFarmer>();
-        if (f != null)
-        {
-            f.Retarget();
-        }
+        bool ordered = f != null && f.Retarget();
 
         ModLog.Info("TrollCounter: " + TrollOrders.Shown(troll) + " guard chase over - back to " +
-                    (f != null ? "farming (nearest source from here)" : "what it did"));
+                    (f == null ? "what it did" : ordered ? "its ordered source" : "farming (nearest source from here)"));
         return f != null;
     }
 
@@ -196,6 +190,9 @@ internal sealed class TrollChase : MonoBehaviour
 
     private float _start, _next;
     private int _swings;
+    private int _drySwings;          // swings in a row that did not hurt the target (ChaseRules)
+    private float _healthAtSwing = -1f; // the target's health when the current swing started (-1 = no swing to judge)
+    private bool _wasInAttack;
     private Character _target;
     private bool _guard;
 
@@ -243,6 +240,9 @@ internal sealed class TrollChase : MonoBehaviour
         c._target = target;
         c._start = Time.time;
         c._swings = 0;
+        c._drySwings = 0;
+        c._healthAtSwing = -1f;
+        c._wasInAttack = false;
         c._guard = guard;
         c._detours = 0;
         c._stuckFor = 0f;
@@ -309,6 +309,8 @@ internal sealed class TrollChase : MonoBehaviour
         Vector3 flat = point - transform.position;
         flat.y = 0f;
         float reach = TrollRage.ReachTo(me, _target);
+        JudgeSwing(me);
+        float approach = ChaseRules.ApproachDistance(reach, _drySwings);
         if (_detourOpen && Time.time >= _detourUntil)
         {
             _detourOpen = false;
@@ -323,7 +325,7 @@ internal sealed class TrollChase : MonoBehaviour
         }
 
         bool detouring = Time.time < _detourUntil;
-        if (flat.magnitude > reach)
+        if (flat.magnitude > approach)
         {
             _stuckFor = me.GetVelocity().magnitude < StuckSpeed ? _stuckFor + dt : 0f;
             bool windowStuck = false;
@@ -356,7 +358,7 @@ internal sealed class TrollChase : MonoBehaviour
             }
 
             // D-176: the answer of the game's MoveTo is kept (it is false when it did not move the troll) and shows in the stall log
-            _lastMoveOk = detouring ? Mv().MoveTo(dt, _detourTo, 0.5f, true) : Mv().MoveTo(dt, point, reach * 0.8f, true);
+            _lastMoveOk = detouring ? Mv().MoveTo(dt, _detourTo, 0.5f, true) : Mv().MoveTo(dt, point, approach * 0.8f, true);
         }
         else
         {
@@ -373,7 +375,7 @@ internal sealed class TrollChase : MonoBehaviour
 
         // D-176 (guard-mob-kills: the chase ran 60 s next to the mob with 0 swings): every reason the troll does not swing is named, once every 2 s
         string why = me.InAttack() ? "already in an attack" : TrollNoHit.InZone(transform.position) ? "inside the bed no-hit zone" : Time.time < _next ? "swing gap" :
-            flat.magnitude > reach + SwingSlack ? "out of reach" : !ai.IsLookingAt(point, LookAngle) ? "not facing it" : null;
+            flat.magnitude > approach + SwingSlack ? (_drySwings >= ChaseRules.DrySwingsBeforeClosing ? "closing in after swings that did not hurt it" : "out of reach") : !ai.IsLookingAt(point, LookAngle) ? "not facing it" : null;
         if (why != null)
         {
             Note(me, why, flat.magnitude, reach);
@@ -409,6 +411,7 @@ internal sealed class TrollChase : MonoBehaviour
         if (me.StartAttack(_target, false))
         {
             _swings++;
+            _healthAtSwing = _target.GetHealth();
             _next = Time.time + Gap;
         }
         else
@@ -510,6 +513,32 @@ internal sealed class TrollChase : MonoBehaviour
     }
 
     private float _nextNote;
+
+    /// 2026-11-05 (ChaseRules): a swing that just ended is judged by the target's health - a hit resets the dry count, a miss adds to it; at the threshold the troll closes in.
+    private void JudgeSwing(Humanoid me)
+    {
+        bool inAttack = me.InAttack();
+        if (_wasInAttack && !inAttack && _healthAtSwing >= 0f && _target != null)
+        {
+            if (ChaseRules.IsDry(_healthAtSwing, _target.GetHealth()))
+            {
+                _drySwings++;
+                if (_drySwings == ChaseRules.DrySwingsBeforeClosing)
+                {
+                    ModLog.Info("TrollChase: " + TrollOrders.Shown(me) + " - " + _drySwings + " swing(s) did not hurt " + _target.name + " - steps closer (to " +
+                                (ChaseRules.CloseFactor * 100f).ToString("0") + " % of its reach)");
+                }
+            }
+            else
+            {
+                _drySwings = 0;
+            }
+
+            _healthAtSwing = -1f;
+        }
+
+        _wasInAttack = inAttack;
+    }
 
     private void Note(Humanoid me, string why, float distance, float reach)
     {

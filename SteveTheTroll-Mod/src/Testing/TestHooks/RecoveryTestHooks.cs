@@ -4,6 +4,7 @@ using System.Text;
 using HarmonyLib;
 using KydlCore.Common;
 using SteveTheTroll.Features.Hubs.Infrastructure;
+using SteveTheTroll.Features.Trolls.Farming.Infrastructure;
 using SteveTheTroll.Features.Trolls.Orders.Commands;
 using SteveTheTroll.Features.Trolls.Recovery.Infrastructure;
 using SteveTheTroll.Features.Trolls.Taming.Infrastructure;
@@ -186,6 +187,14 @@ internal static class RecoveryTestHooks
     private static bool FarmOn(GameObject troll, GameObject source)
     {
         return TrollOrderService.Send(new BreakSourceCommand(troll.GetComponent<Character>(), source, ""));
+    }
+
+    /// 2026-11-05: whether the troll's farmer works on exactly this source right now (after a fight it must go back to an ORDERED source). Expected outcome: true / false.
+    [TestHook("stt.farmTargetIs")]
+    private static bool FarmTargetIs(GameObject troll, GameObject source)
+    {
+        TrollFarmer f = troll != null ? troll.GetComponent<TrollFarmer>() : null;
+        return f != null && source != null && f.Target == source;
     }
 
     /// Resource-specific blacklist of the real RecoveryBook for this troll + this source.

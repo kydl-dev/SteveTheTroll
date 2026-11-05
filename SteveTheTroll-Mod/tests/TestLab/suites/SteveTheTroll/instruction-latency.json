@@ -1,6 +1,6 @@
 ﻿{
     "name":  "instruction-latency",
-    "description":  "D-176 / D-180: the home order takes effect at once (the farmer is in its home mode within 1 s), the troll starts towards its hub within 5 s and is 10 m closer within 12 s. Latency is checked as a state; the distances are separate, calibrated checks (fix8 12 m @ 5 s, fix9 10.8 m @ 6.1 s, fix10 10.0 m @ ~6 s, fix12 0 m @ 3 s).",
+    "description":  "D-176 / D-180: the home order takes effect at once (the farmer is in its home mode within 1 s), the troll starts towards its hub within 5 s and is 10 m closer within 12 s. Latency is checked as a state; the distances are separate checks. 2026-11-05: on cleared open ground (the old far spot measured terrain and, before the spawn fixes, a swim) - the 10 m / 12 s rate is to be re-confirmed on this ground.",
     "timeout":  90,
     "steps":  [
                   {
@@ -9,26 +9,46 @@
                       "args":  {
                                    "clearTrolls":  false,
                                    "slippers":  true,
-                                   "hub":  true
+                                   "hub":  false
                                }
+                  },
+                  {
+                      "do":  "use",
+                      "block":  "openGround",
+                      "args":  {
+                                   "metres":  35,
+                                   "radius":  40
+                               },
+                      "label":  "2026-11-05 (gate runs): at the old spot (-41, 136) the troll had passed only by falling into the sea and SWIMMING at 18 m/s; on solid ground the route was terrain-blocked (1.2 m/s, detours) - the test measures the order, not the terrain, so the scene is on cleared open ground"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.addHub",
+                      "args":  {
+                                   "number":  1,
+                                   "dx":  -15,
+                                   "dz":  -5
+                               },
+                      "label":  "the hub behind-left of the player, ~46 m from the troll"
                   },
                   {
                       "do":  "hook",
                       "name":  "stt.spawnTroll",
                       "args":  {
-                                   "dz":  67,
-                                   "dx":  -20
+                                   "dx":  15,
+                                   "dz":  30
                                },
                       "as":  "troll"
                   },
                   {
                       "do":  "hook",
-                      "name":  "stt.clearAroundTroll",
+                      "name":  "stt.plantTree",
                       "args":  {
-                                   "troll":  "troll",
-                                   "radius":  15
+                                   "dx":  15,
+                                   "dz":  38
                                },
-                      "label":  "fix11: clutter at the troll\u0027s start boxed it in - this test measures the order, not the terrain (clutter has its own tests)"
+                      "as":  "tree",
+                      "label":  "something to farm next to the troll (the open ground has no trees)"
                   },
                   {
                       "do":  "hook",

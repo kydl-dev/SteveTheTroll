@@ -1,0 +1,123 @@
+﻿{
+    "name":  "ordered-source-after-fight",
+    "description":  "2026-11-05 (gate run 1, recovery-walled-tree: a Greyling attacked the owner mid-order; after the guard chase the troll farmed random trees for 6 minutes): a troll ORDERED to break a tree is pulled into a guard fight; when the fight is over it goes back to that tree, not to the nearest source. The scene is guardScene with the order given before the creature appears.",
+    "timeout":  90,
+    "steps":  [
+                  {
+                      "do":  "use",
+                      "block":  "start",
+                      "args":  {
+                                   "clearTrolls":  true,
+                                   "slippers":  false,
+                                   "hub":  false
+                               }
+                  },
+                  {
+                      "do":  "use",
+                      "block":  "openGround",
+                      "args":  {
+                                   "metres":  35,
+                                   "radius":  40
+                               }
+                  },
+                  {
+                      "do":  "give",
+                      "prefab":  "STT_TrollSlippers",
+                      "count":  1,
+                      "equip":  true
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.addHub",
+                      "args":  {
+                                   "number":  1,
+                                   "dx":  0,
+                                   "dz":  25
+                               }
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.plantTree",
+                      "args":  {
+                                   "dx":  8,
+                                   "dz":  34
+                               },
+                      "as":  "tree",
+                      "label":  "the ordered tree, ~34 m from the troll: the fight starts while it is on its way"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.spawnTroll",
+                      "args":  {
+                                   "dx":  -14,
+                                   "dz":  8
+                               },
+                      "as":  "troll"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.farmOn",
+                      "args":  {
+                                   "troll":  "troll",
+                                   "source":  "tree"
+                               },
+                      "expect":  true,
+                      "label":  "the break order was taken"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.farmTargetIs",
+                      "args":  {
+                                   "troll":  "troll",
+                                   "source":  "tree"
+                               },
+                      "expect":  true,
+                      "label":  "its farmer works on the ordered tree"
+                  },
+                  {
+                      "do":  "wait",
+                      "seconds":  2
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.spawnMob",
+                      "args":  {
+                                   "prefab":  "Greydwarf",
+                                   "dx":  -2,
+                                   "dz":  18
+                               },
+                      "as":  "mob"
+                  },
+                  {
+                      "do":  "guardFight",
+                      "near":  8
+                  },
+                  {
+                      "do":  "wait",
+                      "until":  {
+                                    "check":  "hook",
+                                    "name":  "stt.farmTargetIs",
+                                    "args":  {
+                                                 "troll":  "troll",
+                                                 "source":  "tree"
+                                             },
+                                    "expect":  true
+                                },
+                      "timeout":  5,
+                      "label":  "after the fight it goes back to the ordered tree (not the nearest source)"
+                  }
+              ],
+    "asserts":  [
+                    {
+                        "check":  "logContains",
+                        "source":  "SteveTheTroll",
+                        "text":  "guard chase over - back to its ordered source",
+                        "expect":  true,
+                        "label":  "the guard handed the troll back to its order"
+                    },
+                    {
+                        "check":  "noErrors",
+                        "source":  "SteveTheTroll"
+                    }
+                ]
+}

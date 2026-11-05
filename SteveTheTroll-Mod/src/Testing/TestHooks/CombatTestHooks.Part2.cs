@@ -13,6 +13,33 @@ namespace SteveTheTroll.Testing.TestHooks;
 /// <summary>Class size: CombatTestHooks continued - weapons, removing test trolls, the aim, the slippers, the farmer check.</summary>
 internal static partial class CombatTestHooks
 {
+    /// Creatures stt.freezeMob froze (cleared by stt.reset).
+    internal static readonly HashSet<Character> Frozen = new HashSet<Character>();
+
+    /// 2026-11-05 (gate run 1, farm-friend-detour: the frozen "friend" troll was sent back to work 1.5 s after its spawn and walked 6 m - the test read it as pushed):
+    /// MonsterAI.UpdateAI postfix, last of all - a frozen creature's move for this frame is zeroed, whatever steered it (game AI, farming, chase). Pushes still move it.
+    internal static void HoldStill(MonsterAI ai)
+    {
+        if (Frozen.Count == 0 || ai == null)
+        {
+            return;
+        }
+
+        Character ch = ai.GetComponent<Character>();
+        if (ch != null && Frozen.Contains(ch))
+        {
+            ch.SetMoveDir(Vector3.zero);
+            ch.SetRun(false);
+        }
+    }
+
+    /// stt.reset: no creature stays frozen into the next test. Expected outcome: how many were released.
+    internal static int Unfreeze()
+    {
+        int n = Frozen.Count;
+        Frozen.Clear();
+        return n;
+    }
     /// The troll loses its log (D-121 "Unarmed" spawns): only its own body attacks are left. Expected outcome: how many items were removed.
     [TestHook("stt.disarm")]
     private static int Disarm(GameObject troll)

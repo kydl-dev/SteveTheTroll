@@ -1,135 +1,136 @@
-{
-  "name": "SteveTheTroll",
-  "description": "SteveTheTroll 2.0.0 (KydlDev spec port T-210; Architecture V2, D-169 - architecture-v2 runs first): the spec features / hub tabs / KY-Items, costume after slippers (T-201), depot lifecycle, backpack storage, hub choice, full-backpack unload, slipper figures, ownership (D-160) - attack-key-tree runs after every test that needs the arena ground (it teleports the player); costume-after-slippers runs LAST because of its relog (run 20261103-124440: after a relog in the middle, spot-return and far-troll-goes-home-clear-route lost the far troll's ZDO ownership - T-211)",
-  "requireMods": [
-    {
-      "guid": "com.kydldev.SteveTheTroll",
-      "minVersion": "2.0.0"
-    },
-    {
-      "guid": "com.kydldev.KydlCore",
-      "minVersion": "1.0.0"
-    }
-  ],
-  "configOverrides": [
-    {
-      "guid": "com.kydldev.SteveTheTroll",
-      "section": "General",
-      "key": "EnableAll",
-      "value": true
-    },
-    {
-      "guid": "com.kydldev.SteveTheTroll",
-      "section": "Slippers",
-      "key": "Enable",
-      "value": true
-    },
-    {
-      "guid": "com.kydldev.SteveTheTroll",
-      "section": "Costume",
-      "key": "Enable",
-      "value": true
-    },
-    {
-      "guid": "com.kydldev.SteveTheTroll",
-      "section": "Trolls",
-      "key": "AttackKey",
-      "value": "Mouse3"
-    },
-    {
-      "guid": "com.kydldev.SteveTheTroll",
-      "section": "Trolls",
-      "key": "Enable",
-      "value": true
-    },
-    {
-      "guid": "com.kydldev.SteveTheTroll",
-      "section": "TrollHub",
-      "key": "Enable",
-      "value": true
-    },
-    {
-      "guid": "com.kydldev.SteveTheTroll",
-      "section": "TrollHub",
-      "key": "AutoAssign",
-      "value": true
-    },
-    {
-      "guid": "com.kydldev.SteveTheTroll",
-      "section": "TrollBackpack",
-      "key": "RemoveEmptyDepots",
-      "value": true
-    },
-    {
-      "guid": "com.kydldev.SteveTheTroll",
-      "section": "DebugLog",
-      "key": "Enable",
-      "value": true
-    }
-  ],
-  "resetBetweenTests": true,
-  "tests": [
-    "architecture-v2",
-    "startup-clean",
-    "kydl-spec-port",
-    "feature-toggle",
-    "reset-isolation",
-    "depot-empty-removes",
-    "depot-window-open-waits",
-    "depot-not-empty-stays",
-    "depot-reserved-waits",
-    "backpack-roundtrip",
-    "backpack-full-cache",
-    "hub-choice-ranges",
-    "hub-ignores-other-owner",
-    "hub-walk-back",
-    "hub-walk-back-follow-cancels",
-    "hub-manual-precedence",
-    "slipper-skin",
-    "full-backpack-unloads",
-    "full-while-farming",
-    "depot-full-builds-new",
-    "noslippers-full-stays-home",
-    "far-search",
-    "spot-return",
-    "far-troll-goes-home-clear-route",
-    "far-troll-goes-home-obstacle-route",
+﻿{
+    "name":  "SteveTheTroll",
+    "description":  "SteveTheTroll 2.0.0 (KydlDev spec port T-210; Architecture V2, D-169 - architecture-v2 runs first): the spec features / hub tabs / KY-Items, costume after slippers (T-201), depot lifecycle, backpack storage, hub choice, full-backpack unload, slipper figures, ownership (D-160) - attack-key-tree runs after every test that needs the arena ground (it teleports the player); costume-after-slippers runs LAST because of its relog (run 20261103-124440: after a relog in the middle, spot-return and far-troll-goes-home-clear-route lost the far troll\u0027s ZDO ownership - T-211)",
+    "requireMods":  [
+                        {
+                            "guid":  "com.kydldev.SteveTheTroll",
+                            "minVersion":  "2.0.0"
+                        },
+                        {
+                            "guid":  "com.kydldev.KydlCore",
+                            "minVersion":  "1.0.0"
+                        }
+                    ],
+    "configOverrides":  [
+                            {
+                                "guid":  "com.kydldev.SteveTheTroll",
+                                "section":  "General",
+                                "key":  "EnableAll",
+                                "value":  true
+                            },
+                            {
+                                "guid":  "com.kydldev.SteveTheTroll",
+                                "section":  "Slippers",
+                                "key":  "Enable",
+                                "value":  true
+                            },
+                            {
+                                "guid":  "com.kydldev.SteveTheTroll",
+                                "section":  "Costume",
+                                "key":  "Enable",
+                                "value":  true
+                            },
+                            {
+                                "guid":  "com.kydldev.SteveTheTroll",
+                                "section":  "Trolls",
+                                "key":  "AttackKey",
+                                "value":  "Mouse3"
+                            },
+                            {
+                                "guid":  "com.kydldev.SteveTheTroll",
+                                "section":  "Trolls",
+                                "key":  "Enable",
+                                "value":  true
+                            },
+                            {
+                                "guid":  "com.kydldev.SteveTheTroll",
+                                "section":  "TrollHub",
+                                "key":  "Enable",
+                                "value":  true
+                            },
+                            {
+                                "guid":  "com.kydldev.SteveTheTroll",
+                                "section":  "TrollHub",
+                                "key":  "AutoAssign",
+                                "value":  true
+                            },
+                            {
+                                "guid":  "com.kydldev.SteveTheTroll",
+                                "section":  "TrollBackpack",
+                                "key":  "RemoveEmptyDepots",
+                                "value":  true
+                            },
+                            {
+                                "guid":  "com.kydldev.SteveTheTroll",
+                                "section":  "DebugLog",
+                                "key":  "Enable",
+                                "value":  true
+                            }
+                        ],
+    "resetBetweenTests":  true,
+    "tests":  [
+                  "architecture-v2",
+                  "startup-clean",
+                  "kydl-spec-port",
+                  "feature-toggle",
+                  "reset-isolation",
+                  "depot-empty-removes",
+                  "depot-window-open-waits",
+                  "depot-not-empty-stays",
+                  "depot-reserved-waits",
+                  "backpack-roundtrip",
+                  "backpack-full-cache",
+                  "hub-choice-ranges",
+                  "hub-ignores-other-owner",
+                  "hub-walk-back",
+                  "hub-walk-back-follow-cancels",
+                  "hub-manual-precedence",
+                  "slipper-skin",
+                  "full-backpack-unloads",
+                  "full-while-farming",
+                  "depot-full-builds-new",
+                  "noslippers-full-stays-home",
+                  "far-search",
+                  "spot-return",
+                  "far-troll-goes-home-clear-route",
+                  "far-troll-goes-home-obstacle-route",
                   "water-keep",
-    "instruction-latency",
+                  "instruction-latency",
                   "troll-arrival",
                   "spawn-cap",
                   "hub-speed",
-    "ownership-handover",
-    "health-clean",
-    "troll-elemental-immune",
-    "farm-chops-tree",
-    "defend-rage",
-    "counter-slam",
-    "guard-mob",
-    "guard-mob-kills",
+                  "ownership-handover",
+                  "health-clean",
+                  "troll-elemental-immune",
+                  "farm-chops-tree",
+                  "defend-rage",
+                  "counter-slam",
+                  "guard-mob",
+                  "guard-mob-kills",
                   "guard-mob-kills-open",
                   "chase-push-through",
-    "guard-mob-nohit",
-    "nohit-zone",
-    "walls-two-star",
-    "attack-key-nothing",
-    "unarmed-farm",
-    "noweapon-farm",
-    "backpack-pickup",
-    "backpack-death-crates",
-    "bed-heal",
-    "hold-look",
-    "recovery-walled-tree",
-    "attack-key-tree-press",
-    "attack-key-creature",
-    "attack-key-farming-creature",
+                  "guard-mob-nohit",
+                  "nohit-zone",
+                  "walls-two-star",
+                  "attack-key-nothing",
+                  "unarmed-farm",
+                  "noweapon-farm",
+                  "backpack-pickup",
+                  "backpack-death-crates",
+                  "bed-heal",
+                  "hold-look",
+                  "recovery-walled-tree",
+                  "attack-key-tree-press",
+                  "attack-key-creature",
+                  "attack-key-farming-creature",
                   "attack-key-ui-blocked",
                   "farm-one-troll-per-tree",
                   "farm-friend-detour",
                   "club-breaks",
-    "attack-key-tree",
-    "meta-unmet-min-fails",
+                  "attack-key-tree",
+                  "ordered-source-after-fight",
+                  "meta-unmet-min-fails",
                   "meta-wrong-target-fails",
                   "costume-after-slippers"
-  ]
+              ]
 }

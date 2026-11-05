@@ -89,6 +89,7 @@ internal static partial class TestHooks
 
         GapTestHooks.TakeOffCostume(); // D-177: hub-speed wears the whole set - no later test may run with the set bonus
         int ghosts = TrollRegistry.ForgetMissingForTests();
+        CombatTestHooks.Unfreeze(); // 2026-11-05: frozen creatures never carry over
         if (ghosts > 0)
         {
             ModLog.Info("TestHooks: stt.reset dropped " + ghosts + " troll list entr(y/ies) whose troll no longer exists (removed by earlier tests)");
@@ -174,7 +175,15 @@ internal static partial class TestHooks
         ModLog.Info("TestHooks: ground under the spawn " + GroundProbe(at));
         int cleared = ClearBodySpace(at);
         if (cleared > 0) ModLog.Info("TestHooks: " + cleared + " tree(s) / rock(s) / bush(es) removed from the troll's body space before the spawn");
-        return SpawnTrollAt(at);
+        bool ground = SpawnHold.GroundReady(at);
+        GameObject troll = SpawnTrollAt(at);
+        if (!ground)
+        {
+            troll.AddComponent<SpawnHold>();
+            ModLog.Info("TestHooks: no terrain collider under the spawn yet (zone still loading) - the troll is held until there is one");
+        }
+
+        return troll;
     }
 
     /// 2026-11-05 (ecosystem run, instruction-latency): a troll spawned INSIDE tree colliders was thrown out by the physics engine at 16 - 22 m/s, once down through the

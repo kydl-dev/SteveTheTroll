@@ -27,6 +27,8 @@ Status "Automated" here is only true after the TestLab run named in `_agent\TEST
 | Two trolls never share a tree, friend detour (D-151) | reservation rules | - | farm-one-troll-per-tree, farm-friend-detour | - | Automated (pending first run) |
 | Newly tamed troll walks to its tamer and waits (D-043) | - | - | troll-arrival | - | Automated (pending first run) |
 | Troll club breaks special trees (D-120) | - | - | club-breaks | - | Automated (pending first run) |
+| An ordered source survives a fight: after a guard / counter fight the troll goes back to the tree it was ordered to break (2026-11-05, gate run 1) | - | - | ordered-source-after-fight | - | Automated (pending first run) |
+| Test infrastructure: frozen creatures really hold still (farm-friend-detour), trolls spawn into free space and onto a loaded terrain collider (instruction-latency) | - | - | farm-friend-detour, instruction-latency (+ every stt.spawnTroll) | - | Automated |
 | Map pins, hover name of a tamed troll (D-081, D-060) | - | - | - | look | **Gap** (manual only) |
 | Hub sign editor (D-135) | - | - | - | hub-look | Manual |
 

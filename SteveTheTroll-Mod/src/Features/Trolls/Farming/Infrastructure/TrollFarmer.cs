@@ -80,6 +80,7 @@ internal sealed partial class TrollFarmer : MonoBehaviour
     private float _nextSearch, _nextAttack, _nextLog, _stepUntil, _nextFullCheck, _travelStart, _nextNothingLog;
     private FarmingPipeline _pipeline;
     private GameObject _target;
+    private GameObject _ordered; // the source an order named (Force) - kept across fights (Retarget)
 
     /// The source this farmer works on now (null = none). D-177: read by the stt.farmersOn test hook.
     internal GameObject Target => _target;
@@ -272,6 +273,7 @@ internal sealed partial class TrollFarmer : MonoBehaviour
         _focus = focus ?? "";
         _centre = centre;
         _target = null;
+        _ordered = null; // a new order / setup ends the old ordered source
         _hit = null;
         _nextSearch = 0f;
         CurrentItem = "";
@@ -292,15 +294,19 @@ internal sealed partial class TrollFarmer : MonoBehaviour
         }
     }
 
-    /// D-084: after a fight - look for the nearest source again from where the troll stands now. Expected outcome: none (the next step searches).
-    internal void Retarget()
+    /// D-084: after a fight - look for the nearest source again from where the troll stands now.
+    /// 2026-11-05 (gate run 1, recovery-walled-tree: a Greyling attacked the owner mid-order, the guard chase ended and the troll farmed random trees for 6 minutes):
+    /// a troll that had been ORDERED to break a source goes back to it when it still exists and the backpack is not full. Expected outcome: true = back to the ordered source.
+    internal bool Retarget()
     {
+        GameObject ordered = _ordered;
         _target = null;
         _hit = null;
         _nextSearch = 0f;
         _home = IsFull;
         ResetTries();
         _centre = transform.position;
+        return ordered != null && !IsFull && Force(ordered); // Unity null: a source broken meanwhile is gone -> the normal search
     }
 
     /// D-143 (user 2026-10-31: after the logout Steve 1 ran around the base until he got an order instead of emptying his backpack): to the hub / bed and into the depot, the
@@ -343,6 +349,7 @@ internal sealed partial class TrollFarmer : MonoBehaviour
         }
 
         _target = source;
+        _ordered = source;
         _hit = col;
         CurrentItem = item;
         _home = false;

@@ -72,6 +72,12 @@ internal static partial class CombatTestHooks
 
         TargetOf(ai) = null;
         ai.enabled = false;
+        Character ch = mob.GetComponent<Character>();
+        if (ch != null)
+        {
+            Frozen.Add(ch); // 2026-11-05: ai.enabled = false did not stop a TAMED troll (its farming steers in an UpdateAI postfix) - HoldStill zeroes the move every frame
+        }
+
         return !ai.enabled;
     }
 
