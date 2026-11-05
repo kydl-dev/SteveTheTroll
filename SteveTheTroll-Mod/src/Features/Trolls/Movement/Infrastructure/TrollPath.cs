@@ -129,6 +129,7 @@ internal static class TrollPath
         line.Normalize();
         Vector3 chest = pos + Vector3.up * ChestHeight;
         float best = float.MinValue;
+        bool found = false;   // Sonar S1244: no float equality on the sentinel
         float bestAngle = 0f, bestFree = 0f;
         var sb = new System.Text.StringBuilder();
         foreach (float a in PathRules.FeelerAngles)
@@ -142,13 +143,14 @@ internal static class TrollPath
             sb.Append(a.ToString("+0;-0;0")).Append(':').Append(free.ToString("F0")).Append(bad ? "b" : "").Append(' ');
             if (score > best)
             {
+                found = true;
                 best = score;
                 bestAngle = a;
                 bestFree = free;
             }
         }
 
-        if (best == float.MinValue)
+        if (!found)
         {
             log = "feelers (deg:free m, b = bad spot) " + sb + "- no heading free for " + PathRules.MinUsefulRun.ToString("0") + " m";
             return false;

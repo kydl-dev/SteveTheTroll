@@ -248,7 +248,7 @@ internal static partial class GapTestHooks
         {
             TrollSpawnBoost.SpawnList.Prefix(best, spawners, false);
             result = troll.m_spawnChance <= 0f && chance > 0f ? "full (census " + TrollCensus.Count + ")" :
-                troll.m_maxSpawned != max || troll.m_spawnChance != chance ? "boosted max " + troll.m_maxSpawned + " (census " + TrollCensus.Count + ")" : "vanilla";
+                troll.m_maxSpawned != max || !Mathf.Approximately(troll.m_spawnChance, chance) ? "boosted max " + troll.m_maxSpawned + " (census " + TrollCensus.Count + ")" : "vanilla";
         }
         finally
         {
