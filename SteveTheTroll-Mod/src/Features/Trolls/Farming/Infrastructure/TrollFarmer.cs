@@ -366,6 +366,7 @@ internal sealed partial class TrollFarmer : MonoBehaviour
     /// false = fighting / done -> the game's AI runs.
     internal bool Step(MonsterAI ai, float dt)
     {
+        _lastStep = Time.time; // the Part3 watchdog
         _ai = ai;
         _dt = dt;
         _me = _ctx.Humanoid;
