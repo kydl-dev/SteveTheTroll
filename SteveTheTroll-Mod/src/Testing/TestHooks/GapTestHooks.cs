@@ -53,9 +53,7 @@ internal static partial class GapTestHooks
                 continue;
             }
 
-            bool veg = g.GetComponent<TreeBase>() != null || g.GetComponent<TreeLog>() != null || g.GetComponent<MineRock>() != null || g.GetComponent<MineRock5>() != null ||
-                       (g.GetComponent<Destructible>() != null && g.GetComponent<Piece>() == null && g.GetComponent<Character>() == null);
-            if (!veg)
+            if (!IsNatural(g))
             {
                 continue;
             }
@@ -67,6 +65,13 @@ internal static partial class GapTestHooks
 
         ModLog.Info("GapTestHooks: " + n + " tree(s) / log(s) / bush(es) / rock(s) removed within " + radius.ToString("F0") + " m of the troll");
         return n;
+    }
+
+    /// A tree, log, rock or bush (natural clutter) - never a build piece or a creature.
+    internal static bool IsNatural(GameObject g)
+    {
+        return g.GetComponent<TreeBase>() != null || g.GetComponent<TreeLog>() != null || g.GetComponent<MineRock>() != null || g.GetComponent<MineRock5>() != null ||
+               (g.GetComponent<Destructible>() != null && g.GetComponent<Piece>() == null && g.GetComponent<Character>() == null);
     }
 
     /// D-178: the player steps `back` m backwards (still facing +z, the scene in view) once the test has placed everything - trolls that farm, unload or go to the bed
