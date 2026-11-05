@@ -4,32 +4,12 @@
     "timeout":  40,
     "steps":  [
                   {
-                      "do":  "hook",
-                      "name":  "stt.arena",
-                      "contains":  "arena at",
-                      "label":  "start on the arena spot (MIGRATION_DECISIONS C26)"
-                  },
-                  {
-                      "do":  "hook",
-                      "name":  "stt.reset"
-                  },
-                  {
-                      "do":  "hook",
-                      "name":  "stt.clearTrolls"
-                  },
-                  {
-                      "do":  "give",
-                      "prefab":  "STT_TrollSlippers",
-                      "count":  1,
-                      "equip":  true
-                  },
-                  {
-                      "do":  "hook",
-                      "name":  "stt.addHub",
+                      "do":  "use",
+                      "block":  "start",
                       "args":  {
-                                   "number":  1,
-                                   "dx":  0,
-                                   "dz":  25
+                                   "clearTrolls":  true,
+                                   "slippers":  true,
+                                   "hub":  true
                                }
                   },
                   {

@@ -1,190 +1,174 @@
-{
-  "name": "far-troll-goes-home-clear-route",
-  "timeout": 420,
-  "description": "D-174 (review): a full troll ~400 m from its hub on a known-dry, gentle route (stt.clearRoute picks it from world-generator heights) walks home across kept zones, reaches its ACTUAL hub, unloads, and every item is conserved. Isolates long-distance travel / zone transitions from terrain recovery.",
-  "steps": [
-    {
-      "do": "hook",
-      "name": "stt.arena",
-      "contains": "arena at",
-      "label": "start on the arena spot (MIGRATION_DECISIONS C26)"
-    },
-    {
-      "do": "hook",
-      "name": "stt.reset"
-    },
-    {
-      "do": "give",
-      "prefab": "STT_TrollSlippers",
-      "count": 1,
-      "equip": true
-    },
-    {
-      "do": "hook",
-      "name": "stt.addHub",
-      "args": {
-        "number": 1,
-        "dx": 0,
-        "dz": 25
-      }
-    },
-    {
-      "do": "hook",
-      "name": "stt.clearRoute",
-      "args": {
-        "metres": 400
-      }
-    },
-    {
-      "do": "wait",
-      "seconds": 12
-    },
-    {
-      "do": "hook",
-      "name": "stt.clearAround",
-      "args": {
-        "radius": 30
-      },
-      "label": "no tree, rock or stump around the spot the troll starts from (D-176: a stalled start in run 222441 had nothing else to blame)"
-    },
-    {
-      "do": "hook",
-      "name": "stt.clearMobs",
-      "args": {
-        "radius": 80
-      },
-      "label": "no wild creature to fight (fighting wins over unloading, D-149)"
-    },
-    {
-      "do": "hook",
-      "name": "stt.spawnTroll",
-      "args": {
-        "dx": 0,
-        "dz": 16
-      },
-      "as": "troll"
-    },
-    {
-      "do": "wait",
-      "seconds": 2
-    },
-    {
-      "do": "hook",
-      "name": "stt.stepAside",
-      "args": {
-        "dx": 10,
-        "dz": 0
-      },
-      "label": "the player stands out of the troll's way and out of its hold range (D-176: TrollHold froze it with the player 2.4 m away)"
-    },
-    {
-      "do": "hook",
-      "name": "stt.hubFor",
-      "args": {
-        "troll": "troll"
-      },
-      "expect": 1,
-      "label": "the test hub still exists and is the troll's"
-    },
-    {
-      "do": "hook",
-      "name": "stt.hubDistanceInRange",
-      "args": {
-        "troll": "troll",
-        "min": 360,
-        "max": 440
-      },
-      "expect": true,
-      "label": "the troll starts about 400 m from its hub"
-    },
-    {
-      "do": "hook",
-      "name": "stt.followTroll",
-      "args": {
-        "troll": "troll"
-      }
-    },
-    {
-      "do": "hook",
-      "name": "stt.fillBackpack",
-      "args": {
-        "troll": "troll"
-      }
-    },
-    {
-      "do": "hook",
-      "name": "stt.mark",
-      "args": {
-        "troll": "troll"
-      }
-    },
-    {
-      "do": "wait",
-      "until": {
-        "check": "hook",
-        "name": "stt.returningToUnload",
-        "args": {
-          "troll": "troll"
-        },
-        "expect": true
-      },
-      "timeout": 10
-    },
-    {
-      "do": "wait",
-      "until": {
-        "check": "hook",
-        "name": "stt.progressTowardHub",
-        "args": {
-          "troll": "troll"
-        },
-        "min": 30
-      },
-      "timeout": 45,
-      "label": "within 45 s it is at least 30 m CLOSER to its hub (D-176: stt.moved counted any movement and its min was never enforced)"
-    },
-    {
-      "do": "wait",
-      "until": {
-        "check": "hook",
-        "name": "stt.followedBackpackAtMost",
-        "args": {
-          "stacks": 0
-        },
-        "expect": true
-      },
-      "timeout": 300
-    },
-    {
-      "do": "hook",
-      "name": "stt.followedState",
-      "label": "followed troll (diagnosis)"
-    },
-    {
-      "do": "hook",
-      "name": "stt.followedConserved",
-      "expect": true,
-      "label": "every Stone put in is in the backpack or a depot - nothing lost or made"
-    }
-  ],
-  "asserts": [
-    {
-      "check": "hook",
-      "name": "stt.followedBackpackAtMost",
-      "args": {
-        "stacks": 0
-      },
-      "expect": true,
-      "label": "it reached its hub and unloaded everything"
-    },
-    {
-      "check": "hook",
-      "name": "stt.followedConserved",
-      "expect": true
-    },
-    {
-      "check": "noErrors",
-      "source": "SteveTheTroll"
-    }
-  ]
+﻿{
+    "name":  "far-troll-goes-home-clear-route",
+    "timeout":  420,
+    "description":  "D-174 (review): a full troll ~400 m from its hub on a known-dry, gentle route (stt.clearRoute picks it from world-generator heights) walks home across kept zones, reaches its ACTUAL hub, unloads, and every item is conserved. Isolates long-distance travel / zone transitions from terrain recovery.",
+    "steps":  [
+                  {
+                      "do":  "use",
+                      "block":  "start",
+                      "args":  {
+                                   "clearTrolls":  false,
+                                   "slippers":  true,
+                                   "hub":  true
+                               }
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.clearRoute",
+                      "args":  {
+                                   "metres":  400
+                               }
+                  },
+                  {
+                      "do":  "wait",
+                      "seconds":  12
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.clearAround",
+                      "args":  {
+                                   "radius":  30
+                               },
+                      "label":  "no tree, rock or stump around the spot the troll starts from (D-176: a stalled start in run 222441 had nothing else to blame)"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.clearMobs",
+                      "args":  {
+                                   "radius":  80
+                               },
+                      "label":  "no wild creature to fight (fighting wins over unloading, D-149)"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.spawnTroll",
+                      "args":  {
+                                   "dx":  0,
+                                   "dz":  16
+                               },
+                      "as":  "troll"
+                  },
+                  {
+                      "do":  "wait",
+                      "seconds":  2
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.stepAside",
+                      "args":  {
+                                   "dx":  10,
+                                   "dz":  0
+                               },
+                      "label":  "the player stands out of the troll\u0027s way and out of its hold range (D-176: TrollHold froze it with the player 2.4 m away)"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.hubFor",
+                      "args":  {
+                                   "troll":  "troll"
+                               },
+                      "expect":  1,
+                      "label":  "the test hub still exists and is the troll\u0027s"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.hubDistanceInRange",
+                      "args":  {
+                                   "troll":  "troll",
+                                   "min":  360,
+                                   "max":  440
+                               },
+                      "expect":  true,
+                      "label":  "the troll starts about 400 m from its hub"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.followTroll",
+                      "args":  {
+                                   "troll":  "troll"
+                               }
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.fillBackpack",
+                      "args":  {
+                                   "troll":  "troll"
+                               }
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.mark",
+                      "args":  {
+                                   "troll":  "troll"
+                               }
+                  },
+                  {
+                      "do":  "wait",
+                      "until":  {
+                                    "check":  "hook",
+                                    "name":  "stt.returningToUnload",
+                                    "args":  {
+                                                 "troll":  "troll"
+                                             },
+                                    "expect":  true
+                                },
+                      "timeout":  10
+                  },
+                  {
+                      "do":  "wait",
+                      "until":  {
+                                    "check":  "hook",
+                                    "name":  "stt.progressTowardHub",
+                                    "args":  {
+                                                 "troll":  "troll"
+                                             },
+                                    "min":  30
+                                },
+                      "timeout":  45,
+                      "label":  "within 45 s it is at least 30 m CLOSER to its hub (D-176: stt.moved counted any movement and its min was never enforced)"
+                  },
+                  {
+                      "do":  "wait",
+                      "until":  {
+                                    "check":  "hook",
+                                    "name":  "stt.followedBackpackAtMost",
+                                    "args":  {
+                                                 "stacks":  0
+                                             },
+                                    "expect":  true
+                                },
+                      "timeout":  300
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.followedState",
+                      "label":  "followed troll (diagnosis)"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.followedConserved",
+                      "expect":  true,
+                      "label":  "every Stone put in is in the backpack or a depot - nothing lost or made"
+                  }
+              ],
+    "asserts":  [
+                    {
+                        "check":  "hook",
+                        "name":  "stt.followedBackpackAtMost",
+                        "args":  {
+                                     "stacks":  0
+                                 },
+                        "expect":  true,
+                        "label":  "it reached its hub and unloaded everything"
+                    },
+                    {
+                        "check":  "hook",
+                        "name":  "stt.followedConserved",
+                        "expect":  true
+                    },
+                    {
+                        "check":  "noErrors",
+                        "source":  "SteveTheTroll"
+                    }
+                ]
 }

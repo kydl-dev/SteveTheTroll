@@ -1,113 +1,93 @@
-{
-  "name": "defend-rage",
-  "description": "D-171 P5: a creature hits the player - the own troll near the player goes into rage (D-082) and attacks it (D-042 / D-066)",
-  "timeout": 60,
-  "steps": [
-    {
-      "do": "hook",
-      "name": "stt.arena",
-      "contains": "arena at",
-      "label": "start on the arena spot (MIGRATION_DECISIONS C26)"
-    },
-    {
-      "do": "hook",
-      "name": "stt.reset"
-    },
-    {
-      "do": "hook",
-      "name": "stt.clearTrolls"
-    },
-    {
-      "do": "give",
-      "prefab": "STT_TrollSlippers",
-      "count": 1,
-      "equip": true
-    },
-    {
-      "do": "hook",
-      "name": "stt.addHub",
-      "args": {
-        "number": 1,
-        "dx": 0,
-        "dz": 25
-      }
-    },
-    {
-      "do": "hook",
-      "name": "stt.spawnTrollNear",
-      "args": {
-        "dx": -6,
-        "dz": 4
-      },
-      "as": "troll"
-    },
-    {
-      "do": "hook",
-      "name": "stt.spawnMob",
-      "args": {
-        "prefab": "Greydwarf",
-        "dx": 6,
-        "dz": 4
-      },
-      "as": "mob"
-    },
-    {
-      "do": "wait",
-      "seconds": 1
-    },
-    {
-      "do": "hook",
-      "name": "stt.godMode",
-      "args": {
-        "on": false
-      },
-      "expect": false,
-      "label": "god mode off for the hit (D-172)"
-    },
-    {
-      "do": "hook",
-      "name": "stt.hitPlayer",
-      "args": {
-        "attacker": "mob",
-        "damage": 1
-      }
-    },
-    {
-      "do": "hook",
-      "name": "stt.godMode",
-      "args": {
-        "on": true
-      },
-      "expect": true,
-      "label": "god mode back on"
-    },
-    {
-      "do": "wait",
-      "seconds": 1
-    }
-  ],
-  "asserts": [
-    {
-      "check": "hook",
-      "name": "stt.combatState",
-      "args": {
-        "troll": "troll"
-      },
-      "expect": "rage",
-      "label": "enraged"
-    },
-    {
-      "check": "hook",
-      "name": "stt.targetOf",
-      "args": {
-        "troll": "troll"
-      },
-      "expect": "Greydwarf",
-      "label": "targets the attacker"
-    },
-    {
-      "check": "noErrors",
-      "source": "SteveTheTroll"
-    }
-  ]
+﻿{
+    "name":  "defend-rage",
+    "description":  "D-171 P5: a creature hits the player - the own troll near the player goes into rage (D-082) and attacks it (D-042 / D-066)",
+    "timeout":  60,
+    "steps":  [
+                  {
+                      "do":  "use",
+                      "block":  "start",
+                      "args":  {
+                                   "clearTrolls":  true,
+                                   "slippers":  true,
+                                   "hub":  true
+                               }
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.spawnTrollNear",
+                      "args":  {
+                                   "dx":  -6,
+                                   "dz":  4
+                               },
+                      "as":  "troll"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.spawnMob",
+                      "args":  {
+                                   "prefab":  "Greydwarf",
+                                   "dx":  6,
+                                   "dz":  4
+                               },
+                      "as":  "mob"
+                  },
+                  {
+                      "do":  "wait",
+                      "seconds":  1
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.godMode",
+                      "args":  {
+                                   "on":  false
+                               },
+                      "expect":  false,
+                      "label":  "god mode off for the hit (D-172)"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.hitPlayer",
+                      "args":  {
+                                   "attacker":  "mob",
+                                   "damage":  1
+                               }
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.godMode",
+                      "args":  {
+                                   "on":  true
+                               },
+                      "expect":  true,
+                      "label":  "god mode back on"
+                  },
+                  {
+                      "do":  "wait",
+                      "seconds":  1
+                  }
+              ],
+    "asserts":  [
+                    {
+                        "check":  "hook",
+                        "name":  "stt.combatState",
+                        "args":  {
+                                     "troll":  "troll"
+                                 },
+                        "expect":  "rage",
+                        "label":  "enraged"
+                    },
+                    {
+                        "check":  "hook",
+                        "name":  "stt.targetOf",
+                        "args":  {
+                                     "troll":  "troll"
+                                 },
+                        "expect":  "Greydwarf",
+                        "label":  "targets the attacker"
+                    },
+                    {
+                        "check":  "noErrors",
+                        "source":  "SteveTheTroll"
+                    }
+                ]
 }

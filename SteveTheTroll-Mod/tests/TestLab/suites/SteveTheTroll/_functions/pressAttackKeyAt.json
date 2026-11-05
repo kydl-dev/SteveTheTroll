@@ -1,0 +1,11 @@
+{
+  "description": "D-171 / D-178: the attack key on `target` - the ray is aimed and checked (it must resolve `expectName`), no blocking window is open, then one press by the test.",
+  "params": { "target": null, "expectName": null },
+  "steps": [
+    { "do": "hook", "name": "stt.aimAt", "args": { "target": "{{target}}" }, "expect": true },
+    { "do": "hook", "name": "stt.aimedAt", "contains": "{{expectName}}", "label": "the key ray resolves {{expectName}} (aimedAt uses up the one-shot aim)" },
+    { "do": "hook", "name": "stt.aimAt", "args": { "target": "{{target}}" }, "expect": true },
+    { "do": "hook", "name": "kc.hubIsOpen", "expect": false, "label": "no blocking window is open when the key is pressed" },
+    { "do": "hook", "name": "stt.attackKeyPress", "args": { "count": 1 } }
+  ]
+}

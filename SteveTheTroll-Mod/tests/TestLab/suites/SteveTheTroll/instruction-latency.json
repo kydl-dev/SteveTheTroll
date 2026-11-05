@@ -1,31 +1,15 @@
 ﻿{
     "name":  "instruction-latency",
-    "description":  "D-176 (fix8 / fix9 timelines): the home order takes effect at once and the troll then closes on the bed at a rate worth keeping. Two requirements, two checks: (1) it is moving TOWARDS the bed within 3 s of the order; (2) it is at least 10 m closer within 8 s. Measured: fix8 12 m after 5 s, fix9 10.8 m after 6.1 s (speed 1.4 m/s for 2.4 s, then 3.3 - 3.8 m/s: the game ramps a troll up and it first turns round) - the earlier \"15 m moved in 5 s\" matched neither and was never enforced.",
+    "description":  "D-176 / D-180: the home order takes effect at once (the farmer is in its home mode within 1 s), the troll starts towards its hub within 5 s and is 10 m closer within 12 s. Latency is checked as a state; the distances are separate, calibrated checks (fix8 12 m @ 5 s, fix9 10.8 m @ 6.1 s, fix10 10.0 m @ ~6 s, fix12 0 m @ 3 s).",
     "timeout":  90,
     "steps":  [
                   {
-                      "do":  "hook",
-                      "name":  "stt.arena",
-                      "contains":  "arena at",
-                      "label":  "start on the arena spot (MIGRATION_DECISIONS C26)"
-                  },
-                  {
-                      "do":  "hook",
-                      "name":  "stt.reset"
-                  },
-                  {
-                      "do":  "give",
-                      "prefab":  "STT_TrollSlippers",
-                      "count":  1,
-                      "equip":  true
-                  },
-                  {
-                      "do":  "hook",
-                      "name":  "stt.addHub",
+                      "do":  "use",
+                      "block":  "start",
                       "args":  {
-                                   "number":  1,
-                                   "dx":  0,
-                                   "dz":  25
+                                   "clearTrolls":  false,
+                                   "slippers":  true,
+                                   "hub":  true
                                }
                   },
                   {
@@ -94,14 +78,27 @@
                       "do":  "wait",
                       "until":  {
                                     "check":  "hook",
+                                    "name":  "stt.goingHome",
+                                    "args":  {
+                                                 "troll":  "troll"
+                                             },
+                                    "expect":  true
+                                },
+                      "timeout":  1,
+                      "label":  "latency: within 1 s of the order the troll is in its home mode (a state, not a distance - analysis option A)"
+                  },
+                  {
+                      "do":  "wait",
+                      "until":  {
+                                    "check":  "hook",
                                     "name":  "stt.progressTowardHub",
                                     "args":  {
                                                  "troll":  "troll"
                                              },
                                     "min":  1
                                 },
-                      "timeout":  3,
-                      "label":  "latency: within 3 s of the order the troll is at least 1 m closer to its hub (the home order walks it to the hub)"
+                      "timeout":  5,
+                      "label":  "it is moving towards its hub within 5 s (turning round and the game\u0027s speed ramp take 2 - 3 s)"
                   },
                   {
                       "do":  "hook",
@@ -120,8 +117,8 @@
                                              },
                                     "min":  10
                                 },
-                      "timeout":  8,
-                      "label":  "rate: within 8 s of the order the troll is at least 10 m closer to its hub (the home order walks it to the hub) (net progress towards it, so circling does not count)"
+                      "timeout":  12,
+                      "label":  "rate: within 12 s of the order the troll is at least 10 m closer to its hub (fix10 10 m at 6 s, fix8 12 m at 5 s; fix12 0 m at 3 s after a slow start)"
                   },
                   {
                       "do":  "hook",

@@ -4,14 +4,13 @@
     "description":  "D-174 (review: World_TrollElementalImmune skips without a tamed troll): a tamed troll is immune to fire, frost, lightning, poison and spirit.",
     "steps":  [
                   {
-                      "do":  "hook",
-                      "name":  "stt.arena",
-                      "contains":  "arena at",
-                      "label":  "start on the arena spot (MIGRATION_DECISIONS C26)"
-                  },
-                  {
-                      "do":  "hook",
-                      "name":  "stt.reset"
+                      "do":  "use",
+                      "block":  "start",
+                      "args":  {
+                                   "clearTrolls":  false,
+                                   "slippers":  false,
+                                   "hub":  false
+                               }
                   },
                   {
                       "do":  "hook",

@@ -1,86 +1,66 @@
-{
-  "name": "guard-mob",
-  "description": "D-171 P5: a creature near the troll goes for the player - the troll takes it on (TrollGuard, GuardRules)",
-  "timeout": 60,
-  "steps": [
-    {
-      "do": "hook",
-      "name": "stt.arena",
-      "contains": "arena at",
-      "label": "start on the arena spot (MIGRATION_DECISIONS C26)"
-    },
-    {
-      "do": "hook",
-      "name": "stt.reset"
-    },
-    {
-      "do": "hook",
-      "name": "stt.clearTrolls"
-    },
-    {
-      "do": "give",
-      "prefab": "STT_TrollSlippers",
-      "count": 1,
-      "equip": true
-    },
-    {
-      "do": "hook",
-      "name": "stt.addHub",
-      "args": {
-        "number": 1,
-        "dx": 0,
-        "dz": 25
-      }
-    },
-    {
-      "do": "hook",
-      "name": "stt.spawnTroll",
-      "args": {
-        "dx": -14,
-        "dz": 8
-      },
-      "as": "troll"
-    },
-    {
-      "do": "hook",
-      "name": "stt.spawnMob",
-      "args": {
-        "prefab": "Greydwarf",
-        "dx": -11,
-        "dz": 8
-      },
-      "as": "mob"
-    },
-    {
-      "do": "wait",
-      "seconds": 1
-    },
-    {
-      "do": "wait",
-      "until": {
-        "check": "hook",
-        "name": "stt.guardTargetOf",
-        "args": {
-          "mob": "mob",
-          "troll": "troll"
-        },
-        "expect": "Greydwarf"
-      },
-      "timeout": 8
-    }
-  ],
-  "asserts": [
-    {
-      "check": "hook",
-      "name": "stt.targetOf",
-      "args": {
-        "troll": "troll"
-      },
-      "expect": "Greydwarf"
-    },
-    {
-      "check": "noErrors",
-      "source": "SteveTheTroll"
-    }
-  ]
+﻿{
+    "name":  "guard-mob",
+    "description":  "D-171 P5: a creature near the troll goes for the player - the troll takes it on (TrollGuard, GuardRules)",
+    "timeout":  60,
+    "steps":  [
+                  {
+                      "do":  "use",
+                      "block":  "start",
+                      "args":  {
+                                   "clearTrolls":  true,
+                                   "slippers":  true,
+                                   "hub":  true
+                               }
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.spawnTroll",
+                      "args":  {
+                                   "dx":  -14,
+                                   "dz":  8
+                               },
+                      "as":  "troll"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.spawnMob",
+                      "args":  {
+                                   "prefab":  "Greydwarf",
+                                   "dx":  -11,
+                                   "dz":  8
+                               },
+                      "as":  "mob"
+                  },
+                  {
+                      "do":  "wait",
+                      "seconds":  1
+                  },
+                  {
+                      "do":  "wait",
+                      "until":  {
+                                    "check":  "hook",
+                                    "name":  "stt.guardTargetOf",
+                                    "args":  {
+                                                 "mob":  "mob",
+                                                 "troll":  "troll"
+                                             },
+                                    "expect":  "Greydwarf"
+                                },
+                      "timeout":  8
+                  }
+              ],
+    "asserts":  [
+                    {
+                        "check":  "hook",
+                        "name":  "stt.targetOf",
+                        "args":  {
+                                     "troll":  "troll"
+                                 },
+                        "expect":  "Greydwarf"
+                    },
+                    {
+                        "check":  "noErrors",
+                        "source":  "SteveTheTroll"
+                    }
+                ]
 }

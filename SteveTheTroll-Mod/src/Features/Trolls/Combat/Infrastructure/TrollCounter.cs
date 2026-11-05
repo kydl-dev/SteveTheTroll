@@ -223,7 +223,8 @@ internal sealed class TrollChase : MonoBehaviour
 
     // D-179 (user "do 1-2 and 4 now"): 1 a small natural blocker (log, stump, bush, small tree) is broken with swings instead of walked round; 2 the detour point comes
     // from 9 feelers (TrollPath.Feelers) instead of a fixed 6 m side-step - the two-side cast below stays as the fallback; 4 every stall is a bad spot (TrollPath).
-    private const float PushSeconds = 4f, PushSwingGap = 0.6f;
+    private const float PushSeconds = 4f, PushSwingGap = 0.6f, LowTargetMetres = -1.5f;
+    private float _nextLowLog;
     private GameObject _push;
     private float _pushUntil, _nextPushSwing;
     private int _pushSwings;
@@ -377,8 +378,19 @@ internal sealed class TrollChase : MonoBehaviour
             return true;
         }
 
-        ItemDrop.ItemData weapon = TrollWeapons.Pick(me, Attack.AttackType.Horizontal, false) ??
-                                   TrollWeapons.Pick(me, Attack.AttackType.Vertical, false);
+        // D-180 (fix12 attack-key-farming-creature: after a detour the troll stood 4 m ABOVE the frozen creature, 4.0 m away, and its horizontal swings passed over it -
+        // 7 swings, no damage): a creature well below the troll gets the downward swing first, as the farmer does for a low target
+        float dy = point.y - transform.position.y;
+        bool low = dy < LowTargetMetres;
+        ItemDrop.ItemData weapon = TrollWeapons.Pick(me, low ? Attack.AttackType.Vertical : Attack.AttackType.Horizontal, false) ??
+                                   TrollWeapons.Pick(me, low ? Attack.AttackType.Horizontal : Attack.AttackType.Vertical, false);
+        if (low && Time.time >= _nextLowLog)
+        {
+            _nextLowLog = Time.time + 5f;
+            ModLog.Info("TrollChase: " + TrollOrders.Shown(me) + " - " + _target.name + " is " + (-dy).ToString("F1") + " m below: downward swing first (" +
+                        (weapon != null ? weapon.m_shared.m_name : "no weapon") + ")");
+        }
+
         if (weapon == null)
         {
             Note(me, "no melee item", flat.magnitude, reach);
@@ -507,6 +519,6 @@ internal sealed class TrollChase : MonoBehaviour
 
         _nextNote = Time.time + 2f;
         ModLog.Info("TrollChase: " + TrollOrders.Shown(me) + " does not swing at " + (_target != null ? _target.name : "?") + " - " + why + " (" + distance.ToString("F1") +
-                    " m, reach " + reach.ToString("F1") + " m, speed " + me.GetVelocity().magnitude.ToString("F1") + " m/s, " + _swings + " swing(s), " + _detours + " detour(s) so far)");
+                    " m, reach " + reach.ToString("F1") + " m, height difference " + (_target != null ? (_target.transform.position.y - transform.position.y).ToString("F1") : "?") + " m, speed " + me.GetVelocity().magnitude.ToString("F1") + " m/s, " + _swings + " swing(s), " + _detours + " detour(s) so far)");
     }
 }

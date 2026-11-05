@@ -83,6 +83,14 @@ internal static class GapTestHooks
         return to.ToString("F0");
     }
 
+    /// D-180 (instruction-latency, analysis option A: the order's latency is a STATE, not a distance): the troll's farmer is in its home mode.
+    [TestHook("stt.goingHome")]
+    private static bool GoingHome(GameObject troll)
+    {
+        TrollFarmer f = troll.GetComponent<TrollFarmer>();
+        return f != null && f.GoingHome;
+    }
+
     /// D-179: bad spots remembered now (TrollPath).
     [TestHook("stt.badSpots")]
     private static int BadSpots()

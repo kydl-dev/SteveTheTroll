@@ -1,189 +1,140 @@
-{
-  "name": "attack-key-creature",
-  "description": "D-171: the player looks at a creature and presses the attack key - the nearest own troll attacks it (user idea 2026-11-02: the player goes 100 m further out from the test spot, away from the lab start (stt.arenaFurther; a plain dx teleport went back to the lab house) and the target is 15 m in front - no no-hit ring, no arena colliders in the ray; stt.aimAt aims the ray; teleports, so it runs at the end)",
-  "timeout": 60,
-  "steps": [
-    {
-      "do": "hook",
-      "name": "stt.arena",
-      "contains": "arena at",
-      "label": "start on the arena spot (MIGRATION_DECISIONS C26)"
-    },
-    {
-      "do": "hook",
-      "name": "stt.reset"
-    },
-    {
-      "do": "hook",
-      "name": "stt.clearTrolls"
-    },
-    {
-      "do": "give",
-      "prefab": "STT_TrollSlippers",
-      "count": 1,
-      "equip": true
-    },
-    {
-      "do": "hook",
-      "name": "stt.addHub",
-      "args": {
-        "number": 1,
-        "dx": 0,
-        "dz": 25
-      }
-    },
-    {
-      "do": "hook",
-      "name": "stt.arenaFurther",
-      "args": {
-        "metres": 100
-      }
-    },
-    {
-      "do": "hook",
-      "name": "stt.clearAround",
-      "args": {
-        "radius": 30
-      },
-      "label": "no world tree / bush between the player and the target (D-172)"
-    },
-    {
-      "do": "wait",
-      "seconds": 1
-    },
-    {
-      "do": "hook",
-      "name": "stt.spawnMob",
-      "args": {
-        "prefab": "Greydwarf",
-        "dx": 0,
-        "dz": 15
-      },
-      "as": "mob"
-    },
-    {
-      "do": "hook",
-      "name": "stt.freezeMob",
-      "args": {
-        "mob": "mob"
-      },
-      "expect": true,
-      "label": "D-176: nothing but the key can give the troll this target (TrollGuard cannot see a hunter)"
-    },
-    {
-      "do": "hook",
-      "name": "stt.spawnTroll",
-      "args": {
-        "dx": -14,
-        "dz": 8
-      },
-      "as": "troll"
-    },
-    {
-      "do": "wait",
-      "seconds": 1.5
-    },
-    {
-      "do": "face",
-      "target": "mob"
-    },
-    {
-      "do": "wait",
-      "seconds": 0.5
-    },
-    {
-      "do": "hook",
-      "name": "stt.forcedTargetOf",
-      "args": {
-        "troll": "troll"
-      },
-      "expect": "",
-      "label": "no forced target before the key (only the key or a hunter of the player sets one; the troll's own AI may well target a creature it sees)"
-    },
-    {
-      "do": "hook",
-      "name": "stt.aimAt",
-      "args": {
-        "target": "mob"
-      },
-      "expect": true
-    },
-    {
-      "do": "hook",
-      "name": "stt.aimedAt",
-      "contains": "Greydwarf",
-      "label": "the key ray resolves the creature (aimedAt uses up the one-shot aim)"
-    },
-    {
-      "do": "hook",
-      "name": "stt.aimAt",
-      "args": {
-        "target": "mob"
-      },
-      "expect": true
-    },
-    {"do":"hook","name":"kc.hubIsOpen","expect":false,"label":"no blocking window is open when the key is pressed (fix8: a hub a failed test left open refused every press)"},
-    {
-      "do": "hook",
-      "name": "stt.attackKeyPress",
-      "args": {
-        "count": 1
-      }
-    },
-    {
-      "do": "wait",
-      "until": {
-        "check": "hook",
-        "name": "stt.forcedTargetOf",
-        "args": {
-          "troll": "troll"
-        },
-        "expect": "Greydwarf"
-      },
-      "timeout": 5,
-      "label": "the key gave the troll the forced target"
-    },
-    {
-      "do": "wait",
-      "until": {
-        "check": "hook",
-        "name": "stt.targetOf",
-        "args": {
-          "troll": "troll"
-        },
-        "expect": "Greydwarf"
-      },
-      "timeout": 5
-    }
-  ],
-  "asserts": [
-    {
-      "check": "hook",
-      "name": "stt.forcedTargetOf",
-      "args": {
-        "troll": "troll"
-      },
-      "expect": "Greydwarf",
-      "label": "the order is still held"
-    },
-    {
-      "check": "logContains",
-      "source": "SteveTheTroll",
-      "text": "key record - press by a test",
-      "expect": true,
-      "label": "the key press was recorded"
-    },
-    {
-      "check": "hook",
-      "name": "stt.targetOf",
-      "args": {
-        "troll": "troll"
-      },
-      "expect": "Greydwarf"
-    },
-    {
-      "check": "noErrors",
-      "source": "SteveTheTroll"
-    }
-  ]
+﻿{
+    "name":  "attack-key-creature",
+    "description":  "D-171: the player looks at a creature and presses the attack key - the nearest own troll attacks it (user idea 2026-11-02: the player goes 100 m further out from the test spot, away from the lab start (stt.arenaFurther; a plain dx teleport went back to the lab house) and the target is 15 m in front - no no-hit ring, no arena colliders in the ray; stt.aimAt aims the ray; teleports, so it runs at the end)",
+    "timeout":  60,
+    "steps":  [
+                  {
+                      "do":  "use",
+                      "block":  "start",
+                      "args":  {
+                                   "clearTrolls":  true,
+                                   "slippers":  true,
+                                   "hub":  true
+                               }
+                  },
+                  {
+                      "do":  "use",
+                      "block":  "openGround",
+                      "args":  {
+                                   "metres":  100,
+                                   "radius":  30
+                               }
+                  },
+                  {
+                      "do":  "wait",
+                      "seconds":  1
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.spawnMob",
+                      "args":  {
+                                   "prefab":  "Greydwarf",
+                                   "dx":  0,
+                                   "dz":  15
+                               },
+                      "as":  "mob"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.freezeMob",
+                      "args":  {
+                                   "mob":  "mob"
+                               },
+                      "expect":  true,
+                      "label":  "D-176: nothing but the key can give the troll this target (TrollGuard cannot see a hunter)"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.spawnTroll",
+                      "args":  {
+                                   "dx":  -14,
+                                   "dz":  8
+                               },
+                      "as":  "troll"
+                  },
+                  {
+                      "do":  "wait",
+                      "seconds":  1.5
+                  },
+                  {
+                      "do":  "face",
+                      "target":  "mob"
+                  },
+                  {
+                      "do":  "wait",
+                      "seconds":  0.5
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.forcedTargetOf",
+                      "args":  {
+                                   "troll":  "troll"
+                               },
+                      "expect":  "",
+                      "label":  "no forced target before the key (only the key or a hunter of the player sets one; the troll\u0027s own AI may well target a creature it sees)"
+                  },
+                  {
+                      "do":  "use",
+                      "block":  "pressAttackKeyAt",
+                      "args":  {
+                                   "target":  "mob",
+                                   "expectName":  "Greydwarf"
+                               }
+                  },
+                  {
+                      "do":  "wait",
+                      "until":  {
+                                    "check":  "hook",
+                                    "name":  "stt.forcedTargetOf",
+                                    "args":  {
+                                                 "troll":  "troll"
+                                             },
+                                    "expect":  "Greydwarf"
+                                },
+                      "timeout":  5,
+                      "label":  "the key gave the troll the forced target"
+                  },
+                  {
+                      "do":  "wait",
+                      "until":  {
+                                    "check":  "hook",
+                                    "name":  "stt.targetOf",
+                                    "args":  {
+                                                 "troll":  "troll"
+                                             },
+                                    "expect":  "Greydwarf"
+                                },
+                      "timeout":  5
+                  }
+              ],
+    "asserts":  [
+                    {
+                        "check":  "hook",
+                        "name":  "stt.forcedTargetOf",
+                        "args":  {
+                                     "troll":  "troll"
+                                 },
+                        "expect":  "Greydwarf",
+                        "label":  "the order is still held"
+                    },
+                    {
+                        "check":  "logContains",
+                        "source":  "SteveTheTroll",
+                        "text":  "key record - press by a test",
+                        "expect":  true,
+                        "label":  "the key press was recorded"
+                    },
+                    {
+                        "check":  "hook",
+                        "name":  "stt.targetOf",
+                        "args":  {
+                                     "troll":  "troll"
+                                 },
+                        "expect":  "Greydwarf"
+                    },
+                    {
+                        "check":  "noErrors",
+                        "source":  "SteveTheTroll"
+                    }
+                ]
 }

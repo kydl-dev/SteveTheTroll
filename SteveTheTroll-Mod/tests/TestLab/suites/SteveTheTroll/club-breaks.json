@@ -4,18 +4,13 @@
     "timeout":  60,
     "steps":  [
                   {
-                      "do":  "hook",
-                      "name":  "stt.arena",
-                      "label":  "start on the arena spot (MIGRATION_DECISIONS C26)",
-                      "contains":  "arena at"
-                  },
-                  {
-                      "do":  "hook",
-                      "name":  "stt.reset"
-                  },
-                  {
-                      "do":  "hook",
-                      "name":  "stt.clearTrolls"
+                      "do":  "use",
+                      "block":  "start",
+                      "args":  {
+                                   "clearTrolls":  true,
+                                   "slippers":  false,
+                                   "hub":  false
+                               }
                   },
                   {
                       "do":  "hook",

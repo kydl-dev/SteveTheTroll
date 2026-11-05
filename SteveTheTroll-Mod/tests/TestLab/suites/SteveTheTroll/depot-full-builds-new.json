@@ -4,28 +4,12 @@
     "description":  "D-174 (review): the only depot is full to the last slot; a full troll must build / use another depot, unload everything and conserve every item.",
     "steps":  [
                   {
-                      "do":  "hook",
-                      "name":  "stt.arena",
-                      "contains":  "arena at",
-                      "label":  "start on the arena spot (MIGRATION_DECISIONS C26)"
-                  },
-                  {
-                      "do":  "hook",
-                      "name":  "stt.reset"
-                  },
-                  {
-                      "do":  "give",
-                      "prefab":  "STT_TrollSlippers",
-                      "count":  1,
-                      "equip":  true
-                  },
-                  {
-                      "do":  "hook",
-                      "name":  "stt.addHub",
+                      "do":  "use",
+                      "block":  "start",
                       "args":  {
-                                   "number":  1,
-                                   "dx":  0,
-                                   "dz":  25
+                                   "clearTrolls":  false,
+                                   "slippers":  true,
+                                   "hub":  true
                                }
                   },
                   {
@@ -67,45 +51,8 @@
                       "seconds":  2
                   },
                   {
-                      "do":  "hook",
-                      "name":  "stt.followTroll",
-                      "args":  {
-                                   "troll":  "troll"
-                               }
-                  },
-                  {
-                      "do":  "hook",
-                      "name":  "stt.fillBackpack",
-                      "args":  {
-                                   "troll":  "troll"
-                               }
-                  },
-                  {
-                      "do":  "wait",
-                      "until":  {
-                                    "check":  "hook",
-                                    "name":  "stt.followedBackpackAtMost",
-                                    "args":  {
-                                                 "stacks":  0
-                                             },
-                                    "expect":  true
-                                },
+                      "do":  "unloadAndConserve",
                       "timeout":  180
-                  },
-                  {
-                      "do":  "wait",
-                      "seconds":  2
-                  },
-                  {
-                      "do":  "hook",
-                      "name":  "stt.followedState",
-                      "label":  "followed troll (diagnosis)"
-                  },
-                  {
-                      "do":  "hook",
-                      "name":  "stt.followedConserved",
-                      "expect":  true,
-                      "label":  "every Stone put in is in the backpack or a depot - nothing lost or made"
                   }
               ],
     "asserts":  [

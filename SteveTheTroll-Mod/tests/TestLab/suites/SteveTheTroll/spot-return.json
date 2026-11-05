@@ -1,171 +1,170 @@
-{
-  "name": "spot-return",
-  "description": "A troll with a full backpack unloads at home, then walks back to the spot where it farmed (user request 2026-10-31)",
-  "timeout": 330,
-  "steps": [
-    {
-      "do": "hook",
-      "name": "stt.arena",
-      "contains": "arena at",
-      "label": "start on the arena spot (MIGRATION_DECISIONS C26)"
-    },
-    {
-      "do": "hook",
-      "name": "stt.reset"
-    },
-    {
-      "do": "hook",
-      "name": "stt.clearMobs",
-      "args": {
-        "radius": 80
-      },
-      "label": "D-175: this test is about unloading, not fighting (run 194722: a wild Greyling attacked at the start, fighting wins over unloading by design) - the arena starts without wild creatures; guard-mob-kills covers the fight"
-    },
-    {
-      "do": "hook",
-      "name": "stt.wildMobsNear",
-      "args": {
-        "radius": 80
-      },
-      "expect": 0,
-      "label": "no wild creature left within 80 m"
-    },
-    {
-      "do": "give",
-      "prefab": "STT_TrollSlippers",
-      "count": 1,
-      "equip": true
-    },
-    {
-      "do": "hook",
-      "name": "stt.addHub",
-      "args": {
-        "number": 1,
-        "dx": 0,
-        "dz": 25
-      }
-    },
-    {
-      "do": "hook",
-      "name": "stt.spawnTroll",
-      "args": {
-        "dz": 8,
-        "dx": -14
-      },
-      "as": "troll"
-    },
-    {
-      "do": "hook",
-      "name": "stt.startFarm",
-      "args": {
-        "troll": "troll"
-      }
-    },
-    {
-      "do": "wait",
-      "seconds": 3
-    },
-    {
-      "do": "hook",
-      "name": "stt.rememberSpot",
-      "args": {
-        "troll": "troll",
-        "dx": 150,
-        "dz": 0
-      },
-      "expect": true,
-      "label": "spot 150 m away remembered"
-    },
-    {
-      "do": "hook",
-      "name": "stt.followTroll",
-      "args": {
-        "troll": "troll"
-      }
-    },
-    {
-      "do": "hook",
-      "name": "stt.fillBackpack",
-      "args": {
-        "troll": "troll"
-      }
-    },
-    {
-      "do": "hook",
-      "name": "stt.stepAside",
-      "args": {
-        "dx": 0,
-        "dz": -25
-      },
-      "label": "the player steps 25 m south, off the troll's way east to its spot but no further from the spot (run 181331: 40 m south-west took the troll out of the loaded area, its object was re-created and the walk was lost)"
-    },
-    {
-      "do": "wait",
-      "until": {
-        "check": "hook",
-        "name": "stt.followedBackpackAtMost",
-        "args": {
-          "stacks": 20
-        },
-        "expect": true
-      },
-      "timeout": 150
-    },
-    {
-      "do": "wait",
-      "until": {
-        "check": "hook",
-        "name": "stt.travelling",
-        "args": {
-          "troll": "troll"
-        },
-        "expect": true
-      },
-      "timeout": 60
-    },
-    {
-      "do": "wait",
-      "until": {
-        "check": "hook",
-        "name": "stt.followedReachedSpot",
-        "args": {
-          "metres": 15
-        },
-        "expect": true
-      },
-      "timeout": 90
-    },
-    {
-      "do": "wait",
-      "seconds": 3
-    },
-    {
-      "do": "hook",
-      "name": "stt.followedFarming",
-      "expect": true,
-      "label": "it farms again at the remembered spot"
-    }
-  ],
-  "asserts": [
-    {
-      "check": "hook",
-      "name": "stt.followedBackpackAtMost",
-      "args": {
-        "stacks": 20
-      },
-      "expect": true
-    },
-    {
-      "check": "noErrors",
-      "source": "SteveTheTroll"
-    },
-    {
-      "check": "hook",
-      "name": "stt.followedReachedSpot",
-      "args": {
-        "metres": 15
-      },
-      "expect": true
-    }
-  ]
+﻿{
+    "name":  "spot-return",
+    "description":  "A troll with a full backpack unloads at home, then walks back to the spot where it farmed (user request 2026-10-31)",
+    "timeout":  330,
+    "steps":  [
+                  {
+                      "do":  "use",
+                      "block":  "start",
+                      "args":  {
+                                   "clearTrolls":  false,
+                                   "slippers":  false,
+                                   "hub":  false
+                               }
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.clearMobs",
+                      "args":  {
+                                   "radius":  80
+                               },
+                      "label":  "D-175: this test is about unloading, not fighting (run 194722: a wild Greyling attacked at the start, fighting wins over unloading by design) - the arena starts without wild creatures; guard-mob-kills covers the fight"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.wildMobsNear",
+                      "args":  {
+                                   "radius":  80
+                               },
+                      "expect":  0,
+                      "label":  "no wild creature left within 80 m"
+                  },
+                  {
+                      "do":  "give",
+                      "prefab":  "STT_TrollSlippers",
+                      "count":  1,
+                      "equip":  true
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.addHub",
+                      "args":  {
+                                   "number":  1,
+                                   "dx":  0,
+                                   "dz":  25
+                               }
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.spawnTroll",
+                      "args":  {
+                                   "dz":  8,
+                                   "dx":  -14
+                               },
+                      "as":  "troll"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.startFarm",
+                      "args":  {
+                                   "troll":  "troll"
+                               }
+                  },
+                  {
+                      "do":  "wait",
+                      "seconds":  3
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.rememberSpot",
+                      "args":  {
+                                   "troll":  "troll",
+                                   "dx":  150,
+                                   "dz":  0
+                               },
+                      "expect":  true,
+                      "label":  "spot 150 m away remembered"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.followTroll",
+                      "args":  {
+                                   "troll":  "troll"
+                               }
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.fillBackpack",
+                      "args":  {
+                                   "troll":  "troll"
+                               }
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.stepAside",
+                      "args":  {
+                                   "dx":  0,
+                                   "dz":  -25
+                               },
+                      "label":  "the player steps 25 m south, off the troll\u0027s way east to its spot but no further from the spot (run 181331: 40 m south-west took the troll out of the loaded area, its object was re-created and the walk was lost)"
+                  },
+                  {
+                      "do":  "wait",
+                      "until":  {
+                                    "check":  "hook",
+                                    "name":  "stt.followedBackpackAtMost",
+                                    "args":  {
+                                                 "stacks":  20
+                                             },
+                                    "expect":  true
+                                },
+                      "timeout":  150
+                  },
+                  {
+                      "do":  "wait",
+                      "until":  {
+                                    "check":  "hook",
+                                    "name":  "stt.travelling",
+                                    "args":  {
+                                                 "troll":  "troll"
+                                             },
+                                    "expect":  true
+                                },
+                      "timeout":  60
+                  },
+                  {
+                      "do":  "wait",
+                      "until":  {
+                                    "check":  "hook",
+                                    "name":  "stt.followedReachedSpot",
+                                    "args":  {
+                                                 "metres":  15
+                                             },
+                                    "expect":  true
+                                },
+                      "timeout":  90
+                  },
+                  {
+                      "do":  "wait",
+                      "seconds":  3
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.followedFarming",
+                      "expect":  true,
+                      "label":  "it farms again at the remembered spot"
+                  }
+              ],
+    "asserts":  [
+                    {
+                        "check":  "hook",
+                        "name":  "stt.followedBackpackAtMost",
+                        "args":  {
+                                     "stacks":  20
+                                 },
+                        "expect":  true
+                    },
+                    {
+                        "check":  "noErrors",
+                        "source":  "SteveTheTroll"
+                    },
+                    {
+                        "check":  "hook",
+                        "name":  "stt.followedReachedSpot",
+                        "args":  {
+                                     "metres":  15
+                                 },
+                        "expect":  true
+                    }
+                ]
 }

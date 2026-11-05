@@ -316,6 +316,47 @@ internal static class TrollGuard
         return true;
     }
 
+    private static readonly Dictionary<int, float> NotTakenLog = new();
+
+    /// D-180 (fix12 chase-push-through: 2 creatures went for the player, the guard took on none, and nothing said why): once every 5 s per troll, why the creatures after the
+    /// owner are not this troll's fight - the troll's distance to the owner against DefendRange and the nearest creature's distance to the troll and to the owner.
+    private static void NotTaken(Character troll, Player owner, bool ownerNear, bool defends, float range, Vector3 trollPos, Vector3 ownerPos)
+    {
+        if (Hunters.Count == 0)
+        {
+            return;
+        }
+
+        int id = troll.GetInstanceID();
+        float next;
+        if (NotTakenLog.TryGetValue(id, out next) && Time.time < next)
+        {
+            return;
+        }
+
+        NotTakenLog[id] = Time.time + 5f;
+        if (NotTakenLog.Count > 100)
+        {
+            NotTakenLog.Clear();
+        }
+
+        Character near = null;
+        float best = float.MaxValue;
+        foreach (Character m in Hunters)
+        {
+            if (m != null && Vector3.Distance(m.transform.position, trollPos) < best)
+            {
+                best = Vector3.Distance(m.transform.position, trollPos);
+                near = m;
+            }
+        }
+
+        ModLog.Info("TrollGuard: " + TrollTaming.Tag(troll) + " does not take on " + Hunters.Count + " creature(s) after " + owner.GetPlayerName() + " - troll " +
+                    Vector3.Distance(trollPos, ownerPos).ToString("F1") + " m from the owner (defend range " + range.ToString("F0") + ", near " + ownerNear + "), defends " + defends +
+                    (near != null ? ", nearest " + near.name + " " + best.ToString("F1") + " m from the troll and " + Vector3.Distance(near.transform.position, ownerPos).ToString("F1") +
+                                    " m from the owner (guard range " + ModSettings.GuardOwnerRange.Value.ToString("F0") + ", keep range " + KeepRange.ToString("F0") + ")" : ""));
+    }
+
     private static bool Guard(Character troll, MonsterAI ai, Player owner)
     {
         float range = ModSettings.DefendRange.Value;
@@ -352,6 +393,7 @@ internal static class TrollGuard
 
         if (Attackers.Count == 0)
         {
+            NotTaken(troll, owner, ownerNear, defends, range, trollPos, ownerPos);
             return false;
         }
 

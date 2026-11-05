@@ -1,0 +1,16 @@
+{
+  "description": "D-176: a creature (tag `mob`) that goes for the player is taken on by the farming troll (tag `troll`) and killed - six phases, so a failure names the step that broke: AI target, forced target, chase, approach to `near` m, first hit, dead. A combat snapshot is logged every 2 s while it waits.",
+  "params": { "troll": "troll", "mob": "mob", "prefab": "Greydwarf", "near": 8 },
+  "actions": [
+    { "do": "wait", "until": { "check": "hook", "name": "stt.guardTargetOf", "args": { "mob": "{{mob}}", "troll": "{{troll}}" }, "expect": "{{prefab}}" }, "timeout": 8, "label": "phase 1a: the troll's game AI targets the creature" },
+    { "do": "wait", "until": { "check": "hook", "name": "stt.forcedTargetOf", "args": { "troll": "{{troll}}" }, "expect": "{{prefab}}" }, "timeout": 3, "label": "phase 1b: TrollGuard registered it as the forced target" },
+    { "do": "wait", "until": { "check": "hook", "name": "stt.combatState", "args": { "troll": "{{troll}}" }, "expect": "chase" }, "timeout": 3, "label": "phase 1c: a TrollChase drives the troll" },
+    { "do": "wait", "until": { "check": "hook", "name": "stt.trollNearLastMob", "args": { "troll": "{{troll}}", "metres": "{{near}}" }, "expect": true }, "timeout": 20, "label": "phase 2a: the troll closes the gap to {{near}} m" },
+    { "do": "wait", "until": { "check": "hook", "name": "stt.lastMobHurt", "args": { "troll": "{{troll}}" }, "expect": true }, "timeout": 15, "label": "phase 2b: within reach it swings and hurts the creature" },
+    { "do": "wait", "until": { "check": "hook", "name": "stt.guardKillLast", "args": { "troll": "{{troll}}" }, "expect": "dead" }, "timeout": 25, "label": "phase 3: the creature is dead" }
+  ],
+  "asserts": [
+    { "check": "logContains", "source": "SteveTheTroll", "text": "attacks {{prefab}}", "expect": true, "label": "the guard gave the troll the target" },
+    { "check": "logContains", "source": "SteveTheTroll", "text": "done (enemy dead", "expect": true, "label": "the troll itself killed it (TrollChase)" }
+  ]
+}

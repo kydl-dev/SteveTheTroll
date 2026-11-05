@@ -1,146 +1,144 @@
-{
-  "name": "recovery-walled-tree",
-  "description": "D-167: a tree inside a closed ring of player-built walls. The troll gets stuck, never attacks a wall, walks around (detours), fails two complete recovery cycles and blacklists THAT tree for itself (D-171: troll beside the player and the player looks away - after hold-look the player faced the troll's path and TrollHold froze it for the whole test)",
-  "timeout": 420,
-  "steps": [
-    {
-      "do": "hook",
-      "name": "stt.arena",
-      "contains": "arena at",
-      "label": "start on the arena spot (MIGRATION_DECISIONS C26)"
-    },
-    {
-      "do": "hook",
-      "name": "stt.reset"
-    },
-    {
-      "do": "hook",
-      "name": "stt.clearTrolls"
-    },
-    {
-      "do": "give",
-      "prefab": "STT_TrollSlippers",
-      "count": 1,
-      "equip": true
-    },
-    {
-      "do": "hook",
-      "name": "stt.walledTree",
-      "args": {
-        "dx": 0,
-        "dz": 30,
-        "radius": 6
-      },
-      "as": "tree"
-    },
-    {
-      "do": "wait",
-      "seconds": 1
-    },
-    {"do":"wait","until":{"check":"hook","name":"stt.wallsAlive","min":24},"timeout":1,"label":"the whole ring stands (12 walls, two high)"},
-    {
-      "do": "hook",
-      "name": "stt.spawnTroll",
-      "args": {
-        "dx": 14,
-        "dz": 8
-      },
-      "as": "troll"
-    },
-    {
-      "do": "face",
-      "dx": -30,
-      "dz": 0
-    },
-    {
-      "do": "wait",
-      "seconds": 2
-    },
-    {
-      "do": "hook",
-      "name": "stt.farmOn",
-      "args": {
-        "troll": "troll",
-        "source": "tree"
-      },
-      "expect": true,
-      "label": "the troll is ordered to farm the walled tree"
-    },
-    {
-      "do": "hook",
-      "name": "stt.walledTreeHealth",
-      "label": "tree health right after the order (diagnosis)"
-    },
-    {
-      "do": "hook",
-      "name": "stt.wallsAlive",
-      "label": "walls still standing (diagnosis)"
-    },
-    {
-      "do": "wait",
-      "until": {
-        "check": "hook",
-        "name": "stt.walledDone",
-        "args": {
-          "troll": "troll"
-        },
-        "expect": true
-      },
-      "timeout": 360
-    },
-    {
-      "do": "hook",
-      "name": "stt.walledOutcome",
-      "args": {
-        "troll": "troll"
-      },
-      "expect": "blacklisted",
-      "label": "the troll gave the walled tree up (D-167) - not broken in"
-    },
-    {
-      "do": "hook",
-      "name": "stt.wallsHitByTroll",
-      "expect": 0,
-      "label": "no hit of a tamed troll reached a player-built wall (PlayerPieceGuard, D-172)"
-    },
-    {
-      "do": "hook",
-      "name": "stt.wallsHit",
-      "label": "ring walls damaged by any source (diagnosis: a felled tree may fall on them - user: logs may damage)"
-    },
-    {
-      "do": "hook",
-      "name": "stt.walledTreeHealth",
-      "label": "tree health at the end (diagnosis)"
-    }
-  ],
-  "asserts": [
-    {
-      "check": "hook",
-      "name": "stt.wallsHitByTroll",
-      "expect": 0,
-      "label": "no hit of a tamed troll reached a player-built wall (falling logs may, user D-173)"
-    },
-    {
-      "check": "hook",
-      "name": "stt.blacklisted",
-      "args": {
-        "troll": "troll",
-        "source": "tree"
-      },
-      "expect": true
-    },
-    {
-      "check": "hook",
-      "name": "stt.treeStands",
-      "args": {
-        "tree": "tree"
-      },
-      "expect": 1
-    },
-    {
-      "check": "noErrors",
-      "source": "SteveTheTroll"
-    }
-  ]
+﻿{
+    "name":  "recovery-walled-tree",
+    "description":  "D-167: a tree inside a closed ring of player-built walls. The troll gets stuck, never attacks a wall, walks around (detours), fails two complete recovery cycles and blacklists THAT tree for itself (D-171: troll beside the player and the player looks away - after hold-look the player faced the troll\u0027s path and TrollHold froze it for the whole test)",
+    "timeout":  420,
+    "steps":  [
+                  {
+                      "do":  "use",
+                      "block":  "start",
+                      "args":  {
+                                   "clearTrolls":  true,
+                                   "slippers":  true,
+                                   "hub":  false
+                               }
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.walledTree",
+                      "args":  {
+                                   "dx":  0,
+                                   "dz":  30,
+                                   "radius":  6
+                               },
+                      "as":  "tree"
+                  },
+                  {
+                      "do":  "wait",
+                      "seconds":  1
+                  },
+                  {
+                      "do":  "wait",
+                      "until":  {
+                                    "check":  "hook",
+                                    "name":  "stt.wallsAlive",
+                                    "min":  24
+                                },
+                      "timeout":  1,
+                      "label":  "the whole ring stands (12 walls, two high)"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.spawnTroll",
+                      "args":  {
+                                   "dx":  14,
+                                   "dz":  8
+                               },
+                      "as":  "troll"
+                  },
+                  {
+                      "do":  "face",
+                      "dx":  -30,
+                      "dz":  0
+                  },
+                  {
+                      "do":  "wait",
+                      "seconds":  2
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.farmOn",
+                      "args":  {
+                                   "troll":  "troll",
+                                   "source":  "tree"
+                               },
+                      "expect":  true,
+                      "label":  "the troll is ordered to farm the walled tree"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.walledTreeHealth",
+                      "label":  "tree health right after the order (diagnosis)"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.wallsAlive",
+                      "label":  "walls still standing (diagnosis)"
+                  },
+                  {
+                      "do":  "wait",
+                      "until":  {
+                                    "check":  "hook",
+                                    "name":  "stt.walledDone",
+                                    "args":  {
+                                                 "troll":  "troll"
+                                             },
+                                    "expect":  true
+                                },
+                      "timeout":  360
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.walledOutcome",
+                      "args":  {
+                                   "troll":  "troll"
+                               },
+                      "expect":  "blacklisted",
+                      "label":  "the troll gave the walled tree up (D-167) - not broken in"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.wallsHitByTroll",
+                      "expect":  0,
+                      "label":  "no hit of a tamed troll reached a player-built wall (PlayerPieceGuard, D-172)"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.wallsHit",
+                      "label":  "ring walls damaged by any source (diagnosis: a felled tree may fall on them - user: logs may damage)"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.walledTreeHealth",
+                      "label":  "tree health at the end (diagnosis)"
+                  }
+              ],
+    "asserts":  [
+                    {
+                        "check":  "hook",
+                        "name":  "stt.wallsHitByTroll",
+                        "expect":  0,
+                        "label":  "no hit of a tamed troll reached a player-built wall (falling logs may, user D-173)"
+                    },
+                    {
+                        "check":  "hook",
+                        "name":  "stt.blacklisted",
+                        "args":  {
+                                     "troll":  "troll",
+                                     "source":  "tree"
+                                 },
+                        "expect":  true
+                    },
+                    {
+                        "check":  "hook",
+                        "name":  "stt.treeStands",
+                        "args":  {
+                                     "tree":  "tree"
+                                 },
+                        "expect":  1
+                    },
+                    {
+                        "check":  "noErrors",
+                        "source":  "SteveTheTroll"
+                    }
+                ]
 }

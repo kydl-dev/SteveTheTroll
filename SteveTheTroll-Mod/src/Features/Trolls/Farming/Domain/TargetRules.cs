@@ -11,10 +11,12 @@ namespace SteveTheTroll.Features.Trolls.Farming.Domain;
 internal static class TargetRules
 {
     /// How far ahead (m) and how wide (m, each side of the walking line) a troll counts as "in front of me".
-    internal const float Ahead = 3.5f, HalfWidth = 1.8f;
+    // D-180 (fix12 farm-friend-detour: passing a standing troll the walker never got more than 1.4 m beside the line - the 2.8 m waypoint is inside the two bodies, so it pushed
+    // the friend ahead of it up to the tree): the check starts 5 m ahead and the waypoint lies 4 m beside the friend (two troll bodies and a margin)
+    internal const float Ahead = 5f, HalfWidth = 1.8f;
 
     /// How far beside the other troll (m) the detour point lies.
-    internal const float Side = 2.8f;
+    internal const float Side = 4f;
 
     /// A reservation of a target is kept this long (s) after its holder last refreshed it.
     internal const float HoldSeconds = 6f;

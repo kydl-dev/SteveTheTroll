@@ -1,158 +1,160 @@
-{
-  "name": "far-troll-goes-home-obstacle-route",
-  "timeout": 360,
-  "description": "D-174 (review): a full troll ~120 m from its hub with a 24 m line of player-built walls (two high) across its straight way - nothing it may break - must find a way round (the D-174 candidate search: 45 .. 135 degrees, up to 30 m), reach its hub and unload; no troll hit may reach a wall. The game's own path search may already route round the wall (run 174059: no detour was needed) - the test asserts the arrival, the delivery and that no wall was hit, not that a detour ran (the candidate search has its unit tests and recovery-walled-tree).",
-  "steps": [
-    {
-      "do": "hook",
-      "name": "stt.arena",
-      "contains": "arena at",
-      "label": "start on the arena spot (MIGRATION_DECISIONS C26)"
-    },
-    {
-      "do": "hook",
-      "name": "stt.reset"
-    },
-    {
-      "do": "give",
-      "prefab": "STT_TrollSlippers",
-      "count": 1,
-      "equip": true
-    },
-    {
-      "do": "hook",
-      "name": "stt.addHub",
-      "args": {
-        "number": 1,
-        "dx": 0,
-        "dz": 25
-      }
-    },
-    {
-      "do": "hook",
-      "name": "stt.clearRoute",
-      "args": {
-        "metres": 120
-      }
-    },
-    {
-      "do": "wait",
-      "seconds": 8
-    },
-    {
-      "do": "hook",
-      "name": "stt.clearMobs",
-      "args": {
-        "radius": 80
-      }
-    },
-    {
-      "do": "hook",
-      "name": "stt.spawnTroll",
-      "args": {
-        "dx": 0,
-        "dz": 16
-      },
-      "as": "troll"
-    },
-    {
-      "do": "wait",
-      "seconds": 2
-    },
-    {
-      "do": "hook",
-      "name": "stt.hubFor",
-      "args": {
-        "troll": "troll"
-      },
-      "expect": 1,
-      "label": "the test hub is the troll's"
-    },
-    {"do":"hook","name":"stt.wallAcross","args":{"troll":"troll","ahead":12,"length":24},"label":"24 m wall line 12 m in front of the troll, across its way home (the wall count is enforced by the next step)"},
-    {"do":"wait","until":{"check":"hook","name":"stt.wallsAlive","min":12},"timeout":1,"label":"12 walls (6 per layer, two high) stand across the way home"},
-    {
-      "do": "wait",
-      "seconds": 1
-    },
-    {
-      "do": "hook",
-      "name": "stt.followTroll",
-      "args": {
-        "troll": "troll"
-      }
-    },
-    {
-      "do": "hook",
-      "name": "stt.fillBackpack",
-      "args": {
-        "troll": "troll"
-      }
-    },
-    {
-      "do": "wait",
-      "until": {
-        "check": "hook",
-        "name": "stt.returningToUnload",
-        "args": {
-          "troll": "troll"
-        },
-        "expect": true
-      },
-      "timeout": 10
-    },
-    {
-      "do": "wait",
-      "until": {
-        "check": "hook",
-        "name": "stt.followedBackpackAtMost",
-        "args": {
-          "stacks": 0
-        },
-        "expect": true
-      },
-      "timeout": 240
-    },
-    {
-      "do": "hook",
-      "name": "stt.followedState",
-      "label": "followed troll (diagnosis)"
-    },
-    {
-      "do": "hook",
-      "name": "stt.followedConserved",
-      "expect": true,
-      "label": "every Stone put in is in the backpack or a depot - nothing lost or made"
-    },
-    {
-      "do": "hook",
-      "name": "stt.wallsHitByTroll",
-      "expect": 0,
-      "label": "no troll hit reached a player-built wall"
-    }
-  ],
-  "asserts": [
-    {
-      "check": "hook",
-      "name": "stt.followedBackpackAtMost",
-      "args": {
-        "stacks": 0
-      },
-      "expect": true,
-      "label": "it got round the wall, reached its hub and unloaded"
-    },
-    {
-      "check": "hook",
-      "name": "stt.followedConserved",
-      "expect": true
-    },
-    {
-      "check": "hook",
-      "name": "stt.wallsHitByTroll",
-      "expect": 0
-    },
-    {
-      "check": "noErrors",
-      "source": "SteveTheTroll"
-    }
-  ]
+﻿{
+    "name":  "far-troll-goes-home-obstacle-route",
+    "timeout":  360,
+    "description":  "D-174 (review): a full troll ~120 m from its hub with a 24 m line of player-built walls (two high) across its straight way - nothing it may break - must find a way round (the D-174 candidate search: 45 .. 135 degrees, up to 30 m), reach its hub and unload; no troll hit may reach a wall. The game\u0027s own path search may already route round the wall (run 174059: no detour was needed) - the test asserts the arrival, the delivery and that no wall was hit, not that a detour ran (the candidate search has its unit tests and recovery-walled-tree).",
+    "steps":  [
+                  {
+                      "do":  "use",
+                      "block":  "start",
+                      "args":  {
+                                   "clearTrolls":  false,
+                                   "slippers":  true,
+                                   "hub":  true
+                               }
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.clearRoute",
+                      "args":  {
+                                   "metres":  120
+                               }
+                  },
+                  {
+                      "do":  "wait",
+                      "seconds":  8
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.clearMobs",
+                      "args":  {
+                                   "radius":  80
+                               }
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.spawnTroll",
+                      "args":  {
+                                   "dx":  0,
+                                   "dz":  16
+                               },
+                      "as":  "troll"
+                  },
+                  {
+                      "do":  "wait",
+                      "seconds":  2
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.hubFor",
+                      "args":  {
+                                   "troll":  "troll"
+                               },
+                      "expect":  1,
+                      "label":  "the test hub is the troll\u0027s"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.wallAcross",
+                      "args":  {
+                                   "troll":  "troll",
+                                   "ahead":  12,
+                                   "length":  24
+                               },
+                      "label":  "24 m wall line 12 m in front of the troll, across its way home (the wall count is enforced by the next step)"
+                  },
+                  {
+                      "do":  "wait",
+                      "until":  {
+                                    "check":  "hook",
+                                    "name":  "stt.wallsAlive",
+                                    "min":  12
+                                },
+                      "timeout":  1,
+                      "label":  "12 walls (6 per layer, two high) stand across the way home"
+                  },
+                  {
+                      "do":  "wait",
+                      "seconds":  1
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.followTroll",
+                      "args":  {
+                                   "troll":  "troll"
+                               }
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.fillBackpack",
+                      "args":  {
+                                   "troll":  "troll"
+                               }
+                  },
+                  {
+                      "do":  "wait",
+                      "until":  {
+                                    "check":  "hook",
+                                    "name":  "stt.returningToUnload",
+                                    "args":  {
+                                                 "troll":  "troll"
+                                             },
+                                    "expect":  true
+                                },
+                      "timeout":  10
+                  },
+                  {
+                      "do":  "wait",
+                      "until":  {
+                                    "check":  "hook",
+                                    "name":  "stt.followedBackpackAtMost",
+                                    "args":  {
+                                                 "stacks":  0
+                                             },
+                                    "expect":  true
+                                },
+                      "timeout":  240
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.followedState",
+                      "label":  "followed troll (diagnosis)"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.followedConserved",
+                      "expect":  true,
+                      "label":  "every Stone put in is in the backpack or a depot - nothing lost or made"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.wallsHitByTroll",
+                      "expect":  0,
+                      "label":  "no troll hit reached a player-built wall"
+                  }
+              ],
+    "asserts":  [
+                    {
+                        "check":  "hook",
+                        "name":  "stt.followedBackpackAtMost",
+                        "args":  {
+                                     "stacks":  0
+                                 },
+                        "expect":  true,
+                        "label":  "it got round the wall, reached its hub and unloaded"
+                    },
+                    {
+                        "check":  "hook",
+                        "name":  "stt.followedConserved",
+                        "expect":  true
+                    },
+                    {
+                        "check":  "hook",
+                        "name":  "stt.wallsHitByTroll",
+                        "expect":  0
+                    },
+                    {
+                        "check":  "noErrors",
+                        "source":  "SteveTheTroll"
+                    }
+                ]
 }

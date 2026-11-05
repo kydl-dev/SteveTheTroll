@@ -1,37 +1,24 @@
 ﻿{
     "name":  "chase-push-through",
-    "description":  "D-179 (user: pathing in clutter, \"do 1-2 and 4 now\"): the guard fight of guard-mob-kills-open with a row of five small beeches across the troll\u0027s straight way to the creature - the chase must break through them (push-through), reach the creature and kill it (the row is planted right after the creature appears: the farming troll would otherwise chop the beeches as wood first)",
+    "description":  "D-179 (user: pathing in clutter, \"do 1-2 and 4 now\"): the guard fight of guard-mob-kills-open with a row of five small beeches across the troll\u0027s straight way to the creature - the chase must break through them (push-through), reach the creature and kill it (the row is planted right after the creature appears: the farming troll would otherwise chop the beeches as wood first) fix12: with 40 m cleared the troll walked to a birch 31 m away, out of the guard\u0027s defend range, and never took the creature on - 60 m cleared.",
     "timeout":  90,
     "steps":  [
                   {
-                      "do":  "hook",
-                      "name":  "stt.arena",
-                      "contains":  "arena at",
-                      "label":  "start on the arena spot (MIGRATION_DECISIONS C26)"
-                  },
-                  {
-                      "do":  "hook",
-                      "name":  "stt.reset"
-                  },
-                  {
-                      "do":  "hook",
-                      "name":  "stt.clearTrolls"
-                  },
-                  {
-                      "do":  "hook",
-                      "name":  "stt.arenaFurther",
+                      "do":  "use",
+                      "block":  "start",
                       "args":  {
-                                   "metres":  35
-                               },
-                      "label":  "the fight is outside the 15 m bed no-hit zone (the bed stays at the arena spot)"
+                                   "clearTrolls":  true,
+                                   "slippers":  false,
+                                   "hub":  false
+                               }
                   },
                   {
-                      "do":  "hook",
-                      "name":  "stt.clearAround",
+                      "do":  "use",
+                      "block":  "openGround",
                       "args":  {
-                                   "radius":  40
-                               },
-                      "label":  "open ground: no tree, rock or log around the fight (the obstructed twin is guard-mob-kills)"
+                                   "metres":  35,
+                                   "radius":  60
+                               }
                   },
                   {
                       "do":  "give",
@@ -129,84 +116,8 @@
                       "label":  "small beech 5 of 5 across the way"
                   },
                   {
-                      "do":  "wait",
-                      "until":  {
-                                    "check":  "hook",
-                                    "name":  "stt.guardTargetOf",
-                                    "args":  {
-                                                 "mob":  "mob",
-                                                 "troll":  "troll"
-                                             },
-                                    "expect":  "Greydwarf"
-                                },
-                      "timeout":  8,
-                      "label":  "phase 1a: the game AI of the farming troll targets the creature (the AI target field only - not yet proof of a guard order)"
-                  },
-                  {
-                      "do":  "wait",
-                      "until":  {
-                                    "check":  "hook",
-                                    "name":  "stt.forcedTargetOf",
-                                    "args":  {
-                                                 "troll":  "troll"
-                                             },
-                                    "expect":  "Greydwarf"
-                                },
-                      "timeout":  3,
-                      "label":  "phase 1b: TrollGuard registered the creature as the forced target"
-                  },
-                  {
-                      "do":  "wait",
-                      "until":  {
-                                    "check":  "hook",
-                                    "name":  "stt.combatState",
-                                    "args":  {
-                                                 "troll":  "troll"
-                                             },
-                                    "expect":  "chase"
-                                },
-                      "timeout":  3,
-                      "label":  "phase 1c: a TrollChase drives the troll (not farming, not standing)"
-                  },
-                  {
-                      "do":  "wait",
-                      "until":  {
-                                    "check":  "hook",
-                                    "name":  "stt.trollNearLastMob",
-                                    "args":  {
-                                                 "troll":  "troll",
-                                                 "metres":  8
-                                             },
-                                    "expect":  true
-                                },
-                      "timeout":  20,
-                      "label":  "phase 2a: the troll closes the gap to within 8 m (a failure here is the approach, not the swing)"
-                  },
-                  {
-                      "do":  "wait",
-                      "until":  {
-                                    "check":  "hook",
-                                    "name":  "stt.lastMobHurt",
-                                    "expect":  true,
-                                    "args":  {
-                                                 "troll":  "troll"
-                                             }
-                                },
-                      "timeout":  15,
-                      "label":  "phase 2b: within reach it swings and hurts the creature"
-                  },
-                  {
-                      "do":  "wait",
-                      "until":  {
-                                    "check":  "hook",
-                                    "name":  "stt.guardKillLast",
-                                    "args":  {
-                                                 "troll":  "troll"
-                                             },
-                                    "expect":  "dead"
-                                },
-                      "timeout":  25,
-                      "label":  "phase 3: the creature is dead"
+                      "do":  "guardFight",
+                      "near":  8
                   }
               ],
     "asserts":  [
@@ -216,13 +127,6 @@
                         "text":  "pushes through",
                         "expect":  true,
                         "label":  "the chase broke through a small blocker instead of walking round"
-                    },
-                    {
-                        "check":  "logContains",
-                        "source":  "SteveTheTroll",
-                        "text":  "done (enemy dead",
-                        "expect":  true,
-                        "label":  "and the troll killed the creature"
                     },
                     {
                         "check":  "noErrors",

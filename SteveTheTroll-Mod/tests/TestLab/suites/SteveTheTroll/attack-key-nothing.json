@@ -1,76 +1,61 @@
-{
-  "name": "attack-key-nothing",
-  "description": "D-171: the attack key on nothing - the troll goes farming its focus (OrderKind.FarmFocus)",
-  "timeout": 60,
-  "steps": [
-    {
-      "do": "hook",
-      "name": "stt.arena",
-      "contains": "arena at",
-      "label": "start on the arena spot (MIGRATION_DECISIONS C26)"
-    },
-    {
-      "do": "hook",
-      "name": "stt.reset"
-    },
-    {
-      "do": "hook",
-      "name": "stt.clearTrolls"
-    },
-    {
-      "do": "give",
-      "prefab": "STT_TrollSlippers",
-      "count": 1,
-      "equip": true
-    },
-    {
-      "do": "hook",
-      "name": "stt.addHub",
-      "args": {
-        "number": 1,
-        "dx": 0,
-        "dz": 25
-      }
-    },
-    {
-      "do": "hook",
-      "name": "stt.spawnTroll",
-      "args": {
-        "dx": -12,
-        "dz": 12
-      },
-      "as": "troll"
-    },
-    {
-      "do": "wait",
-      "seconds": 1
-    },
-    {"do":"hook","name":"kc.hubIsOpen","expect":false,"label":"no blocking window is open when the key is pressed (fix8: a hub a failed test left open refused every press)"},
-    {
-      "do": "hook",
-      "name": "stt.attackKeyPress",
-      "args": {
-        "count": 1
-      }
-    },
-    {
-      "do": "wait",
-      "seconds": 2
-    }
-  ],
-  "asserts": [
-    {
-      "check": "hook",
-      "name": "stt.hasFarmer",
-      "args": {
-        "troll": "troll"
-      },
-      "expect": true,
-      "label": "farms"
-    },
-    {
-      "check": "noErrors",
-      "source": "SteveTheTroll"
-    }
-  ]
+﻿{
+    "name":  "attack-key-nothing",
+    "description":  "D-171: the attack key on nothing - the troll goes farming its focus (OrderKind.FarmFocus)",
+    "timeout":  60,
+    "steps":  [
+                  {
+                      "do":  "use",
+                      "block":  "start",
+                      "args":  {
+                                   "clearTrolls":  true,
+                                   "slippers":  true,
+                                   "hub":  true
+                               }
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.spawnTroll",
+                      "args":  {
+                                   "dx":  -12,
+                                   "dz":  12
+                               },
+                      "as":  "troll"
+                  },
+                  {
+                      "do":  "wait",
+                      "seconds":  1
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "kc.hubIsOpen",
+                      "expect":  false,
+                      "label":  "no blocking window is open when the key is pressed (fix8: a hub a failed test left open refused every press)"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.attackKeyPress",
+                      "args":  {
+                                   "count":  1
+                               }
+                  },
+                  {
+                      "do":  "wait",
+                      "seconds":  2
+                  }
+              ],
+    "asserts":  [
+                    {
+                        "check":  "hook",
+                        "name":  "stt.hasFarmer",
+                        "args":  {
+                                     "troll":  "troll"
+                                 },
+                        "expect":  true,
+                        "label":  "farms"
+                    },
+                    {
+                        "check":  "noErrors",
+                        "source":  "SteveTheTroll"
+                    }
+                ]
 }

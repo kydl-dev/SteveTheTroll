@@ -83,6 +83,9 @@ internal sealed partial class TrollFarmer : MonoBehaviour
 
     /// The source this farmer works on now (null = none). D-177: read by the stt.farmersOn test hook.
     internal GameObject Target => _target;
+
+    /// The farmer walks home / waits there (the home order or slippers off). D-180: read by the stt.goingHome test hook.
+    internal bool GoingHome => _home;
     private FarmTool _tool;
     private FarmHomeTrip _trip;
     private ItemDrop.ItemData _weapon;

@@ -29,3 +29,18 @@ Status "Automated" here is only true after the TestLab run named in `_agent\TEST
 | Troll club breaks special trees (D-120) | - | - | club-breaks | - | Automated (pending first run) |
 | Map pins, hover name of a tamed troll (D-081, D-060) | - | - | - | look | **Gap** (manual only) |
 | Hub sign editor (D-135) | - | - | - | hub-look | Manual |
+
+## How the TestLab suite is built (D-180, DrakesTestLab docs\TESTLAB-AUTHORING.md)
+
+Reusable steps live in `tests/TestLab/suites/SteveTheTroll/_functions/` (loaded automatically for the suite; a failure inside names the function):
+
+| Function / block | What it does | Used by |
+|---|---|---|
+| `start` (block: `clearTrolls`, `slippers`, `hub`) | arena spot, stt.reset, no test trolls, slippers on, HUB 1 25 m ahead | every test |
+| `openGround` (block: `metres`, `radius`) | the player further out + world trees / rocks cleared | attack-key-*, guard-mob-kills-open, chase-push-through, farm-* |
+| `guardFight` (function: `near`, with asserts) | AI target -> forced target -> chase -> within `near` m -> first hit -> dead | guard-mob-kills, guard-mob-kills-open, chase-push-through |
+| `pressAttackKeyAt` (block: `target`, `expectName`) | aim + check the ray + no window open + one press | attack-key-creature, attack-key-farming-creature |
+| `unloadAndConserve` (function: `timeout`, with assert) | full backpack -> unloads everything -> nothing lost or made | depot-full-builds-new |
+
+Negative tests (`expectFailure`) prove that checks can fail: `meta-unmet-min-fails`, `meta-wrong-target-fails`.
+Quick checks of one test: `Run-TestLabSuites.ps1 -Suites "SteveTheTroll/<test>"`; full runs before a release gate.

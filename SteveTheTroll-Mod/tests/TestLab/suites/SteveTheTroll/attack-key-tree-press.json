@@ -1,138 +1,116 @@
-{
-  "name": "attack-key-tree-press",
-  "description": "D-171 P4/P8: the player looks at a tree and presses the attack key (user idea 2026-11-02: the player goes 100 m further out from the test spot, away from the lab start (stt.arenaFurther; a plain dx teleport went back to the lab house) and the target is 15 m in front - no no-hit ring, no arena colliders in the ray; the lab's own key press and the real camera ray, no aim help; teleports, so it runs at the end)",
-  "timeout": 90,
-  "steps": [
-    {
-      "do": "hook",
-      "name": "stt.arena",
-      "contains": "arena at",
-      "label": "start on the arena spot (MIGRATION_DECISIONS C26)"
-    },
-    {
-      "do": "hook",
-      "name": "stt.reset"
-    },
-    {
-      "do": "hook",
-      "name": "stt.clearTrolls"
-    },
-    {
-      "do": "give",
-      "prefab": "STT_TrollSlippers",
-      "count": 1,
-      "equip": true
-    },
-    {
-      "do": "hook",
-      "name": "stt.addHub",
-      "args": {
-        "number": 1,
-        "dx": 0,
-        "dz": 25
-      }
-    },
-    {
-      "do": "hook",
-      "name": "stt.arenaFurther",
-      "args": {
-        "metres": 100
-      }
-    },
-    {
-      "do": "hook",
-      "name": "stt.clearAround",
-      "args": {
-        "radius": 30
-      },
-      "label": "no world tree / bush between the player and the target (D-172)"
-    },
-    {
-      "do": "wait",
-      "seconds": 1
-    },
-    {
-      "do": "hook",
-      "name": "stt.plantTree",
-      "args": {
-        "dx": 0,
-        "dz": 15
-      },
-      "as": "tree"
-    },
-    {
-      "do": "hook",
-      "name": "stt.spawnTroll",
-      "args": {
-        "dx": -14,
-        "dz": 8
-      },
-      "as": "troll"
-    },
-    {
-      "do": "wait",
-      "seconds": 1.5
-    },
-    {
-      "do": "face",
-      "target": "tree"
-    },
-    {
-      "do": "hook",
-      "name": "stt.lookAt",
-      "args": {
-        "target": "tree",
-        "height": 1.5
-      },
-      "label": "look at the trunk, not the root (D-172)"
-    },
-    {
-      "do": "wait",
-      "seconds": 0.5
-    },
-    {
-      "do": "hook",
-      "name": "stt.aimedAt",
-      "contains": "Beech1",
-      "label": "the real camera ray (what the attack key uses) is on the planted tree"
-    },
-    {
-      "do": "hook",
-      "name": "stt.plantedUntouched",
-      "expect": 1,
-      "label": "the tree is untouched before the press (damage after it belongs to the order)"
-    },
-    {"do":"hook","name":"kc.hubIsOpen","expect":false,"label":"no blocking window is open when the key is pressed (fix8: a hub a failed test left open refused every press)"},
-    {
-      "do": "pressKey",
-      "key": "Mouse3"
-    },
-    {
-      "do": "wait",
-      "until": {
-        "check": "hook",
-        "name": "stt.plantedUntouched",
-        "expect": 0
-      },
-      "timeout": 45
-    }
-  ],
-  "asserts": [
-    {
-      "check": "hook",
-      "name": "stt.plantedUntouched",
-      "expect": 0,
-      "label": "the tree the player looked at was hit"
-    },
-    {
-      "check": "logContains",
-      "source": "SteveTheTroll",
-      "text": "ordered to break Beech1",
-      "expect": true
-    },
-    {
-      "check": "noErrors",
-      "source": "SteveTheTroll"
-    }
-  ]
+﻿{
+    "name":  "attack-key-tree-press",
+    "description":  "D-171 P4/P8: the player looks at a tree and presses the attack key (user idea 2026-11-02: the player goes 100 m further out from the test spot, away from the lab start (stt.arenaFurther; a plain dx teleport went back to the lab house) and the target is 15 m in front - no no-hit ring, no arena colliders in the ray; the lab\u0027s own key press and the real camera ray, no aim help; teleports, so it runs at the end)",
+    "timeout":  90,
+    "steps":  [
+                  {
+                      "do":  "use",
+                      "block":  "start",
+                      "args":  {
+                                   "clearTrolls":  true,
+                                   "slippers":  true,
+                                   "hub":  true
+                               }
+                  },
+                  {
+                      "do":  "use",
+                      "block":  "openGround",
+                      "args":  {
+                                   "metres":  100,
+                                   "radius":  30
+                               }
+                  },
+                  {
+                      "do":  "wait",
+                      "seconds":  1
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.plantTree",
+                      "args":  {
+                                   "dx":  0,
+                                   "dz":  15
+                               },
+                      "as":  "tree"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.spawnTroll",
+                      "args":  {
+                                   "dx":  -14,
+                                   "dz":  8
+                               },
+                      "as":  "troll"
+                  },
+                  {
+                      "do":  "wait",
+                      "seconds":  1.5
+                  },
+                  {
+                      "do":  "face",
+                      "target":  "tree"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.lookAt",
+                      "args":  {
+                                   "target":  "tree",
+                                   "height":  1.5
+                               },
+                      "label":  "look at the trunk, not the root (D-172)"
+                  },
+                  {
+                      "do":  "wait",
+                      "seconds":  0.5
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.aimedAt",
+                      "contains":  "Beech1",
+                      "label":  "the real camera ray (what the attack key uses) is on the planted tree"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.plantedUntouched",
+                      "expect":  1,
+                      "label":  "the tree is untouched before the press (damage after it belongs to the order)"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "kc.hubIsOpen",
+                      "expect":  false,
+                      "label":  "no blocking window is open when the key is pressed (fix8: a hub a failed test left open refused every press)"
+                  },
+                  {
+                      "do":  "pressKey",
+                      "key":  "Mouse3"
+                  },
+                  {
+                      "do":  "wait",
+                      "until":  {
+                                    "check":  "hook",
+                                    "name":  "stt.plantedUntouched",
+                                    "expect":  0
+                                },
+                      "timeout":  45
+                  }
+              ],
+    "asserts":  [
+                    {
+                        "check":  "hook",
+                        "name":  "stt.plantedUntouched",
+                        "expect":  0,
+                        "label":  "the tree the player looked at was hit"
+                    },
+                    {
+                        "check":  "logContains",
+                        "source":  "SteveTheTroll",
+                        "text":  "ordered to break Beech1",
+                        "expect":  true
+                    },
+                    {
+                        "check":  "noErrors",
+                        "source":  "SteveTheTroll"
+                    }
+                ]
 }

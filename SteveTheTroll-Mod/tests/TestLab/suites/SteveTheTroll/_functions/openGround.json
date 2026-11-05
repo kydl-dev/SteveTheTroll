@@ -1,0 +1,8 @@
+{
+  "description": "The player moves `metres` further out from the arena spot (away from the lab start) and the world's trees, logs, bushes and rocks within `radius` m are removed - open ground for a fight or an aimed key.",
+  "params": { "metres": 100, "radius": 40 },
+  "steps": [
+    { "do": "hook", "name": "stt.arenaFurther", "args": { "metres": "{{metres}}" } },
+    { "do": "hook", "name": "stt.clearAround", "args": { "radius": "{{radius}}" }, "label": "open ground: no world tree / rock within {{radius}} m" }
+  ]
+}

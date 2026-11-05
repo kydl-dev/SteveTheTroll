@@ -1,119 +1,112 @@
-{
-  "name": "hub-walk-back-follow-cancels",
-  "description": "A new follow order stops the walk back to the hub; inside the zone nothing walks back (D-162)",
-  "timeout": 60,
-  "steps": [
-    {
-      "do": "hook",
-      "name": "stt.arena",
-      "contains": "arena at",
-      "label": "start on the arena spot (MIGRATION_DECISIONS C26)"
-    },
-    {
-      "do": "hook",
-      "name": "stt.reset"
-    },
-    {
-      "do": "give",
-      "prefab": "STT_TrollSlippers",
-      "count": 1,
-      "equip": true
-    },
-    {
-      "do": "hook",
-      "name": "stt.addHub",
-      "args": {
-        "number": 1,
-        "dx": 0,
-        "dz": 1300
-      }
-    },
-    {
-      "do": "hook",
-      "name": "stt.spawnTroll",
-      "args": {
-        "dz": 16,
-        "dx": 0
-      },
-      "as": "troll"
-    },
-    {
-      "do": "hook",
-      "name": "stt.returnCheck",
-      "args": {
-        "troll": "troll"
-      },
-      "expect": 1,
-      "label": "1284 m from the hub (troll 16 m ahead of the player): walks back"
-    },
-    {
-      "do": "wait",
-      "seconds": 2
-    },
-    {
-      "do": "hook",
-      "name": "stt.follow",
-      "args": {
-        "troll": "troll",
-        "on": true
-      }
-    },
-    {
-      "do": "wait",
-      "until": {
-        "check": "hook",
-        "name": "stt.returning",
-        "args": {
-          "troll": "troll"
-        },
-        "expect": false
-      },
-      "timeout": 10
-    },
-    {
-      "do": "hook",
-      "name": "stt.returning",
-      "args": {
-        "troll": "troll"
-      },
-      "expect": false,
-      "label": "the follow order ended the walk"
-    },
-    {
-      "do": "hook",
-      "name": "stt.clearHubs"
-    },
-    {
-      "do": "hook",
-      "name": "stt.addHub",
-      "args": {
-        "number": 2,
-        "dx": 0,
-        "dz": 940
-      }
-    },
-    {
-      "do": "hook",
-      "name": "stt.follow",
-      "args": {
-        "troll": "troll",
-        "on": false
-      }
-    },
-    {
-      "do": "hook",
-      "name": "stt.returnCheck",
-      "args": {
-        "troll": "troll"
-      },
-      "expect": 0,
-      "label": "924 m from a hub: inside the zone, no walk"
-    }
-  ],
-  "asserts": [
-    {
-      "check": "noErrors",
-      "source": "SteveTheTroll"
-    }
-  ]
+﻿{
+    "name":  "hub-walk-back-follow-cancels",
+    "description":  "A new follow order stops the walk back to the hub; inside the zone nothing walks back (D-162)",
+    "timeout":  60,
+    "steps":  [
+                  {
+                      "do":  "use",
+                      "block":  "start",
+                      "args":  {
+                                   "clearTrolls":  false,
+                                   "slippers":  true,
+                                   "hub":  false
+                               }
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.addHub",
+                      "args":  {
+                                   "number":  1,
+                                   "dx":  0,
+                                   "dz":  1300
+                               }
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.spawnTroll",
+                      "args":  {
+                                   "dz":  16,
+                                   "dx":  0
+                               },
+                      "as":  "troll"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.returnCheck",
+                      "args":  {
+                                   "troll":  "troll"
+                               },
+                      "expect":  1,
+                      "label":  "1284 m from the hub (troll 16 m ahead of the player): walks back"
+                  },
+                  {
+                      "do":  "wait",
+                      "seconds":  2
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.follow",
+                      "args":  {
+                                   "troll":  "troll",
+                                   "on":  true
+                               }
+                  },
+                  {
+                      "do":  "wait",
+                      "until":  {
+                                    "check":  "hook",
+                                    "name":  "stt.returning",
+                                    "args":  {
+                                                 "troll":  "troll"
+                                             },
+                                    "expect":  false
+                                },
+                      "timeout":  10
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.returning",
+                      "args":  {
+                                   "troll":  "troll"
+                               },
+                      "expect":  false,
+                      "label":  "the follow order ended the walk"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.clearHubs"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.addHub",
+                      "args":  {
+                                   "number":  2,
+                                   "dx":  0,
+                                   "dz":  940
+                               }
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.follow",
+                      "args":  {
+                                   "troll":  "troll",
+                                   "on":  false
+                               }
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.returnCheck",
+                      "args":  {
+                                   "troll":  "troll"
+                               },
+                      "expect":  0,
+                      "label":  "924 m from a hub: inside the zone, no walk"
+                  }
+              ],
+    "asserts":  [
+                    {
+                        "check":  "noErrors",
+                        "source":  "SteveTheTroll"
+                    }
+                ]
 }

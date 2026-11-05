@@ -4,18 +4,13 @@
     "timeout":  90,
     "steps":  [
                   {
-                      "do":  "hook",
-                      "name":  "stt.arena",
-                      "contains":  "arena at",
-                      "label":  "start on the arena spot (MIGRATION_DECISIONS C26)"
-                  },
-                  {
-                      "do":  "hook",
-                      "name":  "stt.reset"
-                  },
-                  {
-                      "do":  "hook",
-                      "name":  "stt.clearTrolls"
+                      "do":  "use",
+                      "block":  "start",
+                      "args":  {
+                                   "clearTrolls":  true,
+                                   "slippers":  false,
+                                   "hub":  false
+                               }
                   },
                   {
                       "do":  "hook",
@@ -71,101 +66,11 @@
                       "as":  "mob"
                   },
                   {
-                      "do":  "wait",
-                      "until":  {
-                                    "check":  "hook",
-                                    "name":  "stt.guardTargetOf",
-                                    "args":  {
-                                                 "mob":  "mob",
-                                                 "troll":  "troll"
-                                             },
-                                    "expect":  "Greydwarf"
-                                },
-                      "timeout":  8,
-                      "label":  "phase 1a: the game AI of the farming troll targets the creature (the AI target field only - not yet proof of a guard order)"
-                  },
-                  {
-                      "do":  "wait",
-                      "until":  {
-                                    "check":  "hook",
-                                    "name":  "stt.forcedTargetOf",
-                                    "args":  {
-                                                 "troll":  "troll"
-                                             },
-                                    "expect":  "Greydwarf"
-                                },
-                      "timeout":  3,
-                      "label":  "phase 1b: TrollGuard registered the creature as the forced target"
-                  },
-                  {
-                      "do":  "wait",
-                      "until":  {
-                                    "check":  "hook",
-                                    "name":  "stt.combatState",
-                                    "args":  {
-                                                 "troll":  "troll"
-                                             },
-                                    "expect":  "chase"
-                                },
-                      "timeout":  3,
-                      "label":  "phase 1c: a TrollChase drives the troll (not farming, not standing)"
-                  },
-                  {
-                      "do":  "wait",
-                      "until":  {
-                                    "check":  "hook",
-                                    "name":  "stt.trollNearLastMob",
-                                    "args":  {
-                                                 "troll":  "troll",
-                                                 "metres":  8
-                                             },
-                                    "expect":  true
-                                },
-                      "timeout":  20,
-                      "label":  "phase 2a: the troll closes the gap to within 8 m (a failure here is the approach, not the swing)"
-                  },
-                  {
-                      "do":  "wait",
-                      "until":  {
-                                    "check":  "hook",
-                                    "name":  "stt.lastMobHurt",
-                                    "expect":  true,
-                                    "args":  {
-                                                 "troll":  "troll"
-                                             }
-                                },
-                      "timeout":  15,
-                      "label":  "phase 2b: within reach it swings and hurts the creature"
-                  },
-                  {
-                      "do":  "wait",
-                      "until":  {
-                                    "check":  "hook",
-                                    "name":  "stt.guardKillLast",
-                                    "args":  {
-                                                 "troll":  "troll"
-                                             },
-                                    "expect":  "dead"
-                                },
-                      "timeout":  25,
-                      "label":  "phase 3: the creature is dead"
+                      "do":  "guardFight",
+                      "near":  8
                   }
               ],
     "asserts":  [
-                    {
-                        "check":  "logContains",
-                        "source":  "SteveTheTroll",
-                        "text":  "attacks Greydwarf",
-                        "expect":  true,
-                        "label":  "the guard gave the troll the target"
-                    },
-                    {
-                        "check":  "logContains",
-                        "source":  "SteveTheTroll",
-                        "text":  "done (enemy dead",
-                        "expect":  true,
-                        "label":  "the troll itself killed it (TrollChase)"
-                    },
                     {
                         "check":  "noErrors",
                         "source":  "SteveTheTroll"

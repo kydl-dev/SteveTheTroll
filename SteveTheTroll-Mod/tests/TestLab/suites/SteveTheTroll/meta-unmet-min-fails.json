@@ -1,0 +1,12 @@
+{
+  "name": "meta-unmet-min-fails",
+  "description": "D-180 negative test (DrakesTestLab expectFailure): a wait on a hook whose min can never be met MUST fail - proves the min comparison is enforced (the unenforced do:hook min hid stale tests for weeks). Passes only when the wait fails.",
+  "expectFailure": "never happened",
+  "timeout": 30,
+  "steps": [
+    { "do": "use", "block": "start", "args": { "clearTrolls": true, "slippers": true, "hub": true } },
+    { "do": "hook", "name": "stt.spawnTroll", "args": { "dx": 0, "dz": 20 }, "as": "troll" },
+    { "do": "hook", "name": "stt.mark", "args": { "troll": "troll" } },
+    { "do": "wait", "until": { "check": "hook", "name": "stt.progressTowardHub", "args": { "troll": "troll" }, "min": 9999 }, "timeout": 1, "label": "impossible: 9999 m closer in 1 s" }
+  ]
+}

@@ -71,6 +71,8 @@
   "tests": [
     "architecture-v2",
     "startup-clean",
+                  "meta-unmet-min-fails",
+                  "meta-wrong-target-fails",
     "kydl-spec-port",
     "feature-toggle",
     "reset-isolation",

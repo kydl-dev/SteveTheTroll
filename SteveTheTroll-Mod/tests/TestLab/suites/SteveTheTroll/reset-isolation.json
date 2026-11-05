@@ -1,73 +1,72 @@
-{
-  "name": "reset-isolation",
-  "timeout": 30,
-  "description": "D-174 (review): stt.reset leaves no test troll and no tracking state behind for the next test.",
-  "steps": [
-    {
-      "do": "hook",
-      "name": "stt.arena",
-      "contains": "arena at",
-      "label": "start on the arena spot (MIGRATION_DECISIONS C26)"
-    },
-    {
-      "do": "hook",
-      "name": "stt.reset"
-    },
-    {
-      "do": "hook",
-      "name": "stt.spawnTroll",
-      "args": {
-        "dx": 0,
-        "dz": 16
-      },
-      "as": "troll"
-    },
-    {
-      "do": "hook",
-      "name": "stt.followTroll",
-      "args": {
-        "troll": "troll"
-      }
-    },
-    {
-      "do": "hook",
-      "name": "stt.mark",
-      "args": {
-        "troll": "troll"
-      }
-    },
-    {
-      "do": "wait",
-      "seconds": 1
-    },
-    {
-      "do": "hook",
-      "name": "stt.reset"
-    },
-    {
-      "do": "wait",
-      "seconds": 1
-    },
-    {
-      "do": "hook",
-      "name": "stt.tamedTrollsNear",
-      "args": {
-        "radius": 150
-      },
-      "expect": 0,
-      "label": "no tamed troll near the arena after the reset"
-    },
-    {
-      "do": "hook",
-      "name": "stt.trackingState",
-      "expect": "",
-      "label": "no followed troll / marks / fill counts left"
-    }
-  ],
-  "asserts": [
-    {
-      "check": "noErrors",
-      "source": "SteveTheTroll"
-    }
-  ]
+﻿{
+    "name":  "reset-isolation",
+    "timeout":  30,
+    "description":  "D-174 (review): stt.reset leaves no test troll and no tracking state behind for the next test.",
+    "steps":  [
+                  {
+                      "do":  "use",
+                      "block":  "start",
+                      "args":  {
+                                   "clearTrolls":  false,
+                                   "slippers":  false,
+                                   "hub":  false
+                               }
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.spawnTroll",
+                      "args":  {
+                                   "dx":  0,
+                                   "dz":  16
+                               },
+                      "as":  "troll"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.followTroll",
+                      "args":  {
+                                   "troll":  "troll"
+                               }
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.mark",
+                      "args":  {
+                                   "troll":  "troll"
+                               }
+                  },
+                  {
+                      "do":  "wait",
+                      "seconds":  1
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.reset"
+                  },
+                  {
+                      "do":  "wait",
+                      "seconds":  1
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.tamedTrollsNear",
+                      "args":  {
+                                   "radius":  150
+                               },
+                      "expect":  0,
+                      "label":  "no tamed troll near the arena after the reset"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.trackingState",
+                      "expect":  "",
+                      "label":  "no followed troll / marks / fill counts left"
+                  }
+              ],
+    "asserts":  [
+                    {
+                        "check":  "noErrors",
+                        "source":  "SteveTheTroll"
+                    }
+                ]
 }
