@@ -13,16 +13,16 @@
 == same name in several files
   AddHub                       HubTabs.cs:161, TestHooks.Part3.cs:283
   Apply                        SignFonts.cs:86, DepotGround.cs:235, TrollDepot.Part2.cs:28
-  Begin                        TrollCounter.cs:240, TrollSlam.cs:37, TrollArrival.cs:60
+  Begin                        TrollCounter.cs:237, TrollSlam.cs:37, TrollArrival.cs:60
   Build                        HubPrefab.cs:35, SlipperDropModel.cs:26, DepotPrefab.cs:131, TrollDepot.cs:313, HubTab.cs:30, TrollsKyPage.cs:24
   BusyReason                   IdleRules.cs:37, TrollIdle.cs:234
-  Check                        HubRules.cs:29, TrollReturn.cs:82
+  Check                        HubRules.cs:29, TrollReturn.cs:84
   Decide                       Approach.cs:33, FarmGate.cs:75, OrderRules.cs:50
   Describe                     TrollGuard.cs:261, TrollHold.cs:25, TrollMoveDiag.cs:15
   FloorLift                    DepotData.cs:46, DepotPrefab.cs:36
   Follow                       TrollCommands.cs:43, TestHooks.Part3.cs:364
   Forget                       CostumeUnlock.cs:50, TrollGuard.cs:236
-  HeldByOther                  TargetRules.cs:74, FarmReservations.cs:21
+  HeldByOther                  TargetRules.cs:94, FarmReservations.cs:21
   Holds                        HomeRules.cs:37, TrollHold.cs:43
   IconOf                       CostumeItems.cs:162, HubPrefab.cs:150
   InRange                      BackpackRules.cs:35, TrollBedHeal.cs:26
@@ -40,10 +40,10 @@
   Remove                       TrollDepot.Part2.cs:291, HubTabs.cs:176
   ReservedByOther              DepotRules.cs:29, TrollDepot.cs:182
   SelfCheck                    BackpackStore.cs:59, TrollDefend.cs:42, TrollFarming.cs:71, ValheimTrollMovement.cs:59, TamedTrollSpeed.cs:47, TamedTrollStats.cs:33
-  SetActive                    HubPlacement.cs:29, GapTestHooks.cs:268
+  SetActive                    HubPlacement.cs:29, GapTestHooks.cs:273
   Shown                        TrollIdle.cs:182, TrollOrders.cs:411, TrollCommands.cs:36
-  Slippers                     ModelKyPages.cs:58, CombatTestHooks.Part2.cs:159
-  Target                       TrollReturn.cs:47, CombatTestHooks.cs:141
+  Slippers                     ModelKyPages.cs:58, CombatTestHooks.Part2.cs:186
+  Target                       TrollReturn.cs:47, CombatTestHooks.cs:147
   TargetMethods                ClubBreaks.cs:30, SetTooltipPatch.cs:94, TrollFarmHits.cs:27, CostumePatches.cs:14, CostumePatches.cs:59, TrollsCombatPatches.cs:34
   Track                        SlipperUpgradeCostPatch.cs:30, TrollZones.Part2.cs:88
   Watch                        TrollIdle.cs:192, TrollOrders.cs:92
