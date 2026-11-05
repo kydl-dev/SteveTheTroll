@@ -121,7 +121,7 @@ internal sealed class TrollReturn : MonoBehaviour
             {
                 WhyLogged[key] = Time.time + 10f;
                 Character prey = ai.GetTargetCreature();
-                ModLog.Info("TrollReturn: " + TrollTaming.Tag(c) + " is " + d.ToString("F0") + " m from " + hub.Name + " but does not walk back - owner here " +
+                ModLog.Verbose("TrollReturn: " + TrollTaming.Tag(c) + " is " + d.ToString("F0") + " m from " + hub.Name + " but does not walk back - owner here " +
                             (view != null && view.IsValid() && view.IsOwner()) + ", follow order " + (ai.GetFollowTarget() != null) + ", arriving " +
                             (c.GetComponent<TrollArrival>() != null) + ", owner wears slippers " + TrollHome.OwnerWears(c) + ", AI target " +
                             (prey != null ? prey.name : "none") + ", rage " + (c.GetComponent<TrollRage>() != null) + ", unloading " + (farmer != null && farmer.Unloading) +

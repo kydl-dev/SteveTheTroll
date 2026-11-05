@@ -16,7 +16,9 @@ internal sealed partial class TrollFarmer
 
     private void Update()
     {
-        if (_target == null || _lastStep < 0f || Time.time - _lastStep < StepStallSeconds || Time.time < _nextStepStallLog)
+        // user 2026-11-05: debug log only; a pause the troll is meant to make (a fight, rage, the walk back to the hub) is not a stall
+        if (_target == null || _lastStep < 0f || Time.time - _lastStep < StepStallSeconds || Time.time < _nextStepStallLog ||
+            GetComponent<TrollChase>() != null || GetComponent<TrollRage>() != null || GetComponent<TrollReturn>() != null)
         {
             return;
         }
@@ -26,7 +28,7 @@ internal sealed partial class TrollFarmer
         ZNetView view = GetComponent<ZNetView>();
         Rigidbody body = GetComponent<Rigidbody>();
         Character me = GetComponent<Character>();
-        ModLog.Info("TrollFarmer: " + TrollTaming.Tag(this) + " has target " + _target.name + " but its farming step has not run for " +
+        ModLog.Verbose("TrollFarmer: " + TrollTaming.Tag(this) + " has target " + _target.name + " but its farming step has not run for " +
                     (Time.time - _lastStep).ToString("F1") + " s - AI " + (ai == null ? "none" : "enabled " + ai.enabled + ", active " + ai.isActiveAndEnabled +
                     ", follow " + (ai.GetFollowTarget() != null ? ai.GetFollowTarget().name : "none") + ", AI target " + (ai.GetTargetCreature() != null ? ai.GetTargetCreature().name : "none")) +
                     ", owner here " + (view != null && view.IsValid() && view.IsOwner()) + ", kinematic " + (body != null && body.isKinematic) +
