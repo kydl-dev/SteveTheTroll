@@ -1,0 +1,137 @@
+﻿{
+    "name":  "farm-one-troll-per-tree",
+    "description":  "D-151 / D-177: two farming trolls and one tree on cleared ground - never both on the same source (FarmReservations; the user: \"not have 2 that go for the same tree and one waits behind the first\")",
+    "timeout":  120,
+    "steps":  [
+                  {
+                      "do":  "hook",
+                      "name":  "stt.arena",
+                      "label":  "start on the arena spot (MIGRATION_DECISIONS C26)",
+                      "contains":  "arena at"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.reset"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.clearTrolls"
+                  },
+                  {
+                      "do":  "give",
+                      "prefab":  "STT_TrollSlippers",
+                      "count":  1,
+                      "equip":  true
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.addHub",
+                      "args":  {
+                                   "number":  1,
+                                   "dx":  0,
+                                   "dz":  25
+                               }
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.arenaFurther",
+                      "args":  {
+                                   "metres":  100
+                               }
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.clearAround",
+                      "args":  {
+                                   "radius":  40
+                               },
+                      "label":  "no world tree near: the planted one is the only near source"
+                  },
+                  {
+                      "do":  "wait",
+                      "seconds":  1
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.plantTree",
+                      "args":  {
+                                   "dx":  0,
+                                   "dz":  26
+                               },
+                      "as":  "tree"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.spawnTroll",
+                      "args":  {
+                                   "dx":  -8,
+                                   "dz":  16
+                               },
+                      "as":  "a"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.spawnTroll",
+                      "args":  {
+                                   "dx":  8,
+                                   "dz":  16
+                               },
+                      "as":  "b"
+                  },
+                  {
+                      "do":  "wait",
+                      "seconds":  1
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.startFarm",
+                      "args":  {
+                                   "troll":  "a"
+                               },
+                      "expect":  true
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.startFarm",
+                      "args":  {
+                                   "troll":  "b"
+                               },
+                      "expect":  true
+                  },
+                  {
+                      "do":  "wait",
+                      "until":  {
+                                    "check":  "hook",
+                                    "name":  "stt.farmersOnOneSource",
+                                    "min":  1
+                                },
+                      "timeout":  15,
+                      "label":  "a troll works on a source"
+                  },
+                  {
+                      "do":  "wait",
+                      "until":  {
+                                    "check":  "hook",
+                                    "name":  "stt.watchFarmers",
+                                    "args":  {
+                                                 "seconds":  12
+                                             },
+                                    "expect":  true
+                                },
+                      "timeout":  20,
+                      "label":  "watched for 12 s, every frame"
+                  }
+              ],
+    "asserts":  [
+                    {
+                        "label":  "never 2 trolls on one source",
+                        "name":  "stt.farmersOnOneSourceMax",
+                        "expect":  1,
+                        "check":  "hook"
+                    },
+                    {
+                        "source":  "SteveTheTroll",
+                        "check":  "noErrors"
+                    }
+                ]
+}

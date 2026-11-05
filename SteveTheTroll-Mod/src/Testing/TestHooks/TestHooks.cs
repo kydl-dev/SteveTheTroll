@@ -72,6 +72,15 @@ internal static partial class TestHooks
             return "no player";
         }
 
+        // D-177 (fix10 review: the lab character's troll list held 22 "living" trolls that tests had removed - over GlobalTameCap 15, so a real taming was refused and the
+        // spawn boost cap was 0): entries whose troll no longer exists in this world are dropped before every test
+        GapTestHooks.TakeOffCostume(); // D-177: hub-speed wears the whole set - no later test may run with the set bonus
+        int ghosts = TrollRegistry.ForgetMissingForTests();
+        if (ghosts > 0)
+        {
+            ModLog.Info("TestHooks: stt.reset dropped " + ghosts + " troll list entr(y/ies) whose troll no longer exists (removed by earlier tests)");
+        }
+
         ArenaTestHooks
             .MovePlayer(p); // D-171 (user): every test starts on the same open spot, 70 m from the lab start (trophy stones, house)
         int trolls =
@@ -153,12 +162,18 @@ internal static partial class TestHooks
     }
 
     /// D-172: trolls a test hook made (stt.clearTrolls removes these wherever they walked).
+    /// D-177: a troll another hook file made (a wild troll for the taming test) is removed by stt.clearTrolls like the others.
+    internal static void MarkMade(ZDOID id)
+    {
+        Made.Add(id);
+    }
+
     internal static bool MadeByTest(ZDOID id)
     {
         return Made.Contains(id);
     }
 
-    private static GameObject SpawnTrollAt(Vector3 position)
+    internal static GameObject SpawnTrollAt(Vector3 position)
     {
         GameObject prefab = ZNetScene.instance.GetPrefab(TrollTaming.TrollPrefab);
         if (prefab == null)

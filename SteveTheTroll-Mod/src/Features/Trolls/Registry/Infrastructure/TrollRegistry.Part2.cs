@@ -107,6 +107,36 @@ internal static partial class TrollRegistry
                     " s");
     }
 
+    /// D-177 - TEST RESET ONLY (stt.reset): drops living entries whose troll ZDO no longer exists in this world. Tests remove trolls without a death, so the list kept
+    /// "living" ghosts. Not used in play: a multiplayer client does not know every ZDO and would drop real trolls. Expected outcome: how many entries were dropped.
+    internal static int ForgetMissingForTests()
+    {
+        Load();
+        var all = new List<ZDO>();
+        int index = 0;
+        while (!ZDOMan.instance.GetAllZDOsWithPrefabIterative(TrollTaming.TrollPrefab, all, ref index))
+        {
+        }
+
+        var alive = new HashSet<string>();
+        foreach (ZDO z in all)
+        {
+            string id = z.GetString(IdKey);
+            if (id.Length > 0)
+            {
+                alive.Add(id);
+            }
+        }
+
+        int n = Known.RemoveAll(t => t.DiedTicks <= 0 && !alive.Contains(t.Id));
+        if (n > 0)
+        {
+            Save();
+        }
+
+        return n;
+    }
+
     private static int RemoveDead()
     {
         long keep = (long)(ModSettings.DeadKeepSeconds.Value * TimeSpan.TicksPerSecond), now = DateTime.UtcNow.Ticks;

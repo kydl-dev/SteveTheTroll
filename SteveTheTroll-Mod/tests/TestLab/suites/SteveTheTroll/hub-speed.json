@@ -1,0 +1,147 @@
+﻿{
+    "name":  "hub-speed",
+    "description":  "D-135 / D-177: with the set bonus, a tamed troll with no hub within 1250 m works at half its tamed speed (x1.25 -\u003e x0.625) and the player is told; inside a hub\u0027s 500 m circle it is x1.5. Checked on the factor HubSpeed gives AND on the run speed TamedTrollSpeed applied to the troll.",
+    "timeout":  90,
+    "steps":  [
+                  {
+                      "do":  "hook",
+                      "name":  "stt.arena",
+                      "label":  "start on the arena spot (MIGRATION_DECISIONS C26)",
+                      "contains":  "arena at"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.reset"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.clearTrolls"
+                  },
+                  {
+                      "do":  "give",
+                      "prefab":  "STT_TrollSlippers",
+                      "count":  1,
+                      "equip":  true
+                  },
+                  {
+                      "do":  "give",
+                      "prefab":  "STT_CostumeHelmet",
+                      "count":  1,
+                      "equip":  true
+                  },
+                  {
+                      "do":  "give",
+                      "prefab":  "STT_CostumeChest",
+                      "count":  1,
+                      "equip":  true
+                  },
+                  {
+                      "do":  "give",
+                      "prefab":  "STT_CostumeLegs",
+                      "count":  1,
+                      "equip":  true
+                  },
+                  {
+                      "do":  "wait",
+                      "until":  {
+                                    "check":  "hook",
+                                    "name":  "stt.setActive",
+                                    "expect":  true
+                                },
+                      "timeout":  8,
+                      "label":  "the whole set is worn: the set bonus is on"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.spawnTroll",
+                      "args":  {
+                                   "dx":  0,
+                                   "dz":  20
+                               },
+                      "as":  "troll"
+                  },
+                  {
+                      "do":  "wait",
+                      "seconds":  2
+                  },
+                  {
+                      "do":  "wait",
+                      "until":  {
+                                    "check":  "hook",
+                                    "name":  "stt.hubSpeedPermille",
+                                    "args":  {
+                                                 "troll":  "troll"
+                                             },
+                                    "expect":  625
+                                },
+                      "timeout":  5,
+                      "label":  "no hub at all: half of x1.25"
+                  },
+                  {
+                      "do":  "wait",
+                      "until":  {
+                                    "check":  "hook",
+                                    "name":  "stt.runSpeedPermille",
+                                    "args":  {
+                                                 "troll":  "troll"
+                                             },
+                                    "expect":  625
+                                },
+                      "timeout":  10,
+                      "label":  "the applied run speed is half too"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.addHub",
+                      "args":  {
+                                   "number":  1,
+                                   "dx":  0,
+                                   "dz":  25
+                               }
+                  },
+                  {
+                      "do":  "wait",
+                      "until":  {
+                                    "check":  "hook",
+                                    "name":  "stt.hubSpeedPermille",
+                                    "args":  {
+                                                 "troll":  "troll"
+                                             },
+                                    "expect":  1500
+                                },
+                      "timeout":  5,
+                      "label":  "inside the hub circle: x1.5"
+                  },
+                  {
+                      "do":  "wait",
+                      "until":  {
+                                    "check":  "hook",
+                                    "name":  "stt.runSpeedPermille",
+                                    "args":  {
+                                                 "troll":  "troll"
+                                             },
+                                    "expect":  1500
+                                },
+                      "timeout":  10,
+                      "label":  "the applied run speed follows"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.takeOffCostume",
+                      "expect":  3
+                  }
+              ],
+    "asserts":  [
+                    {
+                        "label":  "the player is told about the half speed",
+                        "expect":  true,
+                        "source":  "SteveTheTroll",
+                        "text":  "work at half speed",
+                        "check":  "logContains"
+                    },
+                    {
+                        "source":  "SteveTheTroll",
+                        "check":  "noErrors"
+                    }
+                ]
+}

@@ -1,0 +1,165 @@
+﻿{
+    "name":  "water-keep",
+    "description":  "D-131 / D-177 (user: \"when they enter water, they are to keep 15 m away from the player at all times so that the player can have space to steer the boat, and they don\u0027t break the boat\"): a following tamed troll in deep water backs off from 5 m to the 15 m ring and holds it; a tamed troll\u0027s hit does not damage a ship (a plain hit does).",
+    "timeout":  150,
+    "steps":  [
+                  {
+                      "do":  "hook",
+                      "name":  "stt.arena",
+                      "label":  "start on the arena spot (MIGRATION_DECISIONS C26)",
+                      "contains":  "arena at"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.reset"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.clearTrolls"
+                  },
+                  {
+                      "do":  "give",
+                      "prefab":  "STT_TrollSlippers",
+                      "count":  1,
+                      "equip":  true
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.toWater",
+                      "args":  {
+                                   "around":  25,
+                                   "maxMetres":  2000,
+                                   "depth":  4
+                               },
+                      "label":  "the player swims in open water at least 4 m deep, 25 m around"
+                  },
+                  {
+                      "do":  "wait",
+                      "seconds":  10
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.spawnTrollInWater",
+                      "args":  {
+                                   "dx":  0,
+                                   "dz":  5
+                               },
+                      "as":  "troll"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.follow",
+                      "args":  {
+                                   "on":  true,
+                                   "troll":  "troll"
+                               },
+                      "expect":  true
+                  },
+                  {
+                      "do":  "wait",
+                      "seconds":  2
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.waterRing",
+                      "args":  {
+                                   "troll":  "troll"
+                               },
+                      "label":  "diagnosis: distance, in water"
+                  },
+                  {
+                      "do":  "wait",
+                      "until":  {
+                                    "check":  "hook",
+                                    "name":  "stt.holdsWaterRing",
+                                    "args":  {
+                                                 "tolerance":  2.5,
+                                                 "troll":  "troll"
+                                             },
+                                    "expect":  true
+                                },
+                      "timeout":  40,
+                      "label":  "it backed off to the 15 m ring"
+                  },
+                  {
+                      "do":  "wait",
+                      "seconds":  5
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.holdsWaterRing",
+                      "args":  {
+                                   "tolerance":  2.5,
+                                   "troll":  "troll"
+                               },
+                      "expect":  true,
+                      "label":  "5 s later it still holds the ring"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.spawnShip",
+                      "args":  {
+                                   "dx":  6,
+                                   "dz":  6
+                               },
+                      "as":  "ship"
+                  },
+                  {
+                      "do":  "wait",
+                      "seconds":  2
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.hitShip",
+                      "args":  {
+                                   "ship":  "ship",
+                                   "troll":  "troll"
+                               }
+                  },
+                  {
+                      "do":  "wait",
+                      "seconds":  1
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.shipHealth",
+                      "args":  {
+                                   "ship":  "ship"
+                               },
+                      "expect":  1000,
+                      "label":  "the tamed troll\u0027s hit did no damage"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.hitShip",
+                      "args":  {
+                                   "ship":  "ship"
+                               }
+                  },
+                  {
+                      "do":  "wait",
+                      "seconds":  1
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.shipHealth",
+                      "args":  {
+                                   "ship":  "ship"
+                               },
+                      "max":  999,
+                      "label":  "the same hit from nobody damages it (the hit was real)"
+                  }
+              ],
+    "asserts":  [
+                    {
+                        "expect":  true,
+                        "source":  "SteveTheTroll",
+                        "text":  "no damage (D-131)",
+                        "check":  "logContains"
+                    },
+                    {
+                        "source":  "SteveTheTroll",
+                        "check":  "noErrors"
+                    }
+                ]
+}

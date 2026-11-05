@@ -21,11 +21,11 @@ Status "Automated" here is only true after the TestLab run named in `_agent\TEST
 | Slipper figures on the feet | FitGeometry (Unity EditMode) | - | slipper-skin | look | Automated + Manual |
 | Bed heal, hold when looked at, order latency | - | - | bed-heal, hold-look, instruction-latency | - | Automated |
 | Set bonus carry +25 % (D-112), constant upgrade cost (D-035) | Carry*, UpgradeCostTests | - | - | - | Unit only |
-| Spawn boost / census cap near the bed (D-042, D-085) | Spawn / census rules | - | - | - | Unit only - **Gap** in game |
-| Water keep: 15 m from a swimming player (D-131) | water / swim rules | - | - | - | Unit only - **Gap** in game |
-| Hub speed: half speed with no hub within 1250 m (D-135) | speed factor rules | - | - | - | Unit only - **Gap** in game |
-| Two trolls never share a tree, friend detour (D-151) | reservation rules | - | - | - | Unit (reservations) - **Gap** in game, friend detour untested |
-| Newly tamed troll walks to its tamer and waits (D-043) | - | - | - | - | **Gap** |
-| Troll club breaks special trees (D-120) | - | - | - | - | **Gap** |
+| Spawn boost / census cap near the bed (D-042, D-085) | Spawn / census rules | - | spawn-cap | - | Automated (pending first run) |
+| Water keep: 15 m ring around a swimming player, no ship damage (D-131) | water / swim rules | - | water-keep | - | Automated (pending first run) |
+| Hub speed: half speed with no hub within 1250 m, x1.5 in a hub circle (D-135) | speed factor rules | - | hub-speed | - | Automated (pending first run) |
+| Two trolls never share a tree, friend detour (D-151) | reservation rules | - | farm-one-troll-per-tree, farm-friend-detour | - | Automated (pending first run) |
+| Newly tamed troll walks to its tamer and waits (D-043) | - | - | troll-arrival | - | Automated (pending first run) |
+| Troll club breaks special trees (D-120) | - | - | club-breaks | - | Automated (pending first run) |
 | Map pins, hover name of a tamed troll (D-081, D-060) | - | - | - | look | **Gap** (manual only) |
 | Hub sign editor (D-135) | - | - | - | hub-look | Manual |

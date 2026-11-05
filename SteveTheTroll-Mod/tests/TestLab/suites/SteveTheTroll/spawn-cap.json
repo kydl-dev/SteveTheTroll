@@ -1,0 +1,112 @@
+﻿{
+    "name":  "spawn-cap",
+    "description":  "D-042 / D-084 / D-085 / D-177: the spawn boost around the bed (500 m) - boosted (max 2) for a slipper wearer with no trolls around, FULL once 2 trolls stand within the radius, vanilla without the slippers. The mod\u0027s real decision runs on the nearest spawn system\u0027s Troll entry, which is put back after each check.",
+    "timeout":  90,
+    "steps":  [
+                  {
+                      "do":  "hook",
+                      "name":  "stt.arena",
+                      "label":  "start on the arena spot (MIGRATION_DECISIONS C26)",
+                      "contains":  "arena at"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.reset"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.clearTrolls"
+                  },
+                  {
+                      "do":  "give",
+                      "prefab":  "STT_TrollSlippers",
+                      "count":  1,
+                      "equip":  true
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.clearTrollZdos",
+                      "args":  {
+                                   "radius":  520
+                               },
+                      "label":  "no troll within the 500 m bed radius (wild ones or ones earlier tests made)"
+                  },
+                  {
+                      "do":  "wait",
+                      "until":  {
+                                    "check":  "hook",
+                                    "name":  "stt.censusCount",
+                                    "expect":  0
+                                },
+                      "timeout":  15,
+                      "label":  "TrollCensus counts 0 trolls around the bed (it recounts every 5 s)"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.spawnBoostDecision",
+                      "label":  "slippers, 0 trolls: the Troll entry is boosted with a cap of 2",
+                      "contains":  "boosted max 2"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.spawnWildTroll",
+                      "args":  {
+                                   "dx":  10,
+                                   "dz":  30
+                               },
+                      "as":  "w1"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.spawnWildTroll",
+                      "args":  {
+                                   "dx":  -10,
+                                   "dz":  30
+                               },
+                      "as":  "w2"
+                  },
+                  {
+                      "do":  "wait",
+                      "until":  {
+                                    "check":  "hook",
+                                    "name":  "stt.censusCount",
+                                    "min":  2
+                                },
+                      "timeout":  15,
+                      "label":  "the census sees the 2 trolls"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.spawnBoostDecision",
+                      "label":  "2 trolls around the bed: no troll spawns there (cap reached)",
+                      "contains":  "full"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.slippers",
+                      "args":  {
+                                   "on":  false
+                               },
+                      "expect":  false
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.spawnBoostDecision",
+                      "expect":  "vanilla",
+                      "label":  "no slipper wearer: the game\u0027s own values"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.clearTrollZdos",
+                      "args":  {
+                                   "radius":  520
+                               }
+                  }
+              ],
+    "asserts":  [
+                    {
+                        "source":  "SteveTheTroll",
+                        "check":  "noErrors"
+                    }
+                ]
+}

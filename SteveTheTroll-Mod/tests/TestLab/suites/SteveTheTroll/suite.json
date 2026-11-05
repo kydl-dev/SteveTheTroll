@@ -94,7 +94,11 @@
     "spot-return",
     "far-troll-goes-home-clear-route",
     "far-troll-goes-home-obstacle-route",
+                  "water-keep",
     "instruction-latency",
+                  "troll-arrival",
+                  "spawn-cap",
+                  "hub-speed",
     "ownership-handover",
     "health-clean",
     "troll-elemental-immune",
@@ -119,6 +123,9 @@
     "attack-key-creature",
     "attack-key-farming-creature",
                   "attack-key-ui-blocked",
+                  "farm-one-troll-per-tree",
+                  "farm-friend-detour",
+                  "club-breaks",
     "attack-key-tree",
     "costume-after-slippers"
   ]

@@ -1,0 +1,98 @@
+﻿{
+    "name":  "troll-arrival",
+    "description":  "D-043 / D-177: a wild troll tamed by the mod\u0027s own countdown (TrollTamingPatch) walks to its tamer and, within 5 m, stays and waits for orders (follow off, patrol point here)",
+    "timeout":  120,
+    "steps":  [
+                  {
+                      "do":  "hook",
+                      "name":  "stt.arena",
+                      "label":  "start on the arena spot (MIGRATION_DECISIONS C26)",
+                      "contains":  "arena at"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.reset"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.clearTrolls"
+                  },
+                  {
+                      "do":  "give",
+                      "prefab":  "STT_TrollSlippers",
+                      "count":  1,
+                      "equip":  true
+                  },
+                  {
+                      "do":  "wait",
+                      "seconds":  1
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.spawnWildTroll",
+                      "args":  {
+                                   "dx":  0,
+                                   "dz":  30
+                               },
+                      "as":  "troll"
+                  },
+                  {
+                      "do":  "wait",
+                      "seconds":  1
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.tameSoon",
+                      "args":  {
+                                   "seconds":  0.5,
+                                   "troll":  "troll"
+                               }
+                  },
+                  {
+                      "do":  "wait",
+                      "until":  {
+                                    "check":  "hook",
+                                    "name":  "stt.isTamed",
+                                    "args":  {
+                                                 "troll":  "troll"
+                                             },
+                                    "expect":  true
+                                },
+                      "timeout":  15,
+                      "label":  "the mod\u0027s taming countdown tames it (the game\u0027s tick is 3 s)"
+                  },
+                  {
+                      "do":  "wait",
+                      "until":  {
+                                    "check":  "hook",
+                                    "name":  "stt.arrival",
+                                    "args":  {
+                                                 "troll":  "troll"
+                                             },
+                                    "expect":  "arrived"
+                                },
+                      "timeout":  60,
+                      "label":  "it walks to the player and stays within 5 m with no follow order"
+                  }
+              ],
+    "asserts":  [
+                    {
+                        "label":  "TrollTamingPatch tamed it",
+                        "expect":  true,
+                        "source":  "SteveTheTroll",
+                        "text":  "tamed by",
+                        "check":  "logContains"
+                    },
+                    {
+                        "label":  "TrollArrival ended with the arrival",
+                        "expect":  true,
+                        "source":  "SteveTheTroll",
+                        "text":  "stays and waits for orders",
+                        "check":  "logContains"
+                    },
+                    {
+                        "source":  "SteveTheTroll",
+                        "check":  "noErrors"
+                    }
+                ]
+}

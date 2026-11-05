@@ -1,0 +1,138 @@
+﻿{
+    "name":  "club-breaks",
+    "description":  "D-120 / D-177: a hit of the Troll Club on a Yggdrasil shoot counts as tool tier 100 and damages it; the same hit with a stone axe does nothing; on a plain beech the club keeps its own tool tier",
+    "timeout":  60,
+    "steps":  [
+                  {
+                      "do":  "hook",
+                      "name":  "stt.arena",
+                      "label":  "start on the arena spot (MIGRATION_DECISIONS C26)",
+                      "contains":  "arena at"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.reset"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.clearTrolls"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.spawnPrefab",
+                      "args":  {
+                                   "dx":  0,
+                                   "prefab":  "YggaShoot1",
+                                   "dz":  6
+                               },
+                      "as":  "shoot"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.spawnPrefab",
+                      "args":  {
+                                   "dx":  6,
+                                   "prefab":  "Beech1",
+                                   "dz":  8
+                               },
+                      "as":  "beech"
+                  },
+                  {
+                      "do":  "wait",
+                      "seconds":  1
+                  },
+                  {
+                      "do":  "wait",
+                      "seconds":  0.5
+                  },
+                  {
+                      "do":  "give",
+                      "prefab":  "AxeStone",
+                      "count":  1,
+                      "equip":  true
+                  },
+                  {
+                      "do":  "wait",
+                      "seconds":  0.5
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.hitWithWeapon",
+                      "args":  {
+                                   "target":  "shoot"
+                               },
+                      "label":  "a stone axe keeps its own tool tier",
+                      "notContains":  "-\u003e 100"
+                  },
+                  {
+                      "do":  "wait",
+                      "seconds":  1
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.objectHurt",
+                      "args":  {
+                                   "target":  "shoot"
+                               },
+                      "expect":  false,
+                      "label":  "the stone axe did nothing to the shoot"
+                  },
+                  {
+                      "do":  "wait",
+                      "seconds":  0.5
+                  },
+                  {
+                      "do":  "give",
+                      "prefab":  "STT_TrollClub",
+                      "count":  1,
+                      "equip":  true
+                  },
+                  {
+                      "do":  "wait",
+                      "seconds":  0.5
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.hitWithWeapon",
+                      "args":  {
+                                   "target":  "shoot"
+                               },
+                      "label":  "the club hit counts as tool tier 100",
+                      "contains":  "-\u003e 100"
+                  },
+                  {
+                      "do":  "wait",
+                      "seconds":  1
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.objectHurt",
+                      "args":  {
+                                   "target":  "shoot"
+                               },
+                      "expect":  true,
+                      "label":  "the shoot took the damage"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.hitWithWeapon",
+                      "args":  {
+                                   "target":  "beech"
+                               },
+                      "label":  "a plain tree: the club keeps its own tool tier",
+                      "notContains":  "-\u003e 100"
+                  }
+              ],
+    "asserts":  [
+                    {
+                        "expect":  true,
+                        "source":  "SteveTheTroll",
+                        "text":  "ClubBreaks: Troll Club hits",
+                        "check":  "logContains"
+                    },
+                    {
+                        "source":  "SteveTheTroll",
+                        "check":  "noErrors"
+                    }
+                ]
+}
