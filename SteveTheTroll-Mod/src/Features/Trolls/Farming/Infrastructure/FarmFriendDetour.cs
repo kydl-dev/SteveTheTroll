@@ -17,7 +17,7 @@ internal sealed class FarmFriendDetour
     private const float DetourSeconds = 1.2f, DetourCheckSeconds = 0.25f, LogSeconds = 10f;
     private int _detours;
     private Vector3 _detourTo;
-    private float _detourUntil, _nextCheck, _nextLog;
+    private float _detourUntil, _nextCheck, _nextLog, _nextNearLog;
 
     /// Expected outcome: true = walk to `around` this frame (a friendly troll stands in the way, or the detour still runs).
     internal bool Check(GameObject self, Vector3 goal, string targetName, out Vector3 around)
@@ -47,7 +47,9 @@ internal sealed class FarmFriendDetour
             var me = new GroundPoint(p.x, p.z);
             var goalPoint = new GroundPoint(goal.x, goal.z);
             var other = new GroundPoint(o.x, o.z);
-            if (!TargetRules.Blocked(me, goalPoint, other, TargetRules.Ahead, TargetRules.HalfWidth))
+            bool blocked = TargetRules.Blocked(me, goalPoint, other, TargetRules.Ahead, TargetRules.HalfWidth);
+            Near(self, c, p, goal, o, blocked);
+            if (!blocked)
             {
                 continue;
             }
@@ -70,5 +72,27 @@ internal sealed class FarmFriendDetour
         }
 
         return around != goal;
+    }
+
+    /// D-178 (fix11 farm-friend-detour: the farmer passed a friend standing on its line 7 m wide and this never fired - nothing said where the friend was): once a second,
+    /// a tamed troll within 6 m is logged with how far ahead (along the line to the goal) and how far beside it stands, and whether that counts as in the way.
+    private void Near(GameObject self, Character c, Vector3 p, Vector3 goal, Vector3 o, bool blocked)
+    {
+        Vector3 rel = o - p;
+        rel.y = 0f;
+        if (rel.magnitude > 6f || Time.time < _nextNearLog)
+        {
+            return;
+        }
+
+        _nextNearLog = Time.time + 1f;
+        Vector3 line = goal - p;
+        line.y = 0f;
+        float len = line.magnitude;
+        Vector3 dir = len > 0.01f ? line / len : Vector3.forward;
+        float along = Vector3.Dot(rel, dir), beside = dir.x * rel.z - dir.z * rel.x;
+        ModLog.Info("TrollFarmer: " + TrollTaming.Tag(self.transform) + " near " + TrollTaming.Tag(c) + " - " + along.ToString("F1") + " m ahead, " + beside.ToString("F1") +
+                    " m beside the line to the goal (" + len.ToString("F1") + " m away; in the way when 0 .. " + TargetRules.Ahead + " m ahead and within " + TargetRules.HalfWidth +
+                    " m beside): " + (blocked ? "IN THE WAY" : "not in the way"));
     }
 }

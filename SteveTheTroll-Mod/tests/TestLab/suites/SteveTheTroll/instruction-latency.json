@@ -39,6 +39,23 @@
                   },
                   {
                       "do":  "hook",
+                      "name":  "stt.clearAroundTroll",
+                      "args":  {
+                                   "troll":  "troll",
+                                   "radius":  15
+                               },
+                      "label":  "fix11: clutter at the troll\u0027s start boxed it in - this test measures the order, not the terrain (clutter has its own tests)"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.observe",
+                      "args":  {
+                                   "back":  15
+                               },
+                      "label":  "D-178: the player watches from 15 m back - the trolls work, unload and go to the bed without walking into the player"
+                  },
+                  {
+                      "do":  "hook",
                       "name":  "stt.startFarm",
                       "args":  {
                                    "troll":  "troll"
@@ -84,7 +101,7 @@
                                     "min":  1
                                 },
                       "timeout":  3,
-                      "label":  "latency: within 3 s of the order the troll is at least 1 m closer to the bed"
+                      "label":  "latency: within 3 s of the order the troll is at least 1 m closer to its hub (the home order walks it to the hub)"
                   },
                   {
                       "do":  "hook",
@@ -104,7 +121,7 @@
                                     "min":  10
                                 },
                       "timeout":  8,
-                      "label":  "rate: within 8 s of the order the troll is at least 10 m closer to the bed (net progress towards it, so circling does not count)"
+                      "label":  "rate: within 8 s of the order the troll is at least 10 m closer to its hub (the home order walks it to the hub) (net progress towards it, so circling does not count)"
                   },
                   {
                       "do":  "hook",

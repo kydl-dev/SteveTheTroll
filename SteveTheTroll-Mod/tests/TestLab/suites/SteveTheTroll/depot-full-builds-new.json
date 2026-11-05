@@ -1,113 +1,128 @@
-{
-  "name": "depot-full-builds-new",
-  "timeout": 240,
-  "description": "D-174 (review): the only depot is full to the last slot; a full troll must build / use another depot, unload everything and conserve every item.",
-  "steps": [
-    {
-      "do": "hook",
-      "name": "stt.arena",
-      "contains": "arena at",
-      "label": "start on the arena spot (MIGRATION_DECISIONS C26)"
-    },
-    {
-      "do": "hook",
-      "name": "stt.reset"
-    },
-    {
-      "do": "give",
-      "prefab": "STT_TrollSlippers",
-      "count": 1,
-      "equip": true
-    },
-    {
-      "do": "hook",
-      "name": "stt.addHub",
-      "args": {
-        "number": 1,
-        "dx": 0,
-        "dz": 25
-      }
-    },
-    {
-      "do": "hook",
-      "name": "stt.spawnDepot",
-      "args": {
-        "dx": -10,
-        "dz": 40
-      },
-      "as": "depot"
-    },
-    {"do":"hook","name":"stt.depotFill","args":{"frame":"depot"},"label":"the existing depot is full (enforced by the depotCount assert: a second depot is built only when the first is full)"},
-    {
-      "do": "hook",
-      "name": "stt.spawnTroll",
-      "args": {
-        "dx": -14,
-        "dz": 8
-      },
-      "as": "troll"
-    },
-    {
-      "do": "wait",
-      "seconds": 2
-    },
-    {
-      "do": "hook",
-      "name": "stt.followTroll",
-      "args": {
-        "troll": "troll"
-      }
-    },
-    {
-      "do": "hook",
-      "name": "stt.fillBackpack",
-      "args": {
-        "troll": "troll"
-      }
-    },
-    {
-      "do": "wait",
-      "until": {
-        "check": "hook",
-        "name": "stt.followedBackpackAtMost",
-        "args": {
-          "stacks": 0
-        },
-        "expect": true
-      },
-      "timeout": 180
-    },
-    {
-      "do": "wait",
-      "seconds": 2
-    },
-    {
-      "do": "hook",
-      "name": "stt.followedState",
-      "label": "followed troll (diagnosis)"
-    },
-    {
-      "do": "hook",
-      "name": "stt.followedConserved",
-      "expect": true,
-      "label": "every Stone put in is in the backpack or a depot - nothing lost or made"
-    }
-  ],
-  "asserts": [
-    {
-      "check": "hook",
-      "name": "stt.depotCount",
-      "min": 2,
-      "label": "a second depot was built"
-    },
-    {
-      "check": "hook",
-      "name": "stt.followedConserved",
-      "expect": true
-    },
-    {
-      "check": "noErrors",
-      "source": "SteveTheTroll"
-    }
-  ]
+﻿{
+    "name":  "depot-full-builds-new",
+    "timeout":  240,
+    "description":  "D-174 (review): the only depot is full to the last slot; a full troll must build / use another depot, unload everything and conserve every item.",
+    "steps":  [
+                  {
+                      "do":  "hook",
+                      "name":  "stt.arena",
+                      "contains":  "arena at",
+                      "label":  "start on the arena spot (MIGRATION_DECISIONS C26)"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.reset"
+                  },
+                  {
+                      "do":  "give",
+                      "prefab":  "STT_TrollSlippers",
+                      "count":  1,
+                      "equip":  true
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.addHub",
+                      "args":  {
+                                   "number":  1,
+                                   "dx":  0,
+                                   "dz":  25
+                               }
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.spawnDepot",
+                      "args":  {
+                                   "dx":  -10,
+                                   "dz":  40
+                               },
+                      "as":  "depot"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.depotFill",
+                      "args":  {
+                                   "frame":  "depot"
+                               },
+                      "label":  "the existing depot is full (enforced by the depotCount assert: a second depot is built only when the first is full)"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.spawnTroll",
+                      "args":  {
+                                   "dx":  -14,
+                                   "dz":  8
+                               },
+                      "as":  "troll"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.observe",
+                      "args":  {
+                                   "back":  15
+                               },
+                      "label":  "D-178: the player watches from 15 m back - the trolls work, unload and go to the bed without walking into the player"
+                  },
+                  {
+                      "do":  "wait",
+                      "seconds":  2
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.followTroll",
+                      "args":  {
+                                   "troll":  "troll"
+                               }
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.fillBackpack",
+                      "args":  {
+                                   "troll":  "troll"
+                               }
+                  },
+                  {
+                      "do":  "wait",
+                      "until":  {
+                                    "check":  "hook",
+                                    "name":  "stt.followedBackpackAtMost",
+                                    "args":  {
+                                                 "stacks":  0
+                                             },
+                                    "expect":  true
+                                },
+                      "timeout":  180
+                  },
+                  {
+                      "do":  "wait",
+                      "seconds":  2
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.followedState",
+                      "label":  "followed troll (diagnosis)"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.followedConserved",
+                      "expect":  true,
+                      "label":  "every Stone put in is in the backpack or a depot - nothing lost or made"
+                  }
+              ],
+    "asserts":  [
+                    {
+                        "check":  "hook",
+                        "name":  "stt.depotCount",
+                        "min":  2,
+                        "label":  "a second depot was built"
+                    },
+                    {
+                        "check":  "hook",
+                        "name":  "stt.followedConserved",
+                        "expect":  true
+                    },
+                    {
+                        "check":  "noErrors",
+                        "source":  "SteveTheTroll"
+                    }
+                ]
 }

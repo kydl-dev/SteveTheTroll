@@ -1,137 +1,145 @@
-{
-  "name": "noweapon-farm",
-  "description": "D-171: a troll with no item at all asks the game for its default items once (D-149, FarmTool) and then farms",
-  "timeout": 90,
-  "steps": [
-    {
-      "do": "hook",
-      "name": "stt.arena",
-      "contains": "arena at",
-      "label": "start on the arena spot (MIGRATION_DECISIONS C26)"
-    },
-    {
-      "do": "hook",
-      "name": "stt.reset"
-    },
-    {
-      "do": "hook",
-      "name": "stt.clearTrolls"
-    },
-    {
-      "do": "give",
-      "prefab": "STT_TrollSlippers",
-      "count": 1,
-      "equip": true
-    },
-    {
-      "do": "hook",
-      "name": "stt.addHub",
-      "args": {
-        "number": 1,
-        "dx": 0,
-        "dz": 25
-      }
-    },
-    {
-      "do": "hook",
-      "name": "stt.spawnTroll",
-      "args": {
-        "dx": -12,
-        "dz": 12
-      },
-      "as": "troll"
-    },
-    {
-      "do": "wait",
-      "seconds": 1.5
-    },
-    {
-      "do": "hook",
-      "name": "stt.stripWeapons",
-      "args": {
-        "troll": "troll"
-      }
-    },
-    {
-      "do": "hook",
-      "name": "stt.plantTree",
-      "args": {
-        "dx": -20,
-        "dz": 20
-      },
-      "as": "tree"
-    },
-    {
-      "do": "hook",
-      "name": "stt.farmOn",
-      "args": {
-        "troll": "troll",
-        "source": "tree"
-      },
-      "expect": true
-    },
-    {
-      "do": "wait",
-      "until": {
-        "check": "hook",
-        "name": "stt.farmAttacks",
-        "args": {
-          "troll": "troll"
-        },
-        "min": 1
-      },
-      "timeout": 60,
-      "label": "the troll itself swings first (D-176: the damage counter also counts recovery rage and debris)"
-    },
-    {
-      "do": "wait",
-      "until": {
-        "check": "hook",
-        "name": "stt.plantedHitByTroll",
-        "min": 1
-      },
-      "timeout": 20
-    }
-  ],
-  "asserts": [
-    {
-      "check": "logContains",
-      "source": "SteveTheTroll",
-      "text": "asks the game for its default items",
-      "expect": true,
-      "label": "the no-weapon path ran"
-    },
-    {
-      "check": "logContains",
-      "source": "SteveTheTroll",
-      "text": "default items gave it",
-      "expect": true,
-      "label": "the default items gave a usable farming tool (D-175: FarmTool checks the result)"
-    },
-    {
-      "check": "hook",
-      "name": "stt.plantedUntouched",
-      "expect": 0,
-      "label": "farms after the default items"
-    },
-    {
-      "check": "hook",
-      "name": "stt.plantedHitByTroll",
-      "min": 1,
-      "label": "the planted tree took a hit from the troll (a falling log of the test before does not count)"
-    },
-    {
-      "check": "hook",
-      "name": "stt.farmAttacks",
-      "args": {
-        "troll": "troll"
-      },
-      "min": 1,
-      "label": "the troll itself swung (D-175: a tree damaged by anything else does not count)"
-    },
-    {
-      "check": "noErrors",
-      "source": "SteveTheTroll"
-    }
-  ]
+﻿{
+    "name":  "noweapon-farm",
+    "description":  "D-171: a troll with no item at all asks the game for its default items once (D-149, FarmTool) and then farms",
+    "timeout":  90,
+    "steps":  [
+                  {
+                      "do":  "hook",
+                      "name":  "stt.arena",
+                      "contains":  "arena at",
+                      "label":  "start on the arena spot (MIGRATION_DECISIONS C26)"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.reset"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.clearTrolls"
+                  },
+                  {
+                      "do":  "give",
+                      "prefab":  "STT_TrollSlippers",
+                      "count":  1,
+                      "equip":  true
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.addHub",
+                      "args":  {
+                                   "number":  1,
+                                   "dx":  0,
+                                   "dz":  25
+                               }
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.spawnTroll",
+                      "args":  {
+                                   "dx":  -12,
+                                   "dz":  12
+                               },
+                      "as":  "troll"
+                  },
+                  {
+                      "do":  "wait",
+                      "seconds":  1.5
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.stripWeapons",
+                      "args":  {
+                                   "troll":  "troll"
+                               }
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.plantTree",
+                      "args":  {
+                                   "dx":  -20,
+                                   "dz":  20
+                               },
+                      "as":  "tree"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.observe",
+                      "args":  {
+                                   "back":  15
+                               },
+                      "label":  "D-178: the player watches from 15 m back - the trolls work, unload and go to the bed without walking into the player"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.farmOn",
+                      "args":  {
+                                   "troll":  "troll",
+                                   "source":  "tree"
+                               },
+                      "expect":  true
+                  },
+                  {
+                      "do":  "wait",
+                      "until":  {
+                                    "check":  "hook",
+                                    "name":  "stt.farmAttacks",
+                                    "args":  {
+                                                 "troll":  "troll"
+                                             },
+                                    "min":  1
+                                },
+                      "timeout":  60,
+                      "label":  "the troll itself swings first (D-176: the damage counter also counts recovery rage and debris)"
+                  },
+                  {
+                      "do":  "wait",
+                      "until":  {
+                                    "check":  "hook",
+                                    "name":  "stt.plantedHitByTroll",
+                                    "min":  1
+                                },
+                      "timeout":  20
+                  }
+              ],
+    "asserts":  [
+                    {
+                        "check":  "logContains",
+                        "source":  "SteveTheTroll",
+                        "text":  "asks the game for its default items",
+                        "expect":  true,
+                        "label":  "the no-weapon path ran"
+                    },
+                    {
+                        "check":  "logContains",
+                        "source":  "SteveTheTroll",
+                        "text":  "default items gave it",
+                        "expect":  true,
+                        "label":  "the default items gave a usable farming tool (D-175: FarmTool checks the result)"
+                    },
+                    {
+                        "check":  "hook",
+                        "name":  "stt.plantedUntouched",
+                        "expect":  0,
+                        "label":  "farms after the default items"
+                    },
+                    {
+                        "check":  "hook",
+                        "name":  "stt.plantedHitByTroll",
+                        "min":  1,
+                        "label":  "the planted tree took a hit from the troll (a falling log of the test before does not count)"
+                    },
+                    {
+                        "check":  "hook",
+                        "name":  "stt.farmAttacks",
+                        "args":  {
+                                     "troll":  "troll"
+                                 },
+                        "min":  1,
+                        "label":  "the troll itself swung (D-175: a tree damaged by anything else does not count)"
+                    },
+                    {
+                        "check":  "noErrors",
+                        "source":  "SteveTheTroll"
+                    }
+                ]
 }

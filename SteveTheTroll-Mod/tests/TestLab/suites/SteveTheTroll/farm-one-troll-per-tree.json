@@ -79,6 +79,14 @@
                       "as":  "b"
                   },
                   {
+                      "do":  "hook",
+                      "name":  "stt.observe",
+                      "args":  {
+                                   "back":  15
+                               },
+                      "label":  "D-178: the player watches from 15 m back - the trolls work, unload and go to the bed without walking into the player"
+                  },
+                  {
                       "do":  "wait",
                       "seconds":  1
                   },

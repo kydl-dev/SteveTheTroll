@@ -1,109 +1,117 @@
-{
-  "name": "noslippers-full-stays-home",
-  "description": "D-173 (user 2026-11-02: a troll whose backpack fills while it walks home without slippers should 'go home and unload there'): slippers off, the troll walks home, its backpack becomes full on the way, it unloads at the home depot and then STAYS home (no walk back to its farm spot).",
-  "timeout": 150,
-  "steps": [
-    {
-      "do": "hook",
-      "name": "stt.arena",
-      "contains": "arena at",
-      "label": "start on the arena spot (MIGRATION_DECISIONS C26)"
-    },
-    {
-      "do": "hook",
-      "name": "stt.reset"
-    },
-    {
-      "do": "hook",
-      "name": "stt.clearTrolls"
-    },
-    {
-      "do": "give",
-      "prefab": "STT_TrollSlippers",
-      "count": 1,
-      "equip": true
-    },
-    {
-      "do": "hook",
-      "name": "stt.spawnTroll",
-      "args": {
-        "dx": -20,
-        "dz": 60
-      },
-      "as": "troll"
-    },
-    {
-      "do": "wait",
-      "seconds": 3
-    },
-    {
-      "do": "hook",
-      "name": "stt.slippers",
-      "args": {
-        "on": false
-      },
-      "expect": false,
-      "label": "slippers off: the troll goes home"
-    },
-    {
-      "do": "wait",
-      "seconds": 2
-    },
-    {
-      "do": "hook",
-      "name": "stt.fillBackpack",
-      "args": {
-        "troll": "troll"
-      }
-    },
-    {
-      "do": "wait",
-      "until": {
-        "check": "hook",
-        "name": "stt.backpackStacks",
-        "args": {
-          "troll": "troll"
-        },
-        "expect": 0
-      },
-      "timeout": 90
-    },
-    {
-      "do": "wait",
-      "seconds": 5
-    },
-    {
-      "do": "hook",
-      "name": "stt.slippers",
-      "args": {
-        "on": true
-      },
-      "expect": true,
-      "label": "slippers back on for the next tests"
-    }
-  ],
-  "asserts": [
-    {
-      "check": "logContains",
-      "source": "SteveTheTroll",
-      "text": "emptied its backpack at home - the owner wears no slippers, it stays home",
-      "expect": true
-    },
-    {
-      "check": "logContains",
-      "source": "SteveTheTroll",
-      "text": "walks back to where it farmed",
-      "expect": false
-    },
-    {
-      "check": "hook",
-      "name": "stt.depotCount",
-      "min": 1,
-      "label": "a home depot received the items"
-    },
-    {
-      "check": "noErrors",
-      "source": "SteveTheTroll"
-    }
-  ]
+﻿{
+    "name":  "noslippers-full-stays-home",
+    "description":  "D-173 (user 2026-11-02: a troll whose backpack fills while it walks home without slippers should \u0027go home and unload there\u0027): slippers off, the troll walks home, its backpack becomes full on the way, it unloads at the home depot and then STAYS home (no walk back to its farm spot).",
+    "timeout":  150,
+    "steps":  [
+                  {
+                      "do":  "hook",
+                      "name":  "stt.arena",
+                      "contains":  "arena at",
+                      "label":  "start on the arena spot (MIGRATION_DECISIONS C26)"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.reset"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.clearTrolls"
+                  },
+                  {
+                      "do":  "give",
+                      "prefab":  "STT_TrollSlippers",
+                      "count":  1,
+                      "equip":  true
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.spawnTroll",
+                      "args":  {
+                                   "dx":  -20,
+                                   "dz":  60
+                               },
+                      "as":  "troll"
+                  },
+                  {
+                      "do":  "wait",
+                      "seconds":  3
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.slippers",
+                      "args":  {
+                                   "on":  false
+                               },
+                      "expect":  false,
+                      "label":  "slippers off: the troll goes home"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.observe",
+                      "args":  {
+                                   "back":  15
+                               },
+                      "label":  "D-178: the player watches from 15 m back - the troll walks to the bed (stt.reset put it on the player\u0027s spot) without walking into the player"
+                  },
+                  {
+                      "do":  "wait",
+                      "seconds":  2
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.fillBackpack",
+                      "args":  {
+                                   "troll":  "troll"
+                               }
+                  },
+                  {
+                      "do":  "wait",
+                      "until":  {
+                                    "check":  "hook",
+                                    "name":  "stt.backpackStacks",
+                                    "args":  {
+                                                 "troll":  "troll"
+                                             },
+                                    "expect":  0
+                                },
+                      "timeout":  90
+                  },
+                  {
+                      "do":  "wait",
+                      "seconds":  5
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.slippers",
+                      "args":  {
+                                   "on":  true
+                               },
+                      "expect":  true,
+                      "label":  "slippers back on for the next tests"
+                  }
+              ],
+    "asserts":  [
+                    {
+                        "check":  "logContains",
+                        "source":  "SteveTheTroll",
+                        "text":  "emptied its backpack at home - the owner wears no slippers, it stays home",
+                        "expect":  true
+                    },
+                    {
+                        "check":  "logContains",
+                        "source":  "SteveTheTroll",
+                        "text":  "walks back to where it farmed",
+                        "expect":  false
+                    },
+                    {
+                        "check":  "hook",
+                        "name":  "stt.depotCount",
+                        "min":  1,
+                        "label":  "a home depot received the items"
+                    },
+                    {
+                        "check":  "noErrors",
+                        "source":  "SteveTheTroll"
+                    }
+                ]
 }

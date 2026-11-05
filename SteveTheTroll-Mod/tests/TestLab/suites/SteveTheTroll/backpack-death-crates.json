@@ -1,69 +1,84 @@
-{
-  "name": "backpack-death-crates",
-  "description": "D-171 P6: a tamed troll with items in its backpack dies - the items drop in cargo crates (BackpackDeath, T-008c)",
-  "timeout": 60,
-  "steps": [
-    {
-      "do": "hook",
-      "name": "stt.arena",
-      "contains": "arena at",
-      "label": "start on the arena spot (MIGRATION_DECISIONS C26)"
-    },
-    {
-      "do": "hook",
-      "name": "stt.reset"
-    },
-    {
-      "do": "hook",
-      "name": "stt.clearTrolls"
-    },
-    {
-      "do": "give",
-      "prefab": "STT_TrollSlippers",
-      "count": 1,
-      "equip": true
-    },
-    {
-      "do": "hook",
-      "name": "stt.addHub",
-      "args": {
-        "number": 1,
-        "dx": 0,
-        "dz": 25
-      }
-    },
-    {
-      "do": "hook",
-      "name": "stt.spawnTroll",
-      "args": {
-        "dx": -12,
-        "dz": 12
-      },
-      "as": "troll"
-    },
-    {
-      "do": "wait",
-      "seconds": 1
-    },
-    {"do":"hook","name":"stt.fillAndKill","args":{"troll":"troll"},"label":"filled and killed in one frame (the troll near its hub would unload in between, D-175) (that it was filled is enforced by the crates assert: no stacks, no crates)"},
-    {
-      "do": "wait",
-      "seconds": 3
-    }
-  ],
-  "asserts": [
-    {
-      "check": "hook",
-      "name": "stt.cratesNear",
-      "args": {
-        "radius": 30
-      },
-      "min": 1,
-      "label": "crates dropped"
-    },
-    {
-      "check": "noErrors",
-      "source": "SteveTheTroll"
-    }
-  ]
+﻿{
+    "name":  "backpack-death-crates",
+    "description":  "D-171 P6: a tamed troll with items in its backpack dies - the items drop in cargo crates (BackpackDeath, T-008c)",
+    "timeout":  60,
+    "steps":  [
+                  {
+                      "do":  "hook",
+                      "name":  "stt.arena",
+                      "contains":  "arena at",
+                      "label":  "start on the arena spot (MIGRATION_DECISIONS C26)"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.reset"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.clearTrolls"
+                  },
+                  {
+                      "do":  "give",
+                      "prefab":  "STT_TrollSlippers",
+                      "count":  1,
+                      "equip":  true
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.addHub",
+                      "args":  {
+                                   "number":  1,
+                                   "dx":  0,
+                                   "dz":  25
+                               }
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.spawnTroll",
+                      "args":  {
+                                   "dx":  -12,
+                                   "dz":  12
+                               },
+                      "as":  "troll"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.observe",
+                      "args":  {
+                                   "back":  15
+                               },
+                      "label":  "D-178: the player watches from 15 m back - the trolls work, unload and go to the bed without walking into the player"
+                  },
+                  {
+                      "do":  "wait",
+                      "seconds":  1
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.fillAndKill",
+                      "args":  {
+                                   "troll":  "troll"
+                               },
+                      "label":  "filled and killed in one frame (the troll near its hub would unload in between, D-175) (that it was filled is enforced by the crates assert: no stacks, no crates)"
+                  },
+                  {
+                      "do":  "wait",
+                      "seconds":  3
+                  }
+              ],
+    "asserts":  [
+                    {
+                        "check":  "hook",
+                        "name":  "stt.cratesNear",
+                        "args":  {
+                                     "radius":  30
+                                 },
+                        "min":  1,
+                        "label":  "crates dropped"
+                    },
+                    {
+                        "check":  "noErrors",
+                        "source":  "SteveTheTroll"
+                    }
+                ]
 }

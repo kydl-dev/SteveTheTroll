@@ -321,6 +321,7 @@ internal sealed partial class TrollRecovery : MonoBehaviour
 
     private void OnStartRage()
     {
+        TrollPath.RecordBadSpot(transform.position, TrollTaming.Tag(this) + " recovery rage"); // D-179 (4)
         _rageEnd = Time.time + StuckRules.RageSeconds;
         ModLog.Info("TrollRecovery: " + TrollTaming.Tag(this) + " is blocked " + _meter.StuckSeconds.ToString("F1") +
                     " s by " + _obstacleName + " (" + _kind + ") " + _d.ToString("F1") +
@@ -387,6 +388,7 @@ internal sealed partial class TrollRecovery : MonoBehaviour
     private void CycleFailed(float d)
     {
         string tag = TrollTaming.Tag(this);
+        TrollPath.RecordBadSpot(transform.position, tag + " recovery cycle failed"); // D-179 (4)
         bool blacklisted = Book.CycleFailed(_troll, _ka, _kb, Time.time, _canAbandon);
         int failed = Book.Failed(_troll, _ka, _kb);
         _pipeline.BeginCycle(blacklisted ? 0 : failed);

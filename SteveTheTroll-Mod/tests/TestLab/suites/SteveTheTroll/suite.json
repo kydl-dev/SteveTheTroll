@@ -108,6 +108,7 @@
     "guard-mob",
     "guard-mob-kills",
                   "guard-mob-kills-open",
+                  "chase-push-through",
     "guard-mob-nohit",
     "nohit-zone",
     "walls-two-star",

@@ -1,87 +1,95 @@
-{
-  "name": "backpack-pickup",
-  "description": "D-171 P6: wood lying within 50 m of a tamed troll goes into its backpack (BackpackPickup, BackpackRules.Collects / InRange)",
-  "timeout": 60,
-  "steps": [
-    {
-      "do": "hook",
-      "name": "stt.arena",
-      "contains": "arena at",
-      "label": "start on the arena spot (MIGRATION_DECISIONS C26)"
-    },
-    {
-      "do": "hook",
-      "name": "stt.reset"
-    },
-    {
-      "do": "hook",
-      "name": "stt.clearTrolls"
-    },
-    {
-      "do": "give",
-      "prefab": "STT_TrollSlippers",
-      "count": 1,
-      "equip": true
-    },
-    {
-      "do": "hook",
-      "name": "stt.addHub",
-      "args": {
-        "number": 1,
-        "dx": 0,
-        "dz": 25
-      }
-    },
-    {
-      "do": "hook",
-      "name": "stt.spawnTroll",
-      "args": {
-        "dx": -12,
-        "dz": 12
-      },
-      "as": "troll"
-    },
-    {
-      "do": "wait",
-      "seconds": 1
-    },
-    {
-      "do": "hook",
-      "name": "stt.dropNear",
-      "args": {
-        "troll": "troll",
-        "prefab": "Wood",
-        "count": 3,
-        "dx": 4,
-        "dz": 0
-      }
-    },
-    {
-      "do": "wait",
-      "until": {
-        "check": "hook",
-        "name": "stt.backpackStacks",
-        "args": {
-          "troll": "troll"
-        },
-        "min": 1
-      },
-      "timeout": 15
-    }
-  ],
-  "asserts": [
-    {
-      "check": "hook",
-      "name": "stt.backpackStacks",
-      "args": {
-        "troll": "troll"
-      },
-      "min": 1,
-      "label": "picked up"
-    },
-    {
-      "check": "noErrors",
-      "source": "SteveTheTroll"
-    }
-  ]
+﻿{
+    "name":  "backpack-pickup",
+    "description":  "D-171 P6: wood lying within 50 m of a tamed troll goes into its backpack (BackpackPickup, BackpackRules.Collects / InRange)",
+    "timeout":  60,
+    "steps":  [
+                  {
+                      "do":  "hook",
+                      "name":  "stt.arena",
+                      "contains":  "arena at",
+                      "label":  "start on the arena spot (MIGRATION_DECISIONS C26)"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.reset"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.clearTrolls"
+                  },
+                  {
+                      "do":  "give",
+                      "prefab":  "STT_TrollSlippers",
+                      "count":  1,
+                      "equip":  true
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.addHub",
+                      "args":  {
+                                   "number":  1,
+                                   "dx":  0,
+                                   "dz":  25
+                               }
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.spawnTroll",
+                      "args":  {
+                                   "dx":  -12,
+                                   "dz":  12
+                               },
+                      "as":  "troll"
+                  },
+                  {
+                      "do":  "wait",
+                      "seconds":  1
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.dropNear",
+                      "args":  {
+                                   "troll":  "troll",
+                                   "prefab":  "Wood",
+                                   "count":  3,
+                                   "dx":  4,
+                                   "dz":  0
+                               }
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.observe",
+                      "args":  {
+                                   "back":  15
+                               },
+                      "label":  "D-178: the player watches from 15 m back - the trolls work, unload and go to the bed without walking into the player"
+                  },
+                  {
+                      "do":  "wait",
+                      "until":  {
+                                    "check":  "hook",
+                                    "name":  "stt.backpackStacks",
+                                    "args":  {
+                                                 "troll":  "troll"
+                                             },
+                                    "min":  1
+                                },
+                      "timeout":  15
+                  }
+              ],
+    "asserts":  [
+                    {
+                        "check":  "hook",
+                        "name":  "stt.backpackStacks",
+                        "args":  {
+                                     "troll":  "troll"
+                                 },
+                        "min":  1,
+                        "label":  "picked up"
+                    },
+                    {
+                        "check":  "noErrors",
+                        "source":  "SteveTheTroll"
+                    }
+                ]
 }

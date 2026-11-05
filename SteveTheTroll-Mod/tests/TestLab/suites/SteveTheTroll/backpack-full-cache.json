@@ -1,49 +1,57 @@
-{
-  "name": "backpack-full-cache",
-  "description": "D-144 full-backpack cache: filled, it is full and the cache says so, every slot is used, and a write through the real store drops the cache. D-173: the cycle runs in ONE frame (stt.backpackCacheCycle) - a full troll near home now unloads there by design, so separate steps raced the troll's own AI.",
-  "timeout": 90,
-  "steps": [
-    {
-      "do": "hook",
-      "name": "stt.arena",
-      "contains": "arena at",
-      "label": "start on the arena spot (MIGRATION_DECISIONS C26)"
-    },
-    {
-      "do": "hook",
-      "name": "stt.reset"
-    },
-    {
-      "do": "hook",
-      "name": "stt.clearTrolls"
-    },
-    {
-      "do": "hook",
-      "name": "stt.spawnTroll",
-      "args": {
-        "dx": 0,
-        "dz": 20
-      },
-      "as": "troll"
-    },
-    {
-      "do": "wait",
-      "seconds": 1
-    },
-    {
-      "do": "hook",
-      "name": "stt.backpackCacheCycle",
-      "args": {
-        "troll": "troll"
-      },
-      "expect": "ok",
-      "label": "fill -> full -> cached full -> every slot used -> write -> cache dropped, all in one frame (D-173)"
-    }
-  ],
-  "asserts": [
-    {
-      "check": "noErrors",
-      "source": "SteveTheTroll"
-    }
-  ]
+﻿{
+    "name":  "backpack-full-cache",
+    "description":  "D-144 full-backpack cache: filled, it is full and the cache says so, every slot is used, and a write through the real store drops the cache. D-173: the cycle runs in ONE frame (stt.backpackCacheCycle) - a full troll near home now unloads there by design, so separate steps raced the troll\u0027s own AI.",
+    "timeout":  90,
+    "steps":  [
+                  {
+                      "do":  "hook",
+                      "name":  "stt.arena",
+                      "contains":  "arena at",
+                      "label":  "start on the arena spot (MIGRATION_DECISIONS C26)"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.reset"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.clearTrolls"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.spawnTroll",
+                      "args":  {
+                                   "dx":  0,
+                                   "dz":  20
+                               },
+                      "as":  "troll"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.observe",
+                      "args":  {
+                                   "back":  15
+                               },
+                      "label":  "D-178: the player watches from 15 m back - the trolls work, unload and go to the bed without walking into the player"
+                  },
+                  {
+                      "do":  "wait",
+                      "seconds":  1
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.backpackCacheCycle",
+                      "args":  {
+                                   "troll":  "troll"
+                               },
+                      "expect":  "ok",
+                      "label":  "fill -\u003e full -\u003e cached full -\u003e every slot used -\u003e write -\u003e cache dropped, all in one frame (D-173)"
+                  }
+              ],
+    "asserts":  [
+                    {
+                        "check":  "noErrors",
+                        "source":  "SteveTheTroll"
+                    }
+                ]
 }

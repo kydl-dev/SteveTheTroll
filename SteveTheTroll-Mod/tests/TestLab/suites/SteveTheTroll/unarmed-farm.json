@@ -1,118 +1,126 @@
-{
-  "name": "unarmed-farm",
-  "description": "D-171: an unarmed troll (no log, D-121) still farms with its own body attacks (disarmed 1.5 s after the spawn: the game gives a new troll its default items in Start)",
-  "timeout": 90,
-  "steps": [
-    {
-      "do": "hook",
-      "name": "stt.arena",
-      "contains": "arena at",
-      "label": "start on the arena spot (MIGRATION_DECISIONS C26)"
-    },
-    {
-      "do": "hook",
-      "name": "stt.reset"
-    },
-    {
-      "do": "hook",
-      "name": "stt.clearTrolls"
-    },
-    {
-      "do": "give",
-      "prefab": "STT_TrollSlippers",
-      "count": 1,
-      "equip": true
-    },
-    {
-      "do": "hook",
-      "name": "stt.addHub",
-      "args": {
-        "number": 1,
-        "dx": 0,
-        "dz": 25
-      }
-    },
-    {
-      "do": "hook",
-      "name": "stt.spawnTroll",
-      "args": {
-        "dx": -12,
-        "dz": 12
-      },
-      "as": "troll"
-    },
-    {
-      "do": "wait",
-      "seconds": 3
-    },
-    {
-      "do": "hook",
-      "name": "stt.disarm",
-      "args": {
-        "troll": "troll"
-      }
-    },
-    {
-      "do": "wait",
-      "seconds": 1
-    },
-    {
-      "do": "hook",
-      "name": "stt.disarm",
-      "args": {
-        "troll": "troll"
-      }
-    },
-    {
-      "do": "wait",
-      "seconds": 1
-    },
-    {
-      "do": "hook",
-      "name": "stt.weaponOf",
-      "args": {
-        "troll": "troll"
-      },
-      "contains": "slap",
-      "label": "swings its slap"
-    },
-    {
-      "do": "hook",
-      "name": "stt.plantTree",
-      "args": {
-        "dx": -20,
-        "dz": 20
-      },
-      "as": "tree"
-    },
-    {
-      "do": "hook",
-      "name": "stt.farmOn",
-      "args": {
-        "troll": "troll",
-        "source": "tree"
-      },
-      "expect": true
-    },
-    {
-      "do": "wait",
-      "until": {
-        "check": "hook",
-        "name": "stt.plantedUntouched",
-        "expect": 0
-      },
-      "timeout": 45
-    }
-  ],
-  "asserts": [
-    {
-      "check": "hook",
-      "name": "stt.plantedUntouched",
-      "expect": 0
-    },
-    {
-      "check": "noErrors",
-      "source": "SteveTheTroll"
-    }
-  ]
+﻿{
+    "name":  "unarmed-farm",
+    "description":  "D-171: an unarmed troll (no log, D-121) still farms with its own body attacks (disarmed 1.5 s after the spawn: the game gives a new troll its default items in Start)",
+    "timeout":  90,
+    "steps":  [
+                  {
+                      "do":  "hook",
+                      "name":  "stt.arena",
+                      "contains":  "arena at",
+                      "label":  "start on the arena spot (MIGRATION_DECISIONS C26)"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.reset"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.clearTrolls"
+                  },
+                  {
+                      "do":  "give",
+                      "prefab":  "STT_TrollSlippers",
+                      "count":  1,
+                      "equip":  true
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.addHub",
+                      "args":  {
+                                   "number":  1,
+                                   "dx":  0,
+                                   "dz":  25
+                               }
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.spawnTroll",
+                      "args":  {
+                                   "dx":  -12,
+                                   "dz":  12
+                               },
+                      "as":  "troll"
+                  },
+                  {
+                      "do":  "wait",
+                      "seconds":  3
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.disarm",
+                      "args":  {
+                                   "troll":  "troll"
+                               }
+                  },
+                  {
+                      "do":  "wait",
+                      "seconds":  1
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.disarm",
+                      "args":  {
+                                   "troll":  "troll"
+                               }
+                  },
+                  {
+                      "do":  "wait",
+                      "seconds":  1
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.weaponOf",
+                      "args":  {
+                                   "troll":  "troll"
+                               },
+                      "contains":  "slap",
+                      "label":  "swings its slap"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.plantTree",
+                      "args":  {
+                                   "dx":  -20,
+                                   "dz":  20
+                               },
+                      "as":  "tree"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.observe",
+                      "args":  {
+                                   "back":  15
+                               },
+                      "label":  "D-178: the player watches from 15 m back - the trolls work, unload and go to the bed without walking into the player"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.farmOn",
+                      "args":  {
+                                   "troll":  "troll",
+                                   "source":  "tree"
+                               },
+                      "expect":  true
+                  },
+                  {
+                      "do":  "wait",
+                      "until":  {
+                                    "check":  "hook",
+                                    "name":  "stt.plantedUntouched",
+                                    "expect":  0
+                                },
+                      "timeout":  45
+                  }
+              ],
+    "asserts":  [
+                    {
+                        "check":  "hook",
+                        "name":  "stt.plantedUntouched",
+                        "expect":  0
+                    },
+                    {
+                        "check":  "noErrors",
+                        "source":  "SteveTheTroll"
+                    }
+                ]
 }

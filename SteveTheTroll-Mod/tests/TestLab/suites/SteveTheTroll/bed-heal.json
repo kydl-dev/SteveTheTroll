@@ -1,85 +1,105 @@
-{
-  "name": "bed-heal",
-  "description": "D-171 P7: a hurt tamed troll near the bed heals (D-085, HomeRules.InHealRange)",
-  "timeout": 40,
-  "steps": [
-    {
-      "do": "hook",
-      "name": "stt.arena",
-      "contains": "arena at",
-      "label": "start on the arena spot (MIGRATION_DECISIONS C26)"
-    },
-    {
-      "do": "hook",
-      "name": "stt.reset"
-    },
-    {
-      "do": "hook",
-      "name": "stt.clearTrolls"
-    },
-    {
-      "do": "give",
-      "prefab": "STT_TrollSlippers",
-      "count": 1,
-      "equip": true
-    },
-    {
-      "do": "hook",
-      "name": "stt.addHub",
-      "args": {
-        "number": 1,
-        "dx": 0,
-        "dz": 25
-      }
-    },
-    {
-      "do": "hook",
-      "name": "stt.spawnTroll",
-      "args": {
-        "dx": -12,
-        "dz": 12
-      },
-      "as": "troll"
-    },
-    {
-      "do": "wait",
-      "seconds": 1
-    },
-    {
-      "do": "hook",
-      "name": "stt.hurtTroll",
-      "args": {
-        "troll": "troll",
-        "damage": 300
-      }
-    },
-    {"do":"wait","until":{"check":"hook","name":"stt.trollMissingHealth","args":{"troll":"troll"},"min":1},"timeout":1,"label":"hurt"},
-    {
-      "do": "wait",
-      "until": {
-        "check": "hook",
-        "name": "stt.trollMissingHealth",
-        "args": {
-          "troll": "troll"
-        },
-        "expect": 0
-      },
-      "timeout": 20
-    }
-  ],
-  "asserts": [
-    {
-      "check": "hook",
-      "name": "stt.trollMissingHealth",
-      "args": {
-        "troll": "troll"
-      },
-      "expect": 0,
-      "label": "healed at the bed"
-    },
-    {
-      "check": "noErrors",
-      "source": "SteveTheTroll"
-    }
-  ]
+﻿{
+    "name":  "bed-heal",
+    "description":  "D-171 P7: a hurt tamed troll near the bed heals (D-085, HomeRules.InHealRange)",
+    "timeout":  40,
+    "steps":  [
+                  {
+                      "do":  "hook",
+                      "name":  "stt.arena",
+                      "contains":  "arena at",
+                      "label":  "start on the arena spot (MIGRATION_DECISIONS C26)"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.reset"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.clearTrolls"
+                  },
+                  {
+                      "do":  "give",
+                      "prefab":  "STT_TrollSlippers",
+                      "count":  1,
+                      "equip":  true
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.addHub",
+                      "args":  {
+                                   "number":  1,
+                                   "dx":  0,
+                                   "dz":  25
+                               }
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.spawnTroll",
+                      "args":  {
+                                   "dx":  -12,
+                                   "dz":  12
+                               },
+                      "as":  "troll"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.observe",
+                      "args":  {
+                                   "back":  15
+                               },
+                      "label":  "D-178: the player watches from 15 m back - the trolls work, unload and go to the bed without walking into the player"
+                  },
+                  {
+                      "do":  "wait",
+                      "seconds":  1
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.hurtTroll",
+                      "args":  {
+                                   "troll":  "troll",
+                                   "damage":  300
+                               }
+                  },
+                  {
+                      "do":  "wait",
+                      "until":  {
+                                    "check":  "hook",
+                                    "name":  "stt.trollMissingHealth",
+                                    "args":  {
+                                                 "troll":  "troll"
+                                             },
+                                    "min":  1
+                                },
+                      "timeout":  1,
+                      "label":  "hurt"
+                  },
+                  {
+                      "do":  "wait",
+                      "until":  {
+                                    "check":  "hook",
+                                    "name":  "stt.trollMissingHealth",
+                                    "args":  {
+                                                 "troll":  "troll"
+                                             },
+                                    "expect":  0
+                                },
+                      "timeout":  20
+                  }
+              ],
+    "asserts":  [
+                    {
+                        "check":  "hook",
+                        "name":  "stt.trollMissingHealth",
+                        "args":  {
+                                     "troll":  "troll"
+                                 },
+                        "expect":  0,
+                        "label":  "healed at the bed"
+                    },
+                    {
+                        "check":  "noErrors",
+                        "source":  "SteveTheTroll"
+                    }
+                ]
 }

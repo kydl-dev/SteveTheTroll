@@ -22,6 +22,74 @@ namespace SteveTheTroll.Testing.TestHooks;
 /// </summary>
 internal static class GapTestHooks
 {
+    // ---- the player out of the trolls' way (D-178) ------------------------------------------------------------------------------------------------------
+
+    /// D-178: tamed trolls that came within 4 m of the player since stt.reset (TestProximityWatch).
+    [TestHook("stt.trollContacts")]
+    private static int TrollContacts()
+    {
+        return TestProximityWatch.Contacts;
+    }
+
+    /// D-178 (fix11 instruction-latency: the troll was boxed in by clutter at its start 70 m away and the latency check measured the terrain): trees, logs, bushes and rocks
+    /// (not pieces, not creatures) within `radius` m of the troll are removed. Expected outcome: how many.
+    [TestHook("stt.clearAroundTroll")]
+    private static int ClearAroundTroll(GameObject troll, float radius)
+    {
+        int n = 0;
+        Vector3 at = troll.transform.position;
+        foreach (ZNetView v in Object.FindObjectsByType<ZNetView>(FindObjectsSortMode.None))
+        {
+            if (v == null || !v.IsValid())
+            {
+                continue;
+            }
+
+            GameObject g = v.gameObject;
+            Vector3 d = g.transform.position - at;
+            d.y = 0f;
+            if (d.magnitude > radius)
+            {
+                continue;
+            }
+
+            bool veg = g.GetComponent<TreeBase>() != null || g.GetComponent<TreeLog>() != null || g.GetComponent<MineRock>() != null || g.GetComponent<MineRock5>() != null ||
+                       (g.GetComponent<Destructible>() != null && g.GetComponent<Piece>() == null && g.GetComponent<Character>() == null);
+            if (!veg)
+            {
+                continue;
+            }
+
+            v.ClaimOwnership();
+            ZNetScene.instance.Destroy(g);
+            n++;
+        }
+
+        ModLog.Info("GapTestHooks: " + n + " tree(s) / log(s) / bush(es) / rock(s) removed within " + radius.ToString("F0") + " m of the troll");
+        return n;
+    }
+
+    /// D-178: the player steps `back` m backwards (still facing +z, the scene in view) once the test has placed everything - trolls that farm, unload or go to the bed
+    /// (which stt.reset put on the player's spot) no longer walk into the player. Call it AFTER every player-relative step. Expected outcome: the new position.
+    [TestHook("stt.observe")]
+    private static string Observe(float back = 15f)
+    {
+        Player p = Player.m_localPlayer;
+        Vector3 to = p.transform.position + new Vector3(0f, 0f, -back);
+        to.y = ZoneSystem.instance.GetGroundHeight(to) + 0.2f;
+        ArenaTestHooks.Place(p, to, Quaternion.identity);
+
+        ModLog.Info("GapTestHooks: the player watches from " + to.ToString("F0") + " (" + back.ToString("F0") + " m back, out of the trolls' way)");
+        return to.ToString("F0");
+    }
+
+    /// D-179: bad spots remembered now (TrollPath).
+    [TestHook("stt.badSpots")]
+    private static int BadSpots()
+    {
+        return SteveTheTroll.Features.Trolls.Movement.Infrastructure.TrollPath.BadSpotCount;
+    }
+
     // ---- taming / arrival (D-043) ---------------------------------------------------------------------------------------------------------------------
 
     /// A WILD troll `dx`,`dz` m from the player (in front), remembered as test-made so stt.clearTrolls / stt.clearTrollZdos remove it. Expected outcome: the troll.
@@ -437,10 +505,31 @@ internal static class GapTestHooks
             throw new Exception(target.name + " cannot be damaged");
         }
 
+        _lastHit = target;
+        _lastHitFull = ObjectHealth(target);
         d.Damage(hit);
         string s = "tool tier " + before + " -> " + hit.m_toolTier + " (" + (w.m_dropPrefab != null ? w.m_dropPrefab.name : w.m_shared.m_name) + ")";
         ModLog.Info("GapTestHooks: hit " + target.name + " - " + s);
         return s;
+    }
+
+    private static GameObject _lastHit;
+    private static int _lastHitFull;
+
+    /// D-178 (fix11 club-breaks: the club broke the shoot in ONE hit, and a destroyed object cannot be named as a hook parameter): the object stt.hitWithWeapon hit last
+    /// lost health or is gone. Expected outcome: true after a hit that counted.
+    [TestHook("stt.lastHitHurt")]
+    private static bool LastHitHurt()
+    {
+        if (_lastHit == null)
+        {
+            ModLog.Info("GapTestHooks: the object hit last is gone (destroyed by the hit)");
+            return true;
+        }
+
+        int now = ObjectHealth(_lastHit);
+        ModLog.Info("GapTestHooks: " + _lastHit.name + " health " + _lastHitFull + " before the hit, " + now + " now");
+        return now < _lastHitFull;
     }
 
     /// True once `target` lost health (or is gone - destroyed by the hit). Expected outcome: true after a hit that counts.

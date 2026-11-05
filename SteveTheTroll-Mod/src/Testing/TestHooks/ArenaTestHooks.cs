@@ -287,7 +287,7 @@ internal static class ArenaTestHooks
     /// D-172: puts the player there AT ONCE. TeleportTo was the bug: its move finishes frames later (after the area loads), so the reset's teleport to the spot landed AFTER
     /// stt.arenaFurther and the tree / troll of the attack-key tests appeared at the bed; and setting the position by hand next to it kept the fall height, so a 9 m step
     /// down counted as a fall (the player died, 2026-11-02). The test spots are near the loaded area, so a direct move is safe; velocity and fall height are reset.
-    private static void Place(Player p, Vector3 to, Quaternion rot)
+    internal static void Place(Player p, Vector3 to, Quaternion rot)
     {
         Rigidbody body = p.GetComponent<Rigidbody>();
         if (body != null)

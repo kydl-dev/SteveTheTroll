@@ -74,6 +74,13 @@ internal static partial class TestHooks
 
         // D-177 (fix10 review: the lab character's troll list held 22 "living" trolls that tests had removed - over GlobalTameCap 15, so a real taming was refused and the
         // spawn boost cap was 0): entries whose troll no longer exists in this world are dropped before every test
+        if (p.GetComponent<TestProximityWatch>() == null)
+        {
+            p.gameObject.AddComponent<TestProximityWatch>(); // D-178: every troll that comes within 4 m of the player is logged
+        }
+
+        TestProximityWatch.ResetCounts();
+        SteveTheTroll.Features.Trolls.Movement.Infrastructure.TrollPath.ForgetBadSpots(); // D-179: bad spots of an earlier test do not steer this one
         GapTestHooks.TakeOffCostume(); // D-177: hub-speed wears the whole set - no later test may run with the set bonus
         int ghosts = TrollRegistry.ForgetMissingForTests();
         if (ghosts > 0)

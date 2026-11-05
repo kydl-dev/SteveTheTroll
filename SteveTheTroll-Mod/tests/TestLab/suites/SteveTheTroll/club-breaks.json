@@ -70,10 +70,7 @@
                   },
                   {
                       "do":  "hook",
-                      "name":  "stt.objectHurt",
-                      "args":  {
-                                   "target":  "shoot"
-                               },
+                      "name":  "stt.lastHitHurt",
                       "expect":  false,
                       "label":  "the stone axe did nothing to the shoot"
                   },
@@ -106,10 +103,7 @@
                   },
                   {
                       "do":  "hook",
-                      "name":  "stt.objectHurt",
-                      "args":  {
-                                   "target":  "shoot"
-                               },
+                      "name":  "stt.lastHitHurt",
                       "expect":  true,
                       "label":  "the shoot took the damage"
                   },

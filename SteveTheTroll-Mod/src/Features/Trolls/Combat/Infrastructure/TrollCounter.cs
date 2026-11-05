@@ -220,6 +220,13 @@ internal sealed class TrollChase : MonoBehaviour
     // (fix9: detour 1 to the right got closer, detour 2 to the left ran into Rock_4 1.1 m away and did not).
     private const float WindowSeconds = 2f, WindowMetres = 1f, CastRadius = 0.8f, FailedSidePenalty = 4f;
     private float _winStart, _windowMoved;
+
+    // D-179 (user "do 1-2 and 4 now"): 1 a small natural blocker (log, stump, bush, small tree) is broken with swings instead of walked round; 2 the detour point comes
+    // from 9 feelers (TrollPath.Feelers) instead of a fixed 6 m side-step - the two-side cast below stays as the fallback; 4 every stall is a bad spot (TrollPath).
+    private const float PushSeconds = 4f, PushSwingGap = 0.6f;
+    private GameObject _push;
+    private float _pushUntil, _nextPushSwing;
+    private int _pushSwings;
     private Vector3 _winPos;
     private bool _lastSideRight = true, _lastDetourFailed;
 
@@ -305,6 +312,11 @@ internal sealed class TrollChase : MonoBehaviour
             _lastDetourFailed = !(flat.magnitude < _detourFromDistance - 0.5f);
             ModLog.Info("TrollChase: " + TrollOrders.Shown(me) + " detour " + _detours + " over - " + _target.name + " was " + _detourFromDistance.ToString("F1") + " m away, is " + flat.magnitude.ToString("F1") +
                         " m now (" + (_lastDetourFailed ? "NOT closer - the other side is preferred next" : "closer") + ")");
+        }
+
+        if (_pushUntil > 0f && PushStep(me))
+        {
+            return true;
         }
 
         bool detouring = Time.time < _detourUntil;
@@ -395,8 +407,56 @@ internal sealed class TrollChase : MonoBehaviour
     }
 
     /// No progress towards the creature: names what is in the way and walks to a point beside the line (the side changes each time). Expected outcome: none.
+    /// D-179 (1): one step of breaking the small blocker in the way - face it and swing until it is gone or PushSeconds are over. Expected outcome: true while it runs.
+    private bool PushStep(Humanoid me)
+    {
+        if (_push == null || Time.time >= _pushUntil)
+        {
+            ModLog.Info("TrollChase: " + TrollOrders.Shown(me) + " push-through over - the blocker " + (_push == null ? "is gone" : "still stands") + " after " + _pushSwings + " swing(s)");
+            _push = null;
+            _pushUntil = 0f;
+            _winStart = Time.time;
+            _winPos = transform.position;
+            return false;
+        }
+
+        Vector3 at = _push.transform.position;
+        Mv().LookAt(at);
+        ITrollCombat combat = _ctx.Capabilities.Combat;
+        if (!combat.InAttack && Time.time >= _nextPushSwing && Mv().IsLookingAt(at, LookAngle))
+        {
+            Collider c = _push.GetComponentInChildren<Collider>();
+            bool low = c != null && c.bounds.max.y < transform.position.y + 1f;
+            if (combat.SwingAt(_push, low))
+            {
+                _pushSwings++;
+                _nextPushSwing = Time.time + PushSwingGap;
+            }
+        }
+
+        return true;
+    }
+
     private void StartDetour(Humanoid me, Vector3 flat, Vector3 point, string trigger)
     {
+        TrollPath.RecordBadSpot(transform.position, TrollOrders.Shown(me) + " chasing " + _target.name);
+        string what;
+        GameObject small = TrollPath.SmallBlocker(me, point, _target.gameObject, out what);
+        if (small != null)
+        {
+            _push = small;
+            _pushUntil = Time.time + PushSeconds;
+            _pushSwings = 0;
+            _nextPushSwing = 0f;
+            _stuckFor = 0f;
+            ModLog.Info("TrollChase: " + TrollOrders.Shown(me) + " makes no progress towards " + _target.name + " (" + trigger + ", " + flat.magnitude.ToString("F1") + " m) - " + what +
+                        ": pushes through");
+            return;
+        }
+
+        Vector3 feelerPoint;
+        string feelerLog;
+        bool feel = TrollPath.Feelers(me, point, _target.gameObject, DetourSide, out feelerPoint, out feelerLog);
         Vector3 dir = flat.normalized;
         Vector3 right = Vector3.Cross(Vector3.up, dir);
         Vector3 chest0 = transform.position + Vector3.up;
@@ -405,7 +465,7 @@ internal sealed class TrollChase : MonoBehaviour
         bool goRight = Mathf.Abs(scoreRight - scoreLeft) < 0.25f ? !_lastSideRight : scoreRight > scoreLeft;
         _lastSideRight = goRight;
         Vector3 side = right * (goRight ? 1f : -1f);
-        Vector3 to = transform.position + side * DetourSide + dir * 2f;
+        Vector3 to = feel ? feelerPoint : transform.position + side * DetourSide + dir * 2f;
         to.y = ZoneSystem.instance != null ? ZoneSystem.instance.GetGroundHeight(to) : to.y;
         _detourTo = to;
         _detourUntil = Time.time + DetourSeconds;
@@ -423,7 +483,7 @@ internal sealed class TrollChase : MonoBehaviour
         Character body = me;
         ModLog.Info("TrollChase: " + TrollOrders.Shown(me) + " makes no progress towards " + _target.name + " (" + trigger + "; " + flat.magnitude.ToString("F1") + " m; troll at " + transform.position.ToString("F0") +
                     ", target at " + point.ToString("F0") + ") - " + blocker + " - the game's MoveTo reports arrived: " + _lastMoveOk + ", real speed " + body.GetVelocity().magnitude.ToString("F1") +
-                    " m/s, in attack " + me.InAttack() + ", staggered " + body.IsStaggering() + ", " + TrollHold.Describe(body) + ", " + TrollMoveDiag.Describe(body, point) + " - detour " + _detours + " to the " + (goRight ? "right" : "left") +
+                    " m/s, in attack " + me.InAttack() + ", staggered " + body.IsStaggering() + ", " + TrollHold.Describe(body) + ", " + TrollMoveDiag.Describe(body, point) + " - blocker probe: " + what + " - " + feelerLog + " - detour " + _detours + (feel ? " by the feelers" : " to the " + (goRight ? "right" : "left")) +
                     " (free run right " + freeRight.ToString("F1") + " m, left " + freeLeft.ToString("F1") + " m" + (_lastDetourFailed ? ", the side of the last failed detour is penalised" : "") + "), walking to " + to.ToString("F0"));
     }
 
