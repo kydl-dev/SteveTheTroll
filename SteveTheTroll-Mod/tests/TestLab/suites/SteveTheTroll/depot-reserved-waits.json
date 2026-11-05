@@ -1,20 +1,91 @@
-{
-  "name": "depot-reserved-waits",
-  "description": "A troll is on its way to a chest (reservation, 90 s): the emptied depot waits, then goes by itself",
-  "timeout": 180,
-  "steps": [
-    { "do": "hook", "name": "stt.arena", "contains": "arena at", "label": "start on the arena spot (MIGRATION_DECISIONS C26)" },
-    { "do": "hook", "name": "stt.reset" },
-    { "do": "hook", "name": "stt.spawnDepot", "args": { "dz": 8 }, "as": "depot" },
-    { "do": "hook", "name": "stt.depotPut", "args": { "frame": "depot", "index": 2, "prefab": "Stone", "count": 5 }, "expect": true },
-    { "do": "hook", "name": "stt.depotReserve", "args": { "frame": "depot" } },
-    { "do": "hook", "name": "stt.depotTake", "args": { "frame": "depot" } },
-    { "do": "wait", "seconds": 10 },
-    { "do": "hook", "name": "stt.depotCount", "expect": 1, "label": "waits while reserved" },
-    { "do": "wait", "until": { "check": "hook", "name": "stt.depotCount", "expect": 0 }, "timeout": 120 }
-  ],
-  "asserts": [
-    { "check": "hook", "name": "stt.depotCount", "expect": 0 },
-    { "check": "noErrors", "source": "SteveTheTroll" }
-  ]
+﻿{
+    "name":  "depot-reserved-waits",
+    "description":  "A troll is on its way to a chest (reservation, 90 s): the emptied depot waits, then goes by itself",
+    "timeout":  180,
+    "steps":  [
+                  {
+                      "do":  "hook",
+                      "name":  "stt.arena",
+                      "contains":  "arena at",
+                      "label":  "start on the arena spot (MIGRATION_DECISIONS C26)"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.reset"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.spawnDepot",
+                      "args":  {
+                                   "dz":  8
+                               },
+                      "as":  "depot"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.depotPut",
+                      "args":  {
+                                   "frame":  "depot",
+                                   "index":  2,
+                                   "prefab":  "Stone",
+                                   "count":  5
+                               },
+                      "expect":  true
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.depotReserve",
+                      "args":  {
+                                   "frame":  "depot"
+                               }
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.depotTake",
+                      "args":  {
+                                   "frame":  "depot"
+                               }
+                  },
+                  {
+                      "do":  "wait",
+                      "seconds":  10
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.depotCount",
+                      "expect":  1,
+                      "label":  "waits while reserved"
+                  },
+                  {
+                      "do":  "wait",
+                      "seconds":  65
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.depotCount",
+                      "expect":  1,
+                      "label":  "still waits 75 s in (the reservation lasts 90 s) - fix10 review: a removal at 11 s passed the old test"
+                  },
+                  {
+                      "do":  "wait",
+                      "until":  {
+                                    "check":  "hook",
+                                    "name":  "stt.depotCount",
+                                    "expect":  0
+                                },
+                      "timeout":  45,
+                      "label":  "gone soon after the 90 s reservation ends"
+                  }
+              ],
+    "asserts":  [
+                    {
+                        "check":  "hook",
+                        "name":  "stt.depotCount",
+                        "expect":  0
+                    },
+                    {
+                        "check":  "noErrors",
+                        "source":  "SteveTheTroll"
+                    }
+                ]
 }

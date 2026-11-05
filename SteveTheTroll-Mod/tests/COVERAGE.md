@@ -19,3 +19,13 @@ Status "Automated" here is only true after the TestLab run named in `_agent\TEST
 | Orders (attack key) | OrderRules | - | attack-key-* | real Mouse 4 | Automated + Manual |
 | Ownership / multiplayer | - | - | ownership-handover | real 2-player test | Automated (virtual) + Gap (real) |
 | Slipper figures on the feet | FitGeometry (Unity EditMode) | - | slipper-skin | look | Automated + Manual |
+| Bed heal, hold when looked at, order latency | - | - | bed-heal, hold-look, instruction-latency | - | Automated |
+| Set bonus carry +25 % (D-112), constant upgrade cost (D-035) | Carry*, UpgradeCostTests | - | - | - | Unit only |
+| Spawn boost / census cap near the bed (D-042, D-085) | Spawn / census rules | - | - | - | Unit only - **Gap** in game |
+| Water keep: 15 m from a swimming player (D-131) | water / swim rules | - | - | - | Unit only - **Gap** in game |
+| Hub speed: half speed with no hub within 1250 m (D-135) | speed factor rules | - | - | - | Unit only - **Gap** in game |
+| Two trolls never share a tree, friend detour (D-151) | reservation rules | - | - | - | Unit (reservations) - **Gap** in game, friend detour untested |
+| Newly tamed troll walks to its tamer and waits (D-043) | - | - | - | - | **Gap** |
+| Troll club breaks special trees (D-120) | - | - | - | - | **Gap** |
+| Map pins, hover name of a tamed troll (D-081, D-060) | - | - | - | look | **Gap** (manual only) |
+| Hub sign editor (D-135) | - | - | - | hub-look | Manual |

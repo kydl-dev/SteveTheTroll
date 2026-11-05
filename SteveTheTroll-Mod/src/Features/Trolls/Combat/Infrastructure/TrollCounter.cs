@@ -312,7 +312,14 @@ internal sealed class TrollChase : MonoBehaviour
         {
             _stuckFor = me.GetVelocity().magnitude < StuckSpeed ? _stuckFor + dt : 0f;
             bool windowStuck = false;
-            if (detouring)
+            // D-176 (fix10, guard-mob-kills: the window called a troll stalled 5.3 m from the creature while it was swinging - "in attack True" - and started a detour mid-swing):
+            // a troll in an attack is not stalled; neither timer runs while it swings
+            if (me.InAttack())
+            {
+                _stuckFor = 0f;
+            }
+
+            if (detouring || me.InAttack())
             {
                 _winStart = Time.time;
                 _winPos = transform.position;

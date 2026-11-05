@@ -185,8 +185,17 @@ internal static class TrollIdle
     }
 
     /// D-144: every own troll is watched; one that travels with no job (no farm, follow, fight, arrival) is reported by name with where it is and what it holds.
+    // D-176 (fix10, depot-full-builds-new: "wanders - moved 24 m in 10 s with no job" one second after the troll had walked to the depot and unloaded - the job was looked at only
+    // at the END of the window): a troll that had a job at any moment of the window is not reported
+    private static readonly HashSet<int> BusyInWindow = new();
+
     private static void Watch(Character c, int id, bool noJob)
     {
+        if (!noJob)
+        {
+            BusyInWindow.Add(id);
+        }
+
         KeyValuePair<float, Vector3> was;
         if (!Seen.TryGetValue(id, out was))
         {
@@ -203,12 +212,14 @@ internal static class TrollIdle
         Vector3 d = c.transform.position - was.Value;
         d.y = 0f;
         Seen[id] = new KeyValuePair<float, Vector3>(Time.time, c.transform.position);
+        bool busyInWindow = BusyInWindow.Remove(id);
         if (Seen.Count > 200)
         {
             Seen.Clear();
+            BusyInWindow.Clear();
         }
 
-        if (IdleRules.Wanders(!noJob, d.magnitude, dt))
+        if (IdleRules.Wanders(!noJob || busyInWindow, d.magnitude, dt))
         {
             ZDO z = c.GetComponent<ZNetView>() != null ? c.GetComponent<ZNetView>().GetZDO() : null;
             bool hasPatrol = z != null && z.GetBool(ZDOVars.s_patrol);
