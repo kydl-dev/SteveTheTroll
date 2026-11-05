@@ -2,7 +2,7 @@
 
 ## 2.0.0
 
-- Not tested in game yet.
+- Tested in game with the full TestLab suite (62 tests, run fix15 2026-11-05: all green).
 - The Troll Hub piece shows in the build menu only after the Steve The Troll set bonus has been active once, and it is then
   learned with the game's normal "new piece" message.
 - The F6 tabs open as you progress: **Costume** once the Steve The Troll set bonus has been active for the first time,

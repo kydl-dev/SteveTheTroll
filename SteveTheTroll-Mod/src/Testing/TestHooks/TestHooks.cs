@@ -275,48 +275,6 @@ internal static partial class TestHooks
         return Mathf.RoundToInt(HubGeometry.Flat(troll.transform.position - was));
     }
 
-    /// D-176 (instruction-latency, fix8: 12 m of 15 m in 5 s with no way to see why): one timeline sample - flat metres moved since stt.mark, net metres gained towards the hub, real
-    /// speed and the order of the troll (the test calls it once a second). Expected outcome: the text.
-    [TestHook("stt.moveSample")]
-    private static string MoveSample(GameObject troll)
-    {
-        Vector3 was;
-        if (!Marks.TryGetValue(troll.GetInstanceID(), out was))
-        {
-            throw new Exception("stt.mark was not called");
-        }
-
-        Character c = troll.GetComponent<Character>();
-        HubRegistry.All(true);
-        HubInfo hub = HubRegistry.For(c);
-        float gained = hub != null ? HubGeometry.Flat(hub.Pos - was) - HubGeometry.Flat(hub.Pos - troll.transform.position) : float.NaN;
-        string s = "moved " + HubGeometry.Flat(troll.transform.position - was).ToString("F1") + " m, " + gained.ToString("F1") + " m closer to the hub, real speed " +
-                   c.GetVelocity().magnitude.ToString("F1") + " m/s";
-        ModLog.Info("TestHooks: moveSample - " + s);
-        return s;
-    }
-
-    /// D-176 (far-troll-goes-home-clear-route: "moved >= 30" did not say whether it moved TOWARD home): flat metres the troll is closer to its hub than it was at stt.mark
-    /// (negative = further away). Query only - safe to poll in `wait until` with `min`. Throws when stt.mark was not called or the troll has no hub.
-    [TestHook("stt.progressTowardHub")]
-    private static int ProgressTowardHub(GameObject troll)
-    {
-        Vector3 was;
-        if (!Marks.TryGetValue(troll.GetInstanceID(), out was))
-        {
-            throw new Exception("stt.mark was not called");
-        }
-
-        HubRegistry.All(true);
-        HubInfo hub = HubRegistry.For(troll.GetComponent<Character>());
-        if (hub == null)
-        {
-            throw new Exception("the troll has no hub");
-        }
-
-        return Mathf.RoundToInt(HubGeometry.Flat(hub.Pos - was) - HubGeometry.Flat(hub.Pos - troll.transform.position));
-    }
-
     /// Flat metres from the troll to the hub it would use (-1 = none).
     [TestHook("stt.hubDistance")]
     private static int HubDistance(GameObject troll)

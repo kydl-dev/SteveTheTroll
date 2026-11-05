@@ -290,4 +290,96 @@ internal sealed partial class TrollRecovery
 
         return M.Stage == RecoveryStage.Rage;
     }
+
+    // A sphere cast along the line to the goal, chest height: the nearest thing that is not the troll itself and not the resource it walks to.
+    private void Probe(out bool rageable, out bool headOn)
+    {
+        rageable = false;
+        headOn = false;
+        _kind = Obstruction.None;
+        _obstacleName = "nothing found";
+        _rageTarget = null;
+        _other = null;
+        if (_mask == 0)
+        {
+            _mask = LayerMask.GetMask("Default", "static_solid", "Default_small", "piece", "piece_nonsolid", "terrain",
+                "character", "character_net", "vehicle");
+        }
+
+        Vector3 dir = _goal - transform.position;
+        dir.y = 0f;
+        if (dir.sqrMagnitude < 0.01f)
+        {
+            return;
+        }
+
+        dir.Normalize();
+        Vector3 origin = transform.position + Vector3.up * ChestHeight;
+        var best = default(RaycastHit);
+        float bestD = float.MaxValue;
+        foreach (RaycastHit h in Physics.SphereCastAll(origin, ProbeRadius, dir, ProbeDistance, _mask,
+                     QueryTriggerInteraction.Ignore))
+        {
+            if (h.collider == null || h.collider.transform.IsChildOf(transform))
+            {
+                continue;
+            }
+
+            if (_goalObject != null && h.collider.transform.IsChildOf(_goalObject.transform))
+            {
+                continue;
+            }
+
+            if (h.distance < bestD)
+            {
+                bestD = h.distance;
+                best = h;
+            }
+        }
+
+        if (best.collider == null)
+        {
+            return;
+        }
+
+        Collider c = best.collider;
+        Character ch = c.GetComponentInParent<Character>();
+        Piece piece = c.GetComponentInParent<Piece>();
+        bool playerBuilt = piece != null && piece.IsPlacedByPlayer();
+        bool breakable = c.GetComponentInParent<IDestructible>() != null;
+        _kind = StuckRules.Classify(ch != null, ch != null && ch.IsPlayer(), ch != null && ch.IsTamed(), playerBuilt,
+            breakable);
+        GameObject root = ch != null ? ch.gameObject : piece != null ? piece.gameObject : c.gameObject;
+        _obstacleName = root.name + " (" + c.name + ", " + bestD.ToString("F1") + " m)";
+        rageable = StuckRules.Rageable(_kind);
+        if (piece != null && _kind == Obstruction.Destructible && LoggedPieces.Add(piece.GetInstanceID()))
+        {
+            // D-172 (user): a fortress wall / world piece as Destructible is normal; a wall a player built as Destructible (placedByPlayer false) is the anomaly
+            ZNetView pv = piece.GetComponent<ZNetView>();
+            ModLog.Info("TrollRecovery: " + TrollTaming.Tag(this) + " treats piece " + piece.name +
+                        " as destructible: placedByPlayer " + piece.IsPlacedByPlayer() + ", GetCreator " +
+                        piece.GetCreator()
+                        + ", ZDO creator " +
+                        (pv != null && pv.IsValid()
+                            ? pv.GetZDO().GetLong(ZDOVars.s_creator).ToString()
+                            : "no valid ZDO") + ", layer " + LayerMask.LayerToName(c.gameObject.layer));
+        }
+
+        if (rageable)
+        {
+            _rageTarget = ch != null ? ch.gameObject : c.gameObject;
+        }
+
+        if (ch != null && ch.IsTamed() && TrollTaming.IsTroll(ch))
+        {
+            Vector3 mf = transform.forward;
+            Vector3 of = ch.transform.forward;
+            headOn = StuckRules.HeadOn(new GroundPoint(transform.position.x, transform.position.z), new GroundPoint(mf.x, mf.z),
+                new GroundPoint(ch.transform.position.x, ch.transform.position.z), new GroundPoint(of.x, of.z));
+            if (headOn)
+            {
+                _other = ch;
+            }
+        }
+    }
 }
