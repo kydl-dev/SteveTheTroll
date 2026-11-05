@@ -1,4 +1,4 @@
-﻿{
+{
     "name":  "guard-mob",
     "description":  "D-171 P5: a creature near the troll goes for the player - the troll takes it on (TrollGuard, GuardRules)",
     "timeout":  60,

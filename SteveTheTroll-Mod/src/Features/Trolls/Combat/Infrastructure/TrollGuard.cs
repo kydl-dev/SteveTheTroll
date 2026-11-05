@@ -176,11 +176,12 @@ internal static class TrollGuard
     }
 
     /// D-176 (guard-mob-kills: a farming troll with the target set stood next to the mob and never swung; the same for an attack-key order): ONE way from "has the target" to "fights":
-    /// a farming troll walks to the creature and swings itself (TrollChase). Not inside the bed no-hit zone (TrollNoHit: the troll cannot swing there; the troll or the creature in the
+    /// the troll walks to the creature and swings itself (TrollChase) - D-182 (fix14 chase-push-through: an IDLE troll ordered by the attack key got the target but no chase and
+    /// stood 2 m from the creature for 30 s; the game's AI never landed a hit) every own troll, farming or not (TrollFarming.Steer steps a chase for any tamed troll). Not inside the bed no-hit zone (TrollNoHit: the troll cannot swing there; the troll or the creature in the
     /// circle) and not when a chase for that creature runs already. Expected outcome: true when a chase was started.
     internal static bool Engage(Character troll, Character creature)
     {
-        if (troll == null || creature == null || troll.GetComponent<TrollFarmer>() == null)
+        if (troll == null || creature == null)
         {
             return false;
         }
@@ -430,16 +431,13 @@ internal static class TrollGuard
         TrollFarmer farmer = troll.GetComponent<TrollFarmer>();
         // D-176: inside the bed no-hit zone (TrollNoHit) the troll cannot swing, so there is nothing to chase for - the troll or the creature in the circle: the guard target stays (as before), no chase
         bool noHit = TrollNoHit.InZone(troll.transform.position) || TrollNoHit.InZone(nearest.transform.position);
-        if (farmer != null)
-        {
-            Engage(troll, nearest); // until it is dead / gone; the end hands the troll back to the farmer
-        }
+        bool chased = Engage(troll, nearest); // until it is dead / gone; the end hands the troll back to its farmer (if it has one)
 
         ModLog.Info("TrollGuard: " + TrollTaming.Tag(troll) + " attacks " + nearest.name + " (" + best.ToString("F1") +
                     " m) - it targets " + (Target(nearest.GetComponent<MonsterAI>()) == troll
                         ? "the troll"
                         : owner.GetPlayerName())
-                    + ", " + Attackers.Count + " attacker(s)" + (farmer != null ? ", farming paused" : "") + (farmer != null && noHit ? ", no chase (bed no-hit zone)" : ""));
+                    + ", " + Attackers.Count + " attacker(s)" + (farmer != null ? ", farming paused" : "") + (noHit ? ", no chase (bed no-hit zone)" : chased ? ", chases it" : ""));
         TrollDefend.UnderAttack(Target(nearest.GetComponent<MonsterAI>()) == troll
             ? TrollOrders.Shown(troll)
             : owner.GetPlayerName()); // D-068: the one that is attacked

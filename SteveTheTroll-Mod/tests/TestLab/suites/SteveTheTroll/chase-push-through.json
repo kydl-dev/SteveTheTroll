@@ -21,11 +21,27 @@
                                }
                   },
                   {
-                      "do":  "use",
-                      "block":  "frozenMobScene",
+                      "do":  "wait",
+                      "seconds":  1
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.spawnMob",
                       "args":  {
-                                   "farming":  false
-                               }
+                                   "prefab":  "Greydwarf",
+                                   "dx":  0,
+                                   "dz":  15
+                               },
+                      "as":  "mob"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.freezeMob",
+                      "args":  {
+                                   "mob":  "mob"
+                               },
+                      "expect":  true,
+                      "label":  "nothing but the key can give the troll this target"
                   },
                   {
                       "do":  "hook",
@@ -98,8 +114,22 @@
                       "label":  "small beech 7 of 7, a wall 4 m in front of the troll across its line to the creature"
                   },
                   {
+                      "do":  "hook",
+                      "name":  "stt.spawnTroll",
+                      "args":  {
+                                   "dx":  -14,
+                                   "dz":  8
+                               },
+                      "as":  "troll",
+                      "label":  "the troll appears behind the finished wall (fix15 focus: spawned first, its own AI walked past the wall\u0027s place before the wall stood)"
+                  },
+                  {
+                      "do":  "face",
+                      "target":  "mob"
+                  },
+                  {
                       "do":  "wait",
-                      "seconds":  1
+                      "seconds":  0.5
                   },
                   {
                       "do":  "use",

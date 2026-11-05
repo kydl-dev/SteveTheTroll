@@ -59,18 +59,35 @@
                                     "expect":  "Greydwarf"
                                 },
                       "timeout":  5
+                  },
+                  {
+                      "do":  "wait",
+                      "until":  {
+                                    "check":  "hook",
+                                    "name":  "stt.lastMobHurt",
+                                    "args":  {
+                                                 "troll":  "troll"
+                                             },
+                                    "expect":  true
+                                },
+                      "timeout":  20,
+                      "label":  "D-182: the idle troll walks to the creature and hurts it (the order ends in a fight, not only a target)"
+                  },
+                  {
+                      "do":  "wait",
+                      "until":  {
+                                    "check":  "hook",
+                                    "name":  "stt.guardKillLast",
+                                    "args":  {
+                                                 "troll":  "troll"
+                                             },
+                                    "expect":  "dead"
+                                },
+                      "timeout":  25,
+                      "label":  "the creature is dead"
                   }
               ],
     "asserts":  [
-                    {
-                        "check":  "hook",
-                        "name":  "stt.forcedTargetOf",
-                        "args":  {
-                                     "troll":  "troll"
-                                 },
-                        "expect":  "Greydwarf",
-                        "label":  "the order is still held"
-                    },
                     {
                         "check":  "logContains",
                         "source":  "SteveTheTroll",
@@ -79,12 +96,11 @@
                         "label":  "the key press was recorded"
                     },
                     {
-                        "check":  "hook",
-                        "name":  "stt.targetOf",
-                        "args":  {
-                                     "troll":  "troll"
-                                 },
-                        "expect":  "Greydwarf"
+                        "check":  "logContains",
+                        "source":  "SteveTheTroll",
+                        "text":  "done (enemy dead",
+                        "expect":  true,
+                        "label":  "the troll itself killed it (TrollChase)"
                     },
                     {
                         "check":  "noErrors",
