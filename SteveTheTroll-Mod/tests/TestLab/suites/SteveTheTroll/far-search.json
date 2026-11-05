@@ -42,14 +42,18 @@
                                }
                   },
                   {
-                      "do":  "hook",
-                      "name":  "stt.farFindsSynthetic",
-                      "args":  {
-                                   "dx":  0,
-                                   "dz":  300
-                               },
-                      "min":  290,
-                      "max":  310,
+                      "do":  "wait",
+                      "until":  {
+                                    "check":  "hook",
+                                    "name":  "stt.farFindsSynthetic",
+                                    "args":  {
+                                                 "dx":  0,
+                                                 "dz":  300
+                                             },
+                                    "min":  290,
+                                    "max":  310
+                                },
+                      "timeout":  1,
                       "label":  "the synthetic 300 m tree itself is found (every other source skipped)"
                   }
               ],

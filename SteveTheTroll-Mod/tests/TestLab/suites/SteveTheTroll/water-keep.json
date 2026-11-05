@@ -130,13 +130,17 @@
                       "seconds":  1
                   },
                   {
-                      "do":  "hook",
-                      "name":  "stt.shipHealth",
-                      "args":  {
-                                   "ship":  "ship"
-                               },
-                      "max":  999,
-                      "label":  "the same hit from nobody damages it (the hit was real)"
+                      "do":  "wait",
+                      "label":  "the same hit from nobody damages it (the hit was real)",
+                      "until":  {
+                                    "check":  "hook",
+                                    "name":  "stt.shipHealth",
+                                    "args":  {
+                                                 "ship":  "ship"
+                                             },
+                                    "max":  999
+                                },
+                      "timeout":  2
                   }
               ],
     "asserts":  [

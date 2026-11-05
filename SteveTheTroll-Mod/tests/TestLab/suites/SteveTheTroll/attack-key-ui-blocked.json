@@ -21,57 +21,11 @@
                                }
                   },
                   {
-                      "do":  "wait",
-                      "seconds":  1
-                  },
-                  {
-                      "do":  "hook",
-                      "name":  "stt.spawnMob",
+                      "do":  "use",
+                      "block":  "frozenMobScene",
                       "args":  {
-                                   "prefab":  "Greydwarf",
-                                   "dx":  0,
-                                   "dz":  15
-                               },
-                      "as":  "mob"
-                  },
-                  {
-                      "do":  "hook",
-                      "name":  "stt.freezeMob",
-                      "args":  {
-                                   "mob":  "mob"
-                               },
-                      "expect":  true,
-                      "label":  "D-176: nothing but the key can give the troll this target (TrollGuard cannot see a hunter)"
-                  },
-                  {
-                      "do":  "hook",
-                      "name":  "stt.spawnTroll",
-                      "args":  {
-                                   "dx":  -14,
-                                   "dz":  8
-                               },
-                      "as":  "troll"
-                  },
-                  {
-                      "do":  "wait",
-                      "seconds":  1.5
-                  },
-                  {
-                      "do":  "face",
-                      "target":  "mob"
-                  },
-                  {
-                      "do":  "wait",
-                      "seconds":  0.5
-                  },
-                  {
-                      "do":  "hook",
-                      "name":  "stt.forcedTargetOf",
-                      "args":  {
-                                   "troll":  "troll"
-                               },
-                      "expect":  "",
-                      "label":  "no forced target before the key (only the key or a hunter of the player sets one; the troll\u0027s own AI may well target a creature it sees)"
+                                   "farming":  false
+                               }
                   },
                   {
                       "do":  "hook",

@@ -1,0 +1,15 @@
+{
+  "description": "D-176: the attack-key scene - a frozen Greydwarf (tag `mob`) 15 m ahead that nothing but the key can make a target (TrollGuard cannot see a hunter), a troll (tag `troll`) 16 m ahead-left (farming when `farming` is true), the player facing the creature, and proof that the troll has no forced target before the key.",
+  "params": { "farming": false },
+  "steps": [
+    { "do": "wait", "seconds": 1 },
+    { "do": "hook", "name": "stt.spawnMob", "args": { "prefab": "Greydwarf", "dx": 0, "dz": 15 }, "as": "mob" },
+    { "do": "hook", "name": "stt.freezeMob", "args": { "mob": "mob" }, "expect": true, "label": "D-176: nothing but the key can give the troll this target (TrollGuard cannot see a hunter)" },
+    { "do": "hook", "name": "stt.spawnTroll", "args": { "dx": -14, "dz": 8 }, "as": "troll" },
+    { "if": "{{farming}}", "do": "hook", "name": "stt.startFarm", "args": { "troll": "troll" }, "label": "the troll is farming when the key is pressed" },
+    { "do": "wait", "seconds": 1.5 },
+    { "do": "face", "target": "mob" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "hook", "name": "stt.forcedTargetOf", "args": { "troll": "troll" }, "expect": "", "label": "no forced target before the key (only the key or a hunter of the player sets one)" }
+  ]
+}

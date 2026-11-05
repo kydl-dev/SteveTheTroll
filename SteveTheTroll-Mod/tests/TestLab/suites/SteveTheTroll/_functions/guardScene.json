@@ -1,0 +1,12 @@
+{
+  "description": "D-176: the guard-fight scene - slippers on, HUB 1 25 m ahead, a farming troll (tag `troll`) 16 m ahead-left, and 2 s later a creature (tag `mob`, default Greydwarf) at `mobDx`,`mobDz` that goes for the player. Call guardFight next.",
+  "params": { "prefab": "Greydwarf", "mobDx": -2, "mobDz": 18 },
+  "steps": [
+    { "do": "give", "prefab": "STT_TrollSlippers", "count": 1, "equip": true },
+    { "do": "hook", "name": "stt.addHub", "args": { "number": 1, "dx": 0, "dz": 25 } },
+    { "do": "hook", "name": "stt.spawnTroll", "args": { "dx": -14, "dz": 8 }, "as": "troll" },
+    { "do": "hook", "name": "stt.startFarm", "args": { "troll": "troll" } },
+    { "do": "wait", "seconds": 2 },
+    { "do": "hook", "name": "stt.spawnMob", "args": { "prefab": "{{prefab}}", "dx": "{{mobDx}}", "dz": "{{mobDz}}" }, "as": "mob" }
+  ]
+}

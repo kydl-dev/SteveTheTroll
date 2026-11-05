@@ -21,49 +21,8 @@
                       "label":  "the fight is outside the 15 m bed no-hit zone (the bed stays at the arena spot)"
                   },
                   {
-                      "do":  "give",
-                      "prefab":  "STT_TrollSlippers",
-                      "count":  1,
-                      "equip":  true
-                  },
-                  {
-                      "do":  "hook",
-                      "name":  "stt.addHub",
-                      "args":  {
-                                   "number":  1,
-                                   "dx":  0,
-                                   "dz":  25
-                               }
-                  },
-                  {
-                      "do":  "hook",
-                      "name":  "stt.spawnTroll",
-                      "args":  {
-                                   "dx":  -14,
-                                   "dz":  8
-                               },
-                      "as":  "troll"
-                  },
-                  {
-                      "do":  "hook",
-                      "name":  "stt.startFarm",
-                      "args":  {
-                                   "troll":  "troll"
-                               }
-                  },
-                  {
-                      "do":  "wait",
-                      "seconds":  2
-                  },
-                  {
-                      "do":  "hook",
-                      "name":  "stt.spawnMob",
-                      "args":  {
-                                   "prefab":  "Greydwarf",
-                                   "dx":  -2,
-                                   "dz":  18
-                               },
-                      "as":  "mob"
+                      "do":  "use",
+                      "block":  "guardScene"
                   },
                   {
                       "do":  "guardFight",
