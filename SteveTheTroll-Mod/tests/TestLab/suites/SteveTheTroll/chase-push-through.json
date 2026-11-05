@@ -1,82 +1,139 @@
 ﻿{
     "name":  "chase-push-through",
-    "description":  "D-179 (user: pathing in clutter, \"do 1-2 and 4 now\"): the guard fight of guard-mob-kills-open with a row of five small beeches across the troll\u0027s straight way to the creature - the chase must break through them (push-through), reach the creature and kill it (the row is planted right after the creature appears: the farming troll would otherwise chop the beeches as wood first) fix12: with 40 m cleared the troll walked to a birch 31 m away, out of the guard\u0027s defend range, and never took the creature on - 60 m cleared.",
-    "timeout":  90,
+    "description":  "D-179 / D-181 (user: pathing in clutter): the attack key sends the troll at a frozen Greydwarf; a wall of 7 small beeches stands 4 m in front of the troll across its straight line. The chase must break through the wall (push-through), reach the creature and kill it. fix13: the old layout let the troll reach swing range before any stall, so push-through never ran.",
+    "timeout":  120,
     "steps":  [
                   {
                       "do":  "use",
                       "block":  "start",
                       "args":  {
                                    "clearTrolls":  true,
-                                   "slippers":  false,
-                                   "hub":  false
+                                   "slippers":  true,
+                                   "hub":  true
                                }
                   },
                   {
                       "do":  "use",
                       "block":  "openGround",
                       "args":  {
-                                   "metres":  35,
-                                   "radius":  60
+                                   "metres":  100,
+                                   "radius":  30
                                }
                   },
                   {
                       "do":  "use",
-                      "block":  "guardScene"
+                      "block":  "frozenMobScene",
+                      "args":  {
+                                   "farming":  false
+                               }
                   },
                   {
                       "do":  "hook",
                       "name":  "stt.spawnPrefab",
                       "args":  {
                                    "prefab":  "Beech_small1",
-                                   "dx":  -6.08,
-                                   "dz":  10.69
+                                   "dx":  -9.08,
+                                   "dz":  7.11
                                },
-                      "label":  "small beech 1 of 5 across the way"
+                      "label":  "small beech 1 of 7, a wall 4 m in front of the troll across its line to the creature"
                   },
                   {
                       "do":  "hook",
                       "name":  "stt.spawnPrefab",
                       "args":  {
                                    "prefab":  "Beech_small1",
-                                   "dx":  -7.04,
-                                   "dz":  11.84
+                                   "dx":  -9.53,
+                                   "dz":  8
                                },
-                      "label":  "small beech 2 of 5 across the way"
+                      "label":  "small beech 2 of 7, a wall 4 m in front of the troll across its line to the creature"
                   },
                   {
                       "do":  "hook",
                       "name":  "stt.spawnPrefab",
                       "args":  {
                                    "prefab":  "Beech_small1",
-                                   "dx":  -8,
-                                   "dz":  13
+                                   "dx":  -9.98,
+                                   "dz":  8.89
                                },
-                      "label":  "small beech 3 of 5 across the way"
+                      "label":  "small beech 3 of 7, a wall 4 m in front of the troll across its line to the creature"
                   },
                   {
                       "do":  "hook",
                       "name":  "stt.spawnPrefab",
                       "args":  {
                                    "prefab":  "Beech_small1",
-                                   "dx":  -8.96,
-                                   "dz":  14.16
+                                   "dx":  -10.42,
+                                   "dz":  9.79
                                },
-                      "label":  "small beech 4 of 5 across the way"
+                      "label":  "small beech 4 of 7, a wall 4 m in front of the troll across its line to the creature"
                   },
                   {
                       "do":  "hook",
                       "name":  "stt.spawnPrefab",
                       "args":  {
                                    "prefab":  "Beech_small1",
-                                   "dx":  -9.92,
-                                   "dz":  15.31
+                                   "dx":  -10.87,
+                                   "dz":  10.68
                                },
-                      "label":  "small beech 5 of 5 across the way"
+                      "label":  "small beech 5 of 7, a wall 4 m in front of the troll across its line to the creature"
                   },
                   {
-                      "do":  "guardFight",
-                      "near":  8
+                      "do":  "hook",
+                      "name":  "stt.spawnPrefab",
+                      "args":  {
+                                   "prefab":  "Beech_small1",
+                                   "dx":  -11.32,
+                                   "dz":  11.58
+                               },
+                      "label":  "small beech 6 of 7, a wall 4 m in front of the troll across its line to the creature"
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.spawnPrefab",
+                      "args":  {
+                                   "prefab":  "Beech_small1",
+                                   "dx":  -11.76,
+                                   "dz":  12.47
+                               },
+                      "label":  "small beech 7 of 7, a wall 4 m in front of the troll across its line to the creature"
+                  },
+                  {
+                      "do":  "wait",
+                      "seconds":  1
+                  },
+                  {
+                      "do":  "use",
+                      "block":  "pressAttackKeyAt",
+                      "args":  {
+                                   "target":  "mob",
+                                   "expectName":  "Greydwarf"
+                               }
+                  },
+                  {
+                      "do":  "wait",
+                      "until":  {
+                                    "check":  "hook",
+                                    "name":  "stt.lastMobHurt",
+                                    "args":  {
+                                                 "troll":  "troll"
+                                             },
+                                    "expect":  true
+                                },
+                      "timeout":  30,
+                      "label":  "the troll got through the wall and hurt the creature"
+                  },
+                  {
+                      "do":  "wait",
+                      "until":  {
+                                    "check":  "hook",
+                                    "name":  "stt.guardKillLast",
+                                    "args":  {
+                                                 "troll":  "troll"
+                                             },
+                                    "expect":  "dead"
+                                },
+                      "timeout":  25,
+                      "label":  "the creature is dead"
                   }
               ],
     "asserts":  [
@@ -85,7 +142,14 @@
                         "source":  "SteveTheTroll",
                         "text":  "pushes through",
                         "expect":  true,
-                        "label":  "the chase broke through a small blocker instead of walking round"
+                        "label":  "the chase broke through the wall instead of walking round"
+                    },
+                    {
+                        "check":  "logContains",
+                        "source":  "SteveTheTroll",
+                        "text":  "done (enemy dead",
+                        "expect":  true,
+                        "label":  "the troll itself killed it"
                     },
                     {
                         "check":  "noErrors",

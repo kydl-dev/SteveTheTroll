@@ -23,7 +23,10 @@ public class LabSuiteGeometryTests
     [Test] public void EveryTrollSpawn_IsInFront_AndFarEnough()
     {
         int seen = 0;
-        foreach (var file in Directory.GetFiles(SuiteDir, "*.json"))
+        // D-181: the blocks / functions in _functions spawn trolls for many tests - they follow the same rule
+        string functions = Path.Combine(SuiteDir, "_functions");
+        var files = Directory.GetFiles(SuiteDir, "*.json").Concat(Directory.Exists(functions) ? Directory.GetFiles(functions, "*.json") : new string[0]);
+        foreach (var file in files)
         {
             string test = Path.GetFileNameWithoutExtension(file);
             foreach (Match m in Spawn.Matches(File.ReadAllText(file)))

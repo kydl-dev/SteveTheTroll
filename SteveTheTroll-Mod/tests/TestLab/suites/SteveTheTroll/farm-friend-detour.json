@@ -1,6 +1,6 @@
 ﻿{
     "name":  "farm-friend-detour",
-    "description":  "D-151 / D-177: a tamed troll standing still on the line between a farming troll and its tree - the farmer steps around it (FarmFriendDetour) and reaches the tree",
+    "description":  "D-151 / D-177 / D-181: a tamed troll stands still on the line between a farming troll and its tree - the farmer gets past it (FarmFriendDetour steps around when it is in the way, or the farmer\u0027s own way already passes it) without pushing it, and hits the tree",
     "timeout":  120,
     "steps":  [
                   {
@@ -74,6 +74,14 @@
                   },
                   {
                       "do":  "hook",
+                      "name":  "stt.mark",
+                      "args":  {
+                                   "troll":  "blocker"
+                               },
+                      "label":  "where the friend stands"
+                  },
+                  {
+                      "do":  "hook",
                       "name":  "stt.startFarm",
                       "args":  {
                                    "troll":  "troll"
@@ -93,15 +101,17 @@
               ],
     "asserts":  [
                     {
-                        "label":  "FarmFriendDetour stepped around the friend",
-                        "expect":  true,
-                        "source":  "SteveTheTroll",
-                        "text":  "steps around",
-                        "check":  "logContains"
+                        "check":  "hook",
+                        "name":  "stt.moved",
+                        "args":  {
+                                     "troll":  "blocker"
+                                 },
+                        "max":  1.5,
+                        "label":  "the friend was not pushed (user: \"not ... one waits behind the first\" / \"re-route next to it\"; fix12: the farmer pushed it up to the tree)"
                     },
                     {
-                        "source":  "SteveTheTroll",
-                        "check":  "noErrors"
+                        "check":  "noErrors",
+                        "source":  "SteveTheTroll"
                     }
                 ]
 }

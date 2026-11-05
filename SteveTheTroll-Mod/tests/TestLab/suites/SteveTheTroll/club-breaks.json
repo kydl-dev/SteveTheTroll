@@ -120,8 +120,8 @@
                         "check":  "logContains"
                     },
                     {
-                        "source":  "SteveTheTroll",
-                        "check":  "noErrors"
+                        "check":  "noErrors",
+                        "source":  "SteveTheTroll"
                     }
                 ]
 }

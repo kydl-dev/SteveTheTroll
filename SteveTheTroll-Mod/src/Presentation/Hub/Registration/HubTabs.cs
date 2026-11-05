@@ -101,6 +101,32 @@ internal static class HubTabs
         return added;
     }
 
+    /// D-181 - TEST RESET ONLY (stt.reset; fix13: two tests that built a hub opened the Troll Hub gate for the rest of the run, and kydl-spec-port / feature-toggle then saw
+    /// 3 tabs instead of a fresh character's 2): the three first-time gates are closed on the character and the gated tabs are taken out of the hub. The features still WANT
+    /// their tabs, so Tick adds each again as soon as its gate opens. Expected outcome: how many gated tabs were removed.
+    internal static int ResetGatesForTests(Player p)
+    {
+        if (p != null && p.m_customData != null)
+        {
+            p.m_customData.Remove(HubBuiltKey);
+            p.m_customData.Remove(HubPlacement.UnlockKey);
+            p.m_customData.Remove(TrollTamingPatch.FirstTameKey);
+        }
+
+        int n = 0;
+        foreach (string id in new[] { CostumeId, MyTrollsId, WorkId, TrollsId, HubId })
+        {
+            if (KyHub.HasTab(Plugin.ModGuid, id))
+            {
+                KyHub.RemoveTab(Plugin.ModGuid, id);
+                n++;
+            }
+        }
+
+        HubTab.Tab = null;
+        return n;
+    }
+
     /// The Slippers tab (SlippersFeature.Start). Expected outcome: it is registered.
     internal static bool AddSlippers()
     {

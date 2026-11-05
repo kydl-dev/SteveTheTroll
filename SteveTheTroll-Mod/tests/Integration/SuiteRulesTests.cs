@@ -66,9 +66,21 @@ public class SuiteRulesTests
             var test = Json.Deserialize<Dictionary<string, object>>(File.ReadAllText(f));
             var steps = test.ContainsKey("steps") ? ((System.Collections.ArrayList)test["steps"]).Cast<object>().ToList() : new List<object>();
             var first = steps.Count > 0 ? steps[0] as Dictionary<string, object> : null;
+            // D-181 (suite on DrakesTestLab blocks): a test may start with the `start` block - then the block itself must start with the stt.arena hook
+            if (first != null && Equals(first["do"], "use") && first.ContainsKey("block") && Equals(first["block"], "start"))
+                first = StartBlockFirstStep();
             Assert.That(first != null && Equals(first["do"], "hook") && Equals(first["name"], "stt.arena"), Is.True,
                 Path.GetFileName(f) + ": the first step must be the stt.arena hook (MIGRATION_DECISIONS C26: every test starts on the arena spot, away from the lab start)");
         }
+    }
+
+    static Dictionary<string, object> StartBlockFirstStep()
+    {
+        string path = Path.Combine(SuiteDir, "_functions", "start.json");
+        if (!File.Exists(path)) return null;
+        var block = Json.Deserialize<Dictionary<string, object>>(File.ReadAllText(path));
+        var steps = block.ContainsKey("steps") ? ((System.Collections.ArrayList)block["steps"]).Cast<object>().ToList() : new List<object>();
+        return steps.Count > 0 ? steps[0] as Dictionary<string, object> : null;
     }
 
     [Test] public void NoTestLabScreenshots()

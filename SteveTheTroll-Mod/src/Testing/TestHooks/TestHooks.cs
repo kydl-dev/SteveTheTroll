@@ -81,6 +81,12 @@ internal static partial class TestHooks
 
         TestProximityWatch.ResetCounts();
         SteveTheTroll.Features.Trolls.Movement.Infrastructure.TrollPath.ForgetBadSpots(); // D-179: bad spots of an earlier test do not steer this one
+        int tabs = SteveTheTroll.Presentation.Hub.Registration.HubTabs.ResetGatesForTests(p); // D-181: every test starts with a fresh character's hub tabs
+        if (tabs > 0)
+        {
+            ModLog.Info("TestHooks: stt.reset closed the first-time gates and took " + tabs + " gated tab(s) out of the hub");
+        }
+
         GapTestHooks.TakeOffCostume(); // D-177: hub-speed wears the whole set - no later test may run with the set bonus
         int ghosts = TrollRegistry.ForgetMissingForTests();
         if (ghosts > 0)

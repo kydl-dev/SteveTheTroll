@@ -86,6 +86,14 @@
                       "key":  "Mouse3"
                   },
                   {
+                      "do":  "hook",
+                      "name":  "stt.observe",
+                      "args":  {
+                                   "back":  15
+                               },
+                      "label":  "fix13: after the press the player steps back - a wild creature fought next to the player left the troll 2.9 m away in the player\u0027s view, and TrollHold (correctly) held it there"
+                  },
+                  {
                       "do":  "wait",
                       "until":  {
                                     "check":  "hook",

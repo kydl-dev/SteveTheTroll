@@ -111,8 +111,8 @@
                         "check":  "hook"
                     },
                     {
-                        "source":  "SteveTheTroll",
-                        "check":  "noErrors"
+                        "check":  "noErrors",
+                        "source":  "SteveTheTroll"
                     }
                 ]
 }

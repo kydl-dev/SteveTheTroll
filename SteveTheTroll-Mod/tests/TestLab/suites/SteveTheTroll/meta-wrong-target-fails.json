@@ -1,12 +1,45 @@
-{
-  "name": "meta-wrong-target-fails",
-  "description": "D-180 negative test (DrakesTestLab expectFailure): with no creature at all, a check that the troll's forced target is a Greydwarf MUST fail - proves the forced-target check cannot pass by accident. Passes only when the check fails.",
-  "expectFailure": true,
-  "timeout": 30,
-  "steps": [
-    { "do": "use", "block": "start", "args": { "clearTrolls": true, "slippers": true, "hub": true } },
-    { "do": "hook", "name": "stt.spawnTroll", "args": { "dx": 0, "dz": 20 }, "as": "troll" },
-    { "do": "wait", "seconds": 1 },
-    { "do": "hook", "name": "stt.forcedTargetOf", "args": { "troll": "troll" }, "expect": "Greydwarf", "label": "no creature exists: this must fail" }
-  ]
+﻿{
+    "name":  "meta-wrong-target-fails",
+    "description":  "D-180 negative test (DrakesTestLab expectFailure): with no creature at all, a check that the troll\u0027s forced target is a Greydwarf MUST fail - proves the forced-target check cannot pass by accident. Passes only when the check fails.",
+    "expectFailure":  true,
+    "timeout":  30,
+    "steps":  [
+                  {
+                      "do":  "use",
+                      "block":  "start",
+                      "args":  {
+                                   "clearTrolls":  true,
+                                   "slippers":  true,
+                                   "hub":  true
+                               }
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.spawnTroll",
+                      "args":  {
+                                   "dx":  0,
+                                   "dz":  20
+                               },
+                      "as":  "troll"
+                  },
+                  {
+                      "do":  "wait",
+                      "seconds":  1
+                  },
+                  {
+                      "do":  "hook",
+                      "name":  "stt.forcedTargetOf",
+                      "args":  {
+                                   "troll":  "troll"
+                               },
+                      "expect":  "Greydwarf",
+                      "label":  "no creature exists: this must fail"
+                  }
+              ],
+    "asserts":  [
+                    {
+                        "check":  "noErrors",
+                        "source":  "SteveTheTroll"
+                    }
+                ]
 }

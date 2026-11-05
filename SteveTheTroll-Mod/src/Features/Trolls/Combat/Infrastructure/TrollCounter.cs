@@ -223,7 +223,9 @@ internal sealed class TrollChase : MonoBehaviour
 
     // D-179 (user "do 1-2 and 4 now"): 1 a small natural blocker (log, stump, bush, small tree) is broken with swings instead of walked round; 2 the detour point comes
     // from 9 feelers (TrollPath.Feelers) instead of a fixed 6 m side-step - the two-side cast below stays as the fallback; 4 every stall is a bad spot (TrollPath).
-    private const float PushSeconds = 4f, PushSwingGap = 0.6f, LowTargetMetres = -1.5f;
+    // D-181 (fix13 attack-key-farming-creature: swings were allowed up to reach + 1 m; the troll stopped 5.6 m from a frozen creature with a 4.9 m reach, swung every 0.05 s,
+    // was always in an attack, so it never stepped closer - 20 s of missed swings): a swing only within reach + SwingSlack; beyond that it walks on (MoveTo arrives at 0.8 x reach)
+    private const float PushSeconds = 4f, PushSwingGap = 0.6f, LowTargetMetres = -1.5f, SwingSlack = 0.3f;
     private float _nextLowLog;
     private GameObject _push;
     private float _pushUntil, _nextPushSwing;
@@ -371,7 +373,7 @@ internal sealed class TrollChase : MonoBehaviour
 
         // D-176 (guard-mob-kills: the chase ran 60 s next to the mob with 0 swings): every reason the troll does not swing is named, once every 2 s
         string why = me.InAttack() ? "already in an attack" : TrollNoHit.InZone(transform.position) ? "inside the bed no-hit zone" : Time.time < _next ? "swing gap" :
-            flat.magnitude > reach + 1f ? "out of reach" : !ai.IsLookingAt(point, LookAngle) ? "not facing it" : null;
+            flat.magnitude > reach + SwingSlack ? "out of reach" : !ai.IsLookingAt(point, LookAngle) ? "not facing it" : null;
         if (why != null)
         {
             Note(me, why, flat.magnitude, reach);
